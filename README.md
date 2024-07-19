@@ -12,3 +12,4 @@ Gradually adding the questions in different languages (Python & Julia)
 | 217. Contains Duplicate | Check if a vector contains any duplicates                                   | Easy       | Arrays, Hashing |        | ✔️    |
 | 49. Group Anagrams     | Group strings into anagrams                                                 | Medium     | Hashing, Sorting|        | ✔️    |
 | 125. Valid Palindrome | Determine if a string is a palindrome, considering only alphanumeric characters and ignoring cases | Easy | Two Pointers |        | ✔️    |
+| 15. Three Sum      | Find all unique triplets in the array which gives the sum of zero           | Medium     | Two Pointers    |        | ✔️    |
