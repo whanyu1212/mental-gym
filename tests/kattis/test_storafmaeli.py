@@ -13,8 +13,8 @@ from storafmaeli import process_anniversary_year
 
 def test_process_anniversary_year(monkeypatch):
     """
-    A StringIO object is a part of Python's io module and provides an in-memory 
-    file-like object that reads and writes a string buffer (text). Essentially, 
+    A StringIO object is a part of Python's io module and provides an in-memory
+    file-like object that reads and writes a string buffer (text). Essentially,
     it behaves like a file, but instead of being connected to a file on disk, it operates in memory.
     """
 
