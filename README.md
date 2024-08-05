@@ -17,7 +17,10 @@ Gradually adding the questions in different languages (Python & Julia)
 
 ## Kattis Problems
 
-| Problem ID         | Description                                                                 | Difficulty | Type                   | Solution |
-|--------------------|-----------------------------------------------------------------------------|------------|------------------------|----------|
-| hip hip            | Print "Hipp hipp hurra!" 20 times                                           | Easy       | Easy Coding Challenges | <a href="/src/kattis/hip_hip.py"><img src="/imgs/python-programming-language.webp" alt="hip hip" width="50"></a> |
-| storafmaeli        | Check if it's anniversary                                                   | Easy       | Easy Coding Challenges | <a href="/src/kattis/storafmaeli.py"><img src="/imgs/python-programming-language.webp" alt="hip hip" width="50"></a> |
+| Problem ID         | Description                                      | Difficulty | Type                   | Solution                                                                                                      |
+|--------------------|--------------------------------------------------|------------|------------------------|---------------------------------------------------------------------------------------------------------------|
+| hip hip            | Print "Hipp hipp hurra!" 20 times                | Easy       | Easy Coding Challenges | <a href="/src/kattis/hip_hip.py"><img src="/imgs/python-programming-language.webp" alt="hip hip" width="50"></a> |
+| storafmaeli        | Check if it's anniversary                        | Easy       | Easy Coding Challenges | <a href="/src/kattis/storafmaeli.py"><img src="/imgs/python-programming-language.webp" alt="storafmaeli" width="50"></a> |
+| fyrirtækjanafn     | Filter out consonants from input                 | Easy       | Easy Coding Challenges | <a href="/src/kattis/fyrirtækjanafn.py"><img src="/imgs/python-programming-language.webp" alt="fyrirtækjanafn" width="50"></a> |
+| peningar           | Calculate values accumulated from circular cells | Easy       | Easy Coding Challenges | <a href="/src/kattis/peningar.py"><img src="/imgs/python-programming-language.webp" alt="peningar" width="50"></a> |
+| framvindustika     | Print progress bar and %                         | Easy       | Easy Coding Challenges | <a href="/src/kattis/framvindustika.py"><img src="/imgs/python-programming-language.webp" alt="framvindustika" width="50"></a> |
