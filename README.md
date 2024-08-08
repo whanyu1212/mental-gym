@@ -15,6 +15,7 @@ Gradually adding the questions in different languages (Python & Julia)
 | 15. Three Sum          | Find all unique triplets in the array which gives the sum of zero           | Medium     | Two Pointers    | <a href="/src/leetcode/threeSum.jl"><img src="/imgs/unnamed.png" alt="three sum" width="40" height="40"></a> |
 | 20. Valid Parenthesis  | Determine if the input string has valid parentheses                         | Easy       | Stack           | <a href="/src/leetcode/ValidParenthesis.jl"><img src="/imgs/unnamed.png" alt="valid parenthesis" width="40" height="40"></a> |
 | 121. Max Profit        | Find the maximum profit you can achieve from buying and selling a stock     | Easy       | Arrays          | <a href="/src/leetcode/MaxProfit.jl"><img src="/imgs/unnamed.png" alt="max profit" width="40" height="40"></a> |
+| 11. Container With Most Water | Find two lines that together with the x-axis form a container, such that the container contains the most water | Medium | Two Pointers | <a href="/src/leetcode/MaxArea.jl"><img src="/imgs/unnamed.png" alt="container with most water" width="40" height="40"></a> |
 
 
 ## Kattis Problems
