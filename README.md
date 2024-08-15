@@ -1,5 +1,12 @@
 # Mental Gym
-Documenting practices on various coding platform such as leetcode, kattis, hackerrank etc
+Documenting practices on various coding platforms such as LeetCode, Kattis, HackerRank, etc. Additionally, adding code snippets to show how to implement certain data structures and algorithms (DSA) from scratch.
+
+## DSA from scratch
+| Category | Algorithm       | Description                       | Implementation Link                  |
+|----------|-----------------|-----------------------------------|--------------------------------------|
+| Sorting  | Bubble Sort     | Simple comparison-based sorting   | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
+| Sorting  | Insertion Sort  | Builds the final sorted array one item at a time | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
+| Sorting  | Selection Sort  | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
 
 ## Leetcode Problems
 
