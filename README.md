@@ -7,6 +7,8 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 | Sorting  | Bubble Sort     | Simple comparison-based sorting   | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
 | Sorting  | Insertion Sort  | Builds the final sorted array one item at a time | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
 | Sorting  | Selection Sort  | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
+| Sorting  | Merge Sort      | Divides the array into halves, sorts them and merges them back together | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
+| Sorting  | Quick Sort      | Divides the array into partitions and sorts them recursively | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
 
 ## Leetcode Problems
 
