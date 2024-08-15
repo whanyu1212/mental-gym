@@ -7,6 +7,8 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 | Sorting  | Bubble Sort     | Simple comparison-based sorting   | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
 | Sorting  | Insertion Sort  | Builds the final sorted array one item at a time | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
 | Sorting  | Selection Sort  | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
+| Sorting  | Merge Sort      | Divides the array into halves, sorts them and merges them back together | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
+| Sorting  | Quick Sort      | Divides the array into partitions and sorts them recursively | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
 
 ## Leetcode Problems
 
@@ -34,9 +36,12 @@ Gradually adding the questions in different languages (Python & Julia)
 | storafmaeli    | Check if it's anniversary                        | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="storafmaeli" width="50">](/src/kattis/storafmaeli.py) |
 | fyrirtækjanafn | Filter out consonants from input                 | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="fyrirtækjanafn" width="50">](/src/kattis/fyrirtækjanafn.py) |
 | peningar       | Calculate values accumulated from circular cells | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="peningar" width="50">](/src/kattis/peningar.py)       |
-| framvindustika | Print progress bar and %                         | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="framvindustika" width="50">](/src/kattis/framvindustika.py) |
+| framvindustika | Print progress bar and %                         | Medium      | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="framvindustika" width="50">](/src/kattis/framvindustika.py) |
 | message        | Extract letters from nested list to form a message| Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="message" width="50">](/src/kattis/message.py)         |
 | bidendalausbid | Calculate waited time in minutes                 | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="bidendalausbid" width="50">](/src/kattis/bidendalausbid.py) |
-| hlaupafmaeli   | Check birthday for leap year                     | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="hlaupafmaeli" width="50">](/src/kattis/hlaupafmaeli.py) |
+| hlaupafmaeli   | Check birthday for leap year                     | Medium       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="hlaupafmaeli" width="50">](/src/kattis/hlaupafmaeli.py) |
 | lidaskipting2  | Find min and max number of competitive teams that can be formed | Easy | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="lidaskipting2" width="50">](/src/kattis/lidaskipting2.py) |
-| fleytitala     | Find min and max number of competitive teams that can be formed | Easy | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="fleytitala" width="50">](/src/kattis/fleytitala.py)   |
+| fleytitala     | Find min and max number of competitive teams that can be formed | Medium | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="fleytitala" width="50">](/src/kattis/fleytitala.py)   |
+| subaruba       | Ubbi dubbi game                                  | Medium     | Array | [<img src="/imgs/python-programming-language.webp" alt="subaruba" width="50">](/src/kattis/subaruba.py)       |
+| gangur         | Count passing pairs of people                    | Easy     | Array | [<img src="/imgs/python-programming-language.webp" alt="gangur" width="50">](/src/kattis/gangur.py)           |
+| taktsvedjur    | Calculate scores with multipliers                | Easy     | Array | [<img src="/imgs/python-programming-language.webp" alt="taktsvedjur" width="50">](/src/kattis/taktsvedjur.py) |
