@@ -9,6 +9,7 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 | Sorting  | Selection Sort  | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
 | Sorting  | Merge Sort      | Divides the array into halves, sorts them and merges them back together | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
 | Sorting  | Quick Sort      | Divides the array into partitions and sorts them recursively | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
+| Sorting  | Random Quick Sort | Uses a random pivot to divide the array into partitions and sorts them recursively | [Random Quick Sort](./src/dsa_from_scratch/sorting/random_quick_sort.py) |
 
 ## Leetcode Problems
 
