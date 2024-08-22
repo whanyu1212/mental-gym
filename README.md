@@ -6,14 +6,17 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 <details>
   <summary>Sorting</summary>
 
-| Category           | Algorithm         | Description                                                                 | Implementation Link                  |
-|--------------------|-------------------|-----------------------------------------------------------------------------|--------------------------------------|
-| Comparison-based   | Bubble Sort       | Simple comparison-based sorting                                             | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
-| Comparison-based   | Insertion Sort    | Builds the final sorted array one item at a time                            | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
-| Comparison-based   | Selection Sort    | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
-| Comparison-based   | Merge Sort        | Divides the array into halves, sorts them and merges them back together      | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
-| Comparison-based   | Quick Sort        | Divides the array into partitions and sorts them recursively                 | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
-| Comparison-based   | Random Quick Sort | Uses a random pivot to divide the array into partitions and sorts them recursively | [Random Quick Sort](./src/dsa_from_scratch/sorting/random_quick_sort.py) |
+| Category             | Algorithm         | Description                                                                 | Implementation Link                  |
+|----------------------|-------------------|-----------------------------------------------------------------------------|--------------------------------------|
+| Comparison-based     | Bubble Sort       | Simple comparison-based sorting                                             | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
+| Comparison-based     | Insertion Sort    | Builds the final sorted array one item at a time                            | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
+| Comparison-based     | Selection Sort    | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
+| Comparison-based     | Merge Sort        | Divides the array into halves, sorts them and merges them back together      | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
+| Comparison-based     | Quick Sort        | Divides the array into partitions and sorts them recursively                 | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
+| Comparison-based     | Random Quick Sort | Uses a random pivot to divide the array into partitions and sorts them recursively | [Random Quick Sort](./src/dsa_from_scratch/sorting/random_quick_sort.py) |
+| Non-comparison-based | Bucket Sort       | Distributes elements into buckets and sorts each bucket individually         | [Bucket Sort](./src/dsa_from_scratch/sorting/bucket_sort.py) |
+| Non-comparison-based | Counting Sort     | Counts the number of objects having distinct key values and uses arithmetic to determine the positions of each key | [Counting Sort](./src/dsa_from_scratch/sorting/counting_sort.py) |
+| Non-comparison-based | Radix Sort        | Sorts numbers by processing individual digits                               | [Radix Sort](./src/dsa_from_scratch/sorting/radix_sort.py) |
 
 </details>
 
