@@ -21,6 +21,24 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 </details>
 
 
+<details>
+  <summary>Arrays</summary>
+  
+  [Common Operations for Array](./src/dsa_from_scratch/arrays/common_operations.py)
+
+</details>
+
+
+
+<details>
+  <summary>Linked List</summary>
+
+  [Singly Linked List](./src/dsa_from_scratch/linked_list/singly_linked_list.py)
+  [Doubly Linked List](./src/dsa_from_scratch/linked_list/doubly_linked_list.py)
+  
+</details>
+
+
 ## LeetCode Questions
 Gradually adding the questions in different languages (Python, Julia & C++)
 
