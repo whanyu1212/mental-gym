@@ -45,6 +45,9 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 <details>
   <summary>Arrays & Hashing</summary>
 
+<details>
+  <summary>Arrays & Hashing</summary>
+
 | Question                | Description                                                                 | Difficulty | Type            | Solution |
 |-------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
 | 1. Two Sum              | Find two indices in a vector such that the numbers add up to a target value | Easy       | Arrays, Hashing | <a href="/src/leetcode/twoSum.jl"><img src="/imgs/unnamed.png" alt="two sum" width="40" height="40"></a> |
@@ -53,6 +56,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 128. Longest Consecutive Sequence | Find the length of the longest consecutive elements sequence | Medium | Arrays, Hashing | <a href="/src/leetcode/LongestConsecutive.jl"><img src="/imgs/unnamed.png" alt="longest consecutive sequence" width="40" height="40"></a> |
 | 271. Encode and Decode Strings | Encode a list of strings to a single string and decode it back to the list | Medium | Arrays, String Manipulation | <a href="/src/leetcode/EncodeDecodeString.jl"><img src="/imgs/unnamed.png" alt="encode decode string" width="40" height="40"></a> |
 | 49. Group Anagrams           | Group strings into anagrams                                                 | Medium     | Hashing, Sorting| <a href="/src/leetcode/groupAnagrams.jl"><img src="/imgs/unnamed.png" alt="group anagrams" width="40" height="40"></a> |
+| 219. Close Duplicates        | Check if a vector contains duplicates within a given range                  | Easy       | Sliding Window  | <a href="/src/leetcode/closeDuplicates.jl"><img src="/imgs/unnamed.png" alt="close duplicates" width="40" height="40"></a> |
+| 1343. NumOfSubarrays         | Count subarrays with average greater than or equal to a threshold           | Medium     | Sliding Window  | <a href="/src/leetcode/numOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
 
 </details>
 
