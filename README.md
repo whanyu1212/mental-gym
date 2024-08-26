@@ -6,20 +6,44 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 <details>
   <summary>Sorting</summary>
 
-| Category           | Algorithm         | Description                                                                 | Implementation Link                  |
-|--------------------|-------------------|-----------------------------------------------------------------------------|--------------------------------------|
-| Comparison-based   | Bubble Sort       | Simple comparison-based sorting                                             | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
-| Comparison-based   | Insertion Sort    | Builds the final sorted array one item at a time                            | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
-| Comparison-based   | Selection Sort    | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
-| Comparison-based   | Merge Sort        | Divides the array into halves, sorts them and merges them back together      | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
-| Comparison-based   | Quick Sort        | Divides the array into partitions and sorts them recursively                 | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
-| Comparison-based   | Random Quick Sort | Uses a random pivot to divide the array into partitions and sorts them recursively | [Random Quick Sort](./src/dsa_from_scratch/sorting/random_quick_sort.py) |
+| Category             | Algorithm         | Description                                                                 | Implementation Link                  |
+|----------------------|-------------------|-----------------------------------------------------------------------------|--------------------------------------|
+| Comparison-based     | Bubble Sort       | Simple comparison-based sorting                                             | [Bubble Sort](./src/dsa_from_scratch/sorting/bubble_sort.py) |
+| Comparison-based     | Insertion Sort    | Builds the final sorted array one item at a time                            | [Insertion Sort](./src/dsa_from_scratch/sorting/insertion_sort.py) |
+| Comparison-based     | Selection Sort    | Selects the smallest element from an unsorted list in each iteration and places that element at the beginning | [Selection Sort](./src/dsa_from_scratch/sorting/selection_sort.py) |
+| Comparison-based     | Merge Sort        | Divides the array into halves, sorts them and merges them back together      | [Merge Sort](./src/dsa_from_scratch/sorting/merge_sort.py) |
+| Comparison-based     | Quick Sort        | Divides the array into partitions and sorts them recursively                 | [Quick Sort](./src/dsa_from_scratch/sorting/quick_sort.py) |
+| Comparison-based     | Random Quick Sort | Uses a random pivot to divide the array into partitions and sorts them recursively | [Random Quick Sort](./src/dsa_from_scratch/sorting/random_quick_sort.py) |
+| Non-comparison-based | Bucket Sort       | Distributes elements into buckets and sorts each bucket individually         | [Bucket Sort](./src/dsa_from_scratch/sorting/bucket_sort.py) |
+| Non-comparison-based | Counting Sort     | Counts the number of objects having distinct key values and uses arithmetic to determine the positions of each key | [Counting Sort](./src/dsa_from_scratch/sorting/counting_sort.py) |
+| Non-comparison-based | Radix Sort        | Sorts numbers by processing individual digits                               | [Radix Sort](./src/dsa_from_scratch/sorting/radix_sort.py) |
 
+</details>
+
+
+<details>
+  <summary>Arrays</summary>
+  
+  [Common Operations for Array](./src/dsa_from_scratch/arrays/common_operations.py)
+
+</details>
+
+
+
+<details>
+  <summary>Linked List</summary>
+
+  [Singly Linked List](./src/dsa_from_scratch/linked_list/singly_linked_list.py)
+  [Doubly Linked List](./src/dsa_from_scratch/linked_list/doubly_linked_list.py)
+  
 </details>
 
 
 ## LeetCode Questions
 Gradually adding the questions in different languages (Python, Julia & C++)
+
+<details>
+  <summary>Arrays & Hashing</summary>
 
 <details>
   <summary>Arrays & Hashing</summary>
@@ -32,6 +56,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 128. Longest Consecutive Sequence | Find the length of the longest consecutive elements sequence | Medium | Arrays, Hashing | <a href="/src/leetcode/LongestConsecutive.jl"><img src="/imgs/unnamed.png" alt="longest consecutive sequence" width="40" height="40"></a> |
 | 271. Encode and Decode Strings | Encode a list of strings to a single string and decode it back to the list | Medium | Arrays, String Manipulation | <a href="/src/leetcode/EncodeDecodeString.jl"><img src="/imgs/unnamed.png" alt="encode decode string" width="40" height="40"></a> |
 | 49. Group Anagrams           | Group strings into anagrams                                                 | Medium     | Hashing, Sorting| <a href="/src/leetcode/groupAnagrams.jl"><img src="/imgs/unnamed.png" alt="group anagrams" width="40" height="40"></a> |
+| 219. Close Duplicates        | Check if a vector contains duplicates within a given range                  | Easy       | Sliding Window  | <a href="/src/leetcode/closeDuplicates.jl"><img src="/imgs/unnamed.png" alt="close duplicates" width="40" height="40"></a> |
+| 1343. NumOfSubarrays         | Count subarrays with average greater than or equal to a threshold           | Medium     | Sliding Window  | <a href="/src/leetcode/numOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
 
 </details>
 
