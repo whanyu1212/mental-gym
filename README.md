@@ -38,6 +38,14 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   
 </details>
 
+## Boilerplate Code
+
+#### Sliding window:
+- **Fixed size**: [Fixed size](./src/boilerplate/sliding_window_fixed.py)
+- **Variable size**: [Variable size](./src/boilerplate/sliding_window_variable.py)
+
+#### Placeholder:
+
 
 ## LeetCode Questions
 Gradually adding the questions in different languages (Python, Julia & C++)
