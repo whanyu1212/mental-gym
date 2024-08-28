@@ -38,12 +38,18 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   
 </details>
 
+## Boilerplate Code
+
+#### Sliding window:
+- **Fixed size**: [Fixed size](./src/boilerplate/sliding_window_fixed.py)
+- **Variable size**: [Variable size](./src/boilerplate/sliding_window_variable.py)
+
+#### Placeholder:
+
 
 ## LeetCode Questions
 Gradually adding the questions in different languages (Python, Julia & C++)
 
-<details>
-  <summary>Arrays & Hashing</summary>
 
 <details>
   <summary>Arrays & Hashing</summary>
@@ -78,6 +84,17 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | Question                | Description                                                                 | Difficulty | Type            | Solution |
 |-------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
 | 20. Valid Parenthesis   | Determine if the input string has valid parentheses                         | Easy       | Stack           | <a href="/src/leetcode/ValidParenthesis.jl"><img src="/imgs/unnamed.png" alt="valid parenthesis" width="40" height="40"></a> |
+
+</details>
+
+<details>
+  <summary>Sliding Window</summary>
+
+| Question                                | Description                                                                 | Difficulty | Type            | Solution |
+|-----------------------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
+| 121. Best Time to Buy and Sell Stock    | Find the maximum profit you can achieve from one transaction                | Easy       | Sliding Window  | <a href="/src/leetcode/MaxProfit.jl"><img src="/imgs/unnamed.png" alt="best time to buy and sell stock" width="40" height="40"></a> |
+| 3. Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | Medium     | Sliding Window  | <a href="/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl"><img src="/imgs/unnamed.png" alt="longest substring without repeating characters" width="40" height="40"></a> |
+| 424. Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | Medium     | Sliding Window  | <a href="/src/leetcode/longestRepeatingCharacterReplacement.jl"><img src="/imgs/unnamed.png" alt="longest repeating character replacement" width="40" height="40"></a> |
 
 </details>
 
