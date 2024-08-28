@@ -42,8 +42,6 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 ## LeetCode Questions
 Gradually adding the questions in different languages (Python, Julia & C++)
 
-<details>
-  <summary>Arrays & Hashing</summary>
 
 <details>
   <summary>Arrays & Hashing</summary>
