@@ -1,52 +1,51 @@
-# We will dissect this Quick Sort algorithm by first discussing its most important sub-routine: The O(N) partition (classic version).
+# Quick sort is a sorting algorithm based on the divide and conquer strategy,
+# known for its efficiency and wide application.
 
-# To partition A[i..j], we first choose A[i] as the pivot p.
+# The core operation of quick sort is "pivot partitioning,"
+# aiming to: select an element from the array as the "pivot,"
+# move all elements smaller than the pivot to its left, and
+# move elements greater than the pivot to its right.
 
-# The remaining items (i.e., A[i+1..j]) are divided into 3 regions:
-
-# 1. S1 = A[i+1..m] where items are ≤ p,
-# 2. S2 = A[m+1..k-1] where items are ≥ p, and
-# 3. Unknown = A[k..j], where items are yet to be assigned to either S1 or S2.
-
-# This implementation is taken from neetcode's YouTube video on Quick Sort.
-# print statements are added for better understanding of the algorithm
+# The following implementation is taken from hell-algo's website
 
 
-def quickSort(arr: list[int], s: int, e: int) -> list[int]:
-    if e - s + 1 <= 1:
-        return arr
+def partition(nums: list[int], left: int, right: int) -> int:
+    """Partition"""
+    pivot = nums[left]  # Use nums[left] as the pivot by default
+    i, j = left, right  # i and j are the left and right pointers
 
-    pivot = arr[e]
-    left = s  # pointer for left side
+    while i < j:  # While the left and right pointers do not meet
+        # Find the first element smaller than the pivot from the right
+        while i < j and nums[j] >= pivot:
+            j -= 1  # Search from right to left for the first element smaller than the pivot
 
-    print(f"Sorting between indices {s} and {e}. Pivot: {pivot}")
+        while i < j and nums[i] <= pivot:
+            i += 1  # Search from left to right for the first element greater than the pivot
 
-    # Partition: elements smaller than pivot on left side
-    for i in range(s, e):
-        if arr[i] < pivot:
-            print(f"Swapping {arr[i]} and {arr[left]}")
-            tmp = arr[left]
-            arr[left] = arr[i]
-            arr[i] = tmp
-            left += 1
-            print(f"Array: {arr} after swapping")
+        # Swap elements if pointers have not met
+        # ensures that elements are only swapped if the pointers have not crossed
+        if i < j:
+            nums[i], nums[j] = nums[j], nums[i]
 
-    # Move pivot in-between left & right sides
-    arr[e] = arr[left]
-    arr[left] = pivot
+    # Swap the pivot to the boundary between the two subarrays
+    nums[left], nums[i] = nums[i], nums[left]
+    return i  # Return the index of the pivot
 
-    print(f"array: {arr} after moving pivot {pivot} to index {left}\n")
 
-    # Quick sort left side
-    quickSort(arr, s, left - 1)
-
-    # Quick sort right side
-    quickSort(arr, left + 1, e)
-
-    return arr
+def quick_sort(nums: list[int], left: int, right: int):
+    """Quick sort"""
+    # Terminate recursion when subarray length is 1
+    if left >= right:
+        return
+    # Partition
+    pivot = partition(nums, left, right)
+    # Recursively process the left subarray and right subarray
+    quick_sort(nums, left, pivot - 1)
+    quick_sort(nums, pivot + 1, right)
 
 
 if __name__ == "__main__":
     A = [29, 10, 14, 37, 13]
     print(f"Original Array: {A}\n")
-    print(f"Sorted Array: {quickSort(A, 0, len(A) - 1)}")
+    quick_sort(A, 0, len(A) - 1)
+    print(f"Sorted Array: {A}")
