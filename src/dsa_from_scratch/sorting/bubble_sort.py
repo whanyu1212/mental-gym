@@ -11,28 +11,26 @@
 # Print statements are added for better understanding of the algorithm
 
 
-def bubbleSort(
-    A: list[int],
+def bubble_sort(
+    a: list[int],
 ) -> list[int]:
     # O(N^2) worst case (reverse sorted input), O(N) best case (sorted input)
-    N = len(A)
-    while N > 1:  # at most n-1 passes
-        print(f"Passes left: {N}")
-        swapped = False
-        for i in range(N - 1):
-            print(f"Comparing {A[i]} and {A[i + 1]}")
-            if A[i] > A[i + 1]:
-                A[i], A[i + 1] = A[i + 1], A[i]  # Python can swap variables like this
+    n = len(a)
+    while n > 1:  # at most n-1 passes
+        swapped = False  # initialize a boolean to check if any swap is done in the pass
+        for i in range(n - 1):  # loop through the entire array
+            if a[i] > a[i + 1]:
+                # Python can swap variables like this, read up on tuple packing and unpacking
+                a[i], a[i + 1] = a[i + 1], a[i]
                 swapped = True
-            print(f"Array: {A} after swapping\n")
         if not swapped:  # optimization
             break  # The array is already sorted
-        N -= 1
-    return A
+        n -= 1  # we fix the last element of the array each pass
+    return a
 
 
 if __name__ == "__main__":
-    A = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
-    print(f"Original Array: {A}\n")
-    print(f"Sorted Array: {bubbleSort(A)}")
+    a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
+    print(f"Original Array: {a}\n")
+    print(f"Sorted Array: {bubble_sort(a)}")
     # Output: [1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9]

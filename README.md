@@ -95,6 +95,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 121. Best Time to Buy and Sell Stock    | Find the maximum profit you can achieve from one transaction                | Easy       | Sliding Window  | <a href="/src/leetcode/MaxProfit.jl"><img src="/imgs/unnamed.png" alt="best time to buy and sell stock" width="40" height="40"></a> |
 | 3. Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | Medium     | Sliding Window  | <a href="/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl"><img src="/imgs/unnamed.png" alt="longest substring without repeating characters" width="40" height="40"></a> |
 | 424. Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | Medium     | Sliding Window  | <a href="/src/leetcode/longestRepeatingCharacterReplacement.jl"><img src="/imgs/unnamed.png" alt="longest repeating character replacement" width="40" height="40"></a> |
+| 76. Minimum Window Substring            | Find the minimum window substring of `s` such that every character in `t` is included | Hard       | Sliding Window  | <a href="/src/leetcode/MinWindow.jl"><img src="/imgs/unnamed.png" alt="minimum window substring" width="40" height="40"></a> |
 
 </details>
 

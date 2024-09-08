@@ -1,7 +1,5 @@
 import random
-from colorama import Fore, Style, init
 
-init(autoreset=True)
 
 # The following code is a simple implementation of the Quick Sort algorithm adapted from https://www.hello-algo.com/en/chapter_sorting/quick_sort/
 # The code is modified to include print statements for better understanding of the algorithm
@@ -33,9 +31,6 @@ def randomized_partition(nums: list[int], left: int, right: int) -> int:
 
     # Swap the pivot to the boundary between the two subarrays
     nums[i], nums[left] = nums[left], nums[i]
-    print(
-        f"{Fore.BLUE}Array: {nums[left:right+1]} after partitioning, pivot: {nums[i]}{Style.RESET_ALL}\n"
-    )
     return i  # Return the index of the pivot
 
 
@@ -47,7 +42,6 @@ def randomized_quick_sort(nums: list[int], left: int, right: int):
         left (int): left boundary of the subarray
         right (int): right boundary of the subarray
     """
-    print(f"{Fore.GREEN}Sorting {nums[left:right+1]}{Style.RESET_ALL}")
     if left < right:
         pivot_index = randomized_partition(nums, left, right)
         randomized_quick_sort(nums, left, pivot_index - 1)

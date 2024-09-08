@@ -9,20 +9,18 @@
 # Print statements are added for better understanding of the algorithm
 
 
-def selectionSort(A: list) -> list:  # O(N^2) for ALL cases...
-    N = len(A)
-    for L in range(N - 1):
-        print(f"Iteration: {L}")
-        smallest = L + A[L:].index(
-            min(A[L:])
+def selection_sort(a: list) -> list:  # O(N^2) for ALL cases...
+    n = len(a)
+    for l in range(n - 1):
+        # Select the smallest element in the interval [i,n−1] and swap it with the element at index i
+        smallest = l + a[l:].index(
+            min(a[l:])
         )  # BEWARE... this is O(N) not O(1)... we cannot find the smallest index of the minimum element of (N-L) items in O(1)
-        print(f"Index of smallest element from index {L} onwards: {smallest}")
-        A[smallest], A[L] = A[L], A[smallest]  # Python can swap variables like this
-        print(f"Array: {A} after swapping\n")
-    return A
+        a[smallest], a[l] = a[l], a[smallest]  # Python can swap variables like this
+    return a
 
 
 if __name__ == "__main__":
-    A = [29, 10, 14, 37, 13]
-    print(f"Original Array: {A}\n")
-    print(f"Sorted Array: {selectionSort(A)}")
+    a = [29, 10, 14, 37, 13]
+    print(f"Original Array: {a}\n")
+    print(f"Sorted Array: {selection_sort(a)}")
