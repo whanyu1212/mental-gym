@@ -33,8 +33,20 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 <details>
   <summary>Linked List</summary>
 
-  [Singly Linked List](./src/dsa_from_scratch/linked_list/singly_linked_list.py)
-  [Doubly Linked List](./src/dsa_from_scratch/linked_list/doubly_linked_list.py)
+  [Singly Linked List](./src/dsa_from_scratch/list_adt/singly_linked_list.py)
+  [Doubly Linked List](./src/dsa_from_scratch/list_adt/doubly_linked_list.py)
+  
+</details>
+
+<details>
+  <summary>Stack and Queue</summary>
+
+  [Stack using Linked List](./src/dsa_from_scratch/list_adt/stack_linked_list.py)
+  [Stack using Array](./src/dsa_from_scratch/list_adt/stack_array.py)
+  [Queue using Linked List](./src/dsa_from_scratch/list_adt/queue_linked_list.py)
+  [Queue using Array](./src/dsa_from_scratch/list_adt/queue_array.py)
+  [Deque using Linked List](./src/dsa_from_scratch/list_adt/deque_linked_list.py)
+  [Deque using Array](./src/dsa_from_scratch/list_adt/deque_array.py)
   
 </details>
 
