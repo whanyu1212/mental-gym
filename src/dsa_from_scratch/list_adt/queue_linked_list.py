@@ -16,15 +16,15 @@ class LinkedListQueue:
         # We need both front and rear pointers to keep track of the queue
         # in contrary to the stack where we only needed the head pointer
         self.front = self.rear = None
-        self.size = 0
+        self._size = 0
 
     def size(self):
         """Return the size of the queue"""
-        return self.size
+        return self._size
 
     def is_empty(self):
         """Check if the queue is empty"""
-        return not bool(self.size)
+        return not bool(self._size)
 
     def enqueue(self, item):
         """Add an item to the queue"""
@@ -34,7 +34,7 @@ class LinkedListQueue:
         else:
             self.rear.next = new_node
             self.rear = new_node
-        self.size += 1
+        self._size += 1
 
     def dequeue(self):
         """Remove and return the first item from the queue"""
@@ -42,7 +42,7 @@ class LinkedListQueue:
             raise IndexError("The queue is empty")
         item = self.front.data
         self.front = self.front.next
-        self.size -= 1
+        self._size -= 1
         return item
 
     def peek(self):

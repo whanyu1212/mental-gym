@@ -14,15 +14,15 @@ class LinkedListStack:
         # Initialize the stack with an empty linked list
 
         self.head = None
-        self.size = 0
+        self._size = 0
 
     def size(self):
         """Return the size of the stack"""
-        return self.size
+        return self._size
 
     def is_empty(self):
         """Check if the stack is empty"""
-        return not bool(self.size)
+        return not bool(self._size)
 
     def push(self, item):
         """Add an item to the stack
@@ -30,7 +30,7 @@ class LinkedListStack:
         new_node = ListNode(item)
         new_node.next = self.head
         self.head = new_node
-        self.size += 1
+        self._size += 1
 
     def pop(self):
         """Remove and return the last item from the stack"""
@@ -38,7 +38,7 @@ class LinkedListStack:
             raise IndexError("The stack is empty")
         item = self.head.data
         self.head = self.head.next
-        self.size -= 1
+        self._size -= 1
         return item
 
     def peek(self):
