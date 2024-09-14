@@ -50,6 +50,14 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   
 </details>
 
+<details>
+  <summary>Heap</summary>
+
+  [Basic heap properties](./src/dsa_from_scratch/heap/heap_properties.py)
+  [Heap implementation](./src/dsa_from_scratch/heap/heap_implementation.py)
+  
+</details>
+
 ## Boilerplate Code
 
 #### Sliding window:
