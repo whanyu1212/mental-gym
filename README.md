@@ -34,6 +34,7 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   <summary>Linked List</summary>
 
   [Singly Linked List](./src/dsa_from_scratch/list_adt/singly_linked_list.py)
+  
   [Doubly Linked List](./src/dsa_from_scratch/list_adt/doubly_linked_list.py)
   
 </details>
@@ -42,10 +43,15 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   <summary>Stack and Queue</summary>
 
   [Stack using Linked List](./src/dsa_from_scratch/list_adt/stack_linked_list.py)
+
   [Stack using Array](./src/dsa_from_scratch/list_adt/stack_array.py)
+
   [Queue using Linked List](./src/dsa_from_scratch/list_adt/queue_linked_list.py)
+
   [Queue using Array](./src/dsa_from_scratch/list_adt/queue_array.py)
+
   [Deque using Linked List](./src/dsa_from_scratch/list_adt/deque_linked_list.py)
+
   [Deque using Array](./src/dsa_from_scratch/list_adt/deque_array.py)
   
 </details>
@@ -54,6 +60,7 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   <summary>Binary Heap</summary>
 
   [Basic heap properties](./src/dsa_from_scratch/heap/heap_properties.py)
+
   [Heap implementation](./src/dsa_from_scratch/heap/heap_implementation.py)
   
 </details>
@@ -63,7 +70,12 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   <summary>Hash Map</summary>
 
   [Common Operations](./src/dsa_from_scratch/hash_map/common_operations.py)
+
   [Creating HashMap using Array](./src/dsa_from_scratch/hash_map/array_hash_map.py)
+
+  [Open Addressing](./src/dsa_from_scratch/hash_map/open_addressing.py)
+
+  [Separate Chaining](./src/dsa_from_scratch/hash_map/separate_chaining.py)
   
 </details>
 
