@@ -103,7 +103,7 @@ class DoublyLinkedList:
         values = []
         current = self.head
         while current:
-            values.append(Fore.GREEN + str(current.data) + Style.RESET_ALL)
+            values.append(str(current.data))
             current = current.next
         return " <-> ".join(values)
 
