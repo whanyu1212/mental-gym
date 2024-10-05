@@ -69,7 +69,9 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
 
 <details>
-  <summary>Hash Map</summary>
+  <summary>HashMap / Hash Table</summary>
+
+  [Direct Addressing Table](./src/dsa_from_scratch/hash_map/direct_addressing_table.py) (simplified hash table)
 
   [Common Operations](./src/dsa_from_scratch/hash_map/common_operations.py)
 
