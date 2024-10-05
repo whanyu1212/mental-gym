@@ -44,3 +44,25 @@ class DirectAddressingTable:
             None otherwise
         """
         return self.table[key]
+
+    def __repr__(self) -> str:
+        """String representation of the direct addressing table.
+
+        Returns:
+            str: the string representation of the direct addressing table
+        """
+        return str(self.table)
+
+
+# Example usage
+
+if __name__ == "__main__":
+    dat = DirectAddressingTable(10)
+    dat.insert(1)
+    dat.insert(3)
+    dat.insert(5)
+    dat.insert(7)
+    print(dat)  # [False, True, False, True, False, True, False, True, False, False]
+    dat.delete(5)
+    print(dat.search(3))  # True
+    print(dat.search(5))  # False
