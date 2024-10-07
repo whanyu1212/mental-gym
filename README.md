@@ -59,17 +59,19 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 <details>
   <summary>Binary Heap</summary>
 
-  [Basic heap properties](./src/dsa_from_scratch/heap/heap_properties.py)
+  [Basic heap properties](./src/dsa_from_scratch/binary_heap/heap_properties.py)
 
-  [Min Heap implementation](./src/dsa_from_scratch/heap/min_heap_implementation.py)
+  [Min Heap implementation](./src/dsa_from_scratch/binary_heap/min_heap_implementation.py)
 
-  [Max Heap implementation](./src/dsa_from_scratch/heap/max_heap_implementation.py)
+  [Max Heap implementation](./src/dsa_from_scratch/binary_heap/max_heap_implementation.py)
   
 </details>
 
 
 <details>
-  <summary>Hash Map</summary>
+  <summary>HashMap / Hash Table</summary>
+
+  [Direct Addressing Table](./src/dsa_from_scratch/hash_map/direct_addressing_table.py) (simplified hash table)
 
   [Common Operations](./src/dsa_from_scratch/hash_map/common_operations.py)
 
