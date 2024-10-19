@@ -83,6 +83,19 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   
 </details>
 
+<details>
+  <summary>Tree</summary>
+
+  [Binary Tree](./src/dsa_from_scratch/tree/binary_tree.py)
+
+  [Array Representation of Tree](./src/dsa_from_scratch/tree/array_representation_of_tree.py)
+
+  [Binary Search Tree](./src/dsa_from_scratch/tree/binary_search_tree.py)
+
+  [AVL](./src/dsa_from_scratch/tree/avl.py)
+  
+</details>
+
 ## Boilerplate Code
 
 #### Sliding window:
