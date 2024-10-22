@@ -1,4 +1,4 @@
-import os
+import sys
 
 
 # Boilerplate to create a tree
@@ -37,6 +37,16 @@ def sorted_list_to_balanced_bst(values: list) -> TreeNode:
 
 
 def find_value_or_closest_smaller(root: TreeNode, num: int) -> int:
+    """Find the value in the BST that is closest to the target number
+    and smaller than the target number.
+
+    Args:
+        root (TreeNode): starting root node
+        num (int): target number to search for
+
+    Returns:
+        int: the cloest value to the target number
+    """
     closest_value = None
 
     cur = root
@@ -53,24 +63,39 @@ def find_value_or_closest_smaller(root: TreeNode, num: int) -> int:
     return closest_value
 
 
-def print_tree(node, level=0):
-    if node:
-        print_tree(node.right, level + 1)
-        print("  " * level + str(node.val))
-        print_tree(node.left, level + 1)
+# def print_tree(node, level=0):
+#     if node:
+#         print_tree(node.right, level + 1)
+#         print("  " * level + str(node.val))
+#         print_tree(node.left, level + 1)
 
 
 # Example usage
 if __name__ == "__main__":
-    # Create a sorted list
-    values = [500, 100, 1000]
+    # with open("input.txt", "r") as file:
+    #     input_data = file.read().strip().split()
+    input_data = sys.stdin.read().strip().split()
 
-    # Convert the list to a balanced binary search tree
+    num_of_contestants = int(input_data[0])
 
-    root = sorted_list_to_balanced_bst(sorted(values))
+    guesses = input_data[1 : num_of_contestants * 2 + 1]
 
-    print_tree(root)
+    d = {}
+    for i in range(0, len(guesses), 2):
+        d[int(guesses[i + 1])] = guesses[i]
 
-    target = 499
+    numeric_guesses = sorted(list(d.keys()))
 
-    print(find_value_or_closest_smaller(root, target))
+    ideas = input_data[num_of_contestants * 2 + 2 :]
+    ideas = list(map(int, ideas))
+
+    root = sorted_list_to_balanced_bst(numeric_guesses)
+
+    # print_tree(root)
+
+    for i in ideas:
+        val = find_value_or_closest_smaller(root, i)
+        if val:
+            print(d[val])
+        else:
+            print(":(")
