@@ -96,6 +96,15 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
   
 </details>
 
+
+<details>
+  <summary>Graph</summary>
+
+  [Adjacency Matrix](./src/dsa_from_scratch/graph/adjacency_matrix.py)
+
+  
+</details>
+
 ## Boilerplate Code
 
 #### Sliding window:
