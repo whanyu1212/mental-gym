@@ -102,6 +102,8 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
   [Adjacency Matrix](./src/dsa_from_scratch/graph/adjacency_matrix.py)
 
+  [Adjacency List](./src/dsa_from_scratch/graph/adjacency_list.py)
+
   
 </details>
 
