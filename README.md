@@ -104,6 +104,8 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
   [Adjacency List](./src/dsa_from_scratch/graph/adjacency_list.py)
 
+  [Graph Traversal DFS](./src/dsa_from_scratch/graph/graph_traversal_dfs.py)
+
   
 </details>
 
