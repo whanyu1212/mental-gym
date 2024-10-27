@@ -1,6 +1,16 @@
 # The following is an implementation of a direct addressing table in Python:
 # It follows the implementation from Prof Steven Halim's Visualgo.net
 
+
+# Limitations of DAT:
+# The keys must be (or can be easily mapped to) non-negative Integer values.
+
+# The range of keys must be small.
+# The memory usage will be (insanely) large if we have (insanely) large range.
+
+# The keys must be dense, i.e., not many gaps in the key values.
+# DAT will contain too many empty (and wasted) cells otherwise.
+
 from typing import Union
 
 

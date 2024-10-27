@@ -1,6 +1,8 @@
 import heapq
 import sys
 
+# https://docs.python.org/3/library/heapq.html
+
 
 def parse_score(input_list):
     max_heap = []
@@ -13,7 +15,8 @@ def parse_score(input_list):
             heapq.heappush(max_heap, -(val - lazy_addition))
             # Ensure the heap only contains up to 10 elements
             if len(max_heap) > 10:
-                heapq.heappop(max_heap)
+                heapq.heappop(max_heap)  # heappop Remove the smallest element
+                # negate of the smallest element is the largest element
         elif input_list[i] == 2:
             lazy_addition += val
         else:
