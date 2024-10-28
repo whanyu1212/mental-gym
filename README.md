@@ -106,6 +106,14 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
   [Graph Traversal DFS](./src/dsa_from_scratch/graph/graph_traversal_dfs.py)
 
+  [Graph Traversal BFS](./src/dsa_from_scratch/graph/graph_traversal_bfs.py)
+
+  [Application: Detect Cycle](./src/dsa_from_scratch/graph/cycle_detection.py)
+
+  [Application: Topological Sort](./src/dsa_from_scratch/graph/toposort.py)
+
+  [Application: Check Bipartite](./src/dsa_from_scratch/graph/check_bipartite.py)
+
   
 </details>
 
