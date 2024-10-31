@@ -1,3 +1,16 @@
+# After multiple insertions and removals,
+# a binary search tree might degrade to a linked list.
+# In such cases, the time complexity of all operations degrades from
+# O(log n) to O(n). To avoid this, we can use an AVL tree
+
+
+# Minimum number of vertices in an AVL tree of height h
+# fib(h+3) - 1
+
+# Maximum number of vertices in an AVL tree of height h
+# 2^h+1 - 1
+
+
 class TreeNode:
     """AVL tree node"""
 
@@ -15,6 +28,7 @@ class AVLTree:
     def height(self, node: TreeNode | None) -> int:
         """Get node height"""
         # Empty node height is -1, leaf node height is 0
+        # The "node height" refers to the distance from that node to its farthest leaf node
         if node is not None:
             return node.height
         return -1
@@ -31,6 +45,9 @@ class AVLTree:
             return 0
         # Node balance factor = left subtree height - right subtree height
         return self.height(node.left) - self.height(node.right)
+
+    # the balance factor of any node in an AVL tree satisfies the following property:
+    # -1 <= balance factor <= 1
 
     def right_rotate(self, node: TreeNode | None) -> TreeNode | None:
         """Right rotation operation"""
