@@ -114,6 +114,18 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
   [Application: Check Bipartite](./src/dsa_from_scratch/graph/check_bipartite.py)
 
+  [Single-Source Shortest Path: Bellman Ford](./src/dsa_from_scratch/graph/bellman_ford.py)
+
+  [Single-Source Shortest Path: Dijkstra](./src/dsa_from_scratch/graph/dijkstra.py)
+
+  [Single-Source Shortest Path: BFS on unweighted graph](./src/dsa_from_scratch/graph/bfs_sssp.py)
+
+  [Single-Source Shortest Path: Modified Dijkstra](./src/dsa_from_scratch/graph/modified_dijkstra.py)
+
+  [Single-Source Shortest Path: DFS on weighted trees](./src/dsa_from_scratch/graph/dfs_weighted_tree.py)
+
+  [Single-Source Shortest Path: DP on DAG](./src/dsa_from_scratch/graph/dp_dag.py)
+
   
 </details>
 
