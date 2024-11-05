@@ -44,39 +44,41 @@ class ArrayBinaryTree:
                 self.res.append(self.val(i))
         return self.res
 
-    def dfs(self, i: int, order: str):
-        """Depth-first traversal"""
-        if self.val(i) is None:
-            return
-        # Pre-order traversal
-        if order == "pre":
-            self.res.append(self.val(i))
-        self.dfs(self.left(i), order)
-        # In-order traversal
-        if order == "in":
-            self.res.append(self.val(i))
-        self.dfs(self.right(i), order)
-        # Post-order traversal
-        if order == "post":
-            self.res.append(self.val(i))
-
-    def pre_order(self) -> list[int]:
+    def pre_order(self, i: int = 1):
         """Pre-order traversal"""
-        self.res = []
-        self.dfs(1, order="pre")  # Start from index 1
-        return self.res
+        if not self.val(i):
+            return
+        else:
+            # Start at the root first
+            # Then traverse the left subtree
+            # Finally, traverse the right subtree
+            print(self.val(i), end=" ")
+            self.pre_order(self.left(i))
+            self.pre_order(self.right(i))
 
-    def in_order(self) -> list[int]:
+    def in_order(self, i: int = 1):
         """In-order traversal"""
-        self.res = []
-        self.dfs(1, order="in")  # Start from index 1
-        return self.res
+        if not self.val(i):
+            return
+        else:
+            # Traverse the left subtree first
+            # Visit the root node
+            # Finally, traverse the right subtree
+            self.in_order(self.left(i))
+            print(self.val(i), end=" ")
+            self.in_order(self.right(i))
 
-    def post_order(self) -> list[int]:
+    def post_order(self, i: int = 1):
         """Post-order traversal"""
-        self.res = []
-        self.dfs(1, order="post")  # Start from index 1
-        return self.res
+        if not self.val(i):
+            return
+        else:
+            # Traverse the left subtree first
+            # Then traverse the right subtree
+            # Finally, visit the root node
+            self.post_order(self.left(i))
+            self.post_order(self.right(i))
+            print(self.val(i), end=" ")
 
 
 # Suppose we have a binary tree like this:
@@ -103,3 +105,22 @@ class ArrayBinaryTree:
 # Order: Traverse Left Subtree → Traverse Right Subtree → Visit Node
 # Sequence: In Post-order traversal, the left child is visited first, followed by the right child, and finally the root node.
 # The Post-order traversal would be: 4, 5, 2, 3, 1
+
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize a binary tree with an array representation
+    arr = [1, 2, 3, 4, 5]
+    tree = ArrayBinaryTree(arr)
+
+    # Level-order traversal
+    print(tree.level_order())  # Output: [1, 2, 3, 4, 5]
+
+    # Pre-order traversal
+    tree.pre_order()  # Output: 1 2 4 5 3
+
+    # In-order traversal
+    tree.in_order()  # Output: 4 2 5 1 3
+
+    # Post-order traversal
+    tree.post_order()  # Output: 4 5 2 3 1

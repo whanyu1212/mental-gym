@@ -84,3 +84,35 @@ class GraphAdjacencyMatrix:
             raise IndexError()
         self.adj_mat[i][j] = 0
         self.adj_mat[j][i] = 0
+
+
+# Example usage
+if __name__ == "__main__":
+    vertices = [0, 1, 2, 3]
+    # Each inner list represent an edge between two vertices
+    edges = [[0, 1], [0, 2], [1, 2], [2, 3]]
+    graph = GraphAdjacencyMatrix(vertices, edges)
+    print(graph.adj_mat)
+    # Output:
+    # [[0, 1, 1, 0], [1, 0, 1, 0], [1, 1, 0, 1], [0, 0, 1, 0]]
+    # The adjacency matrix is symmetric about the main diagonal
+
+    graph.add_vertex(4)
+    print(graph.adj_mat)
+    # Output:
+    # [[0, 1, 1, 0, 0], [1, 0, 1, 0, 0], [1, 1, 0, 1, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0]]
+
+    graph.remove_vertex(2)
+    print(graph.adj_mat)
+    # Output:
+    # [[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
+
+    graph.add_edge(0, 2)
+    print(graph.adj_mat)
+    # Output:
+    # [[0, 1, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]]
+
+    graph.remove_edge(0, 1)
+    print(graph.adj_mat)
+    # Output:
+    # [[0, 0, 1, 0], [0, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]]
