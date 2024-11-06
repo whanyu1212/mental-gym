@@ -6,6 +6,7 @@ def cycle_detection_undirected(graph: dict, vertex, visited: set, parent) -> boo
                 return True
         elif parent != neighbor:
             return True
+    return False
 
 
 def cycle_detection_directed(graph, vertex, visited: set, rec_stack: set) -> bool:
