@@ -5,18 +5,21 @@ import math
 
 class Graph:
     def __init__(self):
+        # Initialize graph as adjacency list
         self.graph = defaultdict(list)
-        self.V = 0
+        self.V = 0  # Number of vertices
 
     def add_edge(self, u: int, v: int, w: int) -> None:
         """Add weighted edge to graph"""
         self.graph[u].append((v, w))
+        # Taking max because the edge between u and v may be between any current vertices
+        # +1 because vertices are 0-indexed
         self.V = max(self.V, u + 1, v + 1)
 
     def topological_sort_util(
         self, v: int, visited: Set[int], stack: List[int]
     ) -> None:
-        """Helper function for topological sort"""
+        """DFS version of topological sort"""
         visited.add(v)
 
         for next_node, _ in self.graph[v]:
