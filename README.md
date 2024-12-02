@@ -135,7 +135,7 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 - **Fixed size**: [Fixed size](./src/boilerplate/sliding_window_fixed.py)
 - **Variable size**: [Variable size](./src/boilerplate/sliding_window_variable.py)
 
-#### Placeholder:
+#### Linked List:
 
 
 ## LeetCode Questions
@@ -158,6 +158,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 
 </details>
 
+<br>
+
 <details>
   <summary>Two Pointers</summary>
 
@@ -169,6 +171,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 
 </details>
 
+<br>
+
 <details>
   <summary>Stack</summary>
 
@@ -177,6 +181,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 20. Valid Parenthesis   | Determine if the input string has valid parentheses                         | Easy       | Stack           | <a href="/src/leetcode/ValidParenthesis.jl"><img src="/imgs/unnamed.png" alt="valid parenthesis" width="40" height="40"></a> |
 
 </details>
+
+<br>
 
 <details>
   <summary>Sliding Window</summary>
@@ -187,6 +193,17 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 3. Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | Medium     | Sliding Window  | <a href="/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl"><img src="/imgs/unnamed.png" alt="longest substring without repeating characters" width="40" height="40"></a> |
 | 424. Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | Medium     | Sliding Window  | <a href="/src/leetcode/longestRepeatingCharacterReplacement.jl"><img src="/imgs/unnamed.png" alt="longest repeating character replacement" width="40" height="40"></a> |
 | 76. Minimum Window Substring            | Find the minimum window substring of `s` such that every character in `t` is included | Hard       | Sliding Window  | <a href="/src/leetcode/MinWindow.jl"><img src="/imgs/unnamed.png" alt="minimum window substring" width="40" height="40"></a> |
+
+</details>
+
+<br>
+
+<details>
+  <summary>Linked List</summary>
+
+| Question                     | Description                                                                 | Difficulty | Type            | Solution |
+|------------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
+| 21. Merge Two Sorted Lists   | Merge two sorted linked lists and return it as a new sorted list            | Easy       | Linked List     | <a href="/src/leetcode/merge_2_sorted_lists.py"><img src="/imgs/python-programming-language.webp" alt="merge two sorted lists" width="40" height="40"></a> <a href="/src/leetcode/Merge2SortedList.jl"><img src="/imgs/unnamed.png" alt="merge two sorted lists" width="40" height="40"></a> |
 
 </details>
 
