@@ -142,7 +142,7 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 Gradually adding the questions in different languages (Python, Julia & C++)
 
 
-<details>
+<details open>
   <summary>Arrays & Hashing</summary>
 
 | Question                | Description                                                                 | Difficulty | Type            | Solution |
@@ -160,7 +160,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 
 <br>
 
-<details>
+<details open>
   <summary>Two Pointers</summary>
 
 | Question                     | Description                                                                 | Difficulty | Type            | Solution |
@@ -173,7 +173,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 
 <br>
 
-<details>
+<details open>
   <summary>Stack</summary>
 
 | Question                | Description                                                                 | Difficulty | Type            | Solution |
@@ -184,7 +184,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 
 <br>
 
-<details>
+<details open>
   <summary>Sliding Window</summary>
 
 | Question                                | Description                                                                 | Difficulty | Type            | Solution |
@@ -198,7 +198,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 
 <br>
 
-<details>
+<details open>
   <summary>Linked List</summary>
 
 | Question                     | Description                                                                 | Difficulty | Type            | Solution |
