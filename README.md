@@ -145,18 +145,18 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 <details open>
   <summary>Arrays & Hashing</summary>
 
-| Question                | Description                                                                 | Difficulty | Type            | Solution |
-|-------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
-| 1. Two Sum              | Find two indices in a vector such that the numbers add up to a target value | Easy       | Arrays, Hashing | <a href="/src/leetcode/two_sum.py"><img src="/imgs/python-programming-language.webp" alt="two sum" width="40" height="40"></a> <a href="/src/leetcode/twoSum.jl"><img src="/imgs/unnamed.png" alt="two sum" width="40" height="40"></a> |
-| 242. IsAnagram          | Determine if two strings are anagrams of each other                         | Easy       | Hashing         | <a href="/src/leetcode/is_anagram.py"><img src="/imgs/python-programming-language.webp" alt="is anagram" width="40" height="40"></a> <a href="/src/leetcode/isAnagram.jl"><img src="/imgs/unnamed.png" alt="is anagram" width="40" height="40"></a>|
-| 217. Contains Duplicate | Check if a vector contains any duplicates                                   | Easy       | Arrays, Hashing | <a href="/src/leetcode/contains_duplicate.py"><img src="/imgs/python-programming-language.webp" alt="contains duplicate" width="40" height="40"></a> <a href="/src/leetcode/containsDuplicate.jl"><img src="/imgs/unnamed.png" alt="contains duplicate" width="40" height="40"></a> |
-| 36. Valid Sudoku        | Determine if a 9x9 Sudoku board is valid                                    | Medium     | Arrays, Hashing | <a href="/src/leetcode/valid_sudoku.py"><img src="/imgs/python-programming-language.webp" alt="valid sudoku" width="40" height="40"></a> <a href="/src/leetcode/ValidSudoku.jl"><img src="/imgs/unnamed.png" alt="valid sudoku" width="40" height="40"></a> |
-| 128. Longest Consecutive Sequence | Find the length of the longest consecutive elements sequence | Medium | Arrays, Hashing | <a href="/src/leetcode/LongestConsecutive.jl"><img src="/imgs/unnamed.png" alt="longest consecutive sequence" width="40" height="40"></a> |
-| 271. Encode and Decode Strings | Encode a list of strings to a single string and decode it back to the list | Medium | Arrays, String Manipulation | <a href="/src/leetcode/EncodeDecodeString.jl"><img src="/imgs/unnamed.png" alt="encode decode string" width="40" height="40"></a> |
-| 49. Group Anagrams           | Group strings into anagrams                                                 | Medium     | Hashing, Sorting| <a href="/src/leetcode/groupAnagrams.jl"><img src="/imgs/unnamed.png" alt="group anagrams" width="40" height="40"></a> |
-| 219. Close Duplicates        | Check if a vector contains duplicates within a given range                  | Easy       | Sliding Window  | <a href="/src/leetcode/closeDuplicates.jl"><img src="/imgs/unnamed.png" alt="close duplicates" width="40" height="40"></a> |
-| 1343. NumOfSubarrays         | Count subarrays with average greater than or equal to a threshold           | Medium     | Sliding Window  | <a href="/src/leetcode/numOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
-| 1929. Concatenation of Array | Return array ans of length 2n where ans[i] == nums[i] and ans[i + n] == nums[i] | Easy | Arrays | <a href="/src/leetcode/get_concatenation.py"><img src="/imgs/python-programming-language.webp" alt="concatenation array" width="40" height="40"></a> <a href="/src/leetcode/GetConcatenation.jl"><img src="/imgs/unnamed.png" alt="concatenation array" width="40" height="40"></a> |
+| Question | Description | Difficulty | Type | Solution |
+|----------|-------------|------------|------|----------|
+| 1. Two Sum | Find two indices in a vector such that the<br>numbers add up to a target value | Easy | Arrays, Hashing | <a href="/src/leetcode/two_sum.py"><img src="/imgs/python-programming-language.webp" alt="two sum" width="40" height="40"></a> <a href="/src/leetcode/twoSum.jl"><img src="/imgs/unnamed.png" alt="two sum" width="40" height="40"></a> |
+| 242. IsAnagram | Determine if two strings are<br>anagrams of each other | Easy | Hashing | <a href="/src/leetcode/is_anagram.py"><img src="/imgs/python-programming-language.webp" alt="is anagram" width="40" height="40"></a> <a href="/src/leetcode/isAnagram.jl"><img src="/imgs/unnamed.png" alt="is anagram" width="40" height="40"></a> |
+| 217. Contains Duplicate | Check if a vector contains<br>any duplicates | Easy | Arrays, Hashing | <a href="/src/leetcode/contains_duplicate.py"><img src="/imgs/python-programming-language.webp" alt="contains duplicate" width="40" height="40"></a> <a href="/src/leetcode/containsDuplicate.jl"><img src="/imgs/unnamed.png" alt="contains duplicate" width="40" height="40"></a> |
+| 36. Valid Sudoku | Determine if a 9x9 Sudoku<br>board is valid | Medium | Arrays, Hashing | <a href="/src/leetcode/valid_sudoku.py"><img src="/imgs/python-programming-language.webp" alt="valid sudoku" width="40" height="40"></a> <a href="/src/leetcode/ValidSudoku.jl"><img src="/imgs/unnamed.png" alt="valid sudoku" width="40" height="40"></a> |
+| 128. Longest Consecutive Sequence | Find the length of the longest<br>consecutive elements sequence | Medium | Arrays, Hashing | <a href="/src/leetcode/LongestConsecutive.jl"><img src="/imgs/unnamed.png" alt="longest consecutive sequence" width="40" height="40"></a> |
+| 271. Encode and Decode Strings | Encode a list of strings to a<br>single string and decode it back to the list | Medium | Arrays, String Manipulation | <a href="/src/leetcode/EncodeDecodeString.jl"><img src="/imgs/unnamed.png" alt="encode decode string" width="40" height="40"></a> |
+| 49. Group Anagrams | Group strings into<br>anagrams | Medium | Hashing, Sorting | <a href="/src/leetcode/groupAnagrams.jl"><img src="/imgs/unnamed.png" alt="group anagrams" width="40" height="40"></a> |
+| 219. Close Duplicates | Check if a vector contains<br>duplicates within a given range | Easy | Sliding Window | <a href="/src/leetcode/closeDuplicates.jl"><img src="/imgs/unnamed.png" alt="close duplicates" width="40" height="40"></a> |
+| 1343. NumOfSubarrays | Count subarrays with average greater<br>than or equal to a threshold | Medium | Sliding Window | <a href="/src/leetcode/numOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
+| 1929. Concatenation of Array | Return array ans of length 2n where<br>ans[i] == nums[i] and ans[i + n] == nums[i] | Easy | Arrays | <a href="/src/leetcode/get_concatenation.py"><img src="/imgs/python-programming-language.webp" alt="concatenation array" width="40" height="40"></a> <a href="/src/leetcode/GetConcatenation.jl"><img src="/imgs/unnamed.png" alt="concatenation array" width="40" height="40"></a> |
 
 </details>
 
@@ -195,8 +195,15 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 3. Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | Medium     | Sliding Window  | <a href="/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl"><img src="/imgs/unnamed.png" alt="longest substring without repeating characters" width="40" height="40"></a> |
 | 424. Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | Medium     | Sliding Window  | <a href="/src/leetcode/longestRepeatingCharacterReplacement.jl"><img src="/imgs/unnamed.png" alt="longest repeating character replacement" width="40" height="40"></a> |
 | 76. Minimum Window Substring            | Find the minimum window substring of `s` such that every character in `t` is included | Hard       | Sliding Window  | <a href="/src/leetcode/MinWindow.jl"><img src="/imgs/unnamed.png" alt="minimum window substring" width="40" height="40"></a> |
+| Two Sum Part 2                          | Find two indices in a sorted array such that they add up to a specific target | Medium     | Sliding Window  | <a href="/src/leetcode/TwoSumPart2.jl"><img src="/imgs/unnamed.png" alt="two sum part 2" width="40" height="40"></a> |
+| Trapping Rain Water                     | Calculate how much water can be trapped after raining                       | Hard       | Sliding Window  | <a href="/src/leetcode/TrappingRainWater.jl"><img src="/imgs/unnamed.png" alt="trapping rain water" width="40" height="40"></a> |
 
 </details>
+
+<br>
+
+<details open>
+  <summary>Linked List</summary>
 
 <br>
 
