@@ -170,7 +170,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 125. Valid Palindrome        | Determine if a string is a palindrome, considering only alphanumeric characters and ignoring cases | Easy | Two Pointers | <a href="/src/leetcode/isPalindrome.jl"><img src="/imgs/unnamed.png" alt="is palindrome" width="40" height="40"></a> |
 | 15. Three Sum                | Find all unique triplets in the array which gives the sum of zero           | Medium     | Two Pointers    | <a href="/src/leetcode/threeSum.jl"><img src="/imgs/unnamed.png" alt="three sum" width="40" height="40"></a> |
 | 11. Container With Most Water| Find two lines that together with the x-axis form a container, such that the container contains the most water | Medium | Two Pointers | <a href="/src/leetcode/MaxArea.jl"><img src="/imgs/unnamed.png" alt="container with most water" width="40" height="40"></a> |
-
+| Two Sum Part 2                          | Find two indices in a sorted array such that they add up to a specific target | Medium     | Sliding Window  | <a href="/src/leetcode/two_sum2.py"><img src="/imgs/python-programming-language.webp" alt="two sum part 2" width="40" height="40"></a> <a href="/src/leetcode/TwoSumPart2.jl"><img src="/imgs/unnamed.png" alt="two sum part 2" width="40" height="40"></a> |
+| Trapping Rain Water                     | Calculate how much water can be trapped after raining                       | Hard       | Sliding Window  | <a href="/src/leetcode/trap.py"><img src="/imgs/python-programming-language.webp" alt="trapping rain water" width="40" height="40"></a> |
 </details>
 
 <br>
@@ -195,8 +196,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 3. Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | Medium     | Sliding Window  | <a href="/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl"><img src="/imgs/unnamed.png" alt="longest substring without repeating characters" width="40" height="40"></a> |
 | 424. Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | Medium     | Sliding Window  | <a href="/src/leetcode/longestRepeatingCharacterReplacement.jl"><img src="/imgs/unnamed.png" alt="longest repeating character replacement" width="40" height="40"></a> |
 | 76. Minimum Window Substring            | Find the minimum window substring of `s` such that every character in `t` is included | Hard       | Sliding Window  | <a href="/src/leetcode/MinWindow.jl"><img src="/imgs/unnamed.png" alt="minimum window substring" width="40" height="40"></a> |
-| Two Sum Part 2                          | Find two indices in a sorted array such that they add up to a specific target | Medium     | Sliding Window  | <a href="/src/leetcode/TwoSumPart2.jl"><img src="/imgs/unnamed.png" alt="two sum part 2" width="40" height="40"></a> |
-| Trapping Rain Water                     | Calculate how much water can be trapped after raining                       | Hard       | Sliding Window  | <a href="/src/leetcode/TrappingRainWater.jl"><img src="/imgs/unnamed.png" alt="trapping rain water" width="40" height="40"></a> |
+
 
 </details>
 
