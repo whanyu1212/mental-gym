@@ -131,9 +131,33 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
 ## Boilerplate Code
 
-#### Sliding window:
-- **Fixed size**: [Fixed size](./src/boilerplate/sliding_window_fixed.py)
-- **Variable size**: [Variable size](./src/boilerplate/sliding_window_variable.py)
+#### Arrays:
+
+<details open>
+<summary>Kadane's Algorithm</summary>
+
+- [Calculating max sum subarray](./src/boilerplate/kadane.py)
+</details>
+
+<details open>
+<summary>Sliding Window</summary>
+
+- [Fixed size](./src/boilerplate/sliding_window_fixed.py)
+- [Variable size](./src/boilerplate/sliding_window_variable.py)
+</details>
+
+
+<details open>
+<summary>Prefix Sum</summary>
+
+- [Range Sum Query](./src/boilerplate/prefix_sum.py)
+</details>
+
+<details open>
+<summary>Two Pointers</summary>
+
+- [3 different variations of two pointers](./src/boilerplate/two_pointers_variations.md)
+</details>
 
 #### Linked List:
 
