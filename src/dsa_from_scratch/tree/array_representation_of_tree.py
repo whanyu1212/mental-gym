@@ -80,6 +80,36 @@ class ArrayBinaryTree:
             self.post_order(self.right(i))
             print(self.val(i), end=" ")
 
+    def level_order_traversal(self, i: int = 1) -> list[int]:
+        """Level-order traversal using a queue
+
+        Args:
+            i (int): Starting index (root node)
+
+        Returns:
+            list[int]: List of node values in level order
+        """
+        if not self.val(i):
+            return []
+
+        result = []
+        queue = deque([i])
+
+        while queue:
+            current = queue.popleft()
+            if self.val(current):
+                result.append(self.val(current))
+
+                # Add left child if exists
+                if self.left(current) and self.val(self.left(current)):
+                    queue.append(self.left(current))
+
+                # Add right child if exists
+                if self.right(current) and self.val(self.right(current)):
+                    queue.append(self.right(current))
+
+        return result
+
 
 # Suppose we have a binary tree like this:
 
@@ -106,6 +136,11 @@ class ArrayBinaryTree:
 # Sequence: In Post-order traversal, the left child is visited first, followed by the right child, and finally the root node.
 # The Post-order traversal would be: 4, 5, 2, 3, 1
 
+
+# 4. Level-order Traversal
+# Order: Visit Nodes Level by Level
+# Sequence: In Level-order traversal, nodes are visited level by level, starting from the root.
+# The Level-order traversal would be: 1, 2, 3, 4, 5
 
 # Example usage
 if __name__ == "__main__":
