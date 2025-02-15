@@ -206,7 +206,8 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | Question               | Description                                                                          | Difficulty | Type  | Solution                                                                                        |
 |------------------------|--------------------------------------------------------------------------------------|------------|-------|-------------------------------------------------------------------------------------------------|
 | 20. Valid Parenthesis  | Determine if the input string has valid parentheses                                  | Easy       | Stack | <a href="/src/leetcode/ValidParenthesis.jl"><img src="/imgs/unnamed.png" alt="valid parenthesis" width="40" height="40"></a> |
-| 155. Min Stack         | Build a stack that supports push, pop, top, and retrieve the minimum in O(1) time    | Easy       | Stack | <a href="/src/leetcode/min_stack.py"><img src="/imgs/python-programming-language.webp" alt="min stack" width="40" height="40"></a>                  |
+| 155. Min Stack         | Build a stack that supports push, pop, top, and retrieve the minimum in O(1) time    | Easy       | Stack | <a href="/src/leetcode/min_stack.py"><img src="/imgs/python-programming-language.webp" alt="min stack" width="40" height="40"></a> |
+| 150. Evaluate RPN      | Evaluate Reverse Polish Notation expression                                          | Medium     | Stack | <a href="/src/leetcode/eval_rpn.py"><img src="/imgs/python-programming-language.webp" alt="eval rpn" width="40" height="40"></a> |
 
 </details>
 
