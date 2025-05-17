@@ -11,6 +11,8 @@ function decode(s::String)::Vector{String}
     result = []
     i = 1 # julia's index starts from 1 
 
+    # The advancement is not uniform, therefore
+    # a while loop is better than for loop
     while i <= length(s) # inclusive of the end
         j = i
         while s[j] != '#'
