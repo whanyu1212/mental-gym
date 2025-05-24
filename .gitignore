@@ -165,3 +165,8 @@ cython_debug/
 /.vscode/
 
 *.txt
+
+src/codewars/node_modules/
+src/codewars/artifacts/
+src/codewars/ignition/
+src/codewars/cache/
