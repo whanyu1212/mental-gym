@@ -181,6 +181,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 1343. NumOfSubarrays | Count subarrays with average greater<br>than or equal to a threshold | Medium | Sliding Window | <a href="/src/leetcode/arrays_hashing/NumOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
 | 1929. Concatenation of Array | Return array ans of length 2n where<br>ans[i] == nums[i] and ans[i + n] == nums[i] | Easy | Arrays | <a href="/src/leetcode/arrays_hashing/get_concatenation.py"><img src="/imgs/python-programming-language.webp" alt="concatenation array" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/GetConcatenation.jl"><img src="/imgs/unnamed.png" alt="concatenation array" width="40" height="40"></a> |
 | 14. Longest Common Prefix | Find the longest common prefix string amongst an array of strings | Easy | Arrays, String Manipulation | <a href="/src/leetcode/arrays_hashing/longest_common_prefix.py"><img src="/imgs/python-programming-language.webp" alt="longest common prefix" width="40" height="40"></a> |
+| 169. Majority Element | Find the majority element that appears more than ⌊n/2⌋ times | Easy | Arrays, Hashing | <a href="/src/leetcode/arrays_hashing/majority_element.py"><img src="/imgs/python-programming-language.webp" alt="majority element" width="40" height="40"></a> |
 
 </details>
 
