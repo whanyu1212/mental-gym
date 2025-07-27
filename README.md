@@ -180,6 +180,7 @@ Gradually adding the questions in different languages (Python, Julia & C++)
 | 219. Close Duplicates | Check if a vector contains<br>duplicates within a given range | Easy | Sliding Window | <a href="/src/leetcode/arrays_hashing/CloseDuplicates.jl"><img src="/imgs/unnamed.png" alt="close duplicates" width="40" height="40"></a> |
 | 1343. NumOfSubarrays | Count subarrays with average greater<br>than or equal to a threshold | Medium | Sliding Window | <a href="/src/leetcode/arrays_hashing/NumOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
 | 1929. Concatenation of Array | Return array ans of length 2n where<br>ans[i] == nums[i] and ans[i + n] == nums[i] | Easy | Arrays | <a href="/src/leetcode/arrays_hashing/get_concatenation.py"><img src="/imgs/python-programming-language.webp" alt="concatenation array" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/GetConcatenation.jl"><img src="/imgs/unnamed.png" alt="concatenation array" width="40" height="40"></a> |
+| 14. Longest Common Prefix | Find the longest common prefix string amongst an array of strings | Easy | Arrays, String Manipulation | <a href="/src/leetcode/arrays_hashing/longest_common_prefix.py"><img src="/imgs/python-programming-language.webp" alt="longest common prefix" width="40" height="40"></a> |
 
 </details>
 
