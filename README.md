@@ -1,9 +1,42 @@
-# Mental Gym
-Documenting practices on various coding platforms such as LeetCode, Kattis, HackerRank, etc. Additionally, adding code snippets to show how to implement certain data structures and algorithms (DSA) from scratch.
+<div align="center">
 
-## DSA from scratch
+# 🧠 Mental Gym <!-- omit in toc -->
+
+### *Level up your coding skills, one problem at a time*
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Julia](https://img.shields.io/badge/Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
+![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
+
+[![LeetCode](https://img.shields.io/badge/LeetCode-27_Solved-FFA116?style=flat&logo=leetcode)](https://leetcode.com)
+[![Kattis](https://img.shields.io/badge/Kattis-13_Solved-00A6A6?style=flat)](https://open.kattis.com)
+![DSA](https://img.shields.io/badge/DSA_Implementations-9_Topics-blueviolet?style=flat)
+
+</div>
+
+---
+
+## About <!-- omit in toc -->
+
+Documenting my journey through various coding platforms including **LeetCode**, **Kattis**, and **HackerRank**. This repository also contains implementations of common data structures and algorithms (DSA) built from scratch to strengthen fundamental understanding.
+
+---
+
+## Table of Contents <!-- omit in toc -->
+
+- [DSA from Scratch](#dsa-from-scratch)
+- [Boilerplate Code](#boilerplate-code)
+  - [Arrays](#arrays)
+- [LeetCode Questions](#leetcode-questions)
+- [Kattis Problems](#kattis-problems)
+
+---
+
+## DSA from Scratch
+
 <details>
-  <summary>Sorting</summary>∏
+  <summary><b>Sorting Algorithms</b></summary>
+  <br>
 
 | Category             | Algorithm         | Description                                                                 | Implementation Link                  |
 |----------------------|-------------------|-----------------------------------------------------------------------------|--------------------------------------|
@@ -19,250 +52,225 @@ Documenting practices on various coding platforms such as LeetCode, Kattis, Hack
 
 </details>
 
-
 <details>
-  <summary>Arrays</summary>
-  
-  [Common Operations for Array](./src/dsa_from_scratch/arrays/common_operations.py)
+  <summary><b>Arrays</b></summary>
+  <br>
+
+  - [Common Operations for Array](./src/dsa_from_scratch/arrays/common_operations.py)
 
 </details>
 
-
-
 <details>
-  <summary>Linked List</summary>
+  <summary><b>Linked List</b></summary>
+  <br>
 
-  [Singly Linked List](./src/dsa_from_scratch/list_adt/singly_linked_list.py)
-  
-  [Doubly Linked List](./src/dsa_from_scratch/list_adt/doubly_linked_list.py)
-  
+  - [Singly Linked List](./src/dsa_from_scratch/list_adt/singly_linked_list.py)
+  - [Doubly Linked List](./src/dsa_from_scratch/list_adt/doubly_linked_list.py)
+
 </details>
 
 <details>
-  <summary>Stack and Queue</summary>
+  <summary><b>Stack and Queue</b></summary>
+  <br>
 
-  [Stack using Linked List](./src/dsa_from_scratch/list_adt/stack_linked_list.py)
+  - [Stack using Linked List](./src/dsa_from_scratch/list_adt/stack_linked_list.py)
+  - [Stack using Array](./src/dsa_from_scratch/list_adt/stack_array.py)
+  - [Queue using Linked List](./src/dsa_from_scratch/list_adt/queue_linked_list.py)
+  - [Queue using Array](./src/dsa_from_scratch/list_adt/queue_array.py)
+  - [Deque using Linked List](./src/dsa_from_scratch/list_adt/deque_linked_list.py)
+  - [Deque using Array](./src/dsa_from_scratch/list_adt/deque_array.py)
 
-  [Stack using Array](./src/dsa_from_scratch/list_adt/stack_array.py)
-
-  [Queue using Linked List](./src/dsa_from_scratch/list_adt/queue_linked_list.py)
-
-  [Queue using Array](./src/dsa_from_scratch/list_adt/queue_array.py)
-
-  [Deque using Linked List](./src/dsa_from_scratch/list_adt/deque_linked_list.py)
-
-  [Deque using Array](./src/dsa_from_scratch/list_adt/deque_array.py)
-  
 </details>
 
 <details>
-  <summary>Binary Heap</summary>
+  <summary><b>Binary Heap</b></summary>
+  <br>
 
-  [Basic heap properties](./src/dsa_from_scratch/binary_heap/heap_properties.py)
+  - [Basic heap properties](./src/dsa_from_scratch/binary_heap/heap_properties.py)
+  - [Min Heap implementation](./src/dsa_from_scratch/binary_heap/min_heap_implementation.py)
+  - [Max Heap implementation](./src/dsa_from_scratch/binary_heap/max_heap_implementation.py)
 
-  [Min Heap implementation](./src/dsa_from_scratch/binary_heap/min_heap_implementation.py)
-
-  [Max Heap implementation](./src/dsa_from_scratch/binary_heap/max_heap_implementation.py)
-  
-</details>
-
-
-<details>
-  <summary>HashMap / Hash Table</summary>
-
-  [Direct Addressing Table](./src/dsa_from_scratch/hash_map/direct_addressing_table.py) (simplified hash table)
-
-  [Common Operations](./src/dsa_from_scratch/hash_map/common_operations.py)
-
-  [Creating HashMap using Array](./src/dsa_from_scratch/hash_map/array_hash_map.py)
-
-  [Open Addressing](./src/dsa_from_scratch/hash_map/open_addressing.py)
-
-  [Separate Chaining](./src/dsa_from_scratch/hash_map/separate_chaining.py)
-  
 </details>
 
 <details>
-  <summary>Tree</summary>
+  <summary><b>HashMap / Hash Table</b></summary>
+  <br>
 
-  [Binary Tree](./src/dsa_from_scratch/tree/binary_tree.py)
+  - [Direct Addressing Table](./src/dsa_from_scratch/hash_map/direct_addressing_table.py) (simplified hash table)
+  - [Common Operations](./src/dsa_from_scratch/hash_map/common_operations.py)
+  - [Creating HashMap using Array](./src/dsa_from_scratch/hash_map/array_hash_map.py)
+  - [Open Addressing](./src/dsa_from_scratch/hash_map/open_addressing.py)
+  - [Separate Chaining](./src/dsa_from_scratch/hash_map/separate_chaining.py)
 
-  [Array Representation of Tree](./src/dsa_from_scratch/tree/array_representation_of_tree.py)
-
-  [Binary Search Tree](./src/dsa_from_scratch/tree/binary_search_tree.py)
-
-  [AVL](./src/dsa_from_scratch/tree/avl.py)
-  
 </details>
-
 
 <details>
-  <summary>Graph</summary>
+  <summary><b>Tree</b></summary>
+  <br>
 
-  [Adjacency Matrix](./src/dsa_from_scratch/graph/adjacency_matrix.py)
+  - [Binary Tree](./src/dsa_from_scratch/tree/binary_tree.py)
+  - [Array Representation of Tree](./src/dsa_from_scratch/tree/array_representation_of_tree.py)
+  - [Binary Search Tree](./src/dsa_from_scratch/tree/binary_search_tree.py)
+  - [AVL](./src/dsa_from_scratch/tree/avl.py)
 
-  [Adjacency List](./src/dsa_from_scratch/graph/adjacency_list.py)
-
-  [Graph Traversal DFS](./src/dsa_from_scratch/graph/graph_traversal_dfs.py)
-
-  [Graph Traversal BFS](./src/dsa_from_scratch/graph/graph_traversal_bfs.py)
-
-  [Application: Detect Cycle](./src/dsa_from_scratch/graph/cycle_detection.py)
-
-  [Application: Topological Sort](./src/dsa_from_scratch/graph/toposort.py)
-
-  [Application: Check Bipartite](./src/dsa_from_scratch/graph/check_bipartite.py)
-
-  [Single-Source Shortest Path: Bellman Ford](./src/dsa_from_scratch/graph/bellman_ford.py)
-
-  [Single-Source Shortest Path: Dijkstra](./src/dsa_from_scratch/graph/dijkstra.py)
-
-  [Single-Source Shortest Path: BFS on unweighted graph](./src/dsa_from_scratch/graph/bfs_sssp.py)
-
-  [Single-Source Shortest Path: Modified Dijkstra](./src/dsa_from_scratch/graph/modified_dijkstra.py)
-
-  [Single-Source Shortest Path: DFS on weighted trees](./src/dsa_from_scratch/graph/dfs_weighted_tree.py)
-
-  [Single-Source Shortest Path: DP on DAG](./src/dsa_from_scratch/graph/dp_dag.py)
-
-  
 </details>
+
+<details>
+  <summary><b>Graph</b></summary>
+  <br>
+
+  - [Adjacency Matrix](./src/dsa_from_scratch/graph/adjacency_matrix.py)
+  - [Adjacency List](./src/dsa_from_scratch/graph/adjacency_list.py)
+  - [Graph Traversal DFS](./src/dsa_from_scratch/graph/graph_traversal_dfs.py)
+  - [Graph Traversal BFS](./src/dsa_from_scratch/graph/graph_traversal_bfs.py)
+  - [Application: Detect Cycle](./src/dsa_from_scratch/graph/cycle_detection.py)
+  - [Application: Topological Sort](./src/dsa_from_scratch/graph/toposort.py)
+  - [Application: Check Bipartite](./src/dsa_from_scratch/graph/check_bipartite.py)
+  - [Single-Source Shortest Path: Bellman Ford](./src/dsa_from_scratch/graph/bellman_ford.py)
+  - [Single-Source Shortest Path: Dijkstra](./src/dsa_from_scratch/graph/dijkstra.py)
+  - [Single-Source Shortest Path: BFS on unweighted graph](./src/dsa_from_scratch/graph/bfs_sssp.py)
+  - [Single-Source Shortest Path: Modified Dijkstra](./src/dsa_from_scratch/graph/modified_dijkstra.py)
+  - [Single-Source Shortest Path: DFS on weighted trees](./src/dsa_from_scratch/graph/dfs_weighted_tree.py)
+  - [Single-Source Shortest Path: DP on DAG](./src/dsa_from_scratch/graph/dp_dag.py)
+
+</details>
+
+---
 
 ## Boilerplate Code
 
-#### Arrays:
+### Arrays
 
 <details open>
-<summary>Kadane's Algorithm</summary>
+<summary><b>Kadane's Algorithm</b></summary>
+<br>
 
 - [Calculating max sum subarray](./src/boilerplate/kadane.py)
 </details>
 
 <details open>
-<summary>Sliding Window</summary>
+<summary><b>Sliding Window</b></summary>
+<br>
 
 - [Fixed size](./src/boilerplate/sliding_window_fixed.py)
 - [Variable size](./src/boilerplate/sliding_window_variable.py)
 </details>
 
-
 <details open>
-<summary>Prefix Sum</summary>
+<summary><b>Prefix Sum</b></summary>
+<br>
 
 - [Range Sum Query](./src/boilerplate/prefix_sum.py)
 </details>
 
 <details open>
-<summary>Two Pointers</summary>
+<summary><b>Two Pointers</b></summary>
+<br>
 
 - [3 different variations of two pointers](./src/boilerplate/two_pointers_variations.md)
 </details>
 
-#### Linked List:
-
+---
 
 ## LeetCode Questions
-Gradually adding the questions in different languages (Python, Julia & C++)
 
+> Gradually adding solutions in different languages: **Python**, **Julia**, and **C++**
 
 <details open>
-  <summary>Arrays & Hashing</summary>
+  <summary><b>Arrays & Hashing</b></summary>
+  <br>
 
-| Question | Description | Difficulty | Type | Solution |
-|----------|-------------|------------|------|----------|
-| 1. Two Sum | Find two indices in a vector such that the<br>numbers add up to a target value | Easy | Arrays, Hashing | <a href="/src/leetcode/arrays_hashing/two_sum.py"><img src="/imgs/python-programming-language.webp" alt="two sum" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/TwoSum.jl"><img src="/imgs/unnamed.png" alt="two sum" width="40" height="40"></a> |
-| 242. Valid Anagram | Determine if two strings are<br>anagrams of each other | Easy | Hashing | <a href="/src/leetcode/arrays_hashing/is_anagram.py"><img src="/imgs/python-programming-language.webp" alt="is anagram" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/IsAnagram.jl"><img src="/imgs/unnamed.png" alt="is anagram" width="40" height="40"></a> |
-| 217. Contains Duplicate | Check if a vector contains<br>any duplicates | Easy | Arrays, Hashing | <a href="/src/leetcode/arrays_hashing/contains_duplicate.py"><img src="/imgs/python-programming-language.webp" alt="contains duplicate" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/ContainsDuplicate.jl"><img src="/imgs/unnamed.png" alt="contains duplicate" width="40" height="40"></a> |
-| 36. Valid Sudoku | Determine if a 9x9 Sudoku<br>board is valid | Medium | Arrays, Hashing | <a href="/src/leetcode/arrays_hashing/is_valid_sudoku.py"><img src="/imgs/python-programming-language.webp" alt="valid sudoku" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/IsValidSudoku.jl"><img src="/imgs/unnamed.png" alt="valid sudoku" width="40" height="40"></a> |
-| 128. Longest Consecutive Sequence | Find the length of the longest<br>consecutive elements sequence | Medium | Arrays, Hashing | <a href="/src/leetcode/arrays_hashing/longest_consecutive.py"><img src="/imgs/python-programming-language.webp" alt="valid sudoku" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/LongestConsecutive.jl"><img src="/imgs/unnamed.png" alt="longest consecutive sequence" width="40" height="40"></a> |
-| 271. Encode and Decode Strings | Encode a list of strings to a<br>single string and decode it back to the list | Medium | Arrays, String Manipulation | <a href="/src/leetcode/arrays_hashing/encode_decode_string.py"><img src="/imgs/python-programming-language.webp" alt="valid sudoku" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/EncodeDecodeString.jl"><img src="/imgs/unnamed.png" alt="encode decode string" width="40" height="40"></a> |
-| 49. Group Anagrams | Group strings into<br>anagrams | Medium | Hashing, Sorting | <a href="/src/leetcode/arrays_hashing/group_anagram.py"><img src="/imgs/python-programming-language.webp" alt="valid sudoku" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/GroupAnagrams.jl"><img src="/imgs/unnamed.png" alt="group anagrams" width="40" height="40"></a> |
-| 219. Close Duplicates | Check if a vector contains<br>duplicates within a given range | Easy | Sliding Window | <a href="/src/leetcode/arrays_hashing/CloseDuplicates.jl"><img src="/imgs/unnamed.png" alt="close duplicates" width="40" height="40"></a> |
-| 1343. NumOfSubarrays | Count subarrays with average greater<br>than or equal to a threshold | Medium | Sliding Window | <a href="/src/leetcode/arrays_hashing/NumOfSubarrays.jl"><img src="/imgs/unnamed.png" alt="num of subarrays" width="40" height="40"></a> |
-| 1929. Concatenation of Array | Return array ans of length 2n where<br>ans[i] == nums[i] and ans[i + n] == nums[i] | Easy | Arrays | <a href="/src/leetcode/arrays_hashing/get_concatenation.py"><img src="/imgs/python-programming-language.webp" alt="concatenation array" width="40" height="40"></a> <a href="/src/leetcode/arrays_hashing/GetConcatenation.jl"><img src="/imgs/unnamed.png" alt="concatenation array" width="40" height="40"></a> |
-| 14. Longest Common Prefix | Find the longest common prefix string amongst an array of strings | Easy | Arrays, String Manipulation | <a href="/src/leetcode/arrays_hashing/longest_common_prefix.py"><img src="/imgs/python-programming-language.webp" alt="longest common prefix" width="40" height="40"></a> |
-| 169. Majority Element | Find the majority element that appears more than ⌊n/2⌋ times | Easy | Arrays, Hashing | <a href="/src/leetcode/arrays_hashing/majority_element.py"><img src="/imgs/python-programming-language.webp" alt="majority element" width="40" height="40"></a> |
+| # | Question | Description | Difficulty | Type | Solution |
+|---|----------|-------------|------------|------|----------|
+| 1 | Two Sum | Find two indices in a vector such that the<br>numbers add up to a target value | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Arrays, Hashing | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/two_sum.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/TwoSum.jl) |
+| 242 | Valid Anagram | Determine if two strings are<br>anagrams of each other | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Hashing | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/is_anagram.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/IsAnagram.jl) |
+| 217 | Contains Duplicate | Check if a vector contains<br>any duplicates | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Arrays, Hashing | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/contains_duplicate.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/ContainsDuplicate.jl) |
+| 36 | Valid Sudoku | Determine if a 9x9 Sudoku<br>board is valid | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Arrays, Hashing | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/is_valid_sudoku.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/IsValidSudoku.jl) |
+| 128 | Longest Consecutive Sequence | Find the length of the longest<br>consecutive elements sequence | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Arrays, Hashing | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/longest_consecutive.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/LongestConsecutive.jl) |
+| 271 | Encode and Decode Strings | Encode a list of strings to a<br>single string and decode it back to the list | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Arrays, String Manipulation | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/encode_decode_string.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/EncodeDecodeString.jl) |
+| 49 | Group Anagrams | Group strings into<br>anagrams | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Hashing, Sorting | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/group_anagram.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/GroupAnagrams.jl) |
+| 219 | Close Duplicates | Check if a vector contains<br>duplicates within a given range | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/CloseDuplicates.jl) |
+| 1343 | NumOfSubarrays | Count subarrays with average greater<br>than or equal to a threshold | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/NumOfSubarrays.jl) |
+| 1929 | Concatenation of Array | Return array ans of length 2n where<br>ans[i] == nums[i] and ans[i + n] == nums[i] | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Arrays | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/get_concatenation.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/arrays_hashing/GetConcatenation.jl) |
+| 14 | Longest Common Prefix | Find the longest common prefix string amongst an array of strings | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Arrays, String Manipulation | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/longest_common_prefix.py) |
+| 169 | Majority Element | Find the majority element that appears more than ⌊n/2⌋ times | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Arrays, Hashing | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/arrays_hashing/majority_element.py) |
 
 </details>
 
-<br>
-
 <details open>
-  <summary>Two Pointers</summary>
+  <summary><b>Two Pointers</b></summary>
+  <br>
 
-| Question                     | Description                                                                 | Difficulty | Type            | Solution |
-|------------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
-| 125. Valid Palindrome        | Determine if a string is a palindrome, considering only alphanumeric characters and ignoring cases | Easy | Two Pointers | <a href="/src/leetcode/two_pointers/ValidPalindrome.jl"><img src="/imgs/unnamed.png" alt="is palindrome" width="40" height="40"></a> <a href="/src/leetcode/two_pointers/valid_palindrome.py"><img src="/imgs/python-programming-language.webp" alt="is palindrome py" width="40" height="40"></a> |
-| 15. Three Sum                | Find all unique triplets in the array which gives the sum of zero           | Medium     | Two Pointers    | <a href="/src/leetcode/two_pointers/threeSum.jl"><img src="/imgs/unnamed.png" alt="three sum" width="40" height="40"></a> <a href="/src/leetcode/two_pointers/three_sum.py"><img src="/imgs/python-programming-language.webp" alt="three sum py" width="40" height="40"></a>|
-| 11. Container With Most Water| Find two lines that together with the x-axis form a container, such that the container contains the most water | Medium | Two Pointers | <a href="/src/leetcode/two_pointers/MaxArea.jl"><img src="/imgs/unnamed.png" alt="container with most water" width="40" height="40"></a> <a href="/src/leetcode/two_pointers/max_area.py"><img src="/imgs/python-programming-language.webp" alt="container with most water py" width="40" height="40"></a> |
-| Two Sum Part 2                          | Find two indices in a sorted array such that they add up to a specific target | Medium     | Sliding Window  | <a href="/src/leetcode/two_pointers/TwoSumPart2.jl"><img src="/imgs/unnamed.png" alt="two sum part 2" width="40" height="40"></a> <a href="/src/leetcode/two_pointers/two_sum2.py"><img src="/imgs/python-programming-language.webp" alt="two sum part 2" width="40" height="40"></a> |
-| Trapping Rain Water                     | Calculate how much water can be trapped after raining                       | Hard       | Sliding Window  | <a href="/src/leetcode/two_pointers/trap.jl"><img src="/imgs/unnamed.png" alt="trapping rain water" width="40" height="40"></a> <a href="/src/leetcode/two_pointers/trap.py"><img src="/imgs/python-programming-language.webp" alt="trapping rain water py" width="40" height="40"></a> |
-</details>
-
-<br>
-
-<details open>
-  <summary>Stack</summary>
-
-| Question               | Description                                                                          | Difficulty | Type  | Solution                                                                                        |
-|------------------------|--------------------------------------------------------------------------------------|------------|-------|-------------------------------------------------------------------------------------------------|
-| 20. Valid Parenthesis  | Determine if the input string has valid parentheses                                  | Easy       | Stack | <a href="/src/leetcode/ValidParenthesis.jl"><img src="/imgs/unnamed.png" alt="valid parenthesis" width="40" height="40"></a> |
-| 155. Min Stack         | Build a stack that supports push, pop, top, and retrieve the minimum in O(1) time    | Easy       | Stack | <a href="/src/leetcode/min_stack.py"><img src="/imgs/python-programming-language.webp" alt="min stack" width="40" height="40"></a> |
-| 150. Evaluate RPN      | Evaluate Reverse Polish Notation expression                                          | Medium     | Stack | <a href="/src/leetcode/eval_rpn.py"><img src="/imgs/python-programming-language.webp" alt="eval rpn" width="40" height="40"></a> |
+| # | Question | Description | Difficulty | Type | Solution |
+|---|----------|-------------|------------|------|----------|
+| 125 | Valid Palindrome | Determine if a string is a palindrome, considering only alphanumeric characters and ignoring cases | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Two Pointers | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/two_pointers/ValidPalindrome.jl) [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/two_pointers/valid_palindrome.py) |
+| 15 | Three Sum | Find all unique triplets in the array which gives the sum of zero | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Two Pointers | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/two_pointers/threeSum.jl) [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/two_pointers/three_sum.py) |
+| 11 | Container With Most Water | Find two lines that together with the x-axis form a container, such that the container contains the most water | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Two Pointers | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/two_pointers/MaxArea.jl) [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/two_pointers/max_area.py) |
+| 167 | Two Sum Part 2 | Find two indices in a sorted array such that they add up to a specific target | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/two_pointers/TwoSumPart2.jl) [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/two_pointers/two_sum2.py) |
+| 42 | Trapping Rain Water | Calculate how much water can be trapped after raining | ![Hard](https://img.shields.io/badge/Hard-DC3545?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/two_pointers/trap.jl) [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/two_pointers/trap.py) |
 
 </details>
 
-<br>
-
 <details open>
-  <summary>Sliding Window</summary>
+  <summary><b>Stack</b></summary>
+  <br>
 
-| Question                                | Description                                                                 | Difficulty | Type            | Solution |
-|-----------------------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
-| 121. Best Time to Buy and Sell Stock    | Find the maximum profit you can achieve from one transaction                | Easy       | Sliding Window  | <a href="/src/leetcode/MaxProfit.jl"><img src="/imgs/unnamed.png" alt="best time to buy and sell stock" width="40" height="40"></a> |
-| 3. Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | Medium     | Sliding Window  | <a href="/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl"><img src="/imgs/unnamed.png" alt="longest substring without repeating characters" width="40" height="40"></a> |
-| 424. Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | Medium     | Sliding Window  | <a href="/src/leetcode/longestRepeatingCharacterReplacement.jl"><img src="/imgs/unnamed.png" alt="longest repeating character replacement" width="40" height="40"></a> |
-| 76. Minimum Window Substring            | Find the minimum window substring of `s` such that every character in `t` is included | Hard       | Sliding Window  | <a href="/src/leetcode/MinWindow.jl"><img src="/imgs/unnamed.png" alt="minimum window substring" width="40" height="40"></a> |
-| 567. Permutation in String              | Check if one string is a permutation of a substring of another string | Medium     | Sliding Window  | <a href="/src/leetcode/permutation_in_string.py"><img src="/imgs/python-programming-language.webp" alt="permutation in string" width="40" height="40"></a> |
-| 239. Sliding Window Maximum             | Find the maximum value in each sliding window of a fixed size k.          | Hard       | Sliding Window  | <a href="/src/leetcode/max_sliding_window.py"><img src="/imgs/python-programming-language.webp" alt="max sliding window" width="40" height="40"></a> |
-
-
+| # | Question | Description | Difficulty | Type | Solution |
+|---|----------|-------------|------------|------|----------|
+| 20 | Valid Parenthesis | Determine if the input string has valid parentheses | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Stack | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/ValidParenthesis.jl) |
+| 155 | Min Stack | Build a stack that supports push, pop, top, and retrieve the minimum in O(1) time | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Stack | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/min_stack.py) |
+| 150 | Evaluate RPN | Evaluate Reverse Polish Notation expression | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Stack | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/eval_rpn.py) |
 
 </details>
 
-
-<br>
-
-
 <details open>
-  <summary>Linked List</summary>
+  <summary><b>Sliding Window</b></summary>
+  <br>
 
-| Question                     | Description                                                                 | Difficulty | Type            | Solution |
-|------------------------------|-----------------------------------------------------------------------------|------------|-----------------|----------|
-| 21. Merge Two Sorted Lists   | Merge two sorted linked lists and return it as a new sorted list            | Easy       | Linked List     | <a href="/src/leetcode/merge_2_sorted_lists.py"><img src="/imgs/python-programming-language.webp" alt="merge two sorted lists" width="40" height="40"></a> <a href="/src/leetcode/Merge2SortedList.jl"><img src="/imgs/unnamed.png" alt="merge two sorted lists" width="40" height="40"></a> |
+| # | Question | Description | Difficulty | Type | Solution |
+|---|----------|-------------|------------|------|----------|
+| 121 | Best Time to Buy and Sell Stock | Find the maximum profit you can achieve from one transaction | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/MaxProfit.jl) |
+| 3 | Longest Substring Without Repeating Characters | Find the length of the longest substring without repeating characters | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/longestSubstringWithoutRepeatingCharacters.jl) |
+| 424 | Longest Repeating Character Replacement | Find the length of the longest substring containing the same letter you can get after performing k replacements | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/longestRepeatingCharacterReplacement.jl) |
+| 76 | Minimum Window Substring | Find the minimum window substring of `s` such that every character in `t` is included | ![Hard](https://img.shields.io/badge/Hard-DC3545?style=flat-square) | Sliding Window | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/MinWindow.jl) |
+| 567 | Permutation in String | Check if one string is a permutation of a substring of another string | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Sliding Window | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/permutation_in_string.py) |
+| 239 | Sliding Window Maximum | Find the maximum value in each sliding window of a fixed size k | ![Hard](https://img.shields.io/badge/Hard-DC3545?style=flat-square) | Sliding Window | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/max_sliding_window.py) |
 
 </details>
 
+<details open>
+  <summary><b>Linked List</b></summary>
+  <br>
+
+| # | Question | Description | Difficulty | Type | Solution |
+|---|----------|-------------|------------|------|----------|
+| 21 | Merge Two Sorted Lists | Merge two sorted linked lists and return it as a new sorted list | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Linked List | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/merge_2_sorted_lists.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/Merge2SortedList.jl) |
+
+</details>
+
+---
 
 ## Kattis Problems
 
 <details>
-  <summary>Kattis Problems</summary>
+  <summary><b>View All Kattis Problems</b></summary>
+  <br>
 
-| Problem ID     | Description                                      | Difficulty | Type                   | Solution                                                                                                      |
-|----------------|--------------------------------------------------|------------|------------------------|---------------------------------------------------------------------------------------------------------------|
-| hip hip        | Print "Hipp hipp hurra!" 20 times                | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="hip hip" width="50">](/src/kattis/hip_hip.py)         |
-| storafmaeli    | Check if it's anniversary                        | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="storafmaeli" width="50">](/src/kattis/storafmaeli.py) |
-| fyrirtækjanafn | Filter out consonants from input                 | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="fyrirtækjanafn" width="50">](/src/kattis/fyrirtækjanafn.py) |
-| peningar       | Calculate values accumulated from circular cells | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="peningar" width="50">](/src/kattis/peningar.py)       |
-| framvindustika | Print progress bar and %                         | Medium     | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="framvindustika" width="50">](/src/kattis/framvindustika.py) |
-| message        | Extract letters from nested list to form a message| Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="message" width="50">](/src/kattis/message.py)         |
-| bidendalausbid | Calculate waited time in minutes                 | Easy       | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="bidendalausbid" width="50">](/src/kattis/bidendalausbid.py) |
-| hlaupafmaeli   | Check birthday for leap year                     | Medium     | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="hlaupafmaeli" width="50">](/src/kattis/hlaupafmaeli.py) |
-| lidaskipting2  | Find min and max number of competitive teams that can be formed | Easy | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="lidaskipting2" width="50">](/src/kattis/lidaskipting2.py) |
-| fleytitala     | Find min and max number of competitive teams that can be formed | Medium | Easy Coding Challenges | [<img src="/imgs/python-programming-language.webp" alt="fleytitala" width="50">](/src/kattis/fleytitala.py)   |
-| subaruba       | Ubbi dubbi game                                  | Medium     | Array | [<img src="/imgs/python-programming-language.webp" alt="subaruba" width="50">](/src/kattis/subaruba.py)       |
-| gangur         | Count passing pairs of people                    | Easy       | Array | [<img src="/imgs/python-programming-language.webp" alt="gangur" width="50">](/src/kattis/gangur.py)           |
-| taktsvedjur    | Calculate scores with multipliers                | Easy       | Array | [<img src="/imgs/python-programming-language.webp" alt="taktsvedjur" width="50">](/src/kattis/taktsvedjur.py) |
+| # | Problem ID | Description | Difficulty | Type | Solution |
+|---|------------|-------------|------------|------|----------|
+| 1 | hip hip | Print "Hipp hipp hurra!" 20 times | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/hip_hip.py) |
+| 2 | storafmaeli | Check if it's anniversary | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/storafmaeli.py) |
+| 3 | fyrirtækjanafn | Filter out consonants from input | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/fyrirtækjanafn.py) |
+| 4 | peningar | Calculate values accumulated from circular cells | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/peningar.py) |
+| 5 | framvindustika | Print progress bar and % | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/framvindustika.py) |
+| 6 | message | Extract letters from nested list to form a message | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/message.py) |
+| 7 | bidendalausbid | Calculate waited time in minutes | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/bidendalausbid.py) |
+| 8 | hlaupafmaeli | Check birthday for leap year | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/hlaupafmaeli.py) |
+| 9 | lidaskipting2 | Find min and max number of competitive teams that can be formed | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/lidaskipting2.py) |
+| 10 | fleytitala | Find min and max number of competitive teams that can be formed | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Easy Coding Challenges | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/fleytitala.py) |
+| 11 | subaruba | Ubbi dubbi game | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | Array | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/subaruba.py) |
+| 12 | gangur | Count passing pairs of people | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Array | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/gangur.py) |
+| 13 | taktsvedjur | Calculate scores with multipliers | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Array | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/taktsvedjur.py) |
 
 </details>
+
