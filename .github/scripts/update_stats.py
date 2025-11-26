@@ -6,6 +6,7 @@ Counts unique problems, not individual language implementations.
 
 import re
 import sys
+import traceback
 
 def count_leetcode_problems(readme_content):
     """Count unique LeetCode problems by problem number."""
@@ -102,4 +103,6 @@ if __name__ == '__main__':
         update_readme_badges(readme_path)
     except Exception as e:
         print(f"❌ Error: {e}")
+        print("\nFull traceback:")
+        traceback.print_exc()
         sys.exit(1)
