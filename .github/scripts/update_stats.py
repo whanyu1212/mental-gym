@@ -14,7 +14,7 @@ def count_leetcode_problems(readme_content):
     pattern = r'\|\s*(\d+)\s*\|.*?\|.*?\|.*?\|.*?\|.*?\|'
 
     # Find all problem numbers in LeetCode section
-    leetcode_section = readme_content.split('## 💻 LeetCode Questions')[1].split('##')[0]
+    leetcode_section = readme_content.split('## LeetCode Questions')[1].split('##')[0]
     problem_numbers = re.findall(pattern, leetcode_section)
 
     # Return count of unique problem numbers
@@ -24,10 +24,10 @@ def count_leetcode_problems(readme_content):
 def count_kattis_problems(readme_content):
     """Count unique Kattis problems by problem ID."""
     # Find Kattis section
-    if '## 🎯 Kattis Problems' not in readme_content:
+    if '## Kattis Problems' not in readme_content:
         return 0
 
-    kattis_section = readme_content.split('## 🎯 Kattis Problems')[1].split('##')[0]
+    kattis_section = readme_content.split('## Kattis Problems')[1].split('##')[0]
 
     # Match table rows, count rows in Kattis table (excluding header)
     # Each row represents a unique problem
