@@ -1,6 +1,6 @@
 using Test
 
-include("../../src/leetcode/arrays_hashing/NumOfSubarrays.jl")
+include("../../src/leetcode/julia/arrays_hashing/NumOfSubarrays.jl")
 
 @testset "numOfSubarrays" begin
     @test numOfSubarrays([2,2,2,2,5,5,5,8], 3, 4) == 3

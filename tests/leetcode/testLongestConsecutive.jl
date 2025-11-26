@@ -1,5 +1,5 @@
 using Test 
-include("../../src/leetcode/arrays_hashing/LongestConsecutive.jl")
+include("../../src/leetcode/julia/arrays_hashing/LongestConsecutive.jl")
 
 @testset "longest consecutive sequence" begin
     @test longestConsecutive([100, 4, 200, 1, 3, 2]) == 4

@@ -4,7 +4,7 @@ import sys
 from io import StringIO
 
 path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis")
+    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
 )
 sys.path.insert(0, path_to_add)
 

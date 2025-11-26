@@ -1,6 +1,6 @@
 using Test
 
-include("../../src/leetcode/two_pointers/threeSum.jl")
+include("../../src/leetcode/julia/two_pointers/threeSum.jl")
 
 @testset "Threesum" begin
     @test threeSum([-1, 0, 1, 2, -1, -4]) == [[-1, -1, 2], [-1, 0, 1]]

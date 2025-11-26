@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/arrays_hashing/GroupAnagrams.jl")
+include("../../src/leetcode/julia/arrays_hashing/GroupAnagrams.jl")
 
 @testset "group_anagrams" begin
     # Sort both inner and outer arrays for order-independent comparison

@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/arrays_hashing/CloseDuplicates.jl")
+include("../../src/leetcode/julia/arrays_hashing/CloseDuplicates.jl")
 
 @testset "closeDuplicates" begin
     @test closeDuplicates([1, 2, 3, 1], 3) == true

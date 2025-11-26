@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/arrays_hashing/ContainsDuplicate.jl")
+include("../../src/leetcode/julia/arrays_hashing/ContainsDuplicate.jl")
 
 @testset "containsDuplicate" begin
     @test containsDuplicate([1, 2, 3, 1]) == true
