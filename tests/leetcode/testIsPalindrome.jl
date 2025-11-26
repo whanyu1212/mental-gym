@@ -1,6 +1,6 @@
 using Test
 
-include("../../src/leetcode/isPalindrome.jl")
+include("../../src/leetcode/julia/two_pointers/ValidPalindrome.jl")
 
 @testset "isPalindrome" begin
     @test isPalindrome("A man, a plan, a canal: Panama") == true

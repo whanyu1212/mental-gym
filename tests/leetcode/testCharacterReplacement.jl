@@ -1,6 +1,6 @@
 using Test
 
-include("../../src/leetcode/CharacterReplacement.jl")
+include("../../src/leetcode/julia/CharacterReplacement.jl")
 
 @testset "CharacterReplacement" begin
     @test characterReplacement("ABAB", 2) == 4
