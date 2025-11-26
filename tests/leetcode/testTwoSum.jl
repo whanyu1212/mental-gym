@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/twoSum.jl")
+include("../../src/leetcode/arrays_hashing/TwoSum.jl")
 
 
 @testset "twoSum" begin
