@@ -14,7 +14,17 @@ def count_leetcode_problems(readme_content):
     pattern = r'\|\s*(\d+)\s*\|.*?\|.*?\|.*?\|.*?\|.*?\|'
 
     # Find all problem numbers in LeetCode section
-    leetcode_section = readme_content.split('## LeetCode Questions')[1].split('##')[0]
+    if '## LeetCode Questions' not in readme_content:
+        print("⚠️  Warning: '## LeetCode Questions' section not found")
+        return 0
+
+    sections = readme_content.split('## LeetCode Questions')
+    if len(sections) < 2:
+        print("⚠️  Warning: Could not split LeetCode section properly")
+        return 0
+
+    # Get content after LeetCode Questions header, up to next ## header or end of file
+    leetcode_section = sections[1].split('\n## ')[0] if '\n## ' in sections[1] else sections[1]
     problem_numbers = re.findall(pattern, leetcode_section)
 
     # Return count of unique problem numbers
@@ -25,9 +35,16 @@ def count_kattis_problems(readme_content):
     """Count unique Kattis problems by problem ID."""
     # Find Kattis section
     if '## Kattis Problems' not in readme_content:
+        print("⚠️  Warning: '## Kattis Problems' section not found")
         return 0
 
-    kattis_section = readme_content.split('## Kattis Problems')[1].split('##')[0]
+    sections = readme_content.split('## Kattis Problems')
+    if len(sections) < 2:
+        print("⚠️  Warning: Could not split Kattis section properly")
+        return 0
+
+    # Get content after Kattis Problems header, up to next ## header or end of file
+    kattis_section = sections[1].split('\n## ')[0] if '\n## ' in sections[1] else sections[1]
 
     # Match table rows, count rows in Kattis table (excluding header)
     # Each row represents a unique problem
