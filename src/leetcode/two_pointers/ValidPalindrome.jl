@@ -12,10 +12,10 @@ Determines if the given string `x` is a palindrome, considering only alphanumeri
 function isPalindrome(x::String)::Bool
     L, R = 1, length(x)
     while L < R
-        while L < R && !isalnum(x[L])
+        while L < R && !(isletter(x[L]) || isdigit(x[L]))
             L += 1
         end
-        while L < R && !isalnum(x[R])
+        while L < R && !(isletter(x[R]) || isdigit(x[R]))
             R -= 1
         end
 

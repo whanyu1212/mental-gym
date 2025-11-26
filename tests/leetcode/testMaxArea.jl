@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/MaxArea.jl")
+include("../../src/leetcode/two_pointers/MaxArea.jl")
 
 @testset "Container with Most Water" begin
     @test MaxArea([1,8,6,2,5,4,8,3,7]) == 49

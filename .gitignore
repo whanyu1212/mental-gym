@@ -170,3 +170,6 @@ src/codewars/node_modules/
 src/codewars/artifacts/
 src/codewars/ignition/
 src/codewars/cache/
+
+# macOS
+.DS_Store
