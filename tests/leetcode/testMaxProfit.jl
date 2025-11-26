@@ -1,5 +1,5 @@
 using Test  
-include("../../src/leetcode/MaxProfit.jl")
+include("../../src/leetcode/julia/sliding_window/MaxProfit.jl")
 
 @testset "MaxProfit" begin
     @test MaxProfit([7,1,5,3,6,4]) == 5

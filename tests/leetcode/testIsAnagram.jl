@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/isAnagram.jl")
+include("../../src/leetcode/julia/arrays_hashing/IsAnagram.jl")
 
 @testset "isAnagram" begin
     @test isAnagram("anagram", "nagaram") == true
