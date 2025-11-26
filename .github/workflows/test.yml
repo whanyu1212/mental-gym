@@ -76,7 +76,7 @@ jobs:
 
       - name: Install Julia dependencies
         run: |
-          julia --project=. -e 'using Pkg; Pkg.instantiate()'
+          julia --project=. -e 'using Pkg; Pkg.instantiate(; allow_autoprecomp=false)'
 
       - name: Run Julia tests
         continue-on-error: true
