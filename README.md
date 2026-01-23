@@ -8,8 +8,6 @@
 ![Julia](https://img.shields.io/badge/Julia-9558B2?style=for-the-badge&logo=julia&logoColor=white)
 ![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 
-[![LeetCode](https://img.shields.io/badge/LeetCode-27_Solved-FFA116?style=flat&logo=leetcode)](https://leetcode.com)
-[![Kattis](https://img.shields.io/badge/Kattis-13_Solved-00A6A6?style=flat)](https://open.kattis.com)
 ![DSA](https://img.shields.io/badge/DSA_Implementations-9_Topics-blueviolet?style=flat)
 
 </div>
@@ -26,11 +24,36 @@ Documenting my journey through various coding platforms including **LeetCode**, 
 
 ## Table of Contents <!-- omit in toc -->
 
+- [Notes](#notes)
+- [Basics](#basics)
 - [DSA from Scratch](#dsa-from-scratch)
 - [Boilerplate Code](#boilerplate-code)
   - [Arrays](#arrays)
 - [LeetCode Questions](#leetcode-questions)
 - [Kattis Problems](#kattis-problems)
+
+---
+
+## Notes
+
+Study notes and reference materials for DSA concepts and complexity analysis.
+
+| Topic | Description |
+|-------|-------------|
+| [Asymptotic Analysis](./notes/asymptotic-analysis.md) | Big O, Big Omega, Big Theta notation with worked examples |
+| [Python Big O Cheatsheet](./notes/python-big-o-cheatsheet.md) | Time complexity of common Python operations |
+| [Space Complexity Questions](./notes/space-complexity-questions.md) | Common space complexity interview questions with Python focus |
+
+---
+
+## Basics
+
+Foundational concepts with runnable code demonstrations.
+
+| File | Description |
+|------|-------------|
+| [Time-Space Tradeoff](./src/basics/time_space_tradeoff.py) | Examples showing when to trade space for time (Two Sum, Fibonacci, etc.) |
+| [Space Complexity Demo](./src/basics/space_complexity_demo.py) | Demonstrations of O(1), O(n), recursion space, and Python gotchas |
 
 ---
 
