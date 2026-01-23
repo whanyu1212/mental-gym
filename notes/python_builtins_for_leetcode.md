@@ -17,6 +17,19 @@ A comprehensive reference of Python built-ins commonly used in competitive progr
 - `s.lower()` / `s.upper()` - Case conversion
 - `s.count(sub)` - Count occurrences of substring
 
+### Character-ASCII Conversion
+- `ord(char)` - Get ASCII/Unicode code point of a character (e.g., `ord('a')` -> 97)
+- `chr(code)` - Get character from ASCII/Unicode code point (e.g., `chr(97)` -> 'a')
+- Common pattern: `ord(char) - ord('a')` maps 'a'-'z' to 0-25
+
+**Character Counting Pattern for Lowercase Strings:**
+```python
+# Count frequency of each character 'a'-'z'
+count = [0] * 26
+for char in string:
+    count[ord(char) - ord('a')] += 1
+```
+
 ### String Formatting
 ```python
 f"{value}"                    # f-strings (Python 3.6+)
@@ -66,10 +79,91 @@ lst[start:end:step]     # General form
 ### Transformation
 - `map(func, iterable)` - Apply function to each element (returns iterator)
 - `filter(func, iterable)` - Filter elements (returns iterator)
-- `zip(*iterables)` - Combine iterables pairwise (returns iterator)
+- `zip(*iterables)` - Combine iterables element-wise (returns iterator)
 - `enumerate(iterable, start=0)` - Pairs of (index, element)
 - `reversed(sequence)` - Reverse iterator
 - `sorted(iterable, key=None, reverse=False)` - Return sorted list
+
+#### `zip()` Deep Dive
+
+**Basic Usage:**
+```python
+zip(iterable1, iterable2, ...)  # Combine iterables element-wise
+```
+
+**How it works:**
+- Takes multiple iterables and returns an iterator of tuples
+- Each tuple contains elements at the same position from all iterables
+- Stops when the shortest iterable is exhausted
+
+**Examples:**
+```python
+# Basic pairing
+list(zip([1, 2, 3], ['a', 'b', 'c']))
+# [(1, 'a'), (2, 'b'), (3, 'c')]
+
+# Unequal lengths - stops at shortest
+list(zip([1, 2, 3], ['a', 'b']))
+# [(1, 'a'), (2, 'b')]
+
+# Transposing a matrix
+matrix = [[1, 2, 3], [4, 5, 6]]
+list(zip(*matrix))
+# [(1, 4), (2, 5), (3, 6)]
+```
+
+**The `*` Unpacking Operator with `zip`:**
+
+When you use `zip(*iterable)`, the `*` unpacks the iterable's elements as separate arguments:
+
+```python
+strs = ["flower", "flow", "flight"]
+
+# Without unpacking: zip receives ONE argument (the list)
+zip(strs)          # Does nothing useful
+
+# With unpacking: zip receives THREE arguments (the strings)
+zip(*strs)         # Equivalent to: zip("flower", "flow", "flight")
+                   # Returns: ('f','f','f'), ('l','l','l'), ('o','o','i'), ...
+```
+
+**Common Use Cases in LeetCode:**
+
+1. **Character-wise comparison across strings:**
+```python
+def longestCommonPrefix(strs):
+    for chars in zip(*strs):
+        if len(set(chars)) != 1:  # Not all same
+            break
+        prefix += chars[0]
+```
+
+2. **Pairwise iteration:**
+```python
+# Adjacent pairs
+for a, b in zip(nums, nums[1:]):
+    print(a, b)
+```
+
+3. **Parallel iteration:**
+```python
+names = ["Alice", "Bob", "Charlie"]
+ages = [25, 30, 35]
+for name, age in zip(names, ages):
+    print(f"{name}: {age}")
+```
+
+4. **Unzipping (reverse of zip):**
+```python
+pairs = [(1, 'a'), (2, 'b'), (3, 'c')]
+numbers, letters = zip(*pairs)
+# numbers = (1, 2, 3), letters = ('a', 'b', 'c')
+```
+
+**Performance Notes:**
+- Returns an iterator (lazy evaluation) - use `list(zip(...))` to materialize
+- Memory efficient for large datasets
+- O(1) memory overhead (doesn't create intermediate lists)
 
 ### Construction
 - `list(iterable)` - Create list from iterable
@@ -121,6 +215,22 @@ hex(x)                  # Convert to hexadecimal string
 - `dict.update(other)` - Update with another dict
 - `dict.clear()` - Remove all items
 - `dict.copy()` - Shallow copy
+
+**Using Tuples as Dictionary Keys:**
+- Lists cannot be dictionary keys (not hashable)
+- Convert to tuple: `tuple(list)` to use as key
+- Useful for grouping by array/list patterns
+
+```python
+# Example: Group anagrams by character frequency
+from collections import defaultdict
+result = defaultdict(list)
+for word in words:
+    count = [0] * 26
+    for char in word:
+        count[ord(char) - ord('a')] += 1
+    result[tuple(count)].append(word)  # tuple as key
+```
 
 ### Set Operations
 ```python
