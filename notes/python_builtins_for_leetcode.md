@@ -6,6 +6,15 @@ A comprehensive reference of Python built-ins commonly used in competitive progr
 
 ## String Operations
 
+### String Constants
+```python
+import string
+string.ascii_lowercase  # 'abcdefghijklmnopqrstuvwxyz'
+string.ascii_uppercase  # 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+string.digits           # '0123456789'
+string.hexdigits        # '0123456789abcdefABCDEF'
+```
+
 ### String Methods
 - `s.split(sep)` - Split string by separator (default: whitespace)
 - `s.join(iterable)` - Join iterable elements with separator `s`
@@ -64,6 +73,25 @@ lst[::-1]               # Reverse (creates new list)
 lst[start:end:step]     # General form
 ```
 
+### List Initialization Pitfall (2D Arrays / Buckets)
+Crucial for initializing hash table buckets (separate chaining) or graph adjacency lists.
+
+```python
+n = 5
+
+# CORRECT: Creates n distinct empty lists
+buckets = [[] for _ in range(n)]
+buckets[0].append(1)
+# Result: [[1], [], [], [], []] -> Independent lists
+
+# WRONG: Creates n references to the SAME list object
+buckets = [[]] * n
+buckets[0].append(1)
+# Result: [[1], [1], [1], [1], [1]] -> All point to the same list!
+```
+
+**Reason:** The `*` operator copies the *reference* of the mutable list `[]`, whereas the list comprehension executes the expression `[]` `n` times, creating `n` new lists.
+
 ---
 
 ## Built-in Functions for Iterables
@@ -85,85 +113,7 @@ lst[start:end:step]     # General form
 - `sorted(iterable, key=None, reverse=False)` - Return sorted list
 
 #### `zip()` Deep Dive
-
-**Basic Usage:**
-```python
-zip(iterable1, iterable2, ...)  # Combine iterables element-wise
-```
-
-**How it works:**
-- Takes multiple iterables and returns an iterator of tuples
-- Each tuple contains elements at the same position from all iterables
-- Stops when the shortest iterable is exhausted
-
-**Examples:**
-```python
-# Basic pairing
-list(zip([1, 2, 3], ['a', 'b', 'c']))
-# [(1, 'a'), (2, 'b'), (3, 'c')]
-
-# Unequal lengths - stops at shortest
-list(zip([1, 2, 3], ['a', 'b']))
-# [(1, 'a'), (2, 'b')]
-
-# Transposing a matrix
-matrix = [[1, 2, 3], [4, 5, 6]]
-list(zip(*matrix))
-# [(1, 4), (2, 5), (3, 6)]
-```
-
-**The `*` Unpacking Operator with `zip`:**
-
-When you use `zip(*iterable)`, the `*` unpacks the iterable's elements as separate arguments:
-
-```python
-strs = ["flower", "flow", "flight"]
-
-# Without unpacking: zip receives ONE argument (the list)
-zip(strs)          # Does nothing useful
-
-# With unpacking: zip receives THREE arguments (the strings)
-zip(*strs)         # Equivalent to: zip("flower", "flow", "flight")
-                   # Returns: ('f','f','f'), ('l','l','l'), ('o','o','i'), ...
-```
-
-**Common Use Cases in LeetCode:**
-
-1. **Character-wise comparison across strings:**
-```python
-def longestCommonPrefix(strs):
-    for chars in zip(*strs):
-        if len(set(chars)) != 1:  # Not all same
-            break
-        prefix += chars[0]
-```
-
-2. **Pairwise iteration:**
-```python
-# Adjacent pairs
-for a, b in zip(nums, nums[1:]):
-    print(a, b)
-```
-
-3. **Parallel iteration:**
-```python
-names = ["Alice", "Bob", "Charlie"]
-ages = [25, 30, 35]
-for name, age in zip(names, ages):
-    print(f"{name}: {age}")
-```
-
-4. **Unzipping (reverse of zip):**
-```python
-pairs = [(1, 'a'), (2, 'b'), (3, 'c')]
-numbers, letters = zip(*pairs)
-# numbers = (1, 2, 3), letters = ('a', 'b', 'c')
-```
-
-**Performance Notes:**
-- Returns an iterator (lazy evaluation) - use `list(zip(...))` to materialize
-- Memory efficient for large datasets
-- O(1) memory overhead (doesn't create intermediate lists)
+*(See previous notes for detailed examples)*
 
 ### Construction
 - `list(iterable)` - Create list from iterable
@@ -174,7 +124,7 @@ numbers, letters = zip(*pairs)
 
 ---
 
-## Math & Numeric Operations
+## Math & Numbers
 
 ### Arithmetic Operators
 ```python
@@ -185,11 +135,25 @@ numbers, letters = zip(*pairs)
 divmod(a, b)            # Returns (a // b, a % b)
 ```
 
-### Math Functions
-- `abs(x)` - Absolute value
-- `pow(base, exp, mod=None)` - Power with optional modulo
-- `round(x, ndigits=None)` - Round to n decimal places
-- `int(x)` / `float(x)` - Type conversion
+### Standard Math Functions (`import math`)
+```python
+from math import ceil, floor, gcd, lcm, sqrt, log, log2, log10, inf, factorial, pow, pi
+
+# Constants
+inf, -inf                           # Infinity
+pi                                  # 3.14159...
+
+# Functions
+ceil(x) / floor(x)                  # Rounding
+gcd(a, b)                           # Greatest common divisor
+lcm(a, b)                           # Least common multiple (Python 3.9+)
+sqrt(x)                             # Square root
+log(x, base=e)                      # Logarithm
+log2(x) / log10(x)                  # Binary/decimal logarithm
+factorial(n)                        # n!
+abs(x)                              # Absolute value (built-in)
+round(x, n)                         # Round to n places (built-in)
+```
 
 ### Bitwise Operators
 ```python
@@ -205,218 +169,114 @@ hex(x)                  # Convert to hexadecimal string
 
 ---
 
-## Collections & Data Structures
+## Advanced Data Structures & Algorithms
 
-### Dictionary Methods
-- `dict.get(key, default=None)` - Get value with default
-- `dict.setdefault(key, default=None)` - Get value, set if missing
-- `dict.keys()` / `dict.values()` / `dict.items()` - View objects
-- `dict.pop(key, default)` - Remove and return value
-- `dict.update(other)` - Update with another dict
-- `dict.clear()` - Remove all items
-- `dict.copy()` - Shallow copy
-
-**Using Tuples as Dictionary Keys:**
-- Lists cannot be dictionary keys (not hashable)
-- Convert to tuple: `tuple(list)` to use as key
-- Useful for grouping by array/list patterns
-
-```python
-# Example: Group anagrams by character frequency
-from collections import defaultdict
-result = defaultdict(list)
-for word in words:
-    count = [0] * 26
-    for char in word:
-        count[ord(char) - ord('a')] += 1
-    result[tuple(count)].append(word)  # tuple as key
-```
-
-### Set Operations
-```python
-s1 & s2                 # Intersection
-s1 | s2                 # Union
-s1 - s2                 # Difference
-s1 ^ s2                 # Symmetric difference
-s1.add(x)               # Add element
-s1.remove(x)            # Remove element (raises KeyError if missing)
-s1.discard(x)           # Remove element (no error if missing)
-s1.issubset(s2)         # Check subset
-s1.issuperset(s2)       # Check superset
-```
-
----
-
-## Standard Library - collections module
-
+### `collections` Module
 ```python
 from collections import Counter, defaultdict, deque, OrderedDict
 
 # Counter - count hashable objects
 counter = Counter([1, 2, 2, 3, 3, 3])
 counter.most_common(n)              # n most common elements
-counter[key]                        # Count of key (0 if missing)
 
 # defaultdict - dict with default factory
 dd = defaultdict(int)               # Default value 0
 dd = defaultdict(list)              # Default value []
-dd = defaultdict(set)               # Default value set()
 
-# deque - double-ended queue
+# deque - double-ended queue (O(1) append/pop on both ends)
 dq = deque([1, 2, 3])
-dq.append(x)                        # Add to right (O(1))
-dq.appendleft(x)                    # Add to left (O(1))
-dq.pop()                            # Remove from right (O(1))
-dq.popleft()                        # Remove from left (O(1))
+dq.append(x) / dq.appendleft(x)
+dq.pop() / dq.popleft()
 dq.rotate(n)                        # Rotate n steps right
-
-# OrderedDict - remembers insertion order (dict is ordered in Python 3.7+)
 ```
 
----
-
-## Standard Library - heapq module
-
+### `heapq` Module (Min-Heap)
 ```python
 from heapq import heappush, heappop, heapify, nlargest, nsmallest
 
-heap = []
+heap = []                           # Use standard list
 heappush(heap, item)                # Add item (min-heap)
 smallest = heappop(heap)            # Remove and return smallest
-heapify(list)                       # Convert list to heap in-place
-nlargest(n, iterable, key=None)     # n largest elements
-nsmallest(n, iterable, key=None)    # n smallest elements
+heapify(list)                       # Convert list to heap in-place (O(n))
 
-# For max-heap, negate values:
+# Max-Heap Workaround: Negate values before pushing
 heappush(heap, -value)
 max_val = -heappop(heap)
 ```
 
----
-
-## Standard Library - itertools module
-
-```python
-from itertools import (
-    accumulate, chain, combinations, combinations_with_replacement,
-    permutations, product, groupby, islice, count, cycle, repeat
-)
-
-# Infinite iterators
-count(start=0, step=1)              # Infinite counter
-cycle(iterable)                     # Repeat iterable infinitely
-repeat(obj, times=None)             # Repeat object
-
-# Combinatorics
-permutations(iterable, r=None)      # All permutations
-combinations(iterable, r)           # All r-length combinations
-combinations_with_replacement(iterable, r)  # Combinations with replacement
-product(*iterables, repeat=1)       # Cartesian product
-
-# Utilities
-accumulate(iterable, func=operator.add)  # Running totals (prefix sums)
-chain(*iterables)                   # Flatten iterables
-groupby(iterable, key=None)         # Group consecutive elements
-islice(iterable, start, stop, step) # Slice iterator
-```
-
----
-
-## Standard Library - bisect module
-
+### `bisect` Module (Binary Search)
 ```python
 from bisect import bisect_left, bisect_right, insort
 
-# Binary search in sorted list
-bisect_left(arr, x)                 # Leftmost insertion point
-bisect_right(arr, x)                # Rightmost insertion point
-insort(arr, x)                      # Insert x in sorted order
+# Assume 'arr' is sorted
+bisect_left(arr, x)                 # First index >= x (Lower Bound)
+bisect_right(arr, x)                # First index > x (Upper Bound)
+insort(arr, x)                      # Insert x keeping order
 
-# Usage for searching
-i = bisect_left(arr, x)
-if i != len(arr) and arr[i] == x:
-    # x found at index i
+# Check existence
+idx = bisect_left(arr, x)
+if idx != len(arr) and arr[idx] == x:
+    print("Found")
 ```
 
----
+### `itertools` Module
+```python
+from itertools import accumulate, chain, combinations, permutations, product, groupby
 
-## Standard Library - functools module
+accumulate(iterable)                # Prefix sums
+chain(*iterables)                   # Flatten/combine
+permutations(iter, r)               # Order matters
+combinations(iter, r)               # Order doesn't matter
+product(iter, repeat=n)             # Cartesian product
+```
 
+### `functools` Module
 ```python
 from functools import lru_cache, reduce, cmp_to_key
 
-# Memoization
-@lru_cache(maxsize=None)
-def fib(n):
-    if n < 2:
-        return n
-    return fib(n-1) + fib(n-2)
+@lru_cache(None)                    # Memoization for recursion
+def fib(n): ...
 
-# Reduce
-reduce(func, iterable, initializer=None)  # Apply func cumulatively
-# Example: reduce(lambda x, y: x * y, [1, 2, 3, 4]) -> 24
-
-# Custom sorting
-sorted(items, key=cmp_to_key(compare_func))
-```
-
----
-
-## Standard Library - math module
-
-```python
-from math import ceil, floor, gcd, lcm, sqrt, log, log2, log10, inf, factorial
-
-ceil(x)                             # Ceiling
-floor(x)                            # Floor
-gcd(a, b)                           # Greatest common divisor
-lcm(a, b)                           # Least common multiple (Python 3.9+)
-sqrt(x)                             # Square root
-log(x, base=e)                      # Logarithm
-log2(x) / log10(x)                  # Binary/decimal logarithm
-inf                                 # Infinity
-factorial(n)                        # n!
-```
-
----
-
-## Comparison & Logical Operators
-
-```python
-==, !=, <, <=, >, >=                # Comparison operators
-is, is not                          # Identity operators
-in, not in                          # Membership operators
-and, or, not                        # Logical operators
-```
-
----
-
-## Type Checking
-
-```python
-type(obj)                           # Get type of object
-isinstance(obj, class_or_tuple)     # Check instance
-issubclass(class, classinfo)        # Check subclass
-```
-
----
-
-## Input/Output
-
-```python
-# Reading input (for Kattis/competitive programming)
-line = input()                      # Read one line
-lines = [input() for _ in range(n)] # Read n lines
-n, m = map(int, input().split())    # Parse space-separated integers
-
-# Printing
-print(*values, sep=' ', end='\n')   # Print values
-print(f"{x:.2f}")                   # Formatted output
+sorted(items, key=cmp_to_key(func)) # Custom comparator
 ```
 
 ---
 
 ## Common Patterns
+
+### Grid Traversal (Direction Arrays)
+Crucial for BFS/DFS on 2D grids (matrices).
+
+```python
+rows, cols = len(grid), len(grid[0])
+# Directions: Right, Down, Left, Up
+directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
+for r in range(rows):
+    for c in range(cols):
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < rows and 0 <= nc < cols:
+                # Process neighbor (nr, nc)
+                pass
+```
+
+### Recursion & Scoping
+**`nonlocal`**: Required to modify a variable from the enclosing scope (outer function) inside a nested function (helper).
+
+```python
+def maxDepth(root):
+    max_d = 0
+    def dfs(node, depth):
+        nonlocal max_d        # Declare intention to modify outer variable
+        if not node: return
+        max_d = max(max_d, depth)
+        dfs(node.left, depth + 1)
+        dfs(node.right, depth + 1)
+    
+    dfs(root, 1)
+    return max_d
+```
 
 ### Frequency Counter
 ```python
@@ -479,6 +339,54 @@ x, y, z = [1, 2, 3]                 # Unpack
 
 # Generator expression (memory efficient)
 sum(x**2 for x in range(1000000))
+```
+
+---
+
+## System & Recursion
+
+### Recursion Limit
+Python's default recursion limit is often 1000, which is too low for deep DFS problems (e.g., graphs/trees with 10^4 nodes).
+
+```python
+import sys
+sys.setrecursionlimit(2000) # Increase limit
+```
+
+---
+
+## Comparison & Logical Operators
+
+```python
+==, !=, <, <=, >, >=                # Comparison operators
+is, is not                          # Identity operators
+in, not in                          # Membership operators
+and, or, not                        # Logical operators
+```
+
+---
+
+## Type Checking
+
+```python
+type(obj)                           # Get type of object
+isinstance(obj, class_or_tuple)     # Check instance
+issubclass(class, classinfo)        # Check subclass
+```
+
+---
+
+## Input/Output
+
+```python
+# Reading input (for Kattis/competitive programming)
+line = input()                      # Read one line
+lines = [input() for _ in range(n)] # Read n lines
+n, m = map(int, input().split())    # Parse space-separated integers
+
+# Printing
+print(*values, sep=' ', end='\n')   # Print values
+print(f"{x:.2f}")                   # Formatted output
 ```
 
 ---
