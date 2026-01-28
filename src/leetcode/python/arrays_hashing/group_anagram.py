@@ -10,10 +10,15 @@ class Solution:
         for s in strs:
             count = [0] * 26
 
-            for char in s:
+            for char in s:s
                 count[ord(char) - ord("a")] += 1
             # convert the list to a tuple so it can be used as a key
             result[tuple(count)].append(s)
+        
+        # alternative would be to use sorted string as key
+        # for s in strs:
+        #     key = ''.join(sorted(s))
+        #     result[key].append(s)
 
         return list(result.values())
 
