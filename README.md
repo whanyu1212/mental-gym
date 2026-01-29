@@ -157,29 +157,29 @@ Foundational concepts with runnable code demonstrations.
 <summary><b>Kadane's Algorithm</b></summary>
 <br>
 
-- [Calculating max sum subarray](./src/boilerplate/kadane.py)
+- [Calculating max sum subarray](./src/boilerplate/arrays/kadane.py)
 </details>
 
 <details open>
 <summary><b>Sliding Window</b></summary>
 <br>
 
-- [Fixed size](./src/boilerplate/sliding_window_fixed.py)
-- [Variable size](./src/boilerplate/sliding_window_variable.py)
+- [Fixed size](./src/boilerplate/sliding_window/sliding_window_fixed.py)
+- [Variable size](./src/boilerplate/sliding_window/sliding_window_variable.py)
 </details>
 
 <details open>
 <summary><b>Prefix Sum</b></summary>
 <br>
 
-- [Range Sum Query](./src/boilerplate/prefix_sum.py)
+- [Range Sum Query](./src/boilerplate/arrays/prefix_sum.py)
 </details>
 
 <details open>
 <summary><b>Two Pointers</b></summary>
 <br>
 
-- [3 different variations of two pointers](./src/boilerplate/two_pointers_variations.md)
+- [3 different variations of two pointers](./notes/two_pointers_variations.md)
 </details>
 
 ---
