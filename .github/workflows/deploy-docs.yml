@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'docs/**'
-      - 'package.json'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
@@ -36,10 +35,12 @@ jobs:
           cache-dependency-path: docs/package-lock.json
 
       - name: Install dependencies
-        run: cd docs && npm ci
+        working-directory: docs
+        run: npm ci
 
       - name: Build docs
-        run: cd docs && npm run docs:build
+        working-directory: docs
+        run: npm run docs:build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
