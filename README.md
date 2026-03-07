@@ -9,6 +9,11 @@
 ![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
 
 ![DSA](https://img.shields.io/badge/DSA_Implementations-9_Topics-blueviolet?style=flat)
+[![Docs](https://img.shields.io/badge/Docs-mental--gym-7c6af7?style=flat&logo=vitepress&logoColor=white)](https://hanyuwu.github.io/mental-gym/)
+[![Deploy Docs](https://github.com/hanyuwu/mental-gym/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/hanyuwu/mental-gym/actions/workflows/deploy-docs.yml)
+![Last Commit](https://img.shields.io/github/last-commit/hanyuwu/mental-gym?style=flat)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 </div>
 
@@ -18,7 +23,7 @@
 
 Documenting my journey through various coding platforms including **LeetCode**, **Kattis**, and **HackerRank**. This repository also contains implementations of common data structures and algorithms (DSA) built from scratch to strengthen fundamental understanding.
 
-> **Note:** All problem-solving and implementations are done independently. AI tools (Claude Code) are used minimally for repository organization and documentation structure only.
+> **Note:** All problem-solving and implementations are done independently. AI tools are used minimally for repository organization and documentation structure only.
 
 ---
 
@@ -27,7 +32,6 @@ Documenting my journey through various coding platforms including **LeetCode**, 
 - [Notes](#notes)
 - [Basics](#basics)
 - [DSA from Scratch](#dsa-from-scratch)
-- [](#)
 - [Boilerplate Code](#boilerplate-code)
   - [Arrays](#arrays)
 - [LeetCode Questions](#leetcode-questions)
@@ -182,11 +186,18 @@ Foundational concepts with runnable code demonstrations.
 - [3 different variations of two pointers](./notes/two_pointers_variations.md)
 </details>
 
+<details open>
+<summary><b>Three Pointers</b></summary>
+<br>
+
+- [8 pattern variations (Dutch National Flag, Sort Colors, partition algorithms, etc.)](./src/boilerplate/three_pointers/patterns.py)
+</details>
+
 ---
 
 ## LeetCode Questions
 
-> Gradually adding solutions in different languages: **Python**, **Julia**, and **C++**
+> Gradually adding solutions in different languages: **Python**, **Julia**, **Rust**, and **C++**
 
 <details open>
   <summary><b>Arrays & Hashing</b></summary>
@@ -194,13 +205,14 @@ Foundational concepts with runnable code demonstrations.
 
 | # | Question | Description | Difficulty | Solution |
 |---|----------|-------------|------------|----------|
-| 1 | Two Sum | Find two indices in a vector such that the<br>numbers add up to a target value<br>💡 *Use HashMap for O(n) time* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/two_sum.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/TwoSum.jl) |
+| 1 | Two Sum | Find two indices in a vector such that the<br>numbers add up to a target value<br>💡 *Use HashMap for O(n) time* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/two_sum.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/TwoSum.jl) [![Rust](https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white)](/src/leetcode/rust/src/arrays_hashing/two_sum.rs) |
 | 242 | Valid Anagram | Determine if two strings are anagrams of each other<br>💡 *HashMap/Counter for frequency comparison* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/is_anagram.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/IsAnagram.jl) |
 | 217 | Contains Duplicate | Check if a vector contains any duplicates<br>💡 *HashSet for O(n) lookup* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/contains_duplicate.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/ContainsDuplicate.jl) |
 | 36 | Valid Sudoku | Determine if a 9x9 Sudoku board is valid<br>💡 *HashSet for rows/cols/boxes* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/is_valid_sudoku.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/IsValidSudoku.jl) |
 | 128 | Longest Consecutive Sequence | Find the length of the longest consecutive elements sequence<br>💡 *HashSet with O(n) streak checking* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/longest_consecutive.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/LongestConsecutive.jl) |
 | 271 | Encode and Decode Strings | Encode a list of strings to a single string and decode it back<br>💡 *Use delimiter with length prefix* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/encode_decode_string.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/EncodeDecodeString.jl) |
 | 49 | Group Anagrams | Group strings into anagrams<br>💡 *Sort strings as keys or count frequencies* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/group_anagram.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/GroupAnagrams.jl) |
+| 75 | Sort Colors | Sort array with only 0s, 1s, and 2s in-place<br>💡 *Three-pointer Dutch National Flag algorithm O(n)* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/sort_colors.py) |
 | 219 | Close Duplicates | Check if a vector contains duplicates within a given range<br>💡 *Sliding window with HashSet* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/CloseDuplicates.jl) |
 | 1343 | NumOfSubarrays | Count subarrays with average greater than or equal to a threshold<br>💡 *Fixed-size sliding window* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/NumOfSubarrays.jl) |
 | 1929 | Concatenation of Array | Return array ans of length 2n where ans[i] == nums[i] and ans[i + n] == nums[i]<br>💡 *Simple array duplication* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/get_concatenation.py) [![Julia](https://img.shields.io/badge/Julia-9558B2?style=flat-square&logo=julia&logoColor=white)](/src/leetcode/julia/arrays_hashing/GetConcatenation.jl) |
@@ -208,6 +220,7 @@ Foundational concepts with runnable code demonstrations.
 | 169 | Majority Element | Find the majority element that appears more than ⌊n/2⌋ times<br>💡 *Boyer-Moore voting or HashMap* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/majority_element.py) |
 | 705 | Design HashSet | Design a HashSet without using any built-in hash table libraries<br>💡 *Use an array of buckets (Separate Chaining)* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/design_hashset.py) |
 | 706 | Design HashMap | Design a HashMap without using any built-in hash table libraries<br>💡 *Store (key, value) pairs in buckets* | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/design_hashmap.py) |
+| 912 | Sort an Array | Sort an array of integers in ascending order<br>💡 *Counting Sort O(n+k) or Heap Sort O(n log n)* | ![Medium](https://img.shields.io/badge/Medium-FFA500?style=flat-square) | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/leetcode/python/arrays_hashing/sort_an_array.py) |
 </details>
 
 <details open>
@@ -286,4 +299,3 @@ Foundational concepts with runnable code demonstrations.
 | 13 | taktsvedjur | Calculate scores with multipliers | ![Easy](https://img.shields.io/badge/Easy-5CB85C?style=flat-square) | Array | [![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](/src/kattis/python/taktsvedjur.py) |
 
 </details>
-
