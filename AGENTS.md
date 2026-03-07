@@ -12,7 +12,7 @@ This file provides guidance to agents (i.e., ADAL) when working with code in thi
 - `src/leetcode/` - LeetCode solutions (Python + Julia)
 - `src/kattis/` - Kattis solutions (Python)
 - `src/dsa_from_scratch/` - DSA implementations from scratch
-- `src/boilerplate/` - Common algorithm patterns (Kadane, sliding window, prefix sum, two pointers)
+- `src/boilerplate/` - Common algorithm patterns (arrays, backtracking, linked_list, sliding_window)
 - `src/basics/` - Fundamental concepts (time/space tradeoffs)
 - `tests/` - Test files mirroring `src/` structure
 
@@ -139,7 +139,7 @@ julia tests/leetcode/testMaxArea.jl
 - `README.md` - Main documentation with problem tables, badges, DSA catalog
 
 **Source Entry Points**:
-- Boilerplate patterns: `src/boilerplate/kadane.py`, `sliding_window_*.py`, `prefix_sum.py`, `two_pointers_variations.md`
+- Boilerplate patterns: `src/boilerplate/arrays/kadane.py`, `src/boilerplate/sliding_window/*.py`, `notes/two_pointers_variations.md`
 - DSA implementations: Browse `src/dsa_from_scratch/python/<category>/` for specific data structures
 
 ## Common Gotchas
