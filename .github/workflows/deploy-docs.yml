@@ -42,6 +42,9 @@ jobs:
         working-directory: docs
         run: npm run docs:build
 
+      - name: Verify dist
+        run: ls docs/.vitepress/dist
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
