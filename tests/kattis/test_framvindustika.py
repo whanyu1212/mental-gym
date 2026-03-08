@@ -1,14 +1,6 @@
-import os
-import sys
-import pytest
 from io import StringIO
 
-# Add the src/kattis directory to the PYTHONPATH
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
-
+import pytest
 from framvindustika import framvindustika
 
 

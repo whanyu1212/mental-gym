@@ -1,20 +1,26 @@
-# This is a weighted SSSP problem with a twist. The twist is that the cost of lodging at each location is added to the
-# cost of the path. The goal is to find the minimum cost to travel from location 1 to location n.
+# This is a weighted SSSP problem with a twist. The twist is that the cost of lodging at
+# each location is added to the
+# cost of the path. The goal is to find the minimum cost to travel from location 1 to
+# location n.
 
-# Given a weighted SSSP Problem, the Dijkstra's algorithm can be used to solve the problem with
-# a slight modification. The modification is to add the lodging cost to the cost of the path when updating the distance
+import heapq
+
+# Given a weighted SSSP Problem, the Dijkstra's algorithm can be used to solve the
+# problem with
+# a slight modification. The modification is to add the lodging cost to the cost of the
+# path when updating the distance
 # to a neighbor.
 import sys
-import heapq
 from typing import Tuple
 
 
 def create_weighted_graph(
     n_locations: int, travel_path_n_cost: list
 ) -> Tuple[dict, dict]:
-    """Create graphs with 1-based indexing for both parties because of
-    their currency exchange rate differences. their weights for the
-    same edge can be different.
+    """
+    Create graphs with 1-based indexing for both parties because of
+    their currency exchange rate differences. their weights for the same
+    edge can be different.
 
     Args:
         n_locations (int): number of locations.
@@ -41,9 +47,10 @@ def create_weighted_graph(
 
 
 def dijkstra(graph: dict, start: int) -> dict:
-    """Dijkstra's algorithm to find the minimum travel cost to
-    reach each location. we do not consider lodging costs here to
-    avoid double counting.
+    """
+    Dijkstra's algorithm to find the minimum travel cost to reach each
+    location. we do not consider lodging costs here to avoid double
+    counting.
 
     Args:
         graph (dict): The graph with 1-based indexing.

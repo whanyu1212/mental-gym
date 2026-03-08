@@ -4,12 +4,13 @@ import sys
 def merge_and_count_inversion(
     nums: list[int], tmp: list[int], left: int, mid: int, right: int
 ) -> int:
-    """A simple variation from the merge sort algorithm.
-    The only difference is that we count the number of inversions
-    during the merge stage.
+    """
+    A simple variation from the merge sort algorithm. The only
+    difference is that we count the number of inversions during the
+    merge stage.
 
     Args:
-        nums (list[int]): input list of integers (index of the respective garage for each house in the list)
+        nums (list[int]): input list of integers (index of the respective garage for each house in the list)  # noqa: E501
         tmp (list[int]): temporary list to store the sorted elements
         left (int): left boundary of the sort interval
         mid (int): middle index of the sort interval
@@ -30,7 +31,7 @@ def merge_and_count_inversion(
             tmp[k] = nums[j]
             j += 1
             # Assume both subarrays are sorted in ascending order
-            # If nums[i] > nums[j], then nums[i] > nums[j], nums[i + 1], ..., nums[mid] as well
+            # If nums[i] > nums[j], then nums[i] > nums[j], nums[i + 1], ..., nums[mid] as well  # noqa: E501
             inversions += mid - i + 1
         k += 1
 
@@ -55,10 +56,11 @@ def merge_and_count_inversion(
 def sort_and_count_inversion(
     nums: list[int], tmp: list[int], left: int, right: int
 ) -> int:
-    """A recursive function to count the number of inversions in a numsay.
+    """
+    A recursive function to count the number of inversions in a numsay.
 
     Args:
-        nums (list[int]): a list of index of the respective garage for each house in the list
+        nums (list[int]): a list of index of the respective garage for each house in the list  # noqa: E501
         tmp (list[int]): temporary list to store the sorted elements
         left (int): left boundary of the sort interval
         right (int): right boundary of the sort interval
@@ -80,8 +82,9 @@ def sort_and_count_inversion(
 
 
 def count_intersections_efficient(house: list[int], garage: list[int]) -> int:
-    """Count the number of intersections on the paths from the houses to the garages
-    using a variation of the merge sort algorithm.
+    """
+    Count the number of intersections on the paths from the houses to
+    the garages using a variation of the merge sort algorithm.
 
     Args:
         house (list[int]): list of integers representing the houses

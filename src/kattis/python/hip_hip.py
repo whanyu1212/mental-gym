@@ -1,8 +1,6 @@
-###################################################################################################
 # https://open.kattis.com/problems/hipphipp
-# Problem A - Hipp Hipp                                                                           #
-# Hipp Hipp                                                                                       #
-###################################################################################################
+# Problem A - Hipp Hipp
+# Hipp Hipp
 
 # Forritunarkeppni Framhaldsskólanna was first held in the year 2001.
 # This year the contest is celebrating a big anniversary, being 20 years old!

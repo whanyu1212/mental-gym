@@ -1,5 +1,4 @@
 import heapq
-import sys
 
 
 def parse_score(input_list):

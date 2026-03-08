@@ -10,7 +10,7 @@
 
 ![DSA](https://img.shields.io/badge/DSA_Implementations-9_Topics-blueviolet?style=flat)
 [![Docs](https://img.shields.io/badge/Docs-mental--gym-7c6af7?style=flat&logo=vitepress&logoColor=white)](https://hanyuwu.github.io/mental-gym/)
-[![Deploy Docs](https://github.com/hanyuwu/mental-gym/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/hanyuwu/mental-gym/actions/workflows/deploy-docs.yml)
+[![Deploy Docs](https://github.com/whanyu1212/mental-gym/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/whanyu1212/mental-gym/actions/workflows/deploy-docs.yml)
 ![Last Commit](https://img.shields.io/github/last-commit/hanyuwu/mental-gym?style=flat)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)

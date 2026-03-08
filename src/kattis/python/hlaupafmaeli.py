@@ -1,5 +1,7 @@
 # There is only 1 input which is the year to check against 2020
-# Function needed: 1. Check if the input year is a leap year 2. Count the number of leap years between 2020 and the input year
+# Function needed:
+# 1. Check if the input year is a leap year
+# 2. Count the number of leap years between 2020 and the input year
 
 
 def is_leap_year(year):
@@ -20,9 +22,9 @@ def is_leap_year(year):
 
 def leap_year_up_to(year):
     """
-    Count the years divisible by 4 first,
-    then subtract the years divisible by 100 because
-    these 2 conditions are mutually exclusive.
+    Count the years divisible by 4 first, then subtract the years
+    divisible by 100 because these 2 conditions are mutually exclusive.
+
     Finally, add back some that are divisible by 400
     """
     return year // 4 - year // 100 + year // 400

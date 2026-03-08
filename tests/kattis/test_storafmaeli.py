@@ -1,21 +1,16 @@
-import io
-import os
-import sys
 from io import StringIO
-
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
 
 from storafmaeli import process_anniversary_year
 
 
 def test_process_anniversary_year(monkeypatch):
     """
-    A StringIO object is a part of Python's io module and provides an in-memory
-    file-like object that reads and writes a string buffer (text). Essentially,
-    it behaves like a file, but instead of being connected to a file on disk, it operates in memory.
+    A StringIO object is a part of Python's io module and provides an
+    in-memory file-like object that reads and writes a string buffer
+    (text).
+
+    Essentially, it behaves like a file, but instead of being connected
+    to a file on disk, it operates in memory.
     """
 
     # Test case: input less than 10
@@ -45,6 +40,5 @@ def test_process_anniversary_year(monkeypatch):
     monkeypatch.setattr("sys.stdout", captured_output)
     process_anniversary_year()
     assert (
-        captured_output.getvalue().strip()
-        == "Invalid input. Please enter a valid year."
+        captured_output.getvalue().strip() == "Invalid input. Please enter a valid year."
     )
