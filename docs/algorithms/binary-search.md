@@ -8,20 +8,8 @@
 ## Template
 
 ### Standard Binary Search
-```python
-def binary_search(nums: list[int], target: int) -> int:
-    l, r = 0, len(nums) - 1
-    while l <= r:
-        mid = l + (r - l) // 2  # avoids overflow
-        if nums[mid] == target:
-            return mid
-        elif nums[mid] < target:
-            l = mid + 1
-        else:
-            r = mid - 1
-    return -1
-```
-**Time**: O(log n) | **Space**: O(1)
+
+<<< @/../src/dsa_from_scratch/python/binary_search/binary_search.py
 
 ### Left Boundary (first occurrence / leftmost valid)
 ```python
@@ -59,7 +47,8 @@ def solve(piles, h):
 - Always use `mid = l + (r - l) // 2` to avoid integer overflow
 
 ## Related Problems
-- LeetCode 704 — Binary Search
-- LeetCode 875 — Koko Eating Bananas
-- LeetCode 33 — Search in Rotated Sorted Array
-- LeetCode 153 — Find Minimum in Rotated Sorted Array
+
+- [LeetCode 704 — Binary Search](/problems/leetcode)
+- [LeetCode 875 — Koko Eating Bananas](/problems/leetcode)
+- [LeetCode 33 — Search in Rotated Sorted Array](/problems/leetcode)
+- [LeetCode 153 — Find Minimum in Rotated Sorted Array](/problems/leetcode)

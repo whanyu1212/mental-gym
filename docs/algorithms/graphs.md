@@ -2,98 +2,40 @@
 
 ## Representations
 
-```python
-# Adjacency list (most common)
-graph = {
-    0: [1, 2],
-    1: [0, 3],
-    2: [0],
-    3: [1],
-}
+### Adjacency List
+<<< @/../src/dsa_from_scratch/python/graph/adjacency_list.py
 
-# Build from edge list
-from collections import defaultdict
-def build_graph(edges):
-    graph = defaultdict(list)
-    for u, v in edges:
-        graph[u].append(v)
-        graph[v].append(u)  # undirected
-    return graph
-```
+### Adjacency Matrix
+<<< @/../src/dsa_from_scratch/python/graph/adjacency_matrix.py
 
-## BFS (Shortest Path / Level Order)
-```python
-from collections import deque
+### Edge List
+<<< @/../src/dsa_from_scratch/python/graph/edge_list.py
 
-def bfs(graph, start):
-    visited = {start}
-    queue = deque([start])
-    while queue:
-        node = queue.popleft()
-        for neighbor in graph[node]:
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
-```
-**Time**: O(V + E) | **Space**: O(V)
+## Traversals
 
-## DFS
-```python
-def dfs(graph, node, visited=None):
-    if visited is None:
-        visited = set()
-    visited.add(node)
-    for neighbor in graph[node]:
-        if neighbor not in visited:
-            dfs(graph, neighbor, visited)
-    return visited
-```
-**Time**: O(V + E) | **Space**: O(V)
+### BFS
+<<< @/../src/dsa_from_scratch/python/graph/graph_traversal_bfs.py
 
-## Cycle Detection (Directed Graph)
-```python
-def has_cycle(graph, n):
-    WHITE, GRAY, BLACK = 0, 1, 2
-    color = [WHITE] * n
+### DFS
+<<< @/../src/dsa_from_scratch/python/graph/graph_traversal_dfs.py
 
-    def dfs(u):
-        color[u] = GRAY
-        for v in graph[u]:
-            if color[v] == GRAY:
-                return True  # back edge = cycle
-            if color[v] == WHITE and dfs(v):
-                return True
-        color[u] = BLACK
-        return False
+## Algorithms
 
-    return any(dfs(i) for i in range(n) if color[i] == WHITE)
-```
+### Cycle Detection
+<<< @/../src/dsa_from_scratch/python/graph/cycle_detection.py
 
-## Topological Sort (Kahn's BFS)
-```python
-from collections import deque
+### Topological Sort
+<<< @/../src/dsa_from_scratch/python/graph/toposort.py
 
-def topo_sort(n, edges):
-    graph = defaultdict(list)
-    in_degree = [0] * n
-    for u, v in edges:
-        graph[u].append(v)
-        in_degree[v] += 1
+### Dijkstra's Shortest Path
+<<< @/../src/dsa_from_scratch/python/graph/dijkstra.py
 
-    queue = deque(i for i in range(n) if in_degree[i] == 0)
-    order = []
-    while queue:
-        u = queue.popleft()
-        order.append(u)
-        for v in graph[u]:
-            in_degree[v] -= 1
-            if in_degree[v] == 0:
-                queue.append(v)
-    return order if len(order) == n else []  # empty = cycle exists
-```
+### Bellman-Ford
+<<< @/../src/dsa_from_scratch/python/graph/bellman_ford.py
 
 ## Related Problems
-- LeetCode 200 — Number of Islands
-- LeetCode 207 — Course Schedule
-- LeetCode 210 — Course Schedule II
-- LeetCode 417 — Pacific Atlantic Water Flow
+
+- [LeetCode 200 — Number of Islands](/problems/leetcode)
+- [LeetCode 207 — Course Schedule](/problems/leetcode)
+- [LeetCode 210 — Course Schedule II](/problems/leetcode)
+- [LeetCode 417 — Pacific Atlantic Water Flow](/problems/leetcode)

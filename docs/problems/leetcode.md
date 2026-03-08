@@ -1,66 +1,65 @@
 # LeetCode Problems
 
-> Solutions live in `src/leetcode/python/` and `src/leetcode/julia/`
+> This page is auto-generated from `src/leetcode/`.
+> Do not edit manually. Run `poetry run python scripts/generate_leetcode_docs.py` to regenerate.
 
 ## Arrays & Hashing
 
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 1 | Two Sum | Easy | Hash map, O(n) |
-| 49 | Group Anagrams | Medium | Sorted key or char count tuple |
-| 238 | Product of Array Except Self | Medium | Prefix + suffix products, no division |
-| 53 | Maximum Subarray | Medium | Kadane's algorithm |
-| 128 | Longest Consecutive Sequence | Medium | Hash set, O(n) |
-
-## Two Pointers
-
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 167 | Two Sum II | Medium | Converging pointers on sorted array |
-| 15 | 3Sum | Medium | Sort + two pointers, skip duplicates |
-| 11 | Container With Most Water | Medium | Greedy converging pointers |
-| 42 | Trapping Rain Water | Hard | Two pointers or monotonic stack |
+| Problem | Python | Julia |
+|---------|--------|-------|
+| Close Duplicates | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/CloseDuplicates.jl) |
+| Contains Duplicate | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/contains_duplicate.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/ContainsDuplicate.jl) |
+| Design Hashmap | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/design_hashmap.py) | — |
+| Design Hashset | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/design_hashset.py) | — |
+| Encode Decode String | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/encode_decode_string.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/EncodeDecodeString.jl) |
+| Get Concatenation | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/get_concatenation.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/GetConcatenation.jl) |
+| Group Anagram | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/group_anagram.py) | — |
+| Group Anagrams | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/GroupAnagrams.jl) |
+| Is Anagram | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/is_anagram.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/IsAnagram.jl) |
+| Is Valid Sudoku | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/is_valid_sudoku.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/IsValidSudoku.jl) |
+| Longest Common Prefix | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/longest_common_prefix.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/LongestCommonPrefix.jl) |
+| Longest Consecutive | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/longest_consecutive.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/LongestConsecutive.jl) |
+| Majority Element | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/majority_element.py) | — |
+| Num Of Subarrays | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/NumOfSubarrays.jl) |
+| Product Except Self | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/product_except_self.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/ProductExceptSelf.jl) |
+| Sort An Array | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/sort_an_array.py) | — |
+| Sort Colors | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/sort_colors.py) | — |
+| Top K Frequent Elements | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/top_k_frequent_elements.py) | — |
+| Two Sum | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/two_sum.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/TwoSum.jl) |
 
 ## Sliding Window
 
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 121 | Best Time to Buy and Sell Stock | Easy | Track min price so far |
-| 3 | Longest Substring Without Repeating Chars | Medium | Hash map + variable window |
-| 76 | Minimum Window Substring | Hard | Two maps + shrink when valid |
+| Problem | Python | Julia |
+|---------|--------|-------|
+| Character Replacement | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/sliding_window/character_replacement.py) | — |
+| Longest Substring | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/sliding_window/longest_substring.py) | — |
+| Max Profit | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/sliding_window/max_profit.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/sliding_window/MaxProfit.jl) |
 
 ## Stack
 
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 20 | Valid Parentheses | Easy | Stack + pairs dict |
-| 155 | Min Stack | Medium | Parallel min stack |
-| 739 | Daily Temperatures | Medium | Monotonic decreasing stack |
-| 84 | Largest Rectangle in Histogram | Hard | Monotonic increasing stack |
+| Problem | Python | Julia |
+|---------|--------|-------|
+| Character Replacement | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/CharacterReplacement.jl) |
+| Encode Decode String | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/EncodeDecodeString.jl) |
+| Eval Rpn | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/eval_rpn.py) | — |
+| Generate Parenthesis | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/generate_parenthesis.py) | — |
+| Longest Consecutive | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/LongestConsecutive.jl) |
+| Max Sliding Window | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/max_sliding_window.py) | — |
+| Merge2 Sorted List | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/Merge2SortedList.jl) |
+| Merge 2 Sorted Lists | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/merge_2_sorted_lists.py) | — |
+| Min Stack | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/min_stack.py) | — |
+| Min Window | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/MinWindow.jl) |
+| Permutation In String | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/permutation_in_string.py) | — |
+| Valid Parenthesis | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/ValidParenthesis.jl) |
+| Valid Sudoku | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/valid_sudoku.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/stack/ValidSudoku.jl) |
 
-## Linked List
+## Two Pointers
 
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 206 | Reverse Linked List | Easy | Iterative prev/curr |
-| 21 | Merge Two Sorted Lists | Easy | Dummy head |
-| 141 | Linked List Cycle | Easy | Floyd's fast/slow |
-| 19 | Remove Nth Node From End | Medium | Two pointers, n gap |
-| 143 | Reorder List | Medium | Find mid + reverse + merge |
-
-## Trees
-
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 104 | Maximum Depth of Binary Tree | Easy | Recursive DFS |
-| 226 | Invert Binary Tree | Easy | Swap children recursively |
-| 102 | Binary Tree Level Order Traversal | Medium | BFS with deque |
-| 236 | Lowest Common Ancestor | Medium | Recursive case split |
-
-## Graphs
-
-| # | Problem | Difficulty | Notes |
-|---|---------|-----------|-------|
-| 200 | Number of Islands | Medium | DFS/BFS flood fill |
-| 207 | Course Schedule | Medium | Cycle detection (DFS coloring) |
-| 210 | Course Schedule II | Medium | Topological sort (Kahn's) |
+| Problem | Python | Julia |
+|---------|--------|-------|
+| Max Area | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/max_area.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/MaxArea.jl) |
+| Three Sum | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/three_sum.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/threeSum.jl) |
+| Trap | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/trap.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/trap.jl) |
+| Two Sum2 | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/two_sum2.py) | — |
+| Two Sum Part2 | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/TwoSumPart2.jl) |
+| Valid Palindrome | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/valid_palindrome.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/two_pointers/ValidPalindrome.jl) |

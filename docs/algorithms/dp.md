@@ -8,6 +8,10 @@
 
 ## Patterns
 
+### 0/1 Knapsack
+
+<<< @/../src/dsa_from_scratch/python/dynamic_programming/01_knapsack.py
+
 ### 1D DP — Fibonacci / Climbing Stairs
 ```python
 def climb_stairs(n: int) -> int:
@@ -43,17 +47,6 @@ def lcs(s: str, t: str) -> int:
 ```
 **Time**: O(mn) | **Space**: O(mn) → optimizable to O(n)
 
-### 0/1 Knapsack
-```python
-def knapsack(weights, values, capacity):
-    n = len(weights)
-    dp = [0] * (capacity + 1)
-    for i in range(n):
-        for w in range(capacity, weights[i] - 1, -1):  # reverse to avoid reuse
-            dp[w] = max(dp[w], dp[w - weights[i]] + values[i])
-    return dp[capacity]
-```
-
 ## Memoization Template
 ```python
 from functools import lru_cache
@@ -77,7 +70,8 @@ def solve(n):
 | String | LCS, Edit Distance, Word Break |
 
 ## Related Problems
-- LeetCode 70 — Climbing Stairs
-- LeetCode 198 — House Robber
-- LeetCode 1143 — Longest Common Subsequence
-- LeetCode 322 — Coin Change
+
+- [LeetCode 70 — Climbing Stairs](/problems/leetcode)
+- [LeetCode 198 — House Robber](/problems/leetcode)
+- [LeetCode 1143 — Longest Common Subsequence](/problems/leetcode)
+- [LeetCode 322 — Coin Change](/problems/leetcode)
