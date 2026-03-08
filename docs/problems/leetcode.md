@@ -22,6 +22,7 @@
 | Majority Element | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/majority_element.py) | — |
 | Num Of Subarrays | — | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/NumOfSubarrays.jl) |
 | Product Except Self | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/product_except_self.py) | [Julia](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/ProductExceptSelf.jl) |
+| Range Query Sum 2d Immutable | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/range_query_sum_2d_immutable.py) | — |
 | Sort An Array | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/sort_an_array.py) | — |
 | Sort Colors | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/sort_colors.py) | — |
 | Top K Frequent Elements | [Python](https://github.com/hanyuwu/mental-gym/blob/develop/src/leetcode/arrays_hashing/top_k_frequent_elements.py) | — |

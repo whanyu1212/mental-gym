@@ -19,6 +19,8 @@
 
 ### Prefix Sum
 
+Precomputing cumulative sums allows for O(1) range queries. This pattern extends naturally to 2D (matrices) and 3D (cubes) using the inclusion-exclusion principle. For an in-depth visual explanation, refer to `notes/prefix_sum_pattern.md` in the repository.
+
 <<< @/../src/patterns/arrays/prefix_sum.py
 
 **Time**: O(n) build, O(1) query | **Space**: O(n)
@@ -42,4 +44,5 @@
 
 - [LeetCode 1 — Two Sum](/problems/leetcode)
 - [LeetCode 238 — Product of Array Except Self](/problems/leetcode)
+- [LeetCode 304 — Range Sum Query 2D - Immutable](/problems/leetcode)
 - [LeetCode 53 — Maximum Subarray](/problems/leetcode)
