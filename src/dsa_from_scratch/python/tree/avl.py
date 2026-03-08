@@ -12,7 +12,7 @@
 
 
 class TreeNode:
-    """AVL tree node"""
+    """AVL tree node."""
 
     def __init__(self, val: int):
         self.val: int = val  # Node value
@@ -26,20 +26,21 @@ class AVLTree:
         self.root: TreeNode | None = None
 
     def height(self, node: TreeNode | None) -> int:
-        """Get node height"""
+        """Get node height."""
         # Empty node height is -1, leaf node height is 0
-        # The "node height" refers to the distance from that node to its farthest leaf node
+        # The "node height" refers to the distance from that node to its farthest leaf
+        # node
         if node is not None:
             return node.height
         return -1
 
     def update_height(self, node: TreeNode | None):
-        """Update node height"""
+        """Update node height."""
         # Node height equals the height of the tallest subtree + 1
         node.height = max([self.height(node.left), self.height(node.right)]) + 1
 
     def balance_factor(self, node: TreeNode | None) -> int:
-        """Get balance factor"""
+        """Get balance factor."""
         # Empty node balance factor is 0
         if node is None:
             return 0
@@ -50,7 +51,7 @@ class AVLTree:
     # -1 <= balance factor <= 1
 
     def right_rotate(self, node: TreeNode | None) -> TreeNode | None:
-        """Right rotation operation"""
+        """Right rotation operation."""
         child = node.left
         grand_child = child.right
         # Rotate node to the right around child
@@ -63,7 +64,7 @@ class AVLTree:
         return child
 
     def left_rotate(self, node: TreeNode | None) -> TreeNode | None:
-        """Left rotation operation"""
+        """Left rotation operation."""
         child = node.right
         grand_child = child.left
         # Rotate node to the left around child
@@ -76,7 +77,8 @@ class AVLTree:
         return child
 
     def rotate(self, node: TreeNode | None) -> TreeNode | None:
-        """Perform rotation operation to restore balance to the subtree"""
+        """Perform rotation operation to restore balance to the
+        subtree."""
         # Get the balance factor of node
         balance_factor = self.balance_factor(node)
         # Left-leaning tree
@@ -101,7 +103,7 @@ class AVLTree:
         return node
 
     def insert(self, val):
-        """Insert node"""
+        """Insert node."""
         self._root = self.insert_helper(self._root, val)
 
     def insert_helper(self, node: TreeNode | None, val: int) -> TreeNode:
@@ -122,7 +124,7 @@ class AVLTree:
         return self.rotate(node)
 
     def remove(self, val: int):
-        """Remove node"""
+        """Remove node."""
         self._root = self.remove_helper(self._root, val)
 
     def remove_helper(self, node: TreeNode | None, val: int) -> TreeNode | None:
@@ -144,7 +146,8 @@ class AVLTree:
                 else:
                     node = child
             else:
-                # Number of child nodes = 2, remove the next node in in-order traversal and replace the current node with it
+                # Number of child nodes = 2, remove the next node in in-order traversal
+                # and replace the current node with it
                 temp = node.right
                 while temp.left is not None:
                     temp = temp.left

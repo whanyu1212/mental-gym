@@ -7,10 +7,12 @@
 # it recursively calls itself, treating that neighbor as the new "start" node.
 # This process continues until all reachable nodes have been visited.
 
-# Time complexity: O(V + E), where V is the number of vertices and E is the number of edges
+# Time complexity: O(V + E), where V is the number of vertices and E is the number of
+# edges
 # Space complexity: O(V), where V is the number of vertices
 # The space complexity is O(V) because the visited set can contain at most V vertices.
-# The recursive calls also consume space on the call stack, but the maximum depth of the call stack is O(V) as well.
+# The recursive calls also consume space on the call stack, but the maximum depth of the
+# call stack is O(V) as well.
 
 
 def dfs_recursive(graph, start, visited=None):

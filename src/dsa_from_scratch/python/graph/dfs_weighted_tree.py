@@ -1,5 +1,4 @@
-from collections import defaultdict
-from typing import Optional, Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class Node:
@@ -29,7 +28,7 @@ def dfs(
 
 
 def build_tree() -> Node:
-    """Helper function to build a sample weighted tree"""
+    """Helper function to build a sample weighted tree."""
     # Create nodes
     nodes = [Node(i) for i in range(5)]
 

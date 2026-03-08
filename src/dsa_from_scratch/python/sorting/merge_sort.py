@@ -38,12 +38,13 @@ def merge(nums: list[int], left: int, mid: int, right: int) -> None:
         tmp[k] = nums[j]
         j += 1
         k += 1
-    # Copy the elements from the temporary array tmp back to the original array nums at the corresponding interval
+    # Copy the elements from the temporary array tmp back to the original array nums at
+    # the corresponding interval
     nums[left : left + len(tmp)] = tmp  # or nums[left:right+1] = tmp
 
 
 def merge_sort(nums: list[int], left: int, right: int):
-    """Merge sort"""
+    """Merge sort."""
     # Termination condition
     if left >= right:
         return  # Terminate recursion when subarray length is 1

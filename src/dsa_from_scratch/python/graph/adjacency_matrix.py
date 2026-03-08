@@ -11,7 +11,8 @@ class GraphAdjacencyMatrix:
             self.add_edge(e[0], e[1])
 
     def size(self) -> int:
-        """Get number of vertices in the graph
+        """
+        Get number of vertices in the graph.
 
         Returns:
             int: number of vertices in the graph
@@ -19,8 +20,9 @@ class GraphAdjacencyMatrix:
         return len(self.vertices)
 
     def add_vertex(self, val: int):
-        """Add a new vertex to the graph.
-        Append additional row and column to the adjacency matrix
+        """
+        Add a new vertex to the graph. Append additional row and column
+        to the adjacency matrix.
 
         Args:
             val (int): value of the new vertex
@@ -36,7 +38,8 @@ class GraphAdjacencyMatrix:
             row.append(0)
 
     def remove_vertex(self, index: int):
-        """Remove vertex at `index` from the graph
+        """
+        Remove vertex at `index` from the graph.
 
         Args:
             index (int): index of the vertex to remove
@@ -55,7 +58,8 @@ class GraphAdjacencyMatrix:
             row.pop(index)
 
     def add_edge(self, i: int, j: int):
-        """Add edge between vertices i and j
+        """
+        Add edge between vertices i and j.
 
         Args:
             i (int): index of vertex i
@@ -66,12 +70,14 @@ class GraphAdjacencyMatrix:
         """
         if i < 0 or j < 0 or i >= self.size() or j >= self.size() or i == j:
             raise IndexError()
-        # In an undirected graph, the adjacency matrix is symmetric about the main diagonal, i.e., satisfies (i, j) == (j, i)
+        # In an undirected graph, the adjacency matrix is symmetric about the main
+        # diagonal, i.e., satisfies (i, j) == (j, i)
         self.adj_mat[i][j] = 1
         self.adj_mat[j][i] = 1
 
     def remove_edge(self, i: int, j: int):
-        """Remove edge between vertices i and j
+        """
+        Remove edge between vertices i and j.
 
         Args:
             i (int): index of vertex i
@@ -100,7 +106,8 @@ if __name__ == "__main__":
     graph.add_vertex(4)
     print(graph.adj_mat)
     # Output:
-    # [[0, 1, 1, 0, 0], [1, 0, 1, 0, 0], [1, 1, 0, 1, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0, 0]]
+    # [[0, 1, 1, 0, 0], [1, 0, 1, 0, 0], [1, 1, 0, 1, 0], [0, 0, 1, 0, 0], [0, 0, 0, 0,
+    # 0]]
 
     graph.remove_vertex(2)
     print(graph.adj_mat)

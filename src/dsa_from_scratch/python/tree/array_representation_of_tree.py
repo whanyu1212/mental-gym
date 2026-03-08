@@ -1,40 +1,43 @@
+from collections import deque
+
+
 class ArrayBinaryTree:
     """Array-based binary tree class (1-indexed)"""
 
     def __init__(self, arr: list[int | None]):
-        """Constructor that initializes a 1-indexed binary tree"""
+        """Constructor that initializes a 1-indexed binary tree."""
         # Insert a placeholder at the beginning to make it 1-indexed
         self._tree = [0] + list(
             arr
         )  # may not need to convert to list if the input is None
 
     def size(self):
-        """List capacity"""
+        """List capacity."""
         return len(self._tree)
 
     def val(self, i: int) -> int | None:
-        """Get the value of the node at index i"""
+        """Get the value of the node at index i."""
         # If the index is out of bounds, return None, representing a vacancy
         if i <= 0 or i >= self.size():
             return None
         return self._tree[i]
 
     def left(self, i: int) -> int | None:
-        """Get the index of the left child of the node at index i"""
+        """Get the index of the left child of the node at index i."""
         return 2 * i
 
     def right(self, i: int) -> int | None:
-        """Get the index of the right child of the node at index i"""
+        """Get the index of the right child of the node at index i."""
         return 2 * i + 1
 
     def parent(self, i: int) -> int | None:
-        """Get the index of the parent of the node at index i"""
+        """Get the index of the parent of the node at index i."""
         if i <= 1:
             return None
         return i // 2
 
     def level_order(self) -> list[int]:
-        """Level-order traversal"""
+        """Level-order traversal."""
         self.res = []
         # Traverse array, starting from index 1
         # Follows the level of the tree from top to bottom,
@@ -45,7 +48,7 @@ class ArrayBinaryTree:
         return self.res
 
     def pre_order(self, i: int = 1):
-        """Pre-order traversal"""
+        """Pre-order traversal."""
         if not self.val(i):
             return
         else:
@@ -57,7 +60,7 @@ class ArrayBinaryTree:
             self.pre_order(self.right(i))
 
     def in_order(self, i: int = 1):
-        """In-order traversal"""
+        """In-order traversal."""
         if not self.val(i):
             return
         else:
@@ -69,7 +72,7 @@ class ArrayBinaryTree:
             self.in_order(self.right(i))
 
     def post_order(self, i: int = 1):
-        """Post-order traversal"""
+        """Post-order traversal."""
         if not self.val(i):
             return
         else:
@@ -81,7 +84,8 @@ class ArrayBinaryTree:
             print(self.val(i), end=" ")
 
     def level_order_traversal(self, i: int = 1) -> list[int]:
-        """Level-order traversal using a queue
+        """
+        Level-order traversal using a queue.
 
         Args:
             i (int): Starting index (root node)
@@ -121,25 +125,29 @@ class ArrayBinaryTree:
 
 # 1. Pre-order Traversal
 # Order: Visit Node → Traverse Left Subtree → Traverse Right Subtree
-# Sequence: In Pre-order traversal, the root node is always the first to be visited, followed by the left child and then the right child.
+# Sequence: In Pre-order traversal, the root node is always the first to be visited,
+# followed by the left child and then the right child.
 # The Pre-order traversal would be: 1, 2, 4, 5, 3
 
 
 # 2. In-order Traversal
 # Order: Traverse Left Subtree → Visit Node → Traverse Right Subtree
-# Sequence: In In-order traversal, the left child is always visited first, then the root, and finally the right child.
+# Sequence: In In-order traversal, the left child is always visited first, then the root,
+# and finally the right child.
 # The In-order traversal would be: 4, 2, 5, 1, 3
 
 
 # 3. Post-order Traversal
 # Order: Traverse Left Subtree → Traverse Right Subtree → Visit Node
-# Sequence: In Post-order traversal, the left child is visited first, followed by the right child, and finally the root node.
+# Sequence: In Post-order traversal, the left child is visited first, followed by the
+# right child, and finally the root node.
 # The Post-order traversal would be: 4, 5, 2, 3, 1
 
 
 # 4. Level-order Traversal
 # Order: Visit Nodes Level by Level
-# Sequence: In Level-order traversal, nodes are visited level by level, starting from the root.
+# Sequence: In Level-order traversal, nodes are visited level by level, starting from the
+# root.
 # The Level-order traversal would be: 1, 2, 3, 4, 5
 
 # Example usage

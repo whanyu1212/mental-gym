@@ -1,5 +1,9 @@
 class TreeNode:
-    """Binary tree node. Very similar to a linked list node, but with two pointers."""
+    """
+    Binary tree node.
+
+    Very similar to a linked list node, but with two pointers.
+    """
 
     def __init__(self, val: int):
         self.val: int = val  # Node value
@@ -12,7 +16,7 @@ class BinarySearchTree:
         self.root: TreeNode | None = None
 
     def search(self, num: int) -> TreeNode | None:
-        """Search node"""
+        """Search node."""
         cur = self._root
         # Loop find, break after passing leaf nodes
         while cur is not None:
@@ -28,7 +32,7 @@ class BinarySearchTree:
         return cur
 
     def insert(self, num: int):
-        """Insert node"""
+        """Insert node."""
         # If tree is empty, initialize root node
         if self._root is None:
             self._root = TreeNode(num)
@@ -56,7 +60,7 @@ class BinarySearchTree:
             pre.left = node
 
     def remove(self, num: int):
-        """Remove node"""
+        """Remove node."""
         # If tree is empty, return
         if self._root is None:
             return
@@ -120,7 +124,8 @@ class BinarySearchTree:
                 cur = cur.left
             return cur
 
-        # Case 2: No right subtree, find the nearest ancestor for which given node would be in left subtree
+        # Case 2: No right subtree, find the nearest ancestor for which given node would
+        # be in left subtree
         successor = None
         ancestor = root
         while ancestor != cur:
@@ -150,7 +155,8 @@ class BinarySearchTree:
                 cur = cur.right
             return cur
 
-        # Case 2: No left subtree, find the nearest ancestor for which given node would be in right subtree
+        # Case 2: No left subtree, find the nearest ancestor for which given node would
+        # be in right subtree
         predecessor = None
         ancestor = root
         while ancestor != cur:

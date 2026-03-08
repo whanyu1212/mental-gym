@@ -1,13 +1,4 @@
-import os
-import sys
 from io import StringIO
-
-
-# Add the src/kattis directory to the PYTHONPATH
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
 
 from fyrirtaekjanafn import filter_consonants
 

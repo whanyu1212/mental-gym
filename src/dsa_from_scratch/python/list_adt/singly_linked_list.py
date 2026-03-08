@@ -1,13 +1,10 @@
 # A linked list is a linear data structure in which each element is a node object,
 # and the nodes are interconnected through "references". These references hold the
 # memory addresses of subsequent nodes, enabling navigation from one node to the next.
-from colorama import Fore, Style, init
-
-init(autoreset=True)
 
 
 class ListNode:
-    """Linked list node class"""
+    """Linked list node class."""
 
     def __init__(self, data: int):
         self.data: int = data  # Node value
@@ -16,8 +13,8 @@ class ListNode:
 
 class SinglyLinkedList:
     def __init__(self):
-        """Initialize an empty singly linked list,
-        assuming that the head node is None"""
+        """Initialize an empty singly linked list, assuming that the
+        head node is None."""
         self.head = None
 
     def insert(self, data, position=None):

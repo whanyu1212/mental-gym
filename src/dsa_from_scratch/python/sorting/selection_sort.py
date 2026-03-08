@@ -11,12 +11,16 @@
 
 def selection_sort(a: list) -> list:  # O(N^2) for ALL cases...
     n = len(a)
-    for l in range(n - 1):
-        # Select the smallest element in the interval [i,n−1] and swap it with the element at index i
-        smallest = l + a[l:].index(
-            min(a[l:])
-        )  # BEWARE... this is O(N) not O(1)... we cannot find the smallest index of the minimum element of (N-L) items in O(1)
-        a[smallest], a[l] = a[l], a[smallest]  # Python can swap variables like this
+    for left in range(n - 1):
+        # Select the smallest element in the interval [i,n−1] and swap it with the
+        # element at index i
+        smallest = left + a[left:].index(min(a[left:]))
+        # BEWARE... this is O(N) not O(1)... we cannot find the smallest index of the
+        # minimum element of (N-L) items in O(1)
+        a[smallest], a[left] = (
+            a[left],
+            a[smallest],
+        )  # Python can swap variables like this
     return a
 
 

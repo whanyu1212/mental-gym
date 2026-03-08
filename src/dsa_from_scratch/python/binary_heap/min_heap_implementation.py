@@ -9,8 +9,8 @@ class MinHeap:
         self.heap = [0]
 
     def push(self, val: int):
-        """Push a value into the heap.
-        The heap is modified in-place and
+        """
+        Push a value into the heap. The heap is modified in-place and
         thus the return value is None.
 
         Args:
@@ -32,8 +32,9 @@ class MinHeap:
             i = i // 2
 
     def pop(self) -> int:
-        """Popping the root node from the heap
-        while maintaining the heap structure and order property.
+        """
+        Popping the root node from the heap while maintaining the heap
+        structure and order property.
 
         Returns:
             int: the value of the root node that was popped
@@ -80,7 +81,8 @@ class MinHeap:
         return res
 
     def top(self) -> Union[int, None]:  # peek
-        """Peek the root node of the heap.
+        """
+        Peek the root node of the heap.
 
         Returns:
             Union[int, None]: the root node of the heap
@@ -91,11 +93,10 @@ class MinHeap:
         return None
 
     def heapify(self, arr: list):
-        """Transform an array into a heap.
-        We are using list in the context of
-        python. The idea is that we percolate
-        each element down the tree until the
-        right position is found.
+        """
+        Transform an array into a heap. We are using list in the context
+        of python. The idea is that we percolate each element down the
+        tree until the right position is found.
 
         Args:
             arr (list): the array to be transformed into a heap

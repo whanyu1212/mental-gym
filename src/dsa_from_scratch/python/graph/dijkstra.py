@@ -1,8 +1,9 @@
-from heapq import heappush, heappop
+from heapq import heappop, heappush
 
 
 def dijkstra(graph: dict, src: int, V: int) -> list:
-    """Find shortest paths from source vertex using Dijkstra's algorithm.
+    """
+    Find shortest paths from source vertex using Dijkstra's algorithm.
 
     Args:
         graph (dict): Graph as adjacency list where graph[u] contains (v,w) pairs

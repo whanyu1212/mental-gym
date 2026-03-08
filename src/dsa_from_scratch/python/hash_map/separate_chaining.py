@@ -1,10 +1,13 @@
 # In the original hash table, each bucket can store only one key-value pair.
 # Separate chaining converts a single element into a linked list, treating
-# key-value pairs as list nodes, storing all colliding key-value pairs in the same linked list.
+# key-value pairs as list nodes, storing all colliding key-value pairs in the same linked
+# list.
 
 
-# It is worth noting that when the linked list/list becomes too long, the performance of the hash table will degrade.
-# This is because the time complexity of the get, put, and remove methods will be O(n) in the worst case.
+# It is worth noting that when the linked list/list becomes too long, the performance of
+# the hash table will degrade.
+# This is because the time complexity of the get, put, and remove methods will be O(n) in
+# the worst case.
 
 
 class Pair:
@@ -49,7 +52,8 @@ class HashMapChaining:
             self.extend()
         index = self.hash_func(key)
         bucket = self.buckets[index]
-        # Traverse the bucket, if the specified key is encountered, update the corresponding val and return
+        # Traverse the bucket, if the specified key is encountered, update the
+        # corresponding val and return
         for pair in bucket:
             if pair.key == key:
                 pair.value = val

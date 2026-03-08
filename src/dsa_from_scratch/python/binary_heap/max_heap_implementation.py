@@ -8,8 +8,9 @@ class MaxHeap:
         self.heap = [0]
 
     def push(self, val: int):
-        """Push a value into the heap.
-        The comparison is the opposite of the min heap.
+        """
+        Push a value into the heap. The comparison is the opposite of
+        the min heap.
 
         Args:
             val (int): the value to be pushed into the heap
@@ -28,8 +29,9 @@ class MaxHeap:
             i = i // 2
 
     def pop(self) -> int:
-        """Popping the root node from the heap
-        while maintaining the heap structure and order property.
+        """
+        Popping the root node from the heap while maintaining the heap
+        structure and order property.
 
         Returns:
             int: the value of the root node that was popped
@@ -76,7 +78,8 @@ class MaxHeap:
         return res
 
     def top(self) -> Union[int, None]:
-        """Return the root node of the heap.
+        """
+        Return the root node of the heap.
 
         Returns:
             Union[int, None]: the root node of the heap
@@ -84,8 +87,8 @@ class MaxHeap:
         return self.heap[1] if len(self.heap) > 1 else None
 
     def heapify(self, arr: list):
-        """Turn the array into a heap.
-        No return because the heap is an
+        """
+        Turn the array into a heap. No return because the heap is an
         instance variable.
 
         Args:

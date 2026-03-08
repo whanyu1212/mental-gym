@@ -1,8 +1,9 @@
-from heapq import heappush, heappop
+from heapq import heappop, heappush
 
 
 def modified_dijkstra(graph: dict, src: int, V: int) -> list:
-    """Modified Dijkstra's algorithm that handles negative weights.
+    """
+    Modified Dijkstra's algorithm that handles negative weights.
 
     Args:
         graph (dict): Graph as adjacency list with (vertex, weight) pairs

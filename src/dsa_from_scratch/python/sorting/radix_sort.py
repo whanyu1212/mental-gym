@@ -1,5 +1,7 @@
-# Radix sort shares the core idea with counting sort, which also sorts by counting the frequency of elements.
-# Building on this, radix sort utilizes the progressive relationship between the digits of numbers,
+# Radix sort shares the core idea with counting sort, which also sorts by counting the
+# frequency of elements.
+# Building on this, radix sort utilizes the progressive relationship between the digits
+# of numbers,
 # sorting each digit in turn to achieve the final sorted order.
 
 from colorama import Fore, Style, init
@@ -38,8 +40,9 @@ def counting_sort_digit(nums: list[int], exp: int):
 
 
 def radix_sort(nums: list[int]):
-    """Radix sort"""
-    # Get the maximum element of the array, used to determine the maximum number of digits
+    """Radix sort."""
+    # Get the maximum element of the array, used to determine the maximum number of
+    # digits
     m = max(nums)
     # Traverse from the lowest to the highest digit
     exp = 1

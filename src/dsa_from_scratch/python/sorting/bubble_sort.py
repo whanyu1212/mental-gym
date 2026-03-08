@@ -20,7 +20,8 @@ def bubble_sort(
         swapped = False  # initialize a boolean to check if any swap is done in the pass
         for i in range(n - 1):  # loop through the entire array
             if a[i] > a[i + 1]:
-                # Python can swap variables like this, read up on tuple packing and unpacking
+                # Python can swap variables like this, read up on tuple packing and
+                # unpacking
                 a[i], a[i + 1] = a[i + 1], a[i]
                 swapped = True
         if not swapped:  # optimization

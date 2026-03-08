@@ -1,4 +1,4 @@
-## The following code snippet is taken from hello-algo
+# The following code snippet is taken from hello-algo
 
 # Initialize hash table
 hmap: dict = {}

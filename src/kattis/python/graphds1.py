@@ -11,14 +11,16 @@ from collections import defaultdict, deque
 
 
 # 2. Detecting a Complete Graph
-# A complete graph is a graph where every pair of distinct vertices is connected by a unique edge.
+# A complete graph is a graph where every pair of distinct vertices is connected by a
+# unique edge.
 
 # Steps:
 # Check Degree: Ensure every vertex has an edge to every other vertex.
 
 
 # 3. Detecting a Bipartite Graph
-# A bipartite graph is a graph whose vertices can be divided into two disjoint sets such that no two graph vertices within the same set are adjacent.
+# A bipartite graph is a graph whose vertices can be divided into two disjoint sets such
+# that no two graph vertices within the same set are adjacent.
 
 # Steps:
 # Coloring: Use BFS or DFS to attempt to color the graph using two colors.
@@ -32,8 +34,9 @@ from collections import defaultdict, deque
 
 
 def convert_input_to_graph(edge_list: list, directed: int) -> dict:
-    """Convert an edge list, i.e a list of tuples (A-B),
-    to a graph represented as a dictionary.
+    """
+    Convert an edge list, i.e a list of tuples (A-B), to a graph
+    represented as a dictionary.
 
     Args:
         edge_list (list): a list of tuples (A-B)
@@ -54,7 +57,8 @@ def convert_input_to_graph(edge_list: list, directed: int) -> dict:
 
 
 def dfs_cycle_detection_undirected(graph: dict, vertex, visited: set, parent) -> bool:
-    """Perform DFS to check for cycles in an undirected graph.
+    """
+    Perform DFS to check for cycles in an undirected graph.
 
     Args:
         graph (dict): The graph represented as an adjacency list.
@@ -64,36 +68,35 @@ def dfs_cycle_detection_undirected(graph: dict, vertex, visited: set, parent) ->
 
     Returns:
         bool: True if no cycles are found, False otherwise.
-        
-        
+
+
     Imagine we have the following graph:
              A
             / \
            B - C
-           
+
     graph = {
         'A': ['B', 'C'],
         'B': ['A', 'C'],
         'C': ['A', 'B']
     }
-    
+
     Initial call: dfs_undirected(graph, 'A', set(), None)
-    
+
     Add 'A' to visited set: visited = {'A'}
-    
+
     First level of recursion:
     dfs_undirected(graph, 'B', {'A'}, 'A')
     Add 'B' to visited set: visited = {'A', 'B'}
-    
+
     Second level of recursion:
     dfs_undirected(graph, 'C', {'A', 'B'}, 'B')
     Add 'C' to visited set: visited = {'A', 'B', 'C'}
-    
+
     Third level of recursion:
     dfs_undirected(graph, 'A', {'A', 'B', 'C'}, 'C')
-    'A' is already in visited set, but 'A' is not the parent of 'C', 
+    'A' is already in visited set, but 'A' is not the parent of 'C',
     so return False
-    
     """
     visited.add(vertex)
     for neighbor in graph[vertex]:
@@ -108,7 +111,8 @@ def dfs_cycle_detection_undirected(graph: dict, vertex, visited: set, parent) ->
 def dfs_cycle_detection_directed(
     graph: dict, vertex, visited: set, rec_stack: set
 ) -> bool:
-    """Perform DFS to check for cycles in a directed graph.
+    """
+    Perform DFS to check for cycles in a directed graph.
 
     Args:
         graph (dict): The graph represented as an adjacency list.
@@ -146,12 +150,11 @@ def dfs_cycle_detection_directed(
 
     Third level of recursion:
     dfs_directed(graph, 'D', {'A', 'B', 'C'}, {'A', 'B', 'C'})
-    Add 'D' to visited set: visited = {'A', 'B', 'C', 'D'} and rec_stack = {'A', 'B', 'C', 'D'}
+    Add 'D' to visited set: visited = {'A', 'B', 'C', 'D'} and rec_stack = {'A', 'B', 'C', 'D'}  # noqa: E501
 
     Fourth level of recursion:
     dfs_directed(graph, 'B', {'A', 'B', 'C', 'D'}, {'A', 'B', 'C', 'D'})
     'B' is already in rec_stack, so return False
-
     """
     visited.add(vertex)
     rec_stack.add(vertex)
@@ -169,7 +172,8 @@ def dfs_cycle_detection_directed(
 
 
 def is_tree(graph: dict, directed: int) -> int:
-    """Check if the graph is a tree.
+    """
+    Check if the graph is a tree.
 
     Args:
         graph (dict): A graph represented as an adjacency list.
@@ -220,9 +224,9 @@ def is_tree(graph: dict, directed: int) -> int:
 
 
 def check_completeness_of_graph(graph: dict) -> int:
-    """Check the completeness of the graph by
-    ensuring that every vertex is connected to
-    every other vertex.
+    """
+    Check the completeness of the graph by ensuring that every vertex is
+    connected to every other vertex.
 
     Args:
         graph (dict): a graph represented as
@@ -241,7 +245,8 @@ def check_completeness_of_graph(graph: dict) -> int:
 
 
 def check_neighbor_color_bfs(graph: dict, start: int, color: dict) -> bool:
-    """Check the coloring of the neighbors of a vertex
+    """
+    Check the coloring of the neighbors of a vertex.
 
     Args:
         graph (dict): graph represented as an adjacency list.
@@ -273,8 +278,9 @@ def check_neighbor_color_bfs(graph: dict, start: int, color: dict) -> bool:
 
 
 def is_bipartite(graph: dict) -> int:
-    """Check if the graph is bipartite by coloring
-    the neighbors of the vertices.
+    """
+    Check if the graph is bipartite by coloring the neighbors of the
+    vertices.
 
     Args:
         graph (dict): graph represented as an adjacency list.
@@ -293,11 +299,10 @@ def is_bipartite(graph: dict) -> int:
 
 
 def is_DAG(graph: dict, directed: int) -> int:
-    """We recycle the function used to
-    detect cycles. If it is undirected,
-    we return False. Otherwise, we return
-    the result of the dfs_cycle_detection_directed
-    function.
+    """
+    We recycle the function used to detect cycles. If it is undirected,
+    we return False. Otherwise, we return the result of the
+    dfs_cycle_detection_directed function.
 
     Args:
         graph (dict): graph represented as an adjacency list.
@@ -313,7 +318,8 @@ def is_DAG(graph: dict, directed: int) -> int:
 
 
 def check_special_graphs(graph: dict, direction: int) -> list:
-    """Chaining the order of the functions
+    """
+    Chaining the order of the functions.
 
     Args:
         graph (dict): graph represented as an adjacency list.

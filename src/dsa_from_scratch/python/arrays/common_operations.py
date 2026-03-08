@@ -1,15 +1,16 @@
 import random
+from typing import List, Union
+
 from colorama import Fore, Style, init
-from typing import Union, List
 
 init(autoreset=True)
 
 
 def initialize_array(length: int) -> List[Union[int, float, str, None]]:
-    """Initialize an array of length `length` with None values.
-    0 is not used as it can be a valid value in some cases but
-    if we want to include str as a potential value, we can't use 0
-    to initialize it
+    """
+    Initialize an array of length `length` with None values. 0 is not
+    used as it can be a valid value in some cases but if we want to
+    include str as a potential value, we can't use 0 to initialize it.
 
     Args:
         length (int): Length of the array to be initialized
@@ -18,13 +19,14 @@ def initialize_array(length: int) -> List[Union[int, float, str, None]]:
         List[Union[int, float, str]]: Array of length `length` with None values
     """
     print(
-        f"{Fore.BLUE}Initializing an array of length {length} with None values{Style.RESET_ALL}"
+        f"{Fore.BLUE}Initializing an array of length {length} with None values{Style.RESET_ALL}"  # noqa: E501
     )
     return [None] * length
 
 
 def random_access(nums: list[int]) -> int:
-    """Randomly access an element in the array `nums`
+    """
+    Randomly access an element in the array `nums`
 
     Args:
         nums (list[int]): input list of integers
@@ -34,7 +36,7 @@ def random_access(nums: list[int]) -> int:
     """
     random_index = random.randint(0, len(nums) - 1)
     print(
-        f"{Fore.GREEN}Randomly accessing element at index {random_index} in the array{Style.RESET_ALL}"
+        f"{Fore.GREEN}Randomly accessing element at index {random_index} in the array{Style.RESET_ALL}"  # noqa: E501
     )
     random_num = nums[random_index]
     print(f"{Fore.CYAN}Randomly accessed element: {random_num}{Style.RESET_ALL}")
@@ -42,7 +44,8 @@ def random_access(nums: list[int]) -> int:
 
 
 def insert(nums: list[int], num: int, index: int) -> None:
-    """Insert a number `num` at index `index` in the array `nums`
+    """
+    Insert a number `num` at index `index` in the array `nums`
 
     Args:
         nums (list[int]): original list of integers
@@ -58,7 +61,8 @@ def insert(nums: list[int], num: int, index: int) -> None:
 
 
 def remove(nums: list[int], index: int) -> None:
-    """Remove an element at index `index` in the array `nums`
+    """
+    Remove an element at index `index` in the array `nums`
 
     Args:
         nums (list[int]): original list of integers
@@ -73,7 +77,8 @@ def remove(nums: list[int], index: int) -> None:
 
 
 def traverse(nums: list[int]) -> None:
-    """Traverse the array `nums` and print the sum of all elements
+    """
+    Traverse the array `nums` and print the sum of all elements.
 
     Args:
         nums (list[int]): input list of integers
@@ -87,7 +92,8 @@ def traverse(nums: list[int]) -> None:
 
 
 def find(nums: list[int], target: int) -> int:
-    """Find the index of the element `target` in the array `nums`
+    """
+    Find the index of the element `target` in the array `nums`
 
     Args:
         nums (list[int]): input list of integers
@@ -99,7 +105,7 @@ def find(nums: list[int], target: int) -> int:
     for i in range(len(nums)):
         if nums[i] == target:
             print(
-                f"{Fore.GREEN}Element {target} found at index {i} in the array{Style.RESET_ALL}"
+                f"{Fore.GREEN}Element {target} found at index {i} in the array{Style.RESET_ALL}"  # noqa: E501
             )
             return i
     print(f"{Fore.RED}Element {target} not found in the array{Style.RESET_ALL}")
@@ -107,7 +113,8 @@ def find(nums: list[int], target: int) -> int:
 
 
 def extend(nums: list[int], enlarge: int) -> list[int]:
-    """Extend the array `nums` by `enlarge` elements
+    """
+    Extend the array `nums` by `enlarge` elements.
 
     Args:
         nums (list[int]): original list of integers

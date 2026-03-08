@@ -1,16 +1,5 @@
-import os
-import sys
 import pytest
-
-
-# Add the src/kattis directory to the PYTHONPATH
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
-
-
-from fleytitala import process_multiline_input, calculate_distance_geom
+from fleytitala import calculate_distance_geom, process_multiline_input
 
 
 @pytest.mark.parametrize(

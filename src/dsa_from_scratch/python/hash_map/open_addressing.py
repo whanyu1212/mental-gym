@@ -32,7 +32,8 @@ class HashMapOpenAddressing:
         while self.buckets[index] is not None:
             # If the key is encountered, return the corresponding bucket index
             if self.buckets[index].key == key:
-                # If a removal mark was encountered earlier, move the key-value pair to that index
+                # If a removal mark was encountered earlier, move the key-value pair to
+                # that index
                 if first_tombstone != -1:
                     self.buckets[first_tombstone] = self.buckets[index]
                     self.buckets[index] = self.TOMBSTONE
@@ -113,7 +114,7 @@ class HashMapOpenAddressing:
             self.size -= 1
 
     def extend(self):
-        """Extend hash table"""
+        """Extend hash table."""
         # Temporarily store the original hash table
         buckets_tmp = self.buckets
         # Initialize the extended new hash table

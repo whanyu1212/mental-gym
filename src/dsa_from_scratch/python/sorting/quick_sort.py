@@ -10,17 +10,19 @@
 
 
 def partition(nums: list[int], left: int, right: int) -> int:
-    """Partition"""
+    """Partition."""
     pivot = nums[left]  # Use nums[left] as the pivot by default
     i, j = left, right  # i and j are the left and right pointers
 
     while i < j:  # While the left and right pointers do not meet
         # Find the first element smaller than the pivot from the right
         while i < j and nums[j] >= pivot:
-            j -= 1  # Search from right to left for the first element smaller than the pivot
+            j -= 1
+            # Search from right to left for the first element smaller than the pivot
 
         while i < j and nums[i] <= pivot:
-            i += 1  # Search from left to right for the first element greater than the pivot
+            i += 1
+            # Search from left to right for the first element greater than the pivot
 
         # Swap elements if pointers have not met
         # ensures that elements are only swapped if the pointers have not crossed
@@ -33,7 +35,7 @@ def partition(nums: list[int], left: int, right: int) -> int:
 
 
 def quick_sort(nums: list[int], left: int, right: int):
-    """Quick sort"""
+    """Quick sort."""
     # Terminate recursion when subarray length is 1
     if left >= right:
         return

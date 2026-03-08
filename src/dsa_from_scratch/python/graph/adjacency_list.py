@@ -1,30 +1,30 @@
 class Vertex:
-    """Class to represent a vertex in the graph"""
+    """Class to represent a vertex in the graph."""
 
     def __init__(self, value):
-        """Constructor"""
+        """Constructor."""
         self.value = value
 
     def __eq__(self, other):
-        """Equality comparison"""
+        """Equality comparison."""
         if isinstance(other, Vertex):
             return self.value == other.value
         return False
 
     def __hash__(self):
-        """Hash function"""
+        """Hash function."""
         return hash(self.value)
 
     def __repr__(self):
-        """String representation"""
+        """String representation."""
         return f"Vertex({self.value})"
 
 
 class GraphAdjacencyList:
-    """Undirected graph class based on adjacency list"""
+    """Undirected graph class based on adjacency list."""
 
     def __init__(self, edges: list[list[Vertex]]):
-        """Constructor"""
+        """Constructor."""
         # Adjacency list, key: vertex, value: all adjacent vertices of that vertex
         self.adj_list = dict[Vertex, list[Vertex]]()
         # Add all vertices and edges
@@ -34,11 +34,11 @@ class GraphAdjacencyList:
             self.add_edge(edge[0], edge[1])
 
     def size(self) -> int:
-        """Get the number of vertices"""
+        """Get the number of vertices."""
         return len(self.adj_list)
 
     def add_edge(self, vet1: Vertex, vet2: Vertex):
-        """Add edge"""
+        """Add edge."""
         if vet1 not in self.adj_list or vet2 not in self.adj_list or vet1 == vet2:
             raise ValueError()
         # Add edge vet1 - vet2
@@ -46,7 +46,7 @@ class GraphAdjacencyList:
         self.adj_list[vet2].append(vet1)
 
     def remove_edge(self, vet1: Vertex, vet2: Vertex):
-        """Remove edge"""
+        """Remove edge."""
         if vet1 not in self.adj_list or vet2 not in self.adj_list or vet1 == vet2:
             raise ValueError()
         # Remove edge vet1 - vet2
@@ -54,14 +54,14 @@ class GraphAdjacencyList:
         self.adj_list[vet2].remove(vet1)
 
     def add_vertex(self, vet: Vertex):
-        """Add vertex"""
+        """Add vertex."""
         if vet in self.adj_list:
             return
         # Add a new linked list to the adjacency list
         self.adj_list[vet] = []
 
     def remove_vertex(self, vet: Vertex):
-        """Remove vertex"""
+        """Remove vertex."""
         if vet not in self.adj_list:
             raise ValueError()
         # Remove the vertex vet's corresponding linked list from the adjacency list
@@ -72,7 +72,7 @@ class GraphAdjacencyList:
                 self.adj_list[vertex].remove(vet)
 
     def print(self):
-        """Print the adjacency list"""
+        """Print the adjacency list."""
         print("Adjacency list: \n")
         for vertex in self.adj_list:
             tmp = [v.value for v in self.adj_list[vertex]]

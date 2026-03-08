@@ -1,15 +1,5 @@
-import os
-import sys
 import pytest
-
-
-# Add the src/kattis directory to the PYTHONPATH
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
-
-from message import process_multiline_input, output_message
+from message import output_message, process_multiline_input
 
 
 @pytest.mark.parametrize(

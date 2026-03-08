@@ -1,12 +1,14 @@
 import random
 
-
-# The following code is a simple implementation of the Quick Sort algorithm adapted from https://www.hello-algo.com/en/chapter_sorting/quick_sort/
-# The code is modified to include print statements for better understanding of the algorithm
+# The following code is a simple implementation of the Quick Sort algorithm adapted from
+# https://www.hello-algo.com/en/chapter_sorting/quick_sort/
+# The code is modified to include print statements for better understanding of the
+# algorithm
 
 
 def randomized_partition(nums: list[int], left: int, right: int) -> int:
-    """Randomized partitioning for optimizing Quick Sort
+    """
+    Randomized partitioning for optimizing Quick Sort.
 
     Args:
         nums (list[int]): input list of integers
@@ -23,9 +25,11 @@ def randomized_partition(nums: list[int], left: int, right: int) -> int:
     i, j = left, right
     while i < j:
         while i < j and nums[j] >= nums[left]:
-            j -= 1  # Search from right to left for the first element smaller than the pivot
+            j -= 1
+            # Search from right to left for the first element smaller than the pivot
         while i < j and nums[i] <= nums[left]:
-            i += 1  # Search from left to right for the first element greater than the pivot
+            i += 1
+            # Search from left to right for the first element greater than the pivot
         # Swap elements
         nums[i], nums[j] = nums[j], nums[i]
 
@@ -35,7 +39,8 @@ def randomized_partition(nums: list[int], left: int, right: int) -> int:
 
 
 def randomized_quick_sort(nums: list[int], left: int, right: int):
-    """Apply randomized quick sort to the input list of integers
+    """
+    Apply randomized quick sort to the input list of integers.
 
     Args:
         nums (list[int]): input list of integers

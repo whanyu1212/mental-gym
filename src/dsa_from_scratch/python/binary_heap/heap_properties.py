@@ -1,17 +1,21 @@
-# Implementation of basic properties of a heap data structure such as the parent-child relationship
+# Implementation of basic properties of a heap data structure such as the parent-child
+# relationship
 
 # Assuming the heap is stored in an array and it follows the 0-based indexing
 
 
 class Heap:
     """
-    A class to illustrate the basic properties of a binary heap, such as the parent-child relationship.
+    A class to illustrate the basic properties of a binary heap, such as
+    the parent-child relationship.
 
-    This class is not a full implementation of a heap data structure. It only demonstrates how to calculate
-    the indices of parent and child nodes in a heap stored in an array.
+    This class is not a full implementation of a heap data structure.
+    It only demonstrates how to calculate the indices of parent and child
+    nodes in a heap stored in an array.
 
     Attributes:
-        heap (list): The list representation of the heap, with a placeholder at index 0 for 1-based indexing.
+        heap (list): The list representation of the heap, with a placeholder
+            at index 0 for 1-based indexing.
     """
 
     def __init__(self):
@@ -19,8 +23,8 @@ class Heap:
         self.heap = [0]  # Placeholder for 1-based indexing
 
     def left(self, i: int) -> int:
-        """Get index of left child node given
-        the index of the parent node.
+        """
+        Get index of left child node given the index of the parent node.
 
         Args:
             i (int): index of the parent node
@@ -31,8 +35,9 @@ class Heap:
         return 2 * i
 
     def right(self, i: int) -> int:
-        """Get the index of the right child node given
-        the index of the parent node.
+        """
+        Get the index of the right child node given the index of the
+        parent node.
 
         Args:
             i (int): index of the parent node
@@ -43,8 +48,9 @@ class Heap:
         return 2 * i + 1
 
     def parent(self, i: int) -> int:
-        """Get the index of the parent node given
-        the index of the child node.
+        """
+        Get the index of the parent node given the index of the child
+        node.
 
         Args:
             i (int): index of the child node
@@ -55,7 +61,8 @@ class Heap:
         return i // 2  # floor division
 
     def peek(self) -> int:
-        """Access the root node of the heap.
+        """
+        Access the root node of the heap.
 
         Raises:
             IndexError: If the heap is empty or

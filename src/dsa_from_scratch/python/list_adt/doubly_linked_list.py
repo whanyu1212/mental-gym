@@ -1,14 +1,12 @@
 # In contrast to a singly linked list, a doubly linked list maintains references
 # in two directions. Each node contains references (pointer) to both its successor
 # (the next node) and predecessor (the previous node). Although doubly linked lists
-# offer more flexibility for traversing in either direction, they also consume more memory space.
-from colorama import Fore, Style, init
-
-init(autoreset=True)
+# offer more flexibility for traversing in either direction, they also consume more
+# memory space.
 
 
 class ListNode:
-    """Bidirectional linked list node class"""
+    """Bidirectional linked list node class."""
 
     def __init__(self, data: int):
         self.data: int = data
@@ -33,7 +31,8 @@ class DoublyLinkedList:
             self.head.prev = new_node
             self.head = new_node
         else:
-            # the goal is to move the current pointer to the node just before the position
+            # the goal is to move the current pointer to the node just before the
+            # position
             current = self.head
             for _ in range(position - 1):
                 if current.next is None:  # check if the current node is the last node

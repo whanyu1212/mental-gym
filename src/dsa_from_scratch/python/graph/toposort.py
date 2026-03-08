@@ -1,15 +1,15 @@
-# Topological sort is a technique used in graph theory to order the vertices of a directed acyclic graph (DAG).
-# It ensures that for every directed edge from vertex ( u ) to vertex ( v ), vertex ( u ) comes before vertex ( v ) in the ordering.
+# Topological sort is a technique used in graph theory to order the vertices of a
+# directed acyclic graph (DAG).
+# It ensures that for every directed edge from vertex ( u ) to vertex ( v ), vertex ( u )
+# comes before vertex ( v ) in the ordering.
 
 
 # The topological_sort function needs to go through every single node in the graph
 # to ensure that all nodes are included in the topological order, even if they are
 # not reachable from the starting node of the DFS traversal.
 
-from collections import deque, defaultdict
-
-
-from typing import List, Dict, Set
+from collections import defaultdict, deque
+from typing import Dict, List, Set
 
 
 def dfs(
@@ -20,7 +20,8 @@ def dfs(
     graph: Dict[int, List[int]],
 ) -> bool:
     """
-    Perform a Depth-First Search (DFS) to detect cycles and build the topological order.
+    Perform a Depth-First Search (DFS) to detect cycles and build the
+    topological order.
 
     Args:
         node (int): The current node being visited.
@@ -80,7 +81,8 @@ def topological_sort(graph: Dict[int, List[int]]) -> List[int]:
                 )
     # The topological order is stored in the stack in reverse order
     # because we are appending the nodes to the stack after the recursive call.
-    # the first node to be appended to the stack will be the last node in the topological order.
+    # the first node to be appended to the stack will be the last node in the topological
+    # order.
     return stack[::-1]
 
 
@@ -92,7 +94,8 @@ def topological_sort(graph: Dict[int, List[int]]) -> List[int]:
 # Traverse the graph and for each node, increment the in-degree of its neighbors.
 
 # Initialize Queue:
-# Collect all nodes with in-degree 0 and add them to a queue. These nodes have no dependencies and can be processed first.
+# Collect all nodes with in-degree 0 and add them to a queue. These nodes have no
+# dependencies and can be processed first.
 
 # Process Nodes:
 # While the queue is not empty:
@@ -101,7 +104,8 @@ def topological_sort(graph: Dict[int, List[int]]) -> List[int]:
 # If a neighbor's in-degree becomes 0, add it to the queue.
 
 # Check for Cycles:
-# After processing all nodes, if the number of nodes in the topological order is equal to the number of nodes in the graph, a valid topological sort is obtained.
+# After processing all nodes, if the number of nodes in the topological order is equal to
+# the number of nodes in the graph, a valid topological sort is obtained.
 # If not, the graph contains at least one cycle, making topological sorting impossible.
 
 

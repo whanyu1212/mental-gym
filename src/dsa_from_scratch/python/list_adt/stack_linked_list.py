@@ -2,7 +2,7 @@
 
 
 class ListNode:
-    """Linked list node class"""
+    """Linked list node class."""
 
     def __init__(self, data: int):
         self.data: int = data  # Node value
@@ -17,23 +17,23 @@ class LinkedListStack:
         self._size = 0
 
     def size(self):
-        """Return the size of the stack"""
+        """Return the size of the stack."""
         return self._size
 
     def is_empty(self):
-        """Check if the stack is empty"""
+        """Check if the stack is empty."""
         return not bool(self._size)
 
     def push(self, item):
-        """Add an item to the stack
-        and make it the head of the linked list"""
+        """Add an item to the stack and make it the head of the linked
+        list."""
         new_node = ListNode(item)
         new_node.next = self.head
         self.head = new_node
         self._size += 1
 
     def pop(self):
-        """Remove and return the last item from the stack"""
+        """Remove and return the last item from the stack."""
         if self.is_empty():
             raise IndexError("The stack is empty")
         item = self.head.data
@@ -42,13 +42,13 @@ class LinkedListStack:
         return item
 
     def peek(self):
-        """Return the last item from the stack"""
+        """Return the last item from the stack."""
         if self.is_empty():
             raise IndexError("The stack is empty")
         return self.head.data
 
     def to_list(self):
-        """Convert the stack to a list"""
+        """Convert the stack to a list."""
         stack_list = []
         current = self.head
         while current:

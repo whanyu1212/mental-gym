@@ -1,14 +1,4 @@
-import os
-import sys
 import pytest
-
-
-# Add the src/kattis directory to the PYTHONPATH
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
-
 from lidaskipting2 import get_min_max_teams
 
 
@@ -20,7 +10,7 @@ from lidaskipting2 import get_min_max_teams
         (100, "100\n34"),
         (
             10000000000000000000000000000000000000000,
-            "10000000000000000000000000000000000000000\n3333333333333333333333333333333333333334",
+            "10000000000000000000000000000000000000000\n3333333333333333333333333333333333333334",  # noqa: E501
         ),
     ],
 )

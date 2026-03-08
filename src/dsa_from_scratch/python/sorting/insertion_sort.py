@@ -8,12 +8,13 @@
 
 
 def insertion_sort(nums: list[int]):
-    """Insertion sort"""
+    """Insertion sort."""
     # Outer loop: sorted range is [0, i-1]
     for i in range(1, len(nums)):
         base = nums[i]
         j = i - 1
-        # Inner loop: insert base into the correct position within the sorted range [0, i-1]
+        # Inner loop: insert base into the correct position within the sorted range [0,
+        # i-1]
         while j >= 0 and nums[j] > base:
             nums[j + 1] = nums[j]  # Move nums[j] to the right by one position
             j -= 1

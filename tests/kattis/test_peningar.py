@@ -1,15 +1,7 @@
-import os
-import sys
-import pytest
 from io import StringIO
 
-# Add the src/kattis directory to the PYTHONPATH
-path_to_add = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../src/kattis/python")
-)
-sys.path.insert(0, path_to_add)
-
-from peningar import parse_inputs, calculate_value_accumulated
+import pytest
+from peningar import calculate_value_accumulated, parse_inputs
 
 
 @pytest.mark.parametrize(

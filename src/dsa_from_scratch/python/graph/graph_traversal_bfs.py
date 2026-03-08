@@ -5,13 +5,17 @@
 # 1. Layered exploration: BFS explores nodes level by level,
 # moving outward from the starting node.
 
-# 2. Queue-based implementation: BFS uses a queue to keep track of the nodes that need to be explored.
+# 2. Queue-based implementation: BFS uses a queue to keep track of the nodes that need to
+# be explored.
 
-# 3. Shortest path: In unweighted graphs, BFS can be used to find the shortest path between two nodes.
+# 3. Shortest path: In unweighted graphs, BFS can be used to find the shortest path
+# between two nodes.
 
-# 4. Visited tracking: BFS keeps track of the nodes that have been visited to avoid infinite loops.
+# 4. Visited tracking: BFS keeps track of the nodes that have been visited to avoid
+# infinite loops.
 
-# Time complexity: O(V + E), where V is the number of vertices and E is the number of edges in the graph.
+# Time complexity: O(V + E), where V is the number of vertices and E is the number of
+# edges in the graph.
 
 from collections import deque
 

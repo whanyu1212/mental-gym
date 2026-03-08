@@ -1,6 +1,6 @@
-from collections import defaultdict
-from typing import List, Dict, Set
 import math
+from collections import defaultdict
+from typing import Dict, List, Set
 
 
 class Graph:
@@ -10,16 +10,14 @@ class Graph:
         self.V = 0  # Number of vertices
 
     def add_edge(self, u: int, v: int, w: int) -> None:
-        """Add weighted edge to graph"""
+        """Add weighted edge to graph."""
         self.graph[u].append((v, w))
         # Taking max because the edge between u and v may be between any current vertices
         # +1 because vertices are 0-indexed
         self.V = max(self.V, u + 1, v + 1)
 
-    def topological_sort_util(
-        self, v: int, visited: Set[int], stack: List[int]
-    ) -> None:
-        """DFS version of topological sort"""
+    def topological_sort_util(self, v: int, visited: Set[int], stack: List[int]) -> None:
+        """DFS version of topological sort."""
         visited.add(v)
 
         for next_node, _ in self.graph[v]:
@@ -29,7 +27,7 @@ class Graph:
         stack.append(v)
 
     def shortest_path(self, source: int) -> Dict[int, int]:
-        """Find shortest path from source using DP"""
+        """Find shortest path from source using DP."""
         # Step 1: Get topological order
         visited = set()
         stack = []

@@ -3,36 +3,36 @@
 
 class ArrayStack:
     def __init__(self):
-        """Initialize the stack with an empty lists"""
+        """Initialize the stack with an empty lists."""
         self.stack = []
 
     # Add various methods for stack operations
     def size(self):
-        """Return the size of the stack"""
+        """Return the size of the stack."""
         return len(self.stack)
 
     def is_empty(self):
-        """Check if the stack is empty"""
+        """Check if the stack is empty."""
         return not bool(self.stack)
 
     def push(self, item):
-        """Add an item to the stack"""
+        """Add an item to the stack."""
         self.stack.append(item)
 
     def pop(self):
-        """Remove and return the last item from the stack"""
+        """Remove and return the last item from the stack."""
         if self.is_empty():
             raise IndexError("The stack is empty")
         return self.stack.pop()
 
     def peek(self):
-        """Return the last item from the stack"""
+        """Return the last item from the stack."""
         if self.is_empty():
             raise IndexError("The stack is empty")
         return self.stack[-1]
 
     def __str__(self):
-        """print the stack items using string"""
+        """Print the stack items using string."""
         return str(self.stack)
 
 

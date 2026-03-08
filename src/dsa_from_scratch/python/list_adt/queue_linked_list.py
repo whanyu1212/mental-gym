@@ -2,7 +2,7 @@
 
 
 class ListNode:
-    """Linked list node class"""
+    """Linked list node class."""
 
     def __init__(self, data: int):
         self.data: int = data  # Node value
@@ -19,15 +19,15 @@ class LinkedListQueue:
         self._size = 0
 
     def size(self):
-        """Return the size of the queue"""
+        """Return the size of the queue."""
         return self._size
 
     def is_empty(self):
-        """Check if the queue is empty"""
+        """Check if the queue is empty."""
         return not bool(self._size)
 
     def enqueue(self, item):
-        """Add an item to the queue"""
+        """Add an item to the queue."""
         new_node = ListNode(item)
         if self.is_empty():
             self.front = self.rear = new_node
@@ -37,7 +37,7 @@ class LinkedListQueue:
         self._size += 1
 
     def dequeue(self):
-        """Remove and return the first item from the queue"""
+        """Remove and return the first item from the queue."""
         if self.is_empty():
             raise IndexError("The queue is empty")
         item = self.front.data
@@ -46,7 +46,7 @@ class LinkedListQueue:
         return item
 
     def peek(self):
-        """Return the first item from the queue"""
+        """Return the first item from the queue."""
         if self.is_empty():
             raise IndexError("The queue is empty")
         return self.front.data

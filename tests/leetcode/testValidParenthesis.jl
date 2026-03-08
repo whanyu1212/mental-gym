@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/julia/ValidParenthesis.jl")
+include("../../src/leetcode/ValidParenthesis.jl")
 
 @testset "valid parentheis" begin
     @test isValid("()") == true

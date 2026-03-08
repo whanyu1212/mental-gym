@@ -5,7 +5,8 @@
 # Simple to represent weighted edges
 
 # There are also 5 special cases involving the SSSP problem.
-# When we encounter any one of them, we can solve it with different and (much) faster algorithm than the generic O(V×E)
+# When we encounter any one of them, we can solve it with different and (much) faster
+# algorithm than the generic O(V×E)
 # Bellman-Ford algorithm. They are:
 
 # On Unweighted Graphs: O(V+E) BFS,
@@ -16,8 +17,9 @@
 
 
 def bellman_ford(graph: list, V: int, src: int) -> list:
-    """Bellman-Ford algorithm to find shortest paths from a
-    source vertex to all other vertices in a weighted graph.
+    """
+    Bellman-Ford algorithm to find shortest paths from a source vertex
+    to all other vertices in a weighted graph.
 
     Args:
         graph (list): List of edges (u, v, w) where u, v are vertices
@@ -41,7 +43,8 @@ def bellman_ford(graph: list, V: int, src: int) -> list:
 
     # Check for negative weight cycles
     # Runs one more time to detect negative weight cycles
-    # If any edge can still be relaxed after V-1 iterations, then there is a negative cycle
+    # If any edge can still be relaxed after V-1 iterations, then there is a negative
+    # cycle
     for u, v, w in graph:
         if dist[u] != float("inf") and dist[u] + w < dist[v]:
             print("Graph contains negative weight cycle")

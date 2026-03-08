@@ -5,10 +5,12 @@ from collections import deque
 
 
 def bfs_shortest_path(adj_list: dict, src: int, V: int) -> list:
-    """Find shortest paths in unweighted graph using BFS.
+    """
+    Find shortest paths in unweighted graph using BFS.
 
     Args:
-        adj_list (dict): Graph as adjacency list where adj_list[u] contains neighbors of u
+        adj_list (dict): Graph as adjacency list where adj_list[u]
+            contains neighbors of u
         src (int): Source vertex
         V (int): Number of vertices
 

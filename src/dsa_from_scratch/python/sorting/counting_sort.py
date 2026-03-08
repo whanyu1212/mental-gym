@@ -1,11 +1,13 @@
-# Counting sort achieves sorting by counting the number of elements, typically applied to arrays of integers.
+# Counting sort achieves sorting by counting the number of elements, typically applied to
+# arrays of integers.
 from colorama import Fore, Style, init
 
 init(autoreset=True)
 
 
 def counting_sort_naive(nums: list[int]) -> None:
-    """Apply naive counting sort on the input list of numbers.
+    """
+    Apply naive counting sort on the input list of numbers.
 
     Args:
         nums (list[int]): List of integers to be sorted.
@@ -34,8 +36,9 @@ def counting_sort_naive(nums: list[int]) -> None:
 
 
 def counting_sort(nums: list[int]) -> None:
-    """Complete implementation of counting sort that
-    can handle objects and is a stable sort
+    """
+    Complete implementation of counting sort that can handle objects and
+    is a stable sort.
 
     Args:
         nums (list[int]): _description_
@@ -50,7 +53,8 @@ def counting_sort(nums: list[int]) -> None:
     counter = [0] * (m + 1)
     for num in nums:
         counter[num] += 1
-    # 3. Calculate the prefix sum of counter, converting "occurrence count" to "tail index"
+    # 3. Calculate the prefix sum of counter, converting "occurrence count" to "tail
+    # index"
     # counter[num]-1 is the last index where num appears in res
     # same idea as cumulative sum
     for i in range(m):
@@ -64,7 +68,7 @@ def counting_sort(nums: list[int]) -> None:
         print(f"{Fore.GREEN}nums[{i}]: {nums[i]}{Style.RESET_ALL}")
         num = nums[i]
         print(
-            f"{Fore.GREEN}Total occurrences before {num}: {counter[num]-1}{Style.RESET_ALL}"
+            f"{Fore.GREEN}Total occurrences before {num}: {counter[num]-1}{Style.RESET_ALL}"  # noqa: E501
         )
         res[counter[num] - 1] = num  # Place num at the corresponding index
         print(f"{Fore.GREEN}Placing {num} at index {counter[num]-1}{Style.RESET_ALL}")

@@ -3,17 +3,17 @@
 
 class ArrayQueue:
     def __init__(self, size: int):
-        """Initialize the queue with an empty list"""
+        """Initialize the queue with an empty list."""
         self.queue = [] * size
         self.front = 0  # Front pointer in the queue
         self._size = 0
 
     def size(self):
-        """Return the size of the queue"""
+        """Return the size of the queue."""
         return self._size
 
     def capacity(self):
-        """Return the capacity of the queue"""
+        """Return the capacity of the queue."""
         return len(self.queue)
 
     def is_empty(self):

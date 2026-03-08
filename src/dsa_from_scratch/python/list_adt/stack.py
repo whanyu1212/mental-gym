@@ -37,43 +37,43 @@ class ListNode:
 
 
 class LinkedListStack:
-    """Stack class based on linked list"""
+    """Stack class based on linked list."""
 
     def __init__(self):
-        """Constructor"""
+        """Constructor."""
         self._peek: ListNode | None = None
         self._size: int = 0
 
     def size(self) -> int:
-        """Get the length of the stack"""
+        """Get the length of the stack."""
         return self._size
 
     def is_empty(self) -> bool:
-        """Determine if the stack is empty"""
+        """Determine if the stack is empty."""
         return self._size == 0
 
     def push(self, val: int):
-        """Push"""
+        """Push."""
         node = ListNode(val)
         node.next = self._peek
         self._peek = node
         self._size += 1
 
     def pop(self) -> int:
-        """Pop"""
+        """Pop."""
         num = self.peek()
         self._peek = self._peek.next
         self._size -= 1
         return num
 
     def peek(self) -> int:
-        """Access stack top element"""
+        """Access stack top element."""
         if self.is_empty():
             raise IndexError("Stack is empty")
         return self._peek.val
 
     def to_list(self) -> list[int]:
-        """Convert to a list for printing"""
+        """Convert to a list for printing."""
         arr = []
         node = self._peek
         while node:
@@ -83,7 +83,7 @@ class LinkedListStack:
         return arr
 
     def __str__(self):
-        """Print the stack"""
+        """Print the stack."""
         return str(self.to_list())
 
 

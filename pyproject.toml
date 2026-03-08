@@ -21,6 +21,9 @@ sortedcontainers = "^2.4.0"
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
 
+[tool.pytest.ini_options]
+pythonpath = ["src/kattis/python", "src/leetcode/arrays_hashing", "src/leetcode/two_pointers", "src/leetcode/sliding_window", "src/leetcode/stack"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

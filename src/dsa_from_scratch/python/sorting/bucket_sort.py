@@ -1,15 +1,20 @@
-## Bucket Sort
-## Instead of comparison based sorting, we can use a divide and conquer approach to sort the elements.
-# It involves setting up a series of ordered buckets, each corresponding to a range of data,
-# and then distributing the data evenly among these buckets; each bucket is then sorted individually;
-# finally, all the data are merged in the order of the buckets.
-
 from colorama import Fore, Style, init
+
+init(autoreset=True)
+# Bucket Sort
+# Instead of comparison based sorting, we can use a divide and conquer approach to sort
+# the elements.
+# It involves setting up a series of ordered buckets, each corresponding to a range of
+# data,
+# and then distributing the data evenly among these buckets; each bucket is then sorted
+# individually;
+# finally, all the data are merged in the order of the buckets.
 
 
 def bucket_sort(nums: list[float]) -> None:
-    """Apply bucket sort on the input list of numbers.
-    The nums is modified in-place and thus the return value is None.
+    """
+    Apply bucket sort on the input list of numbers. The nums is modified
+    in-place and thus the return value is None.
 
     Args:
         nums (list[float]): List of numbers to be sorted.
