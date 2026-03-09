@@ -193,6 +193,8 @@ Sum = (
 
 ## Variations and Related Patterns
 
-1.  **Product of Array Except Self:** While not strictly a sum, storing "prefix products" and "suffix products" is a related technique.
-2.  **Subarray Sum Equals K:** You can use a hash map alongside a running prefix sum to efficiently count the number of subarrays that sum to exactly `k` in $O(N)$ time.
-3.  **Difference Array:** The inverse of a prefix sum. It's used when you need to apply multiple range updates (e.g., "add X to all elements between index L and R") efficiently. After all updates are applied to the difference array, computing the prefix sum of the difference array yields the final updated array.
+1.  **Product of Array Except Self (LeetCode 238):** While not strictly a sum, computing "prefix products" and "suffix products" is a direct application of this pattern. By precomputing products from the left (prefix) and from the right (suffix), you can find the product of all elements except the current one in $O(1)$ time per element, strictly avoiding division.
+2.  **Subarray Sum Equals K (LeetCode 560):** You can use a hash map alongside a running prefix sum to efficiently count the number of subarrays that sum to exactly `k` in $O(N)$ time. Instead of nested loops, you check if `current_prefix_sum - k` exists in your frequency hash map.
+3.  **Difference Array (e.g., LeetCode 370 - Range Addition):** The inverse of a prefix sum. It's used when you need to apply multiple range updates (e.g., "add X to all elements between index L and R") efficiently. Instead of updating every element, you add $X$ at index $L$ and subtract $X$ at $R+1$. After all updates, computing the prefix sum of the difference array yields the final updated array.
+4.  **Continuous Subarray Sum / Modulo Arithmetic (LeetCode 523):** Similar to Subarray Sum Equals K, but tracking the prefix sum modulo $K$. If the same modulo result is seen twice at least two indices apart, a valid subarray exists.
+5.  **Matrix Block Sum (LeetCode 1074):** A direct application of the 2D prefix sum. Given a matrix, return a new matrix where each element is the sum of a block bounded by a distance `k` from the element.
