@@ -1,0 +1,224 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const s = "abcabcbb".split("");
+
+const steps = [
+  { l: 0, r: -1, max: 0, set: [], conflict: -1, exp: "Initial state. L=0, R starts before the string. We expand R to grow the window." },
+  { l: 0, r: 0,  max: 1, set: ['a'], conflict: -1, exp: "R=0 'a'. Not in set. Add it. Window 'a', length 1. Max=1." },
+  { l: 0, r: 1,  max: 2, set: ['a','b'], conflict: -1, exp: "R=1 'b'. Not in set. Add it. Window 'ab', length 2. Max=2." },
+  { l: 0, r: 2,  max: 3, set: ['a','b','c'], conflict: -1, exp: "R=2 'c'. Not in set. Add it. Window 'abc', length 3. Max=3." },
+  { l: 0, r: 3,  max: 3, set: ['a','b','c'], conflict: 3, exp: "R=3 'a'. Duplicate! 'a' is already in the set. Shrink from L until resolved." },
+  { l: 1, r: 3,  max: 3, set: ['b','c','a'], conflict: -1, exp: "Remove 'a' at L=0, move L to 1. Now add 'a' at R=3. Window 'bca', length 3. Max=3." },
+  { l: 1, r: 4,  max: 3, set: ['b','c','a'], conflict: 4, exp: "R=4 'b'. Duplicate! Shrink from L." },
+  { l: 2, r: 4,  max: 3, set: ['c','a','b'], conflict: -1, exp: "Remove 'b' at L=1, move L to 2. Add 'b' at R=4. Window 'cab', length 3. Max=3." },
+  { l: 2, r: 5,  max: 3, set: ['c','a','b'], conflict: 5, exp: "R=5 'c'. Duplicate! Shrink from L." },
+  { l: 3, r: 5,  max: 3, set: ['a','b','c'], conflict: -1, exp: "Remove 'c' at L=2, move L to 3. Add 'c' at R=5. Window 'abc', length 3. Max=3." },
+  { l: 3, r: 6,  max: 3, set: ['a','b','c'], conflict: 6, exp: "R=6 'b'. Duplicate! Shrink from L." },
+  { l: 4, r: 6,  max: 3, set: ['b','c'], conflict: 6, exp: "Remove 'a' at L=3, move L to 4. 'b' still in set — keep shrinking." },
+  { l: 5, r: 6,  max: 3, set: ['c','b'], conflict: -1, exp: "Remove 'b' at L=4, move L to 5. Add 'b' at R=6. Window 'cb', length 2." },
+  { l: 5, r: 7,  max: 3, set: ['c','b'], conflict: 7, exp: "R=7 'b'. Duplicate! Shrink from L." },
+  { l: 6, r: 7,  max: 3, set: ['b'], conflict: 7, exp: "Remove 'c' at L=5, move L to 6. 'b' still in set — keep shrinking." },
+  { l: 7, r: 7,  max: 3, set: ['b'], conflict: -1, exp: "Remove 'b' at L=6, move L to 7. Add 'b' at R=7. Window 'b', length 1. End of string." },
+  { l: 7, r: 7,  max: 3, set: ['b'], conflict: -1, exp: "Done. Maximum window length found was 3, corresponding to 'abc'." },
+];
+---
+
+<longest-substring-visuals>
+  <AlgorithmPlayer title="s = 'abcabcbb'" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box">
+        <span class="stat-label">Current Window</span>
+        <span class="stat-val ls-current-len">0</span>
+      </div>
+      <div class="stat-box highlight">
+        <span class="stat-label">Max Length</span>
+        <span class="stat-val ls-max-len">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">String & Sliding Window</p>
+      <div class="string-container">
+        <div class="window-highlight ls-window"></div>
+        <div class="array-row ls-chars">
+          {s.map((char, i) => (
+            <div class="array-col">
+              <div class="array-cell ls-cell" data-idx={i}>
+                <span class="cell-val">{char}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+              <div class="pointers-row ls-ptr-col" data-idx={i}>
+                <span class="ptr ptr-l hidden">L</span>
+                <span class="ptr ptr-r hidden">R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Character Set (Hash Set)</p>
+      <div class="hashmap-row ls-set"></div>
+    </div>
+  </AlgorithmPlayer>
+</longest-substring-visuals>
+
+<script>
+  class LongestSubstringVisuals extends HTMLElement {
+    connectedCallback() {
+      this.currentLenEl = this.querySelector(".ls-current-len");
+      this.maxLenEl = this.querySelector(".ls-max-len");
+      this.setEl = this.querySelector(".ls-set");
+      this.windowEl = this.querySelector(".ls-window") as HTMLElement;
+      this.cells = Array.from(this.querySelectorAll(".ls-cell"));
+      this.ptrCols = Array.from(this.querySelectorAll(".ls-ptr-col"));
+
+      let lastStep: any = null;
+
+      this._updateHighlight = () => {
+        if (!lastStep) return;
+        const s = lastStep;
+        if (this.windowEl && this.cells.length > 0) {
+          if (s.l <= s.r) {
+            const arrayRow = this.querySelector(".ls-chars");
+            const leftCell = this.cells[s.l] as HTMLElement;
+            const rightCell = this.cells[s.r] as HTMLElement;
+            if (arrayRow && leftCell && rightCell) {
+              const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+              const width = (rightCell.offsetLeft + rightCell.offsetWidth) - leftCell.offsetLeft + 8;
+              this.windowEl.style.left = `${left}px`;
+              this.windowEl.style.width = `${width}px`;
+              this.windowEl.style.opacity = "1";
+              this.windowEl.classList.toggle("conflict-window", s.conflict !== -1);
+            }
+          } else {
+            this.windowEl.style.opacity = "0";
+          }
+        }
+      };
+
+      window.addEventListener('resize', this._updateHighlight);
+      const arrayRow = this.querySelector(".ls-chars");
+      if (arrayRow) {
+        arrayRow.addEventListener('scroll', this._updateHighlight);
+      }
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+        lastStep = s;
+
+        // Stats
+        if (this.currentLenEl) {
+          const len = (s.r >= s.l && s.conflict === -1 && s.set.length > 0) ? (s.r - s.l + 1) : s.set.length;
+          this.currentLenEl.textContent = len.toString();
+        }
+        if (this.maxLenEl) this.maxLenEl.textContent = s.max;
+
+        // Cells & Pointers
+        this.cells.forEach((cell: any, i: number) => {
+          cell.className = "array-cell ls-cell";
+          const valSpan = cell.querySelector(".cell-val");
+
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i >= s.l && i <= s.r) valSpan.classList.add("in-window");
+            if (i === s.conflict) valSpan.classList.add("conflict");
+          }
+        });
+
+        this.ptrCols.forEach((col: any, i: number) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+        });
+
+        this._updateHighlight();
+
+        // Set
+        if (this.setEl) {
+          if (s.set.length === 0) {
+            this.setEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.setEl.innerHTML = s.set.map((char: string) =>
+              `<span class='hashmap-entry'>'${char}'</span>`
+            ).join("");
+          }
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this._updateHighlight) {
+        window.removeEventListener('resize', this._updateHighlight);
+        const arrayRow = this.querySelector(".ls-chars");
+        if (arrayRow) {
+          arrayRow.removeEventListener('scroll', this._updateHighlight);
+        }
+      }
+    }
+  }
+
+  if (!customElements.get('longest-substring-visuals')) {
+    customElements.define('longest-substring-visuals', LongestSubstringVisuals);
+  }
+</script>
+
+<style>
+  longest-substring-visuals {
+    display: block;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .string-container {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .window-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 2rem; /* leave room for pointers */
+    background: rgba(201, 168, 76, 0.08);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 4px;
+    z-index: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .window-highlight.conflict-window {
+    background: rgba(176, 90, 90, 0.1);
+    border-color: rgba(176, 90, 90, 0.4);
+  }
+
+  .ls-chars {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cell-val.in-window {
+    color: var(--text);
+    border-color: rgba(201, 168, 76, 0.5);
+    background: #151515;
+  }
+
+  .cell-val.conflict {
+    color: #e09090;
+    border-color: #b05a5a;
+    background: rgba(176, 90, 90, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
+  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+</style>

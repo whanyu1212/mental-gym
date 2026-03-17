@@ -1,0 +1,222 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 1, 1, 2, 2, 3];
+const k = 2;
+
+const steps = [
+  // Phase 1: Frequency Map
+  { phase: 'count', i: -1, count: {}, buckets: [], res: [], exp: "Step 1: Count the frequency of each element in the array using a Hash Map." },
+  { phase: 'count', i: 0, count: {'1': 1}, buckets: [], res: [], exp: "nums[0] = 1. Count of 1 is now 1." },
+  { phase: 'count', i: 1, count: {'1': 2}, buckets: [], res: [], exp: "nums[1] = 1. Count of 1 is now 2." },
+  { phase: 'count', i: 2, count: {'1': 3}, buckets: [], res: [], exp: "nums[2] = 1. Count of 1 is now 3." },
+  { phase: 'count', i: 3, count: {'1': 3, '2': 1}, buckets: [], res: [], exp: "nums[3] = 2. Count of 2 is now 1." },
+  { phase: 'count', i: 4, count: {'1': 3, '2': 2}, buckets: [], res: [], exp: "nums[4] = 2. Count of 2 is now 2." },
+  { phase: 'count', i: 5, count: {'1': 3, '2': 2, '3': 1}, buckets: [], res: [], exp: "nums[5] = 3. Count of 3 is now 1." },
+
+  // Phase 2: Bucket Sort
+  { phase: 'bucket', i: -1, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], [], [], [], [], [], []], res: [], exp: "Step 2: Create an array of 'buckets' where the index represents the frequency. Max possible frequency is 6 (length of nums)." },
+  { phase: 'bucket', i: 0, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], [], [], [], [], []], res: [], exp: "Number '3' has frequency 1. Add it to bucket at index 1." },
+  { phase: 'bucket', i: 1, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], [], [], [], []], res: [], exp: "Number '2' has frequency 2. Add it to bucket at index 2." },
+  { phase: 'bucket', i: 2, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: [], exp: "Number '1' has frequency 3. Add it to bucket at index 3." },
+
+  // Phase 3: Gather Results
+  { phase: 'gather', i: 6, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: [], exp: "Step 3: Gather top k=2 elements by iterating buckets right-to-left (highest frequency first). Check index 6: empty." },
+  { phase: 'gather', i: 5, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: [], exp: "Check index 5: empty." },
+  { phase: 'gather', i: 4, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: [], exp: "Check index 4: empty." },
+  { phase: 'gather', i: 3, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: ['1'], exp: "Check index 3: Found ['1']! Add '1' to results. We have 1 element, need 1 more." },
+  { phase: 'gather', i: 2, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: ['1', '2'], exp: "Check index 2: Found ['2']! Add '2' to results. We now have k=2 elements!" },
+  { phase: 'done', i: -1, count: {'1': 3, '2': 2, '3': 1}, buckets: [[], ['3'], ['2'], ['1'], [], [], []], res: ['1', '2'], exp: "Done! The 2 most frequent elements are [1, 2]." }
+];
+
+const emptyBuckets = [[], [], [], [], [], [], []];
+---
+
+<top-k-frequent-visuals>
+  <AlgorithmPlayer title={`nums = [1, 1, 1, 2, 2, 3], k = ${k}`} steps={steps}>
+
+    <div class="anim-row" style="display: flex; gap: 4rem; flex-wrap: wrap;">
+
+      <!-- Left Column: Array & Map -->
+      <div style="flex: 1;">
+        <p class="anim-label">Input Array</p>
+        <div class="array-row tkf-nums" style="margin-bottom: 2rem;">
+          {nums.map((n, i) => (
+            <div class="array-col">
+              <div class="array-cell tkf-cell" data-idx={i}>
+                <span class="cell-val">{n}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p class="anim-label">Frequency Map</p>
+        <div class="hashmap-row tkf-map" style="min-height: 40px;">
+          <!-- Map Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Right Column: Buckets & Output -->
+      <div style="flex: 1;">
+        <p class="anim-label">Buckets (Index = Frequency)</p>
+        <div class="array-row tkf-buckets" style="margin-bottom: 2rem;">
+          {emptyBuckets.map((_, i) => (
+            <div class="array-col" style="align-items: center;">
+              <div class="array-cell tkf-bucket-cell" data-idx={i} style="min-height: 3rem; min-width: 2.5rem; justify-content: flex-end; padding: 0.2rem; background: #0a0a0a; border: 1px dashed var(--border);">
+                <!-- Dynamic values -->
+              </div>
+              <span class="cell-idx" style="margin-top: 0.2rem;">Idx {i}</span>
+              <div class="pointers-row tkf-bucket-ptr" data-idx={i}>
+                <span class="ptr ptr-up hidden" style="color: #7dab7d;">↑</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p class="anim-label highlight-label">Top k={k} Results</p>
+        <div class="array-row tkf-results" style="min-height: 3rem;">
+          <!-- Dynamic Results -->
+        </div>
+      </div>
+
+    </div>
+
+  </AlgorithmPlayer>
+</top-k-frequent-visuals>
+
+<script>
+  class TopKFrequentVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".tkf-cell"));
+      this.mapEl = this.querySelector(".tkf-map");
+      this.bucketCells = Array.from(this.querySelectorAll(".tkf-bucket-cell"));
+      this.bucketPtrs = Array.from(this.querySelectorAll(".tkf-bucket-ptr"));
+      this.resEl = this.querySelector(".tkf-results");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Input Cells (Phase 1)
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (s.phase === 'count') {
+              if (i < s.i) valSpan.classList.add("visited");
+              if (i === s.i) valSpan.classList.add("active-eval");
+            } else {
+              valSpan.classList.add("visited");
+            }
+          }
+        });
+
+        // Frequency Map
+        if (this.mapEl) {
+          const keys = Object.keys(s.count);
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = keys.map((k) => {
+              const val = s.count[k];
+              const isHighlight = s.phase === 'bucket' && k === Object.keys(s.count)[s.i];
+              return `<span class="hashmap-entry ${isHighlight ? 'active-map-entry' : ''}">
+                        <span style="color: var(--muted);">'${k}':</span> <span style="font-weight: bold; color: var(--text);">${val}</span>
+                      </span>`;
+            }).join("");
+          }
+        }
+
+        // Buckets
+        this.bucketCells.forEach((cell: any, i: number) => {
+          if (s.buckets && s.buckets.length > 0) {
+            const arr = s.buckets[i];
+            if (arr.length === 0) {
+              cell.innerHTML = "";
+              cell.style.borderColor = "var(--border)";
+              cell.style.background = "#0a0a0a";
+            } else {
+              cell.innerHTML = arr.map((num: string) => `
+                <div style="background: rgba(90, 130, 176, 0.2); border: 1px solid #5a82b0; border-radius: 2px; padding: 0.1rem 0.3rem; margin-top: 0.1rem; color: #90b0e0; font-family: ui-monospace, monospace; font-size: 0.8rem; animation: pop-in 0.2s;">
+                  ${num}
+                </div>
+              `).join("");
+              cell.style.borderColor = "#5a82b0";
+              cell.style.background = "rgba(90, 130, 176, 0.05)";
+            }
+
+            if (s.phase === 'gather' && i === s.i) {
+               cell.style.borderColor = "#7dab7d";
+               cell.style.boxShadow = "0 0 10px rgba(125, 171, 125, 0.2)";
+            } else if (cell.innerHTML !== "") {
+               cell.style.boxShadow = "none";
+            }
+          } else {
+            cell.innerHTML = "";
+            cell.style.borderColor = "var(--border)";
+            cell.style.background = "#0a0a0a";
+          }
+        });
+
+        // Bucket Pointers (Phase 3)
+        this.bucketPtrs.forEach((col: any, i: number) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) {
+             ptr.className = `ptr ptr-up ${s.phase === 'gather' && i === s.i ? "" : "hidden"}`;
+          }
+        });
+
+        // Results
+        if (this.resEl) {
+          if (!s.res || s.res.length === 0) {
+             this.resEl.innerHTML = "<span style='color: var(--muted); font-style: italic; opacity: 0.5;'>[ ]</span>";
+          } else {
+             this.resEl.innerHTML = s.res.map((n: string) => `
+               <div class="array-col">
+                 <div class="array-cell">
+                   <span class="cell-val success-val" style="animation: pop-in 0.2s;">${n}</span>
+                 </div>
+               </div>
+             `).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('top-k-frequent-visuals')) {
+    customElements.define('top-k-frequent-visuals', TopKFrequentVisuals);
+  }
+</script>
+
+<style>
+  top-k-frequent-visuals {
+    display: block;
+  }
+
+  .highlight-label {
+    color: #7dab7d !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .active-map-entry {
+    border-color: var(--accent) !important;
+    background: rgba(201, 168, 76, 0.1) !important;
+    transform: translateY(-2px);
+  }
+
+  .success-val {
+    border-color: #7dab7d !important;
+    color: #a0d0a0 !important;
+    background: rgba(125, 171, 125, 0.15) !important;
+  }
+</style>

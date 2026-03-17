@@ -1,0 +1,212 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const s1 = "ab";
+const s2 = "eidbaooo";
+
+const steps = [
+  { l: 0, r: 1, s1Count: {'a': 1, 'b': 1}, windowCount: {'e': 1, 'i': 1}, match: false, exp: "Initial window of size 2 (length of s1). Window count doesn't match s1 count." },
+  { l: 1, r: 2, s1Count: {'a': 1, 'b': 1}, windowCount: {'i': 1, 'd': 1}, match: false, exp: "Slide window right. Add 'd', remove 'e'. Doesn't match." },
+  { l: 2, r: 3, s1Count: {'a': 1, 'b': 1}, windowCount: {'d': 1, 'b': 1}, match: false, exp: "Slide window right. Add 'b', remove 'i'. Doesn't match." },
+  { l: 3, r: 4, s1Count: {'a': 1, 'b': 1}, windowCount: {'b': 1, 'a': 1}, match: true, exp: "Slide window right. Add 'a', remove 'd'. Window count matches s1 count! Valid permutation found." },
+];
+
+const s1Keys = Object.keys(steps[0].s1Count).sort();
+---
+
+<permutation-in-string-visuals>
+  <AlgorithmPlayer title={`s1 = "${s1}", s2 = "${s2}"`} steps={steps}>
+
+    <div class="anim-row" style="display: flex; gap: 3rem; flex-wrap: wrap;">
+
+      <!-- Target Frequency -->
+      <div>
+        <p class="anim-label">Target Frequency (s1)</p>
+        <div class="hashmap-row pis-target-map">
+          {s1Keys.map(k => (
+            <span class="hashmap-entry highlight-entry" style="opacity: 0.8;">'{k}' : {steps[0].s1Count[k as keyof typeof steps[0]['s1Count']]}</span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Current Window Frequency -->
+      <div>
+        <p class="anim-label">Window Frequency</p>
+        <div class="hashmap-row pis-window-map"></div>
+      </div>
+    </div>
+
+    <!-- String Array -->
+    <div class="anim-row" style="margin-top: 2rem;">
+      <p class="anim-label">String s2 (Sliding Window)</p>
+      <div class="string-container">
+        <div class="window-highlight pis-window"></div>
+        <div class="array-row pis-chars" style="position: relative; z-index: 1;">
+          {s2.split("").map((char, i) => (
+            <div class="array-col">
+              <div class="array-cell pis-cell" data-idx={i}>
+                <span class="cell-val">{char}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+              <div class="pointers-row pis-ptr-col" data-idx={i}>
+                <span class="ptr ptr-l hidden">L</span>
+                <span class="ptr ptr-r hidden">R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</permutation-in-string-visuals>
+
+<script>
+  class PermutationInStringVisuals extends HTMLElement {
+    connectedCallback() {
+      this.windowEl = this.querySelector(".pis-window") as HTMLElement;
+      this.cells = Array.from(this.querySelectorAll(".pis-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".pis-ptr-col"));
+      this.windowMapEl = this.querySelector(".pis-window-map");
+
+      let lastStep: any = null;
+
+      this._updateHighlight = () => {
+        if (!lastStep) return;
+        const s = lastStep;
+        if (this.windowEl && this.cells.length > 0) {
+          if (s.l <= s.r) {
+            const arrayRow = this.querySelector(".pis-chars");
+            const leftCell = this.cells[s.l] as HTMLElement;
+            const rightCell = this.cells[s.r] as HTMLElement;
+            if (arrayRow && leftCell && rightCell) {
+              const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+              const width = (rightCell.offsetLeft + rightCell.offsetWidth) - leftCell.offsetLeft + 8;
+              this.windowEl.style.left = `${left}px`;
+              this.windowEl.style.width = `${width}px`;
+              this.windowEl.style.opacity = "1";
+
+              if (s.match) {
+                this.windowEl.classList.add("success-window");
+              } else {
+                this.windowEl.classList.remove("success-window");
+              }
+            }
+          } else {
+            this.windowEl.style.opacity = "0";
+          }
+        }
+      };
+
+      window.addEventListener('resize', this._updateHighlight);
+      const arrayRow = this.querySelector(".pis-chars");
+      if (arrayRow) {
+        arrayRow.addEventListener('scroll', this._updateHighlight);
+      }
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+        lastStep = s;
+
+        // Pointers & Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i >= s.l && i <= s.r) {
+              valSpan.classList.add("in-window");
+              if (s.match) valSpan.classList.add("success-val");
+            }
+          }
+        });
+
+        this.ptrs.forEach((col: any, i: number) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+        });
+
+        this._updateHighlight();
+
+        // Frequency Map
+        if (this.windowMapEl) {
+          const keys = Object.keys(s.windowCount).sort();
+          if (keys.length === 0) {
+            this.windowMapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.windowMapEl.innerHTML = keys.map(k => {
+              // Highlight if this specific count matches target count
+              const matchesTarget = s.s1Count[k] === s.windowCount[k];
+              return `<span class='hashmap-entry ${matchesTarget ? 'highlight-entry' : ''}'>'${k}' : ${s.windowCount[k]}</span>`;
+            }).join("");
+          }
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this._updateHighlight) {
+        window.removeEventListener('resize', this._updateHighlight);
+        const arrayRow = this.querySelector(".pis-chars");
+        if (arrayRow) {
+          arrayRow.removeEventListener('scroll', this._updateHighlight);
+        }
+      }
+    }
+  }
+
+  if (!customElements.get('permutation-in-string-visuals')) {
+    customElements.define('permutation-in-string-visuals', PermutationInStringVisuals);
+  }
+</script>
+
+<style>
+  permutation-in-string-visuals {
+    display: block;
+  }
+
+  .string-container {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .window-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 2rem;
+    background: rgba(90, 130, 176, 0.08);
+    border: 1px solid rgba(90, 130, 176, 0.3);
+    border-radius: 4px;
+    z-index: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .window-highlight.success-window {
+    background: rgba(125, 171, 125, 0.1);
+    border-color: rgba(125, 171, 125, 0.4);
+    box-shadow: 0 0 12px rgba(125, 171, 125, 0.2);
+  }
+
+  .cell-val.in-window {
+    color: #90b0e0;
+    border-color: #5a82b0;
+    background: rgba(90, 130, 176, 0.15);
+  }
+
+  .cell-val.success-val {
+    color: #7dab7d !important;
+    border-color: #7dab7d !important;
+    background: rgba(125, 171, 125, 0.15) !important;
+  }
+
+  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
+  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+
+  .highlight-entry {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: rgba(201, 168, 76, 0.1) !important;
+  }
+</style>

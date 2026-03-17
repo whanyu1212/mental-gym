@@ -1,0 +1,408 @@
+---
+import { problems } from "../../data/problems";
+import { mlProblems } from "../../data/mlProblems";
+import Layout from "../../layouts/Layout.astro";
+
+// Algorithms
+const ALGO_GROUP_ORDER = ["Arrays & Hashing", "Two Pointers", "Sliding Window", "Stack"];
+const algoGroups = [
+	...ALGO_GROUP_ORDER.filter((g) => problems.some((p) => p.group === g)),
+	...problems
+		.map((p) => p.group)
+		.filter((g) => !ALGO_GROUP_ORDER.includes(g))
+		.filter((g, i, arr) => arr.indexOf(g) === i),
+];
+const algoByGroup = Object.fromEntries(
+	algoGroups.map((g) => [g, problems.filter((p) => p.group === g)]),
+);
+
+// Machine Learning
+const mlCategories = [...new Set(mlProblems.map((problem) => problem.category))];
+const mlByCategory = Object.fromEntries(
+	mlCategories.map((category) => [
+		category,
+		mlProblems.filter((problem) => problem.category === category),
+	]),
+);
+---
+
+<Layout title="Problems | Mental Gym">
+	<div class="page-header">
+		<h1>Problems Bank</h1>
+		<p class="subtitle">
+			{problems.length} algorithms and {mlProblems.length} ML interview questions
+		</p>
+	</div>
+
+	<div class="section-tabs">
+		<button class="section-tab active" data-target="algo-section">Algorithms</button>
+		<button class="section-tab" data-target="ml-section">Machine Learning</button>
+		<button class="section-tab" data-target="sd-section">System Design</button>
+	</div>
+
+	<div id="algo-section" class="problem-section active">
+		{
+			algoGroups.map((group) => (
+				<section
+					class="group"
+					id={`algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
+				>
+					<h2 class="group-title">{group}</h2>
+					<table class="problem-table">
+						<thead>
+							<tr>
+								<th class="col-id">#</th>
+								<th class="col-title">Problem</th>
+								<th class="col-diff">Difficulty</th>
+								<th class="col-tags">Topics</th>
+							</tr>
+						</thead>
+						<tbody>
+							{algoByGroup[group].map((problem) => (
+								<tr>
+									<td class="col-id muted">{problem.id}</td>
+									<td class="col-title">
+										<a href={`/algorithms/${problem.slug}/`}>{problem.title}</a>
+									</td>
+									<td class="col-diff">
+										<span class={`badge ${problem.difficulty.toLowerCase()}`}>
+											{problem.difficulty}
+										</span>
+									</td>
+									<td class="col-tags">
+										{problem.topics.slice(0, 3).map((tag) => (
+											<span class="tag">{tag}</span>
+										))}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</section>
+			))
+		}
+	</div>
+
+	<div id="sd-section" class="problem-section hidden">
+		<div class="coming-soon">
+			<p class="coming-soon-title">System Design</p>
+			<p class="coming-soon-sub">Coming soon — cases covering ML system design, distributed systems, and architecture tradeoffs.</p>
+		</div>
+	</div>
+
+	<div id="ml-section" class="problem-section hidden">
+		<div class="ml-intro">
+			<p>
+				Placeholder section for ML coding interview questions and implementation drills.
+				These represent common interview styles: classical ML, evaluation,
+				transformers, and practical PyTorch.
+			</p>
+		</div>
+
+		{
+			mlCategories.map((category) => (
+				<section
+					class="group"
+					id={`ml-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
+				>
+					<h2 class="group-title">{category}</h2>
+					<table class="problem-table">
+						<thead>
+							<tr>
+								<th class="col-id">#</th>
+								<th class="col-title">Problem</th>
+								<th class="col-diff">Difficulty</th>
+								<th class="col-tags">Tags</th>
+								<th class="col-status">Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{mlByCategory[category].map((problem) => (
+								<tr>
+									<td class="col-id muted">{problem.id}</td>
+									<td class="col-title">
+										<div class="problem-copy">
+											<a class="problem-name" href={`/machine-learning/${problem.slug}/`}>
+												{problem.title}
+											</a>
+											<span class="problem-summary">{problem.summary}</span>
+										</div>
+									</td>
+									<td class="col-diff">
+										<span class={`badge ${problem.difficulty.toLowerCase()}`}>
+											{problem.difficulty}
+										</span>
+									</td>
+									<td class="col-tags">
+										{problem.tags.map((tag) => <span class="tag">{tag}</span>)}
+									</td>
+									<td class="col-status">
+										<span class="status">{problem.status}</span>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</section>
+			))
+		}
+	</div>
+</Layout>
+
+<script>
+	const tabs = document.querySelectorAll<HTMLButtonElement>(".section-tab");
+	const sections = document.querySelectorAll<HTMLElement>(".problem-section");
+
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			const targetId = tab.dataset.target;
+
+			tabs.forEach((t) => t.classList.remove("active"));
+			tab.classList.add("active");
+
+			sections.forEach((section) => {
+				if (section.id === targetId) {
+					section.classList.remove("hidden");
+					section.classList.add("active");
+				} else {
+					section.classList.add("hidden");
+					section.classList.remove("active");
+				}
+			});
+		});
+	});
+
+	const hash = window.location.hash;
+	const stored = sessionStorage.getItem("problems-tab");
+	sessionStorage.removeItem("problems-tab");
+
+	const target = hash.startsWith("#ml-") ? "ml-section"
+		: hash.startsWith("#sd-") ? "sd-section"
+		: stored === "ml" ? "ml-section"
+		: stored === "system-design" ? "sd-section"
+		: null;
+
+	if (target) {
+		const tab = document.querySelector(`[data-target="${target}"]`) as HTMLButtonElement;
+		if (tab) tab.click();
+	}
+</script>
+
+<style>
+	.page-header {
+		margin-bottom: 2rem;
+	}
+
+	.page-header h1 {
+		margin: 0 0 0.25rem;
+		font-family: var(--font-serif);
+		font-size: 2rem;
+		font-weight: 600;
+		letter-spacing: 0.3px;
+	}
+
+	.subtitle {
+		margin: 0;
+		color: var(--muted);
+	}
+
+	.section-tabs {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 2rem;
+		border-bottom: 1px solid var(--border);
+		padding-bottom: 0.5rem;
+	}
+
+	.section-tab {
+		background: transparent;
+		border: none;
+		color: var(--muted);
+		padding: 0.5rem 1rem;
+		font-size: 0.9rem;
+		font-family: Inter, system-ui, sans-serif;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: background 0.2s, color 0.2s;
+	}
+
+	.section-tab:hover {
+		background: rgba(201, 168, 76, 0.1);
+		color: var(--text);
+	}
+
+	.section-tab.active {
+		background: rgba(201, 168, 76, 0.15);
+		color: var(--accent);
+		font-weight: 500;
+	}
+
+	.problem-section.hidden {
+		display: none;
+	}
+
+	.ml-intro {
+		margin-bottom: 2rem;
+		max-width: 720px;
+	}
+
+	.ml-intro p {
+		margin: 0;
+		color: var(--muted);
+		line-height: 1.6;
+	}
+
+	.group {
+		margin-bottom: 2.5rem;
+	}
+
+	.group-title {
+		margin: 0 0 0.75rem;
+		font-size: 0.72rem;
+		color: var(--accent);
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		font-weight: 600;
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	.problem-table {
+		width: 100%;
+		border-collapse: collapse;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	th {
+		text-align: left;
+		padding: 0.6rem 0.9rem;
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--muted);
+		border-bottom: 1px solid var(--border);
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	td {
+		padding: 0.65rem 0.9rem;
+		border-bottom: 1px solid var(--border);
+		font-size: 0.88rem;
+		vertical-align: top;
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	#algo-section td {
+		vertical-align: middle;
+	}
+
+	tbody tr:last-child td {
+		border-bottom: none;
+	}
+
+	tbody tr:hover {
+		background: rgba(201, 168, 76, 0.04);
+	}
+
+	.col-id {
+		width: 4rem;
+	}
+
+	.col-diff {
+		width: 6rem;
+	}
+
+	.col-status {
+		width: 7rem;
+	}
+
+	.muted {
+		color: var(--muted);
+	}
+
+	.badge {
+		font-size: 0.72rem;
+		padding: 0.2rem 0.55rem;
+		border-radius: 2px;
+		border: 1px solid var(--border);
+		font-family: Inter, system-ui, sans-serif;
+		white-space: nowrap;
+	}
+
+	.easy {
+		color: #7dab7d;
+	}
+	.medium {
+		color: #c9a84c;
+	}
+	.hard {
+		color: #b05a5a;
+	}
+
+	.tag {
+		display: inline-block;
+		font-size: 0.7rem;
+		padding: 0.15rem 0.45rem;
+		border-radius: 2px;
+		border: 1px solid var(--border);
+		color: var(--muted);
+		margin-right: 0.25rem;
+		margin-bottom: 0.25rem;
+		font-family: Inter, system-ui, sans-serif;
+		white-space: nowrap;
+	}
+
+	.status {
+		display: inline-block;
+		font-size: 0.72rem;
+		padding: 0.2rem 0.55rem;
+		border-radius: 2px;
+		border: 1px solid var(--border);
+		color: var(--accent);
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	.coming-soon {
+		padding: 4rem 2rem;
+		text-align: center;
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		background: var(--panel);
+	}
+
+	.coming-soon-title {
+		margin: 0 0 0.5rem;
+		font-family: var(--font-serif);
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--muted);
+	}
+
+	.coming-soon-sub {
+		margin: 0;
+		color: var(--muted);
+		font-size: 0.88rem;
+		font-family: Inter, system-ui, sans-serif;
+		max-width: 480px;
+		margin: 0 auto;
+		line-height: 1.6;
+	}
+
+	.problem-copy {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.problem-name {
+		font-weight: 600;
+	}
+
+	.problem-summary {
+		color: var(--muted);
+		line-height: 1.5;
+		font-size: 0.82rem;
+	}
+</style>

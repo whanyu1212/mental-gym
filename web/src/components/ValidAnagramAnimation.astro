@@ -1,0 +1,185 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const s = "anagram".split("");
+const t = "nagaram".split("");
+
+const steps = [
+  { i: -1, phase: 'init', sCount: {}, exp: "Initial state. We need to check if 't' is an anagram of 's'. First, we will build a frequency map of 's'." },
+
+  // Build S
+  { i: 0, phase: 's', sCount: {'a': 1}, exp: "s[0] = 'a'. Add to map." },
+  { i: 1, phase: 's', sCount: {'a': 1, 'n': 1}, exp: "s[1] = 'n'. Add to map." },
+  { i: 2, phase: 's', sCount: {'a': 2, 'n': 1}, exp: "s[2] = 'a'. Increment 'a'." },
+  { i: 3, phase: 's', sCount: {'a': 2, 'n': 1, 'g': 1}, exp: "s[3] = 'g'. Add to map." },
+  { i: 4, phase: 's', sCount: {'a': 2, 'n': 1, 'g': 1, 'r': 1}, exp: "s[4] = 'r'. Add to map." },
+  { i: 5, phase: 's', sCount: {'a': 3, 'n': 1, 'g': 1, 'r': 1}, exp: "s[5] = 'a'. Increment 'a'." },
+  { i: 6, phase: 's', sCount: {'a': 3, 'n': 1, 'g': 1, 'r': 1, 'm': 1}, exp: "s[6] = 'm'. Add to map. Map for 's' is complete." },
+
+  // Decrement T
+  { i: -1, phase: 't-start', sCount: {'a': 3, 'n': 1, 'g': 1, 'r': 1, 'm': 1}, exp: "Now we iterate through 't', decrementing the counts in our map." },
+  { i: 0, phase: 't', sCount: {'a': 3, 'n': 0, 'g': 1, 'r': 1, 'm': 1}, exp: "t[0] = 'n'. Decrement 'n'." },
+  { i: 1, phase: 't', sCount: {'a': 2, 'n': 0, 'g': 1, 'r': 1, 'm': 1}, exp: "t[1] = 'a'. Decrement 'a'." },
+  { i: 2, phase: 't', sCount: {'a': 2, 'n': 0, 'g': 0, 'r': 1, 'm': 1}, exp: "t[2] = 'g'. Decrement 'g'." },
+  { i: 3, phase: 't', sCount: {'a': 1, 'n': 0, 'g': 0, 'r': 1, 'm': 1}, exp: "t[3] = 'a'. Decrement 'a'." },
+  { i: 4, phase: 't', sCount: {'a': 1, 'n': 0, 'g': 0, 'r': 0, 'm': 1}, exp: "t[4] = 'r'. Decrement 'r'." },
+  { i: 5, phase: 't', sCount: {'a': 0, 'n': 0, 'g': 0, 'r': 0, 'm': 1}, exp: "t[5] = 'a'. Decrement 'a'." },
+  { i: 6, phase: 't', sCount: {'a': 0, 'n': 0, 'g': 0, 'r': 0, 'm': 0}, exp: "t[6] = 'm'. Decrement 'm'." },
+
+  { i: -1, phase: 'done', sCount: {'a': 0, 'n': 0, 'g': 0, 'r': 0, 'm': 0}, exp: "All counts are 0! Therefore, 't' is a valid anagram of 's'." }
+];
+
+const allKeys = ['a', 'g', 'm', 'n', 'r'];
+---
+
+<valid-anagram-visuals>
+  <AlgorithmPlayer title='s = "anagram", t = "nagaram"' steps={steps}>
+
+    <div class="anim-row" style="display: flex; gap: 4rem; flex-wrap: wrap;">
+
+      <!-- Arrays -->
+      <div style="flex: 1;">
+        <p class="anim-label">String s</p>
+        <div class="array-row va-s-row" style="margin-bottom: 2rem;">
+          {s.map((char, i) => (
+            <div class="array-col">
+              <div class="array-cell va-s-cell" data-idx={i}>
+                <span class="cell-val">{char}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p class="anim-label">String t</p>
+        <div class="array-row va-t-row">
+          {t.map((char, i) => (
+            <div class="array-col">
+              <div class="array-cell va-t-cell" data-idx={i}>
+                <span class="cell-val">{char}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Frequency Map -->
+      <div style="width: 200px;">
+        <p class="anim-label">Frequency Map</p>
+        <div class="hashmap-col va-map" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+  </AlgorithmPlayer>
+</valid-anagram-visuals>
+
+<script>
+  class ValidAnagramVisuals extends HTMLElement {
+    connectedCallback() {
+      this.sCells = Array.from(this.querySelectorAll(".va-s-cell"));
+      this.tCells = Array.from(this.querySelectorAll(".va-t-cell"));
+      this.mapEl = this.querySelector(".va-map");
+      const allKeys = ['a', 'g', 'm', 'n', 'r'];
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // String S highlights
+        this.sCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (s.phase === 's') {
+              if (i < s.i) valSpan.classList.add("visited");
+              if (i === s.i) valSpan.classList.add("active-add");
+            } else if (s.phase === 't-start' || s.phase === 't' || s.phase === 'done') {
+              valSpan.classList.add("visited");
+            }
+          }
+        });
+
+        // String T highlights
+        this.tCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (s.phase === 't') {
+              if (i < s.i) valSpan.classList.add("visited");
+              if (i === s.i) valSpan.classList.add("active-sub");
+            } else if (s.phase === 'done') {
+              valSpan.classList.add("visited");
+            }
+          }
+        });
+
+        // Map Render
+        if (this.mapEl) {
+          if (Object.keys(s.sCount).length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty' style='padding: 1rem;'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = allKeys.map(k => {
+              const val = s.sCount[k];
+              if (val === undefined) return '';
+
+              let highlightClass = '';
+              if (s.phase === 's' && k === this.sCells[s.i]?.querySelector('.cell-val')?.textContent) {
+                highlightClass = 'highlight-add';
+              } else if (s.phase === 't' && k === this.tCells[s.i]?.querySelector('.cell-val')?.textContent) {
+                highlightClass = 'highlight-sub';
+              }
+
+              return `<div class='hashmap-entry ${highlightClass}' style='display: flex; justify-content: space-between; width: 100%;'>
+                        <span>'${k}'</span>
+                        <span style="font-weight: bold; ${val === 0 ? 'opacity: 0.3;' : ''}">${val}</span>
+                      </div>`;
+            }).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('valid-anagram-visuals')) {
+    customElements.define('valid-anagram-visuals', ValidAnagramVisuals);
+  }
+</script>
+
+<style>
+  valid-anagram-visuals {
+    display: block;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-add {
+    border-color: #5a82b0;
+    color: #90b0e0;
+    background: rgba(90, 130, 176, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-sub {
+    border-color: #c9a84c;
+    color: #e0bc5c;
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateY(4px); /* Pushes down instead of up */
+  }
+
+  .highlight-add {
+    border-color: #5a82b0 !important;
+    background: rgba(90, 130, 176, 0.15) !important;
+    color: #90b0e0 !important;
+  }
+
+  .highlight-sub {
+    border-color: #c9a84c !important;
+    background: rgba(201, 168, 76, 0.15) !important;
+    color: #e0bc5c !important;
+  }
+</style>

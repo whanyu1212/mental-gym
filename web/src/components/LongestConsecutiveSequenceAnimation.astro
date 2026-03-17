@@ -1,0 +1,152 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [100, 4, 200, 1, 3, 2];
+
+const steps = [
+  { phase: 'init', active: -1, longest: 0, curr: 0, chain: [], exp: "First, add all elements to a Hash Set for O(1) lookups." },
+
+  { phase: 'check', active: 100, longest: 0, curr: 0, chain: [], exp: "Check 100. Does 99 exist in the set? No. This means 100 is the start of a sequence!" },
+  { phase: 'count', active: 100, longest: 1, curr: 1, chain: [100], exp: "Sequence starts at 100. Does 101 exist? No. Sequence ends. Length is 1." },
+
+  { phase: 'check', active: 4, longest: 1, curr: 0, chain: [], exp: "Check 4. Does 3 exist in the set? YES. So 4 is NOT the start of a sequence. Skip it to avoid redundant work." },
+
+  { phase: 'check', active: 200, longest: 1, curr: 0, chain: [], exp: "Check 200. Does 199 exist? No. Start of a sequence!" },
+  { phase: 'count', active: 200, longest: 1, curr: 1, chain: [200], exp: "Sequence starts at 200. Does 201 exist? No. Sequence ends. Length is 1. Max remains 1." },
+
+  { phase: 'check', active: 1, longest: 1, curr: 0, chain: [], exp: "Check 1. Does 0 exist? No. Start of a sequence!" },
+  { phase: 'count', active: 1, longest: 1, curr: 1, chain: [1], exp: "Found 1. Current length = 1. Does 2 exist? YES!" },
+  { phase: 'count', active: 2, longest: 1, curr: 2, chain: [1, 2], exp: "Found 2. Current length = 2. Does 3 exist? YES!" },
+  { phase: 'count', active: 3, longest: 1, curr: 3, chain: [1, 2, 3], exp: "Found 3. Current length = 3. Does 4 exist? YES!" },
+  { phase: 'count', active: 4, longest: 4, curr: 4, chain: [1, 2, 3, 4], exp: "Found 4. Current length = 4. Does 5 exist? No. Sequence ends. New max length is 4!" },
+
+  { phase: 'check', active: 3, longest: 4, curr: 0, chain: [], exp: "Check 3. Does 2 exist? YES. Skip." },
+  { phase: 'check', active: 2, longest: 4, curr: 0, chain: [], exp: "Check 2. Does 1 exist? YES. Skip." },
+
+  { phase: 'done', active: -1, longest: 4, curr: 0, chain: [], exp: "Done! The longest consecutive sequence is length 4." }
+];
+---
+
+<longest-consecutive-visuals>
+  <AlgorithmPlayer title="nums = [100, 4, 200, 1, 3, 2]" steps={steps}>
+
+    <div class="stats-row" style="margin-bottom: 2rem;">
+      <div class="stat-box highlight">
+        <span class="stat-label">Longest Sequence</span>
+        <span class="stat-val lcs-longest">0</span>
+      </div>
+      <div class="stat-box" style="border-color: rgba(90, 130, 176, 0.4); background: rgba(90, 130, 176, 0.05);">
+        <span class="stat-label">Current Sequence</span>
+        <span class="stat-val lcs-curr" style="color: #5a82b0;">0</span>
+      </div>
+    </div>
+
+    <!-- Active Chain -->
+    <div class="anim-row" style="min-height: 4rem;">
+      <p class="anim-label">Active Sequence Chain</p>
+      <div class="array-row lcs-chain">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- Hash Set -->
+    <div class="anim-row" style="margin-top: 2rem;">
+      <p class="anim-label">Hash Set O(1) Lookups</p>
+      <div class="hashmap-row lcs-set" style="gap: 0.8rem;">
+        {nums.map(n => (
+          <div class="array-cell lcs-set-cell" data-val={n}>
+            <span class="cell-val" style="border-radius: 50%;">{n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</longest-consecutive-visuals>
+
+<script>
+  class LongestConsecutiveVisuals extends HTMLElement {
+    connectedCallback() {
+      this.longestEl = this.querySelector(".lcs-longest");
+      this.currEl = this.querySelector(".lcs-curr");
+      this.chainEl = this.querySelector(".lcs-chain");
+      this.setCells = Array.from(this.querySelectorAll(".lcs-set-cell"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Stats
+        if (this.longestEl) this.longestEl.textContent = s.longest;
+        if (this.currEl) this.currEl.textContent = s.curr;
+
+        // Chain Render
+        if (this.chainEl) {
+          if (!s.chain || s.chain.length === 0) {
+            this.chainEl.innerHTML = "<span style='color: var(--muted); font-style: italic; opacity: 0.5;'>None</span>";
+          } else {
+            this.chainEl.innerHTML = s.chain.map((n: number, idx: number) => `
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div class="array-cell active-chain-cell">
+                  <span class="cell-val" style="border-color: #5a82b0; color: #90b0e0; background: rgba(90, 130, 176, 0.15); transform: translateY(0); border-radius: 50%; width: 2.5rem; height: 2.5rem;">${n}</span>
+                </div>
+                ${idx < s.chain.length - 1 ? `<span style="color: #5a82b0;">→</span>` : ''}
+              </div>
+            `).join("");
+          }
+        }
+
+        // Set Cells
+        this.setCells.forEach((cell: any) => {
+          const val = parseInt(cell.dataset.val, 10);
+          const valSpan = cell.querySelector(".cell-val");
+
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            valSpan.style.borderRadius = "50%";
+
+            if (s.phase === 'check' && val === s.active) {
+              valSpan.classList.add("active-eval");
+            } else if (s.phase === 'count' && s.chain.includes(val)) {
+              valSpan.classList.add("success-val");
+            }
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('longest-consecutive-visuals')) {
+    customElements.define('longest-consecutive-visuals', LongestConsecutiveVisuals);
+  }
+</script>
+
+<style>
+  longest-consecutive-visuals {
+    display: block;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.success-val {
+    border-color: #5a82b0;
+    color: #90b0e0;
+    background: rgba(90, 130, 176, 0.15);
+  }
+
+  .active-chain-cell {
+    animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+</style>

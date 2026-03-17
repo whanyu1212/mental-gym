@@ -1,0 +1,262 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 3, -1, -3, 5, 3, 6, 7];
+const k = 3;
+
+const steps = [
+  { i: -1, deque: [], res: [], window: [-1,-1], exp: "Initial state. We use a Monotonic Decreasing Deque to store INDICES of elements. k=3." },
+
+  // Window 1: [1, 3, -1]
+  { i: 0, deque: [0], res: [], window: [0,0], exp: "i=0. nums[0] = 1. Deque is empty, append index 0. Deque: [0]." },
+  { i: 1, deque: [1], res: [], window: [0,1], exp: "i=1. nums[1] = 3. 3 > nums[deque.back()] (1). Pop index 0 because 1 can never be the max now. Append 1. Deque: [1]." },
+  { i: 2, deque: [1, 2], res: [3], window: [0,2], exp: "i=2. nums[2] = -1. -1 < 3, so just append index 2. Deque: [1, 2]. Window is size 3! Max is nums[deque[0]] = 3. Add to results." },
+
+  // Window 2: [3, -1, -3]
+  { i: 3, deque: [1, 2, 3], res: [3, 3], window: [1,3], exp: "i=3. nums[3] = -3. -3 < -1, append index 3. Deque: [1, 2, 3]. Window shifted. Front of deque (1) is still valid. Max is 3. Add to results." },
+
+  // Window 3: [-1, -3, 5]
+  { i: 4, deque: [4], res: [3, 3, 5], window: [2,4], exp: "i=4. nums[4] = 5. 5 is greater than -3, -1, and 3! Pop all smaller elements. Append index 4. Deque: [4]. Max is 5." },
+
+  // Window 4: [-3, 5, 3]
+  { i: 5, deque: [4, 5], res: [3, 3, 5, 5], window: [3,5], exp: "i=5. nums[5] = 3. 3 < 5. Append index 5. Deque: [4, 5]. Max is 5." },
+
+  // Window 5: [5, 3, 6]
+  { i: 6, deque: [6], res: [3, 3, 5, 5, 6], window: [4,6], exp: "i=6. nums[6] = 6. 6 > 3 and 6 > 5. Pop indices 5 and 4. Append index 6. Deque: [6]. Max is 6." },
+
+  // Window 6: [3, 6, 7]
+  { i: 7, deque: [7], res: [3, 3, 5, 5, 6, 7], window: [5,7], exp: "i=7. nums[7] = 7. 7 > 6. Pop index 6. Append index 7. Deque: [7]. Max is 7. Done!" },
+];
+---
+
+<sliding-window-max-visuals>
+  <AlgorithmPlayer title={`nums = [1, 3, -1, -3, 5, 3, 6, 7], k = ${k}`} steps={steps}>
+
+    <div class="anim-row" style="display: flex; gap: 4rem; justify-content: center; flex-wrap: wrap;">
+
+      <!-- Array and Window -->
+      <div style="flex: 2; min-width: 300px;">
+        <p class="anim-label">Array & Sliding Window (k=3)</p>
+        <div class="string-container">
+          <div class="window-highlight swm-window"></div>
+          <div class="array-row swm-chars" style="position: relative; z-index: 1;">
+            {nums.map((n, i) => (
+              <div class="array-col">
+                <div class="array-cell swm-cell" data-idx={i}>
+                  <span class="cell-val">{n}</span>
+                  <span class="cell-idx">{i}</span>
+                </div>
+                <div class="pointers-row swm-ptr-col" data-idx={i}>
+                  <span class="ptr ptr-up hidden">i</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p class="anim-label" style="margin-top: 2rem;">Results Array</p>
+        <div class="array-row swm-res">
+           <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Deque -->
+      <div style="flex: 1; min-width: 150px; display: flex; flex-direction: column; align-items: center;">
+        <p class="anim-label">Monotonic Deque (Stores Indices)</p>
+        <div class="deque-container swm-deque">
+          <!-- Rendered via JS -->
+        </div>
+        <p class="anim-label" style="font-size: 0.6rem; opacity: 0.6; text-transform: none; margin-top: 0.5rem;">Front is always max for current window</p>
+      </div>
+
+    </div>
+
+  </AlgorithmPlayer>
+</sliding-window-max-visuals>
+
+<script>
+  class SlidingWindowMaxVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".swm-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".swm-ptr-col"));
+      this.windowEl = this.querySelector(".swm-window") as HTMLElement;
+      this.dequeEl = this.querySelector(".swm-deque");
+      this.resEl = this.querySelector(".swm-res");
+      const nums = [1, 3, -1, -3, 5, 3, 6, 7]; // needed for values in deque
+
+      let lastStep: any = null;
+
+      this._updateHighlight = () => {
+        if (!lastStep) return;
+        const s = lastStep;
+        if (this.windowEl && this.cells.length > 0) {
+          const l = s.window[0];
+          const r = s.window[1];
+          if (l !== -1 && r !== -1) {
+            const arrayRow = this.querySelector(".swm-chars");
+            const leftCell = this.cells[l] as HTMLElement;
+            const rightCell = this.cells[r] as HTMLElement;
+            if (arrayRow && leftCell && rightCell) {
+              const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+              const width = (rightCell.offsetLeft + rightCell.offsetWidth) - leftCell.offsetLeft + 8;
+              this.windowEl.style.left = `${left}px`;
+              this.windowEl.style.width = `${width}px`;
+              this.windowEl.style.opacity = "1";
+            }
+          } else {
+            this.windowEl.style.opacity = "0";
+          }
+        }
+      };
+
+      window.addEventListener('resize', this._updateHighlight);
+      const arrayRow = this.querySelector(".swm-chars");
+      if (arrayRow) {
+        arrayRow.addEventListener('scroll', this._updateHighlight);
+      }
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+        lastStep = s;
+
+        // Pointers & Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i >= s.window[0] && i <= s.window[1]) {
+              valSpan.classList.add("in-window");
+            } else if (i < s.window[0]) {
+              valSpan.classList.add("visited");
+            }
+          }
+        });
+
+        this.ptrs.forEach((col: any, i: number) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) ptr.className = `ptr ptr-up ${i === s.i ? "" : "hidden"}`;
+        });
+
+        this._updateHighlight();
+
+        // Deque Render
+        if (this.dequeEl) {
+          if (s.deque.length === 0) {
+            this.dequeEl.innerHTML = "<span style='color: var(--muted); font-style: italic; opacity: 0.5;'>Empty</span>";
+          } else {
+            this.dequeEl.innerHTML = s.deque.map((idx: number, queuePos: number) => {
+              const val = nums[idx];
+              const isFront = queuePos === 0;
+              return `
+                <div class="deque-item ${isFront ? 'deque-front' : ''}">
+                  <span style="font-size: 0.7rem; color: var(--muted); margin-right: 0.5rem;">idx ${idx}:</span>
+                  <span style="font-weight: bold; color: ${isFront ? 'var(--accent)' : 'var(--text)'};">${val}</span>
+                </div>
+              `;
+            }).join("");
+          }
+        }
+
+        // Results
+        if (this.resEl) {
+           if (s.res.length === 0) {
+             this.resEl.innerHTML = "<span style='color: var(--muted); font-style: italic; opacity: 0.5; padding: 1rem;'>[ ]</span>";
+           } else {
+             this.resEl.innerHTML = s.res.map((n: number) => `
+               <div class="array-col">
+                 <div class="array-cell">
+                   <span class="cell-val success-val" style="animation: pop-in 0.2s;">${n}</span>
+                 </div>
+               </div>
+             `).join("");
+           }
+        }
+
+      });
+    }
+  }
+
+  if (!customElements.get('sliding-window-max-visuals')) {
+    customElements.define('sliding-window-max-visuals', SlidingWindowMaxVisuals);
+  }
+</script>
+
+<style>
+  sliding-window-max-visuals {
+    display: block;
+  }
+
+  .string-container {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .window-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 2rem;
+    background: rgba(90, 130, 176, 0.08);
+    border: 1px solid rgba(90, 130, 176, 0.3);
+    border-radius: 4px;
+    z-index: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .cell-val.in-window {
+    color: #90b0e0;
+    border-color: #5a82b0;
+    background: rgba(90, 130, 176, 0.15);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+
+  /* Deque */
+  .deque-container {
+    width: 100%;
+    min-height: 150px;
+    border: 2px dashed var(--border);
+    background: #0a0a0a;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .deque-item {
+    background: #151515;
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: slide-in 0.2s ease-out;
+  }
+
+  .deque-front {
+    border-color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+    box-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
+  }
+
+  .success-val {
+    border-color: #7dab7d !important;
+    color: #a0d0a0 !important;
+    background: rgba(125, 171, 125, 0.15) !important;
+  }
+
+  @keyframes slide-in {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+</style>

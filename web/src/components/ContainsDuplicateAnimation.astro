@@ -1,0 +1,119 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 2, 3, 1];
+
+const steps = [
+  { i: -1, val: null, set: [], found: false, exp: "Initialize an empty Hash Set to keep track of seen numbers." },
+  { i: 0, val: 1, set: [], found: false, exp: "Check nums[0] = 1. Is 1 in the set? No. Add it to the set." },
+  { i: 1, val: 2, set: [1], found: false, exp: "Check nums[1] = 2. Is 2 in the set? No. Add it to the set." },
+  { i: 2, val: 3, set: [1, 2], found: false, exp: "Check nums[2] = 3. Is 3 in the set? No. Add it to the set." },
+  { i: 3, val: 1, set: [1, 2, 3], found: true, exp: "Check nums[3] = 1. Is 1 in the set? YES! We found a duplicate. Return true." }
+];
+---
+
+<contains-duplicate-visuals>
+  <AlgorithmPlayer title="nums = [1, 2, 3, 1]" steps={steps}>
+
+    <!-- Array -->
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-row cd-array">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell cd-cell" data-idx={i}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Hash Set -->
+    <div class="anim-row" style="margin-top: 2rem;">
+      <p class="anim-label">Hash Set (Seen Numbers)</p>
+      <div class="hashmap-row cd-set"></div>
+    </div>
+
+  </AlgorithmPlayer>
+</contains-duplicate-visuals>
+
+<script>
+  class ContainsDuplicateVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".cd-cell"));
+      this.setEl = this.querySelector(".cd-set");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i < s.i) valSpan.classList.add("visited");
+            if (i === s.i) {
+              valSpan.classList.add("active-eval");
+              if (s.found) valSpan.classList.add("conflict");
+            }
+          }
+        });
+
+        // Set
+        if (this.setEl) {
+          if (s.set.length === 0) {
+            this.setEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.setEl.innerHTML = s.set.map((val: number) => {
+              const isMatch = s.found && val === s.val;
+              return `<span class='hashmap-entry ${isMatch ? 'conflict-entry' : ''}'>${val}</span>`;
+            }).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('contains-duplicate-visuals')) {
+    customElements.define('contains-duplicate-visuals', ContainsDuplicateVisuals);
+  }
+</script>
+
+<style>
+  contains-duplicate-visuals {
+    display: block;
+  }
+
+  .cell-val.visited {
+    opacity: 0.5;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.conflict {
+    border-color: #b05a5a !important;
+    color: #e09090 !important;
+    background: rgba(176, 90, 90, 0.15) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  .conflict-entry {
+    border-color: #b05a5a !important;
+    color: #e09090 !important;
+    background: rgba(176, 90, 90, 0.15) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>

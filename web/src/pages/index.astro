@@ -1,0 +1,523 @@
+---
+import { getCollection } from "astro:content";
+import { mlProblems } from "../data/mlProblems";
+import { problems } from "../data/problems";
+import Layout from "../layouts/Layout.astro";
+
+const notes = await getCollection("notes");
+
+const total = problems.length;
+const easy = problems.filter((p) => p.difficulty === "Easy").length;
+const medium = problems.filter((p) => p.difficulty === "Medium").length;
+const hard = problems.filter((p) => p.difficulty === "Hard").length;
+
+const groups = [...new Set(problems.map((p) => p.group))];
+const groupCounts = Object.fromEntries(
+	groups.map((g) => [g, problems.filter((p) => p.group === g).length]),
+);
+
+const mlCategories = [...new Set(mlProblems.map((p) => p.category))];
+const mlCategoryCounts = Object.fromEntries(
+	mlCategories.map((c) => [c, mlProblems.filter((p) => p.category === c).length]),
+);
+---
+
+<Layout title="Mental Gym">
+	<section class="hero">
+		<h1>Mental Gym</h1>
+		<p class="tagline">My personal interview practice space.</p>
+		<p class="description">
+			Problems I've worked through, solutions I've written, patterns I want to remember.
+		</p>
+	</section>
+
+	<section class="stats">
+		<div class="stat">
+			<span class="stat-value">{total}</span>
+			<span class="stat-label">Algorithms</span>
+		</div>
+		<div class="stat">
+			<span class="stat-value">{mlProblems.length}</span>
+			<span class="stat-label">ML Problems</span>
+		</div>
+		<div class="stat">
+			<span class="stat-value">{notes.length}</span>
+			<span class="stat-label">Notes</span>
+		</div>
+		<div class="stat">
+			<span class="stat-value easy">{easy}</span>
+			<span class="stat-label">Easy</span>
+		</div>
+		<div class="stat">
+			<span class="stat-value medium">{medium}</span>
+			<span class="stat-label">Medium</span>
+		</div>
+		<div class="stat">
+			<span class="stat-value hard">{hard}</span>
+			<span class="stat-label">Hard</span>
+		</div>
+	</section>
+
+	<section class="domains">
+		<a class="domain-card" href="/problems?tab=algorithms">
+			<div class="domain-accent"></div>
+			<div class="domain-body">
+				<p class="domain-label">01</p>
+				<h2 class="domain-title">Algorithms</h2>
+				<p class="domain-desc">LeetCode-style problems grouped by pattern — arrays, hashing, sliding window, two pointers, stack, and more.</p>
+				<div class="domain-meta">
+					<span>{total} problems</span>
+					<span class="domain-arrow">→</span>
+				</div>
+			</div>
+		</a>
+
+		<a class="domain-card" href="/problems?tab=ml">
+			<div class="domain-accent ml"></div>
+			<div class="domain-body">
+				<p class="domain-label">02</p>
+				<h2 class="domain-title">Machine Learning</h2>
+				<p class="domain-desc">ML coding interview questions — implement algorithms from scratch, evaluation metrics, transformers, and PyTorch.</p>
+				<div class="domain-meta">
+					<span>{mlProblems.length} problems</span>
+					<span class="domain-arrow">→</span>
+				</div>
+			</div>
+		</a>
+
+		<a class="domain-card domain-card--muted" href="/problems?tab=system-design">
+			<div class="domain-accent sd"></div>
+			<div class="domain-body">
+				<p class="domain-label">03</p>
+				<h2 class="domain-title">System Design</h2>
+				<p class="domain-desc">ML system design cases — architecture tradeoffs, distributed training, inference, and production pipelines.</p>
+				<div class="domain-meta">
+					<span class="coming-soon-tag">Coming soon</span>
+					<span class="domain-arrow">→</span>
+				</div>
+			</div>
+		</a>
+	</section>
+
+	<section class="subtopics">
+		<div class="subtopics-col">
+			<h3 class="col-heading">Algorithm Topics</h3>
+			<div class="topic-list">
+				{groups.map((group, i) => (
+					<a class="topic-row" href={`/problems#algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`}>
+						<span class="topic-num">{String(i + 1).padStart(2, "0")}</span>
+						<span class="topic-name">{group}</span>
+						<span class="topic-count">{groupCounts[group]}</span>
+					</a>
+				))}
+			</div>
+		</div>
+
+		<div class="subtopics-col">
+			<h3 class="col-heading">ML Categories</h3>
+			<div class="topic-list">
+				{mlCategories.map((category, i) => (
+					<a class="topic-row" href={`/problems#ml-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}>
+						<span class="topic-num">{String(i + 1).padStart(2, "0")}</span>
+						<span class="topic-name">{category}</span>
+						<span class="topic-count">{mlCategoryCounts[category]}</span>
+					</a>
+				))}
+			</div>
+		</div>
+	</section>
+
+	{notes.length > 0 && (
+		<section class="notes">
+			<h3 class="col-heading">Notes</h3>
+			<ol class="notes-list">
+				{notes.map((note, i) => (
+					<li class="note-entry">
+						<a href={`/notes/${note.id}/`} class="note-link">
+							<span class="note-index">{String(i + 1).padStart(2, "0")}</span>
+							<span class="note-body">
+								<span class="note-title">{note.data.title}</span>
+								{note.data.description && (
+									<span class="note-desc">{note.data.description}</span>
+								)}
+							</span>
+							<span class="note-arrow">→</span>
+						</a>
+					</li>
+				))}
+			</ol>
+		</section>
+	)}
+</Layout>
+
+<script>
+	// Pass tab param to /problems when clicking domain cards
+	document.querySelectorAll<HTMLAnchorElement>(".domain-card").forEach((card) => {
+		card.addEventListener("click", (e) => {
+			const url = new URL(card.href);
+			const tab = url.searchParams.get("tab");
+			if (tab) {
+				sessionStorage.setItem("problems-tab", tab);
+			}
+		});
+	});
+</script>
+
+<style>
+	.hero {
+		text-align: center;
+		padding: 3.5rem 1rem 2rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.6rem;
+	}
+
+	.hero h1 {
+		font-size: 4rem;
+		margin: 0;
+		letter-spacing: 1px;
+		color: var(--accent);
+		font-family: var(--font-serif);
+		font-weight: 600;
+	}
+
+	.tagline {
+		font-size: 1.15rem;
+		color: var(--muted);
+		margin: 0;
+		font-style: italic;
+		font-family: var(--font-serif);
+	}
+
+	.description {
+		color: var(--muted);
+		margin: 0;
+		max-width: 400px;
+		line-height: 1.7;
+		font-size: 0.88rem;
+		font-family: var(--font-sans);
+	}
+
+	/* Stats */
+	.stats {
+		display: flex;
+		justify-content: center;
+		gap: 2.5rem;
+		padding: 1.25rem 1.5rem;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		margin-bottom: 2.5rem;
+	}
+
+	.stat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.15rem;
+	}
+
+	.stat-value {
+		font-size: 1.75rem;
+		font-weight: 600;
+		font-family: var(--font-serif);
+		line-height: 1;
+	}
+
+	.stat-label {
+		font-size: 0.65rem;
+		color: var(--muted);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		font-family: var(--font-sans);
+	}
+
+	.easy { color: #7dab7d; }
+	.medium { color: #c9a84c; }
+	.hard { color: #b05a5a; }
+
+	/* Domain cards */
+	.domains {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1rem;
+		margin-bottom: 2.5rem;
+	}
+
+	.domain-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		overflow: hidden;
+		text-decoration: none;
+		transition: border-color 0.2s, transform 0.2s;
+	}
+
+	.domain-card:hover {
+		border-color: var(--accent);
+		transform: translateY(-2px);
+		text-decoration: none;
+	}
+
+	.domain-card--muted:hover {
+		border-color: var(--muted);
+	}
+
+	.domain-accent {
+		height: 3px;
+		background: var(--accent);
+	}
+
+	.domain-accent.ml {
+		background: #7d9bab;
+	}
+
+	.domain-accent.sd {
+		background: #2a2520;
+	}
+
+	.domain-body {
+		padding: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		flex: 1;
+	}
+
+	.domain-label {
+		margin: 0;
+		font-size: 0.68rem;
+		color: var(--accent);
+		font-family: var(--font-sans);
+		letter-spacing: 0.12em;
+		opacity: 0.6;
+	}
+
+	.domain-card--muted .domain-label {
+		color: var(--muted);
+	}
+
+	.domain-title {
+		margin: 0;
+		font-size: 1.3rem;
+		font-family: var(--font-serif);
+		font-weight: 600;
+		color: var(--text);
+		letter-spacing: 0.3px;
+	}
+
+	.domain-card--muted .domain-title {
+		color: var(--muted);
+	}
+
+	.domain-desc {
+		margin: 0;
+		font-size: 0.82rem;
+		color: var(--muted);
+		font-family: var(--font-sans);
+		line-height: 1.6;
+		flex: 1;
+	}
+
+	.domain-meta {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--muted);
+		font-family: var(--font-sans);
+	}
+
+	.domain-arrow {
+		color: var(--accent);
+		opacity: 0;
+		transition: opacity 0.15s, transform 0.2s;
+	}
+
+	.domain-card--muted .domain-arrow {
+		color: var(--muted);
+	}
+
+	.domain-card:hover .domain-arrow {
+		opacity: 1;
+		transform: translateX(4px);
+	}
+
+	.coming-soon-tag {
+		font-size: 0.68rem;
+		padding: 0.15rem 0.5rem;
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		color: var(--muted);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	/* Subtopics two-column list */
+	.subtopics {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+		margin-bottom: 2.5rem;
+	}
+
+	.col-heading {
+		margin: 0 0 0.75rem;
+		font-size: 0.68rem;
+		color: var(--accent);
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		font-weight: 600;
+		font-family: var(--font-sans);
+	}
+
+	.topic-list {
+		border-top: 1px solid var(--border);
+	}
+
+	.topic-row {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.55rem 0;
+		border-bottom: 1px solid var(--border);
+		text-decoration: none;
+		transition: padding-left 0.15s;
+	}
+
+	.topic-row:hover {
+		padding-left: 0.4rem;
+		text-decoration: none;
+	}
+
+	.topic-row:hover .topic-name {
+		color: var(--accent);
+	}
+
+	.topic-num {
+		font-size: 0.65rem;
+		color: var(--accent);
+		opacity: 0.5;
+		font-family: var(--font-sans);
+		letter-spacing: 0.05em;
+		flex-shrink: 0;
+		min-width: 1.5rem;
+	}
+
+	.topic-name {
+		flex: 1;
+		font-size: 0.85rem;
+		color: var(--text);
+		font-family: var(--font-sans);
+		transition: color 0.15s;
+	}
+
+	.topic-count {
+		font-size: 0.72rem;
+		color: var(--muted);
+		font-family: var(--font-sans);
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		padding: 0.1rem 0.4rem;
+	}
+
+	/* Notes */
+	.notes {
+		margin-top: 0;
+	}
+
+	.notes-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.note-entry {
+		border-bottom: 1px solid var(--border);
+	}
+
+	.note-link {
+		display: flex;
+		align-items: baseline;
+		gap: 1.25rem;
+		padding: 0.9rem 0;
+		text-decoration: none;
+		transition: padding-left 0.2s;
+	}
+
+	.note-link:hover {
+		padding-left: 0.5rem;
+		text-decoration: none;
+	}
+
+	.note-link:hover .note-title {
+		color: var(--accent);
+	}
+
+	.note-link:hover .note-arrow {
+		opacity: 1;
+		transform: translateX(4px);
+	}
+
+	.note-index {
+		font-family: var(--font-sans);
+		font-size: 0.7rem;
+		color: var(--accent);
+		opacity: 0.6;
+		letter-spacing: 0.05em;
+		flex-shrink: 0;
+		min-width: 1.5rem;
+	}
+
+	.note-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		flex: 1;
+	}
+
+	.note-title {
+		color: var(--text);
+		font-family: var(--font-serif);
+		font-size: 1.05rem;
+		font-weight: 600;
+		transition: color 0.15s;
+	}
+
+	.note-desc {
+		color: var(--muted);
+		font-size: 0.8rem;
+		line-height: 1.5;
+		font-family: var(--font-sans);
+	}
+
+	.note-arrow {
+		font-family: var(--font-sans);
+		color: var(--accent);
+		opacity: 0;
+		transition: opacity 0.15s, transform 0.2s;
+		flex-shrink: 0;
+	}
+
+	@media (max-width: 720px) {
+		.domains {
+			grid-template-columns: 1fr;
+		}
+
+		.subtopics {
+			grid-template-columns: 1fr;
+		}
+
+		.stats {
+			gap: 1.5rem;
+			flex-wrap: wrap;
+		}
+	}
+</style>

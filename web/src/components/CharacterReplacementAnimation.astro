@@ -1,0 +1,230 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const s = "ABAB";
+const k = 2;
+
+const steps = [
+  { l: 0, r: 0, char: 'A', count: {'A': 1}, maxF: 1, valid: true, exp: "Initial state. L=0, R=0. Add 'A' to frequency map. Max frequency (maxF) is 1 ('A'). Length is 1. We need (1 - 1) = 0 replacements. 0 <= k(2). Valid!" },
+  { l: 0, r: 1, char: 'B', count: {'A': 1, 'B': 1}, maxF: 1, valid: true, exp: "R=1. Add 'B'. maxF is 1. Length is 2. We need (2 - 1) = 1 replacement. 1 <= 2. Valid!" },
+  { l: 0, r: 2, char: 'A', count: {'A': 2, 'B': 1}, maxF: 2, valid: true, exp: "R=2. Add 'A'. 'A' freq becomes 2. maxF is 2. Length is 3. We need (3 - 2) = 1 replacement. 1 <= 2. Valid!" },
+  { l: 0, r: 3, char: 'B', count: {'A': 2, 'B': 2}, maxF: 2, valid: true, exp: "R=3. Add 'B'. 'B' freq becomes 2. maxF remains 2. Length is 4. We need (4 - 2) = 2 replacements. 2 <= 2. Valid! Max length is 4." },
+];
+---
+
+<character-replacement-visuals>
+  <AlgorithmPlayer title={`s = "ABAB", k = ${k}`} steps={steps}>
+    <div class="stats-row" style="margin-bottom: 2rem;">
+      <div class="stat-box">
+        <span class="stat-label">Window Length</span>
+        <span class="stat-val cr-len">0</span>
+      </div>
+      <div class="stat-box highlight">
+        <span class="stat-label">Max Freq (maxF)</span>
+        <span class="stat-val cr-maxf">0</span>
+      </div>
+      <div class="stat-box" style="border-color: rgba(176, 90, 90, 0.4); background: rgba(176, 90, 90, 0.05);">
+        <span class="stat-label">Replacements Needed</span>
+        <span class="stat-val cr-replacements" style="color: #b05a5a;">0</span>
+      </div>
+    </div>
+
+    <!-- String Array -->
+    <div class="anim-row">
+      <p class="anim-label">String (Sliding Window)</p>
+      <div class="string-container">
+        <div class="window-highlight cr-window"></div>
+        <div class="array-row cr-chars" style="position: relative; z-index: 1;">
+          {s.split("").map((char, i) => (
+            <div class="array-col">
+              <div class="array-cell cr-cell" data-idx={i}>
+                <span class="cell-val">{char}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+              <div class="pointers-row cr-ptr-col" data-idx={i}>
+                <span class="ptr ptr-l hidden">L</span>
+                <span class="ptr ptr-r hidden">R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Frequency Map -->
+    <div class="anim-row" style="margin-top: 2rem;">
+      <p class="anim-label">Character Frequencies</p>
+      <div class="hashmap-row cr-map"></div>
+    </div>
+
+  </AlgorithmPlayer>
+</character-replacement-visuals>
+
+<script>
+  class CharacterReplacementVisuals extends HTMLElement {
+    connectedCallback() {
+      this.lenEl = this.querySelector(".cr-len");
+      this.maxfEl = this.querySelector(".cr-maxf");
+      this.replacementsEl = this.querySelector(".cr-replacements");
+
+      this.windowEl = this.querySelector(".cr-window") as HTMLElement;
+      this.cells = Array.from(this.querySelectorAll(".cr-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".cr-ptr-col"));
+      this.mapEl = this.querySelector(".cr-map");
+
+      let lastStep: any = null;
+
+      this._updateHighlight = () => {
+        if (!lastStep) return;
+        const s = lastStep;
+        if (this.windowEl && this.cells.length > 0) {
+          if (s.l <= s.r) {
+            const arrayRow = this.querySelector(".cr-chars");
+            const leftCell = this.cells[s.l] as HTMLElement;
+            const rightCell = this.cells[s.r] as HTMLElement;
+            if (arrayRow && leftCell && rightCell) {
+              const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+              const width = (rightCell.offsetLeft + rightCell.offsetWidth) - leftCell.offsetLeft + 8;
+              this.windowEl.style.left = `${left}px`;
+              this.windowEl.style.width = `${width}px`;
+              this.windowEl.style.opacity = "1";
+              this.windowEl.classList.toggle("conflict-window", !s.valid);
+            }
+          } else {
+            this.windowEl.style.opacity = "0";
+          }
+        }
+      };
+
+      window.addEventListener('resize', this._updateHighlight);
+      const arrayRow = this.querySelector(".cr-chars");
+      if (arrayRow) {
+        arrayRow.addEventListener('scroll', this._updateHighlight);
+      }
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+        lastStep = s;
+
+        const currentLen = s.r - s.l + 1;
+        const replacements = currentLen - s.maxF;
+
+        // Stats
+        if (this.lenEl) this.lenEl.textContent = currentLen.toString();
+        if (this.maxfEl) this.maxfEl.textContent = s.maxF.toString();
+        if (this.replacementsEl) {
+          this.replacementsEl.textContent = replacements.toString();
+          if (!s.valid) {
+             this.replacementsEl.parentElement?.classList.add("conflict-box");
+          } else {
+             this.replacementsEl.parentElement?.classList.remove("conflict-box");
+          }
+        }
+
+        // Pointers & Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i >= s.l && i <= s.r) {
+              valSpan.classList.add("in-window");
+            }
+          }
+        });
+
+        this.ptrs.forEach((col: any, i: number) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+        });
+
+        this._updateHighlight();
+
+        // Frequency Map
+        if (this.mapEl) {
+          const keys = Object.keys(s.count).sort();
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = keys.map(k => {
+              const isMaxF = s.count[k] === s.maxF;
+              return `<span class='hashmap-entry ${isMaxF ? 'highlight-entry' : ''}'>'${k}' : ${s.count[k]}</span>`;
+            }).join("");
+          }
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this._updateHighlight) {
+        window.removeEventListener('resize', this._updateHighlight);
+        const arrayRow = this.querySelector(".cr-chars");
+        if (arrayRow) {
+          arrayRow.removeEventListener('scroll', this._updateHighlight);
+        }
+      }
+    }
+  }
+
+  if (!customElements.get('character-replacement-visuals')) {
+    customElements.define('character-replacement-visuals', CharacterReplacementVisuals);
+  }
+</script>
+
+<style>
+  character-replacement-visuals {
+    display: block;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .conflict-box {
+    border-color: #b05a5a !important;
+    background: rgba(176, 90, 90, 0.15) !important;
+  }
+
+  .string-container {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .window-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 2rem;
+    background: rgba(90, 130, 176, 0.08);
+    border: 1px solid rgba(90, 130, 176, 0.3);
+    border-radius: 4px;
+    z-index: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .window-highlight.conflict-window {
+    background: rgba(176, 90, 90, 0.1);
+    border-color: rgba(176, 90, 90, 0.4);
+  }
+
+  .cell-val.in-window {
+    color: #90b0e0;
+    border-color: #5a82b0;
+    background: rgba(90, 130, 176, 0.15);
+  }
+
+  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
+  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+
+  .highlight-entry {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: rgba(201, 168, 76, 0.1) !important;
+    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2);
+  }
+</style>

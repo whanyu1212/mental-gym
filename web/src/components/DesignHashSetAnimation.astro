@@ -1,0 +1,126 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const keysToAdd = [1, 2, 1, 3];
+const buckets = 4;
+
+const steps = [
+  { p: -1, op: 'init', key: null, hash: null, map: [[], [], [], []], exp: "Initialize HashSet with a limited number of buckets (e.g., 4). Each bucket is a list to handle collisions." },
+  { p: 0, op: 'add', key: 1, hash: 1, map: [[], [1], [], []], exp: "add(1). Hash = 1 % 4 = 1. Go to bucket 1. '1' is not there, append it." },
+  { p: 1, op: 'add', key: 2, hash: 2, map: [[], [1], [2], []], exp: "add(2). Hash = 2 % 4 = 2. Go to bucket 2. '2' is not there, append it." },
+  { p: 2, op: 'add', key: 1, hash: 1, map: [[], [1], [2], []], exp: "add(1). Hash = 1 % 4 = 1. Go to bucket 1. '1' is ALREADY there! Do nothing. (Sets store unique elements)" },
+  { p: 3, op: 'remove', key: 2, hash: 2, map: [[], [1], [], []], exp: "remove(2). Hash = 2 % 4 = 2. Go to bucket 2. '2' is there, so we remove it." },
+  { p: 4, op: 'contains', key: 1, hash: 1, map: [[], [1], [], []], exp: "contains(1). Hash = 1 % 4 = 1. Look in bucket 1. '1' is there! Return true." },
+  { p: 5, op: 'contains', key: 3, hash: 3, map: [[], [1], [], []], exp: "contains(3). Hash = 3 % 4 = 3. Look in bucket 3. It's empty. Return false." }
+];
+
+const emptyBuckets = [[], [], [], []];
+---
+
+<design-hashset-visuals>
+  <AlgorithmPlayer title="Design HashSet (Buckets = 4)" steps={steps}>
+
+    <div class="stats-row" style="margin-bottom: 2rem; justify-content: center;">
+      <div class="stat-box">
+        <span class="stat-label">Operation</span>
+        <span class="stat-val hs-op" style="font-size: 1rem; color: #90b0e0;">-</span>
+      </div>
+      <div style="display: flex; align-items: center; color: var(--muted); font-size: 1.5rem;">→</div>
+      <div class="stat-box highlight">
+        <span class="stat-label">Hash Function</span>
+        <span class="stat-val hs-hash" style="font-size: 1rem; font-family: ui-monospace, monospace;">-</span>
+      </div>
+    </div>
+
+    <!-- Buckets Array -->
+    <div class="anim-row" style="display: flex; flex-direction: column; align-items: center;">
+      <p class="anim-label">Underlying Array of Lists (Chaining)</p>
+
+      <div class="array-row hs-buckets" style="gap: 1.5rem; padding: 1rem 0;">
+        {emptyBuckets.map((_, i) => (
+          <div class="array-col" style="align-items: center; min-width: 4rem;">
+            <div class="array-cell hs-bucket-cell" data-idx={i} style="min-height: 4rem; width: 100%; justify-content: flex-start; padding: 0.5rem; background: #0a0a0a; border: 2px solid var(--border); border-top: none; border-radius: 0 0 4px 4px;">
+              <!-- Dynamic values -->
+            </div>
+            <span class="cell-idx" style="margin-top: 0.5rem; font-weight: bold;">Bucket {i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</design-hashset-visuals>
+
+<script>
+  class DesignHashSetVisuals extends HTMLElement {
+    connectedCallback() {
+      this.opEl = this.querySelector(".hs-op");
+      this.hashEl = this.querySelector(".hs-hash");
+      this.bucketCells = Array.from(this.querySelectorAll(".hs-bucket-cell"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Stats
+        if (this.opEl) {
+           if (s.op === 'init') this.opEl.textContent = 'Init';
+           else this.opEl.textContent = `${s.op}(${s.key})`;
+
+           if (s.op === 'add') this.opEl.style.color = '#7dab7d';
+           else if (s.op === 'remove') this.opEl.style.color = '#e09090';
+           else if (s.op === 'contains') this.opEl.style.color = '#90b0e0';
+           else this.opEl.style.color = 'var(--text)';
+        }
+
+        if (this.hashEl) {
+           if (s.hash !== null) {
+              this.hashEl.textContent = `${s.key} % 4 = ${s.hash}`;
+           } else {
+              this.hashEl.textContent = "-";
+           }
+        }
+
+        // Buckets
+        this.bucketCells.forEach((cell: any, i: number) => {
+          const arr = s.map[i];
+          if (arr && arr.length > 0) {
+            cell.innerHTML = arr.map((num: number) => `
+              <div style="background: rgba(201, 168, 76, 0.2); border: 1px solid var(--accent); border-radius: 2px; padding: 0.2rem 0.5rem; margin-bottom: 0.3rem; color: var(--accent); font-family: ui-monospace, monospace; font-weight: bold; animation: pop-in 0.2s;">
+                ${num}
+              </div>
+            `).join("");
+          } else {
+            cell.innerHTML = "";
+          }
+
+          // Highlight active bucket
+          if (s.hash === i) {
+             cell.style.borderColor = "var(--accent)";
+             cell.style.background = "rgba(201, 168, 76, 0.05)";
+             cell.style.boxShadow = "0 0 10px rgba(201, 168, 76, 0.2)";
+          } else {
+             cell.style.borderColor = "var(--border)";
+             cell.style.background = "#0a0a0a";
+             cell.style.boxShadow = "none";
+          }
+        });
+
+      });
+    }
+  }
+
+  if (!customElements.get('design-hashset-visuals')) {
+    customElements.define('design-hashset-visuals', DesignHashSetVisuals);
+  }
+</script>
+
+<style>
+  design-hashset-visuals {
+    display: block;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+</style>

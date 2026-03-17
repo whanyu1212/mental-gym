@@ -1,0 +1,140 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const steps = [
+  {
+    active: -1,
+    found: [] as number[],
+    mapKeys: [] as number[],
+    mapVals: [] as number[],
+    explanation: "We iterate through the array. For each element, check if its complement (target - current) is already in the hash map. If yes: return both indices. If no: store the current value and its index.",
+  },
+  {
+    active: 0,
+    found: [] as number[],
+    mapKeys: [] as number[],
+    mapVals: [] as number[],
+    explanation: "i=0, nums[0]=2. Complement = 9 - 2 = 7. Is 7 in the map? No. Store {2: 0}.",
+  },
+  {
+    active: 0,
+    found: [] as number[],
+    mapKeys: [2],
+    mapVals: [0],
+    explanation: "Map updated: {2: 0}. Move to next element.",
+  },
+  {
+    active: 1,
+    found: [] as number[],
+    mapKeys: [2],
+    mapVals: [0],
+    explanation: "i=1, nums[1]=7. Complement = 9 - 7 = 2. Is 2 in the map? Yes! It is at index 0.",
+  },
+  {
+    active: 1,
+    found: [0, 1] as number[],
+    mapKeys: [2],
+    mapVals: [0],
+    explanation: "Return [0, 1]. nums[0] + nums[1] = 2 + 7 = 9. Correct!",
+  },
+  {
+    active: 2,
+    found: [] as number[],
+    mapKeys: [2, 7],
+    mapVals: [0, 1],
+    explanation: "(If there were no match earlier) i=2, nums[2]=11. Complement = 9 - 11 = -2. Not in map. Store {11: 2}.",
+  },
+  {
+    active: 3,
+    found: [] as number[],
+    mapKeys: [2, 7, 11],
+    mapVals: [0, 1, 2],
+    explanation: "i=3, nums[3]=15. Complement = 9 - 15 = -6. Not in map. No more elements — no solution found.",
+  },
+];
+---
+
+<two-sum-visuals>
+  <AlgorithmPlayer title="nums = [2, 7, 11, 15], target = 9" steps={steps}>
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-cell ts-cell" data-idx={i}>
+            <span class="cell-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Hash map</p>
+      <div class="hashmap-row ts-map"></div>
+    </div>
+  </AlgorithmPlayer>
+</two-sum-visuals>
+
+<script>
+  class TwoSumVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".ts-cell"));
+      this.mapEl = this.querySelector(".ts-map");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        this.cells.forEach((cell: any) => {
+          const i = parseInt(cell.dataset.idx || "0", 10);
+          cell.className = "array-cell ts-cell";
+          if (s.found.includes(i)) {
+            cell.classList.add("found");
+          } else if (i === s.active) {
+            cell.classList.add("active");
+          } else if (i < s.active) {
+            cell.classList.add("visited");
+          }
+        });
+
+        if (this.mapEl) {
+          if (s.mapKeys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = s.mapKeys.map((k: any, idx: number) =>
+              `<span class='hashmap-entry'>${k} : ${s.mapVals[idx]}</span>`
+            ).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('two-sum-visuals')) {
+    customElements.define('two-sum-visuals', TwoSumVisuals);
+  }
+</script>
+
+<style>
+  two-sum-visuals {
+    display: block;
+  }
+  .ts-cell.visited .cell-val {
+    opacity: 0.35;
+  }
+  .ts-cell.active .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+  }
+  .ts-cell.active {
+    transform: translateY(-4px);
+  }
+  .ts-cell.found .cell-val {
+    border-color: #7dab7d;
+    color: #7dab7d;
+    background: rgba(125, 171, 125, 0.1);
+  }
+</style>

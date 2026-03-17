@@ -1,0 +1,137 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 2, 1];
+const n = nums.length;
+const ans = [1, 2, 1, 1, 2, 1];
+
+const steps = [
+  { i: -1, ansState: [null, null, null, null, null, null], exp: "Create ans array of size 2n. n = 3, so size is 6." },
+  { i: 0,  ansState: [1, null, null, 1, null, null], exp: "i = 0. Set ans[0] = nums[0] (1), and ans[0+3] = nums[0] (1)." },
+  { i: 1,  ansState: [1, 2, null, 1, 2, null], exp: "i = 1. Set ans[1] = nums[1] (2), and ans[1+3] = nums[1] (2)." },
+  { i: 2,  ansState: [1, 2, 1, 1, 2, 1], exp: "i = 2. Set ans[2] = nums[2] (1), and ans[2+3] = nums[2] (1)." },
+  { i: -1, ansState: [1, 2, 1, 1, 2, 1], exp: "Done! The array is concatenated." },
+];
+---
+
+<concatenation-visuals>
+  <AlgorithmPlayer title="nums = [1, 2, 1]" steps={steps}>
+
+    <!-- Input Array -->
+    <div class="anim-row" style="margin-bottom: 3rem;">
+      <p class="anim-label">Input: nums</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell ca-num-cell" data-idx={i}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Output Array -->
+    <div class="anim-row">
+      <p class="anim-label">Output: ans (size 2n)</p>
+      <div class="array-row">
+        {ans.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell ca-ans-cell" data-idx={i}>
+              <span class="cell-val empty-val"></span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</concatenation-visuals>
+
+<script>
+  class ConcatenationVisuals extends HTMLElement {
+    connectedCallback() {
+      this.numCells = Array.from(this.querySelectorAll(".ca-num-cell"));
+      this.ansCells = Array.from(this.querySelectorAll(".ca-ans-cell"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Input cells
+        this.numCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i === s.i) valSpan.classList.add("active-read");
+            else if (s.i !== -1 && i < s.i) valSpan.classList.add("visited");
+          }
+        });
+
+        // Output cells
+        this.ansCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            const val = s.ansState[i];
+
+            if (val === null) {
+              valSpan.textContent = "";
+              valSpan.classList.add("empty-val");
+            } else {
+              valSpan.textContent = val.toString();
+              if (s.i !== -1 && (i === s.i || i === s.i + 3)) {
+                valSpan.classList.add("active-write");
+              } else if (s.i === -1 && e.detail.index > 0) {
+                 // Final step
+                 valSpan.classList.add("success-val");
+              }
+            }
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('concatenation-visuals')) {
+    customElements.define('concatenation-visuals', ConcatenationVisuals);
+  }
+</script>
+
+<style>
+  concatenation-visuals {
+    display: block;
+  }
+
+  .empty-val {
+    background: transparent !important;
+    border-style: dashed !important;
+    border-color: #333 !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-read {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-write {
+    border-color: #5a82b0;
+    color: #90b0e0;
+    background: rgba(90, 130, 176, 0.15);
+    transform: translateY(-4px);
+    animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .cell-val.success-val {
+    border-color: #7dab7d;
+    color: #a0d0a0;
+    background: rgba(125, 171, 125, 0.05);
+  }
+</style>

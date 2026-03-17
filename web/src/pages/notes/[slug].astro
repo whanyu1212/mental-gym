@@ -1,0 +1,221 @@
+---
+import { getCollection, render } from "astro:content";
+import ComplexityChart from "../../components/ComplexityChart.astro";
+import SortingChart from "../../components/SortingChart.astro";
+import StackDepthChart from "../../components/StackDepthChart.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+	const notes = await getCollection("notes");
+	return notes.map((note) => ({
+		params: { slug: note.id },
+		props: { note },
+	}));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+---
+
+<Layout title={`${note.data.title} | Mental Gym`} math={true}>
+	<nav class="breadcrumb">
+		<a href="/">Home</a>
+		<span class="sep">›</span>
+		<span>{note.data.title}</span>
+	</nav>
+
+	<article class="note">
+		<Content />
+		{note.id === "asymptotic-analysis" && (
+			<div class="chart-section">
+				<h2>Growth Rate Visualised</h2>
+				<p class="chart-intro">How the common complexity classes scale as <em>n</em> grows. Note the logarithmic y-axis — O(2ⁿ) and O(n!) shoot off the chart almost immediately.</p>
+				<ComplexityChart />
+			</div>
+		)}
+		{note.id === "time-complexity" && (
+			<div class="chart-section">
+				<h2>Sorting Algorithm Comparison</h2>
+				<p class="chart-intro">Best, average, and worst-case time complexity for common sorting algorithms. Quick sort's worst case stands out — it degrades to O(n²) on sorted input without a randomised pivot.</p>
+				<SortingChart />
+			</div>
+		)}
+		{note.id === "space-complexity" && (
+			<div class="chart-section">
+				<h2>Call Stack Depth by Recursion Pattern</h2>
+				<p class="chart-intro">Maximum simultaneous stack frames as <em>n</em> grows. The difference between O(log n) and O(n) stack depth becomes critical at large inputs — the latter risks stack overflow.</p>
+				<StackDepthChart />
+			</div>
+		)}
+	</article>
+</Layout>
+
+<style>
+	.breadcrumb {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.78rem;
+		color: var(--muted);
+		margin-bottom: 2rem;
+		font-family: Inter, system-ui, sans-serif;
+		letter-spacing: 0.04em;
+	}
+
+	.breadcrumb a {
+		color: var(--muted);
+	}
+
+	.breadcrumb a:hover {
+		color: var(--accent);
+	}
+
+	.sep {
+		opacity: 0.4;
+	}
+
+	/* Prose typography */
+	.note :global(h1) {
+		font-size: 2.6rem;
+		margin: 0 0 0.25rem;
+		letter-spacing: 0.5px;
+		color: var(--accent);
+		font-family: var(--font-serif);
+		font-weight: 600;
+	}
+
+	.note :global(h2) {
+		font-size: 1.5rem;
+		margin: 2.5rem 0 0.75rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--border);
+		color: var(--text);
+		font-family: var(--font-serif);
+		font-weight: 600;
+		letter-spacing: 0.3px;
+	}
+
+	.note :global(h3) {
+		font-size: 0.72rem;
+		margin: 1.75rem 0 0.5rem;
+		color: var(--accent);
+		font-family: var(--font-sans);
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-weight: 600;
+	}
+
+	.note :global(p) {
+		line-height: 1.8;
+		margin: 0 0 1rem;
+		color: var(--text);
+		font-family: var(--font-sans);
+		font-size: 0.93rem;
+	}
+
+	.note :global(ul),
+	.note :global(ol) {
+		padding-left: 1.5rem;
+		margin: 0 0 1rem;
+		font-family: var(--font-sans);
+		font-size: 0.93rem;
+	}
+
+	.note :global(li) {
+		line-height: 1.75;
+		margin-bottom: 0.35rem;
+	}
+
+	.note :global(strong) {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.note :global(code) {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.87em;
+		background: rgba(201, 168, 76, 0.1);
+		padding: 0.1em 0.4em;
+		border-radius: 2px;
+		color: #d4b86a;
+	}
+
+	.note :global(pre) {
+		background: #0a0a0a;
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		padding: 1rem 1.25rem;
+		overflow-x: auto;
+		margin: 0.75rem 0 1.25rem;
+		line-height: 1.6;
+	}
+
+	.note :global(pre code) {
+		background: none;
+		padding: 0;
+		font-size: 0.88rem;
+		color: inherit;
+	}
+
+	/* Tables */
+	.note :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 0.75rem 0 1.5rem;
+		font-size: 0.88rem;
+		font-family: var(--font-sans);
+	}
+
+	.note :global(th) {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		color: var(--muted);
+		font-size: 0.68rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		font-family: var(--font-sans);
+	}
+
+	.note :global(td) {
+		padding: 0.5rem 0.85rem;
+		border: 1px solid var(--border);
+		line-height: 1.5;
+	}
+
+	.note :global(tr:hover td) {
+		background: rgba(201, 168, 76, 0.04);
+	}
+
+	.note :global(blockquote) {
+		border-left: 2px solid var(--accent);
+		margin: 0 0 1rem;
+		padding: 0.25rem 0 0.25rem 1rem;
+	}
+
+	.note :global(blockquote p) {
+		margin: 0;
+		color: var(--muted);
+		font-style: italic;
+	}
+
+	.chart-section {
+		margin-top: 2.5rem;
+	}
+
+	.chart-section h2 {
+		font-size: 1.25rem;
+		margin: 0 0 0.75rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--border);
+		color: var(--text);
+	}
+
+	.chart-intro {
+		color: var(--muted);
+		font-size: 0.9rem;
+		margin: 0 0 0.5rem;
+		line-height: 1.6;
+	}
+</style>

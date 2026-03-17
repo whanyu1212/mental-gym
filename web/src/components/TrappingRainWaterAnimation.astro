@@ -1,0 +1,178 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const h = [0,1,0,2,1,0,1,3,2,1,2,1];
+const maxH = 3;
+
+const steps = [
+  { l: 0, r: 11, maxL: 0, maxR: 1, w: 0, wArr: [0,0,0,0,0,0,0,0,0,0,0,0], exp: "Initial state. L=0 (height=0), R=11 (height=1). maxL starts at 0, maxR starts at 1." },
+  { l: 1, r: 11, maxL: 1, maxR: 1, w: 0, wArr: [0,0,0,0,0,0,0,0,0,0,0,0], exp: "maxL (0) < maxR (1), so we process Left. L moves to 1 (height=1). maxL becomes 1. Traps 1 - 1 = 0." },
+  { l: 1, r: 10, maxL: 1, maxR: 2, w: 0, wArr: [0,0,0,0,0,0,0,0,0,0,0,0], exp: "maxL (1) >= maxR (1), so we process Right. R moves to 10 (height=2). maxR becomes 2. Traps 2 - 2 = 0." },
+  { l: 2, r: 10, maxL: 1, maxR: 2, w: 1, wArr: [0,0,1,0,0,0,0,0,0,0,0,0], exp: "maxL (1) < maxR (2), so we process Left. L moves to 2 (height=0). maxL remains 1. Traps 1 - 0 = 1 block! Total=1." },
+  { l: 3, r: 10, maxL: 2, maxR: 2, w: 1, wArr: [0,0,1,0,0,0,0,0,0,0,0,0], exp: "maxL (1) < maxR (2), so we process Left. L moves to 3 (height=2). maxL becomes 2. Traps 2 - 2 = 0." },
+  { l: 3, r: 9,  maxL: 2, maxR: 2, w: 2, wArr: [0,0,1,0,0,0,0,0,0,1,0,0], exp: "maxL (2) >= maxR (2), so we process Right. R moves to 9 (height=1). maxR remains 2. Traps 2 - 1 = 1 block! Total=2." },
+  { l: 3, r: 8,  maxL: 2, maxR: 2, w: 2, wArr: [0,0,1,0,0,0,0,0,0,1,0,0], exp: "maxL (2) >= maxR (2), process Right. R moves to 8 (height=2). maxR remains 2. Traps 2 - 2 = 0." },
+  { l: 3, r: 7,  maxL: 2, maxR: 3, w: 2, wArr: [0,0,1,0,0,0,0,0,0,1,0,0], exp: "maxL (2) >= maxR (2), process Right. R moves to 7 (height=3). maxR becomes 3. Traps 3 - 3 = 0." },
+  { l: 4, r: 7,  maxL: 2, maxR: 3, w: 3, wArr: [0,0,1,0,1,0,0,0,0,1,0,0], exp: "maxL (2) < maxR (3), process Left. L moves to 4 (height=1). maxL remains 2. Traps 2 - 1 = 1 block! Total=3." },
+  { l: 5, r: 7,  maxL: 2, maxR: 3, w: 5, wArr: [0,0,1,0,1,2,0,0,0,1,0,0], exp: "maxL (2) < maxR (3), process Left. L moves to 5 (height=0). maxL remains 2. Traps 2 - 0 = 2 blocks! Total=5." },
+  { l: 6, r: 7,  maxL: 2, maxR: 3, w: 6, wArr: [0,0,1,0,1,2,1,0,0,1,0,0], exp: "maxL (2) < maxR (3), process Left. L moves to 6 (height=1). maxL remains 2. Traps 2 - 1 = 1 block! Total=6." },
+  { l: 7, r: 7,  maxL: 3, maxR: 3, w: 6, wArr: [0,0,1,0,1,2,1,0,0,1,0,0], exp: "L moves to 7. Pointers meet! Total water trapped is 6 blocks." }
+];
+---
+
+<trap-water-visuals>
+  <AlgorithmPlayer title="heights = [0,1,0,2,1,0,1,3,2,1,2,1]" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box">
+        <span class="stat-label">Max Left (maxL)</span>
+        <span class="stat-val tw-maxl">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">Max Right (maxR)</span>
+        <span class="stat-val tw-maxr">1</span>
+      </div>
+      <div class="stat-box highlight">
+        <span class="stat-label">Total Water</span>
+        <span class="stat-val tw-water">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Elevation Map (Two Pointers)</p>
+      <div class="chart-container">
+        <div class="bars-row">
+          {h.map((height, idx) => (
+            <div class="bar-col">
+              <div class="bar-wrapper">
+                <div class="water-block tw-water-block" data-idx={idx} style={`height: 0%; bottom: ${(height / maxH) * 100}%;`}></div>
+                <div class="solid-block" style={`height: ${(height / maxH) * 100}%`}></div>
+              </div>
+              <span class="bar-idx">{height}</span>
+              <div class="pointer-container tw-ptr-col" data-idx={idx}>
+                <span class="ptr ptr-l hidden">L</span>
+                <span class="ptr ptr-r hidden">R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</trap-water-visuals>
+
+<script>
+  class TrapWaterVisuals extends HTMLElement {
+    connectedCallback() {
+      this.maxlEl = this.querySelector(".tw-maxl");
+      this.maxrEl = this.querySelector(".tw-maxr");
+      this.waterEl = this.querySelector(".tw-water");
+      this.waterBlocks = Array.from(this.querySelectorAll(".tw-water-block"));
+      this.ptrs = Array.from(this.querySelectorAll(".tw-ptr-col"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        if (this.maxlEl) this.maxlEl.textContent = s.maxL;
+        if (this.maxrEl) this.maxrEl.textContent = s.maxR;
+        if (this.waterEl) this.waterEl.textContent = s.w;
+
+        this.ptrs.forEach((col: any, idx: number) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${idx === s.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${idx === s.r ? "" : "hidden"}`;
+        });
+
+        this.waterBlocks.forEach((block: any, idx: number) => {
+          const waterUnits = s.wArr[idx];
+          const percent = (waterUnits / 3) * 100;
+          block.style.height = `${percent}%`;
+          block.style.opacity = waterUnits > 0 ? "1" : "0";
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('trap-water-visuals')) {
+    customElements.define('trap-water-visuals', TrapWaterVisuals);
+  }
+</script>
+
+<style>
+  trap-water-visuals {
+    display: block;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(90, 130, 176, 0.4);
+    background: rgba(90, 130, 176, 0.05);
+  }
+  .stat-box.highlight .stat-val {
+    color: #5a82b0;
+  }
+
+  .chart-container {
+    position: relative;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    height: 150px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-end;
+  }
+  .bars-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 2rem;
+    justify-content: flex-end;
+  }
+  .bar-wrapper {
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+  .solid-block {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-bottom: none;
+    border-radius: 1px 1px 0 0;
+  }
+  .water-block {
+    position: absolute;
+    width: 100%;
+    background: rgba(90, 130, 176, 0.6);
+    border: 1px solid #5a82b0;
+    border-bottom: none;
+    border-radius: 1px 1px 0 0;
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    z-index: 2;
+  }
+  .bar-idx {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    font-family: ui-monospace, monospace;
+  }
+  .pointer-container {
+    height: 1rem;
+    margin-top: 0.2rem;
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  .ptr-l { background: rgba(176, 90, 90, 0.2); color: #b05a5a; }
+  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+</style>

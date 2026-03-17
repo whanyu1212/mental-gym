@@ -1,0 +1,98 @@
+---
+// Line chart showing max call stack depth vs n for different recursion patterns
+---
+
+<div class="chart-wrap">
+  <canvas id="stack-depth-chart"></canvas>
+</div>
+
+<script>
+  import {
+    Chart, LineController, LineElement, PointElement,
+    LinearScale, CategoryScale, Tooltip, Legend,
+  } from "chart.js";
+
+  Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
+
+  const N = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+
+  const curves = [
+    {
+      label: "O(1) — iterative",
+      color: "#7dab7d",
+      fn: () => 1,
+    },
+    {
+      label: "O(log n) — binary search / balanced tree",
+      color: "#c9a84c",
+      fn: (n: number) => Math.log2(n),
+    },
+    {
+      label: "O(n) — linear recursion",
+      color: "#b05a5a",
+      fn: (n: number) => n,
+    },
+    {
+      label: "O(h) worst — skewed tree / path graph",
+      color: "#8a3a3a",
+      fn: (n: number) => n,
+    },
+  ];
+
+  const ctx = (document.getElementById("stack-depth-chart") as HTMLCanvasElement).getContext("2d")!;
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: N.map(String),
+      datasets: curves.map((c) => ({
+        label: c.label,
+        data: N.map(c.fn),
+        borderColor: c.color,
+        backgroundColor: c.color + "18",
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.3,
+      })),
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: "index", intersect: false },
+      scales: {
+        x: {
+          title: { display: true, text: "n (input size)", color: "#8a8070" },
+          ticks: { color: "#8a8070" },
+          grid: { color: "#2a2520" },
+        },
+        y: {
+          title: { display: true, text: "Max stack depth (frames)", color: "#8a8070" },
+          ticks: { color: "#8a8070" },
+          grid: { color: "#2a2520" },
+        },
+      },
+      plugins: {
+        legend: {
+          labels: { color: "#a6b1d3", boxWidth: 12, padding: 14, font: { size: 11 } },
+        },
+        tooltip: {
+          backgroundColor: "#161616",
+          borderColor: "#2a2520",
+          borderWidth: 1,
+          titleColor: "#f0ead6",
+          bodyColor: "#8a8070",
+        },
+      },
+    },
+  });
+</script>
+
+<style>
+  .chart-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  canvas { max-height: 320px; }
+</style>

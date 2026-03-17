@@ -1,0 +1,137 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const steps = [
+  { l: 0, r: 3, sum: 17, found: false, exp: "Initial state. Array is sorted. L=0 (val 2), R=3 (val 15). Target is 9." },
+  { l: 0, r: 3, sum: 17, found: false, exp: "Sum = 2 + 15 = 17. 17 > 9, so we need a smaller sum. Move R left to decrease the sum." },
+  { l: 0, r: 2, sum: 13, found: false, exp: "R=2 (val 11). Sum = 2 + 11 = 13. 13 > 9. Still too large. Move R left again." },
+  { l: 0, r: 1, sum: 9, found: true, exp: "R=1 (val 7). Sum = 2 + 7 = 9. 9 == 9. Match found!" },
+  { l: 0, r: 1, sum: 9, found: true, exp: "Return 1-based indices: [L+1, R+1] = [1, 2]." },
+];
+---
+
+<two-sum-ii-visuals>
+  <AlgorithmPlayer title="nums = [2, 7, 11, 15], target = 9" steps={steps}>
+
+    <div class="stats-row">
+      <div class="stat-box highlight">
+        <span class="stat-label">L + R Sum</span>
+        <span class="stat-val ts-sum">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Sorted Array & Pointers</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell ts-cell" data-idx={i}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row ts-ptr-col" data-idx={i}>
+              <span class="ptr ptr-l hidden">L</span>
+              <span class="ptr ptr-r hidden">R</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</two-sum-ii-visuals>
+
+<script>
+  class TwoSumIIVisuals extends HTMLElement {
+    connectedCallback() {
+      this.sumEl = this.querySelector(".ts-sum");
+      this.cells = Array.from(this.querySelectorAll(".ts-cell"));
+      this.ptrCols = Array.from(this.querySelectorAll(".ts-ptr-col"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Stats
+        if (this.sumEl) {
+          this.sumEl.textContent = s.sum !== null ? s.sum.toString() : "-";
+          if (s.found) {
+            this.sumEl.parentElement?.classList.add("success-box");
+          } else {
+            this.sumEl.parentElement?.classList.remove("success-box");
+          }
+        }
+
+        // Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i < s.l || i > s.r) valSpan.classList.add("visited"); // elements outside window are 'discarded'
+            if (i === s.l || i === s.r) {
+              valSpan.classList.add("active-lr");
+              if (s.found) valSpan.classList.add("found-lr");
+            }
+          }
+        });
+
+        // Pointers
+        this.ptrCols.forEach((col: any, i: number) => {
+          const ptrL = col.querySelector(".ptr-l");
+          const ptrR = col.querySelector(".ptr-r");
+
+          if (ptrL) ptrL.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
+          if (ptrR) ptrR.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('two-sum-ii-visuals')) {
+    customElements.define('two-sum-ii-visuals', TwoSumIIVisuals);
+  }
+</script>
+
+<style>
+  two-sum-ii-visuals {
+    display: block;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+  .stat-box.success-box {
+    border-color: #7dab7d !important;
+    background: rgba(125, 171, 125, 0.1) !important;
+  }
+  .stat-box.success-box .stat-val {
+    color: #7dab7d !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.35;
+  }
+
+  .cell-val.active-lr {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.found-lr {
+    border-color: #7dab7d !important;
+    color: #7dab7d !important;
+    background: rgba(125, 171, 125, 0.15) !important;
+    box-shadow: 0 0 10px rgba(125, 171, 125, 0.2);
+  }
+
+  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
+  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+</style>

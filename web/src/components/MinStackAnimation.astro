@@ -1,0 +1,168 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const steps = [
+  { val: null, stack: [], minStack: [], exp: "Initial state. Both stacks are empty." },
+  { val: -2, stack: [-2], minStack: [-2], exp: "push(-2). Main stack gets -2. Min stack is empty, so we also push -2. Minimum is now -2." },
+  { val: 0, stack: [-2, 0], minStack: [-2], exp: "push(0). Main stack gets 0. 0 is greater than current min (-2), so Min stack is unchanged." },
+  { val: -3, stack: [-2, 0, -3], minStack: [-2, -3], exp: "push(-3). Main stack gets -3. -3 <= current min (-2), so we push -3 to Min stack. New minimum is -3." },
+  { val: null, stack: [-2, 0, -3], minStack: [-2, -3], exp: "getMin() -> returns top of Min stack, which is -3." },
+  { val: null, stack: [-2, 0], minStack: [-2], exp: "pop(). Popped -3 from Main stack. Since -3 equals top of Min stack, we also pop from Min stack. Minimum reverts to -2." },
+  { val: null, stack: [-2, 0], minStack: [-2], exp: "top() -> returns top of Main stack, which is 0." },
+  { val: null, stack: [-2, 0], minStack: [-2], exp: "getMin() -> returns top of Min stack, which is -2." },
+];
+---
+
+<min-stack-visuals>
+  <AlgorithmPlayer title="Min Stack Operations" steps={steps}>
+    <div class="anim-row" style="display: flex; gap: 4rem; justify-content: center; min-height: 250px;">
+
+      <!-- Left: Main Stack -->
+      <div style="width: 140px; display: flex; flex-direction: column; align-items: center;">
+        <p class="anim-label">Main Stack</p>
+        <div class="stack-container ms-main">
+          <!-- Stack elements dynamically rendered here -->
+        </div>
+        <div class="stack-base"></div>
+      </div>
+
+      <!-- Right: Min Stack -->
+      <div style="width: 140px; display: flex; flex-direction: column; align-items: center;">
+        <p class="anim-label highlight-label">Min Stack</p>
+        <div class="stack-container ms-min highlight-container">
+          <!-- Stack elements dynamically rendered here -->
+        </div>
+        <div class="stack-base highlight-base"></div>
+      </div>
+
+    </div>
+  </AlgorithmPlayer>
+</min-stack-visuals>
+
+<script>
+  class MinStackVisuals extends HTMLElement {
+    connectedCallback() {
+      this.mainStackEl = this.querySelector(".ms-main");
+      this.minStackEl = this.querySelector(".ms-min");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        const renderStack = (container: Element | null, arr: number[], isMinStack: boolean) => {
+          if (!container) return;
+
+          if (arr.length === 0) {
+            container.innerHTML = `<span class="stack-empty">Empty</span>`;
+            return;
+          }
+
+          const stackItems = arr.map((val: number, idx: number) => {
+            const isTop = idx === arr.length - 1;
+            const topClass = isTop ? (isMinStack ? 'stack-top-min' : 'stack-top-main') : '';
+            return `<div class="stack-item ${topClass}">${val}</div>`;
+          });
+
+          container.innerHTML = stackItems.reverse().join("");
+        };
+
+        renderStack(this.mainStackEl, s.stack, false);
+        renderStack(this.minStackEl, s.minStack, true);
+      });
+    }
+  }
+
+  if (!customElements.get('min-stack-visuals')) {
+    customElements.define('min-stack-visuals', MinStackVisuals);
+  }
+</script>
+
+<style>
+  min-stack-visuals {
+    display: block;
+  }
+
+  .highlight-label {
+    color: #7dab7d !important;
+  }
+
+  /* Stack Styles */
+  .stack-container {
+    width: 120px;
+    height: 180px;
+    border-left: 2px solid var(--border);
+    border-right: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.5rem;
+    gap: 0.25rem;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .highlight-container {
+    border-color: rgba(125, 171, 125, 0.4);
+    background: rgba(125, 171, 125, 0.05);
+  }
+
+  .stack-base {
+    width: 140px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 2px;
+    transition: background 0.3s;
+  }
+
+  .highlight-base {
+    background: rgba(125, 171, 125, 0.6);
+  }
+
+  .stack-item {
+    width: 100%;
+    height: 2rem;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 2px;
+    font-family: ui-monospace, monospace;
+    font-size: 1rem;
+    color: var(--text);
+    animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  .stack-top-main {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2);
+  }
+
+  .stack-top-min {
+    border-color: #7dab7d;
+    color: #7dab7d;
+    background: rgba(125, 171, 125, 0.15);
+    box-shadow: 0 0 8px rgba(125, 171, 125, 0.2);
+  }
+
+  .stack-empty {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes pop-in {
+    from { transform: scale(0.9) translateY(-10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+</style>

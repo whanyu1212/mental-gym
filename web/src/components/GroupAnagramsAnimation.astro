@@ -1,0 +1,157 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const strs = ["eat", "tea", "tan", "ate", "nat", "bat"];
+
+const steps = [
+  { i: -1, word: "", key: "", map: {}, exp: "Initialize an empty HashMap. We will use the sorted version of each word as the key." },
+  { i: 0, word: "eat", key: "aet", map: {"aet": ["eat"]}, exp: "Word 'eat' sorted is 'aet'. Add 'eat' to key 'aet'." },
+  { i: 1, word: "tea", key: "aet", map: {"aet": ["eat", "tea"]}, exp: "Word 'tea' sorted is 'aet'. Key 'aet' exists! Append 'tea' to the list." },
+  { i: 2, word: "tan", key: "ant", map: {"aet": ["eat", "tea"], "ant": ["tan"]}, exp: "Word 'tan' sorted is 'ant'. Add 'tan' to new key 'ant'." },
+  { i: 3, word: "ate", key: "aet", map: {"aet": ["eat", "tea", "ate"], "ant": ["tan"]}, exp: "Word 'ate' sorted is 'aet'. Append 'ate' to key 'aet'." },
+  { i: 4, word: "nat", key: "ant", map: {"aet": ["eat", "tea", "ate"], "ant": ["tan", "nat"]}, exp: "Word 'nat' sorted is 'ant'. Append 'nat' to key 'ant'." },
+  { i: 5, word: "bat", key: "abt", map: {"aet": ["eat", "tea", "ate"], "ant": ["tan", "nat"], "abt": ["bat"]}, exp: "Word 'bat' sorted is 'abt'. Add 'bat' to new key 'abt'." },
+  { i: -1, word: "", key: "", map: {"aet": ["eat", "tea", "ate"], "ant": ["tan", "nat"], "abt": ["bat"]}, exp: "Done! The values of the map are the grouped anagrams." }
+];
+---
+
+<group-anagrams-visuals>
+  <AlgorithmPlayer title='strs = ["eat", "tea", "tan", "ate", "nat", "bat"]' steps={steps}>
+
+    <!-- Input Array -->
+    <div class="anim-row" style="margin-bottom: 2rem;">
+      <p class="anim-label">Input Array</p>
+      <div class="array-row ga-array">
+        {strs.map((str, i) => (
+          <div class="array-col">
+            <div class="array-cell ga-cell" data-idx={i} style="width: auto; padding: 0 0.5rem;">
+              <span class="cell-val">{str}</span>
+            </div>
+            <div class="pointers-row ga-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden">i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Active Transformation -->
+    <div class="stats-row" style="margin-bottom: 2rem; justify-content: center;">
+      <div class="stat-box" style="min-width: 120px;">
+        <span class="stat-label">Current Word</span>
+        <span class="stat-val ga-curr-word" style="font-size: 1rem;">-</span>
+      </div>
+      <div style="display: flex; align-items: center; color: var(--muted); font-size: 1.5rem;">→</div>
+      <div class="stat-box highlight" style="min-width: 120px;">
+        <span class="stat-label">Sorted Key</span>
+        <span class="stat-val ga-curr-key" style="font-size: 1rem;">-</span>
+      </div>
+    </div>
+
+    <!-- Hash Map -->
+    <div class="anim-row">
+      <p class="anim-label">HashMap (Key: Sorted String, Value: List)</p>
+      <div class="ga-map" style="display: flex; flex-direction: column; gap: 0.5rem; border: 1px solid var(--border); border-radius: 2px; padding: 1rem; background: #0a0a0a; min-height: 150px;">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</group-anagrams-visuals>
+
+<script>
+  class GroupAnagramsVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".ga-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".ga-ptr-col"));
+      this.wordEl = this.querySelector(".ga-curr-word");
+      this.keyEl = this.querySelector(".ga-curr-key");
+      this.mapEl = this.querySelector(".ga-map");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Active State
+        if (this.wordEl) this.wordEl.textContent = s.word || "-";
+        if (this.keyEl) this.keyEl.textContent = s.key || "-";
+
+        // Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i < s.i) valSpan.classList.add("visited");
+            if (i === s.i) valSpan.classList.add("active-eval");
+            if (s.i === -1 && e.detail.index > 0) valSpan.classList.add("visited");
+          }
+        });
+
+        // Pointers
+        this.ptrs.forEach((col: any, i: number) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) ptr.className = `ptr ptr-up ${i === s.i ? "" : "hidden"}`;
+        });
+
+        // Map
+        if (this.mapEl) {
+          const keys = Object.keys(s.map);
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span style='color: var(--muted); font-style: italic; opacity: 0.5;'>Empty Map</span>";
+          } else {
+            this.mapEl.innerHTML = keys.map(k => {
+              const isMatch = k === s.key;
+              const values = s.map[k].join(", ");
+              return `
+                <div style="display: flex; gap: 1rem; align-items: center; padding: 0.5rem; background: ${isMatch ? 'rgba(201, 168, 76, 0.1)' : '#151515'}; border: 1px solid ${isMatch ? 'var(--accent)' : 'var(--border)'}; border-radius: 2px;">
+                  <span style="font-family: ui-monospace, monospace; color: ${isMatch ? 'var(--accent)' : 'var(--muted)'}; width: 40px;">"${k}"</span>
+                  <span style="color: var(--muted);">:</span>
+                  <span style="font-family: ui-monospace, monospace; color: var(--text);">[${values.split(', ').map((v: string) => `"${v}"`).join(', ')}]</span>
+                </div>
+              `;
+            }).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('group-anagrams-visuals')) {
+    customElements.define('group-anagrams-visuals', GroupAnagramsVisuals);
+  }
+</script>
+
+<style>
+  group-anagrams-visuals {
+    display: block;
+  }
+
+  .cell-val {
+    padding: 0 0.5rem !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+</style>

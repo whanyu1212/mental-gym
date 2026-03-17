@@ -1,0 +1,169 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const words = ["lint", "code", "love", "you"];
+const encodedString = "4#lint4#code4#love3#you";
+
+const steps = [
+  // Encode Phase
+  { phase: 'encode', i: -1, encStr: "", decoded: [], activeStr: "", exp: "ENCODE: We will store each string with its length followed by a '#' delimiter." },
+  { phase: 'encode', i: 0, encStr: "4#lint", decoded: [], activeStr: "lint", exp: "Encode 'lint'. Length is 4. Append '4#lint' to encoded string." },
+  { phase: 'encode', i: 1, encStr: "4#lint4#code", decoded: [], activeStr: "code", exp: "Encode 'code'. Length is 4. Append '4#code'." },
+  { phase: 'encode', i: 2, encStr: "4#lint4#code4#love", decoded: [], activeStr: "love", exp: "Encode 'love'. Length is 4. Append '4#love'." },
+  { phase: 'encode', i: 3, encStr: "4#lint4#code4#love3#you", decoded: [], activeStr: "you", exp: "Encode 'you'. Length is 3. Append '3#you'. Encoding complete!" },
+
+  // Decode Phase
+  { phase: 'decode', i: -1, pointer: 0, encStr: encodedString, decoded: [], activeStr: "", exp: "DECODE: Start parsing the encoded string: '4#lint4#code4#love3#you'" },
+  { phase: 'decode', i: 0, pointer: 0, len: 4, encStr: encodedString, decoded: ["lint"], activeStr: "lint", exp: "Read until '#'. Length is 4. Read next 4 chars ('lint'). Add to decoded list." },
+  { phase: 'decode', i: 1, pointer: 6, len: 4, encStr: encodedString, decoded: ["lint", "code"], activeStr: "code", exp: "Read until '#'. Length is 4. Read next 4 chars ('code'). Add to decoded list." },
+  { phase: 'decode', i: 2, pointer: 12, len: 4, encStr: encodedString, decoded: ["lint", "code", "love"], activeStr: "love", exp: "Read until '#'. Length is 4. Read next 4 chars ('love'). Add to decoded list." },
+  { phase: 'decode', i: 3, pointer: 18, len: 3, encStr: encodedString, decoded: ["lint", "code", "love", "you"], activeStr: "you", exp: "Read until '#'. Length is 3. Read next 3 chars ('you'). Add to decoded list." },
+  { phase: 'done', i: -1, pointer: 23, encStr: encodedString, decoded: ["lint", "code", "love", "you"], activeStr: "", exp: "Decoding complete! We perfectly recovered the original array." }
+];
+---
+
+<encode-decode-visuals>
+  <AlgorithmPlayer title='strs = ["lint", "code", "love", "you"]' steps={steps}>
+
+    <div class="anim-row" style="display: flex; gap: 4rem; justify-content: center; align-items: flex-start; margin-bottom: 2rem;">
+
+      <!-- Input Array -->
+      <div style="flex: 1; max-width: 200px;">
+        <p class="anim-label">Input Array</p>
+        <div class="array-row ed-input" style="flex-direction: column; gap: 0.5rem;">
+          {words.map((w, i) => (
+            <div class="array-cell ed-in-cell" data-idx={i} style="width: auto; padding: 0.5rem 1rem;">
+              <span class="cell-val">"{w}"</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Encoded String -->
+      <div style="flex: 2;">
+        <p class="anim-label highlight-label">Encoded String Network Payload</p>
+        <div class="ed-encoded-box" style="background: #0a0a0a; border: 1px dashed var(--accent); padding: 1.5rem; border-radius: 4px; min-height: 80px; display: flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 1.2rem; color: var(--accent); letter-spacing: 2px;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Output Array -->
+      <div style="flex: 1; max-width: 200px;">
+        <p class="anim-label" style="color: #7dab7d;">Decoded Array</p>
+        <div class="array-row ed-output" style="flex-direction: column; gap: 0.5rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+  </AlgorithmPlayer>
+</encode-decode-visuals>
+
+<script>
+  class EncodeDecodeVisuals extends HTMLElement {
+    connectedCallback() {
+      this.inCells = Array.from(this.querySelectorAll(".ed-in-cell"));
+      this.encBox = this.querySelector(".ed-encoded-box");
+      this.outContainer = this.querySelector(".ed-output");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Input Cells
+        this.inCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (s.phase === 'encode') {
+              if (i < s.i) valSpan.classList.add("visited");
+              if (i === s.i) valSpan.classList.add("active-eval");
+            } else {
+              valSpan.classList.add("visited"); // Grey out during decode
+            }
+          }
+        });
+
+        // Encoded String Box
+        if (this.encBox) {
+          if (!s.encStr) {
+             this.encBox.innerHTML = "<span style='opacity: 0.3; font-style: italic; font-size: 0.9rem;'>Empty</span>";
+          } else {
+             // For decode phase, highlight the chunk being parsed
+             if (s.phase === 'decode' && s.pointer !== undefined && s.len !== undefined) {
+                const prefix = s.encStr.substring(0, s.pointer);
+                // The chunk format is "length#string" e.g., "4#lint"
+                // The pointer is at the start of the chunk.
+                // The total length of this chunk is len(length_str) + 1 + length.
+                const lenStrLength = s.len.toString().length;
+                const chunkLen = lenStrLength + 1 + s.len;
+                const activeChunk = s.encStr.substring(s.pointer, s.pointer + chunkLen);
+                const suffix = s.encStr.substring(s.pointer + chunkLen);
+
+                this.encBox.innerHTML = `
+                  <span style="opacity: 0.5;">${prefix}</span>
+                  <span style="background: rgba(201, 168, 76, 0.2); border-radius: 2px; padding: 0.2rem; box-shadow: 0 0 8px rgba(201,168,76,0.3);">${activeChunk}</span>
+                  <span style="opacity: 0.5;">${suffix}</span>
+                `;
+             } else {
+                this.encBox.innerHTML = `<span>${s.encStr}</span>`;
+             }
+          }
+        }
+
+        // Decoded Array Output
+        if (this.outContainer) {
+          if (s.decoded.length === 0) {
+             this.outContainer.innerHTML = "<div style='color: var(--muted); font-style: italic; opacity: 0.5; padding: 1rem; text-align: center;'>Empty</div>";
+          } else {
+             this.outContainer.innerHTML = s.decoded.map((w: string, i: number) => {
+               const isJustAdded = s.phase === 'decode' && i === s.i;
+               return `
+                 <div class="array-cell ${isJustAdded ? 'active-out' : ''}" style="width: auto; padding: 0.5rem 1rem;">
+                   <span class="cell-val" style="border-color: #7dab7d; color: #a0d0a0; background: rgba(125, 171, 125, 0.05);">"${w}"</span>
+                 </div>
+               `;
+             }).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('encode-decode-visuals')) {
+    customElements.define('encode-decode-visuals', EncodeDecodeVisuals);
+  }
+</script>
+
+<style>
+  encode-decode-visuals {
+    display: block;
+  }
+
+  .highlight-label {
+    color: var(--accent) !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+    transform: translateX(4px);
+  }
+
+  .active-out .cell-val {
+    background: rgba(125, 171, 125, 0.2) !important;
+    box-shadow: 0 0 10px rgba(125, 171, 125, 0.2);
+    transform: translateX(-4px);
+    animation: slide-left 0.3s ease-out;
+  }
+
+  @keyframes slide-left {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(-4px); opacity: 1; }
+  }
+</style>

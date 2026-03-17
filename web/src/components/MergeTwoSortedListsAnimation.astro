@@ -1,0 +1,155 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const list1 = [1, 2, 4];
+const list2 = [1, 3, 4];
+
+const steps = [
+  { i1: 0, i2: 0, merged: [], exp: "Create a dummy head. Use two pointers, one for each list." },
+  { i1: 1, i2: 0, merged: [1], exp: "l1 (1) <= l2 (1). Append l1. Move l1 pointer." },
+  { i1: 1, i2: 1, merged: [1, 1], exp: "l2 (1) < l1 (2). Append l2. Move l2 pointer." },
+  { i1: 2, i2: 1, merged: [1, 1, 2], exp: "l1 (2) <= l2 (3). Append l1. Move l1 pointer." },
+  { i1: 2, i2: 2, merged: [1, 1, 2, 3], exp: "l2 (3) < l1 (4). Append l2. Move l2 pointer." },
+  { i1: 3, i2: 2, merged: [1, 1, 2, 3, 4], exp: "l1 (4) <= l2 (4). Append l1. Move l1 pointer." },
+  { i1: 3, i2: 3, merged: [1, 1, 2, 3, 4, 4], exp: "l1 is empty. Append remaining l2. Done!" }
+];
+---
+
+<merge-sorted-lists-visuals>
+  <AlgorithmPlayer title="list1 = [1, 2, 4], list2 = [1, 3, 4]" steps={steps}>
+
+    <div class="anim-row" style="display: flex; gap: 4rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem;">
+
+      <!-- List 1 -->
+      <div>
+        <p class="anim-label" style="color: #90b0e0;">List 1</p>
+        <div class="array-row">
+          {list1.map((n, i) => (
+            <div class="array-col" style="flex-direction: row; align-items: center;">
+              <div class="array-cell msl-l1-cell" data-idx={i}>
+                <span class="cell-val" style="border-color: #5a82b0;">{n}</span>
+              </div>
+              {i < list1.length - 1 && <span style="color: #5a82b0; margin: 0 0.2rem;">→</span>}
+            </div>
+          ))}
+        </div>
+        <div class="pointers-row msl-l1-ptrs" style="justify-content: flex-start; margin-top: 0.5rem; height: 1.5rem;">
+          <!-- Pointers rendered via JS -->
+        </div>
+      </div>
+
+      <!-- List 2 -->
+      <div>
+        <p class="anim-label" style="color: #e0bc5c;">List 2</p>
+        <div class="array-row">
+          {list2.map((n, i) => (
+            <div class="array-col" style="flex-direction: row; align-items: center;">
+              <div class="array-cell msl-l2-cell" data-idx={i}>
+                <span class="cell-val" style="border-color: #c9a84c;">{n}</span>
+              </div>
+              {i < list2.length - 1 && <span style="color: #c9a84c; margin: 0 0.2rem;">→</span>}
+            </div>
+          ))}
+        </div>
+        <div class="pointers-row msl-l2-ptrs" style="justify-content: flex-start; margin-top: 0.5rem; height: 1.5rem;">
+           <!-- Pointers rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Merged List -->
+    <div class="anim-row">
+      <p class="anim-label highlight-label">Merged List (Output)</p>
+      <div class="array-row msl-merged-row" style="min-height: 4rem;">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</merge-sorted-lists-visuals>
+
+<script>
+  class MergeSortedListsVisuals extends HTMLElement {
+    connectedCallback() {
+      this.l1Cells = Array.from(this.querySelectorAll(".msl-l1-cell"));
+      this.l2Cells = Array.from(this.querySelectorAll(".msl-l2-cell"));
+      this.l1PtrContainer = this.querySelector(".msl-l1-ptrs");
+      this.l2PtrContainer = this.querySelector(".msl-l2-ptrs");
+      this.mergedRow = this.querySelector(".msl-merged-row");
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Cells L1
+        this.l1Cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.style.opacity = i < s.i1 ? "0.3" : "1";
+            valSpan.style.background = i === s.i1 ? "rgba(90, 130, 176, 0.15)" : "#0e0e0e";
+          }
+        });
+
+        // Pointers L1
+        if (this.l1PtrContainer) {
+           this.l1PtrContainer.innerHTML = "";
+           if (s.i1 < 3) {
+             const offset = s.i1 * (2.75 + 1.5); // approximate offset based on cell width + arrow gap
+             this.l1PtrContainer.innerHTML = `<span class="ptr ptr-up" style="color: #90b0e0; margin-left: ${offset}rem; font-size: 1.2rem;">↑</span>`;
+           }
+        }
+
+        // Cells L2
+        this.l2Cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.style.opacity = i < s.i2 ? "0.3" : "1";
+            valSpan.style.background = i === s.i2 ? "rgba(201, 168, 76, 0.15)" : "#0e0e0e";
+          }
+        });
+
+        // Pointers L2
+        if (this.l2PtrContainer) {
+           this.l2PtrContainer.innerHTML = "";
+           if (s.i2 < 3) {
+             const offset = s.i2 * (2.75 + 1.5);
+             this.l2PtrContainer.innerHTML = `<span class="ptr ptr-up" style="color: #e0bc5c; margin-left: ${offset}rem; font-size: 1.2rem;">↑</span>`;
+           }
+        }
+
+        // Merged Row
+        if (this.mergedRow) {
+          if (!s.merged || s.merged.length === 0) {
+            this.mergedRow.innerHTML = `<span style="color: var(--muted); font-style: italic; opacity: 0.5;">Empty</span>`;
+          } else {
+            this.mergedRow.innerHTML = s.merged.map((n: number, i: number) => {
+              const isJustAdded = i === s.merged.length - 1;
+              return `
+                <div class="array-col" style="flex-direction: row; align-items: center;">
+                  <div class="array-cell">
+                    <span class="cell-val" style="border-color: #7dab7d; color: #a0d0a0; background: rgba(125, 171, 125, 0.15); ${isJustAdded ? 'animation: pop-in 0.2s;' : ''}">${n}</span>
+                  </div>
+                  ${i < s.merged.length - 1 ? `<span style="color: #7dab7d; margin: 0 0.2rem;">→</span>` : ''}
+                </div>
+              `;
+            }).join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('merge-sorted-lists-visuals')) {
+    customElements.define('merge-sorted-lists-visuals', MergeSortedListsVisuals);
+  }
+</script>
+
+<style>
+  merge-sorted-lists-visuals {
+    display: block;
+  }
+
+  .highlight-label {
+    color: #7dab7d !important;
+  }
+</style>

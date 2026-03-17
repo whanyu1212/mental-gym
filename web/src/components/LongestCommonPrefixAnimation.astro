@@ -1,0 +1,112 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const strs = ["flower", "flow", "flight"];
+const maxLength = Math.max(...strs.map(s => s.length));
+
+const steps = [
+  { i: -1, char: '', match: true, exp: "Start checking characters column by column across all strings." },
+  { i: 0, char: 'f', match: true, exp: "Index 0: All strings have 'f'. Match!" },
+  { i: 1, char: 'l', match: true, exp: "Index 1: All strings have 'l'. Match!" },
+  { i: 2, char: 'o', match: false, exp: "Index 2: 'flower' has 'o', 'flow' has 'o', but 'flight' has 'i'. Mismatch!" },
+  { i: -1, char: '', match: false, exp: "Mismatch found. The longest common prefix is 'fl'." }
+];
+---
+
+<longest-common-prefix-visuals>
+  <AlgorithmPlayer title='strs = ["flower", "flow", "flight"]' steps={steps}>
+
+    <div class="anim-row" style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px; margin: 0 auto 2rem auto;">
+      {strs.map((str, rowIdx) => (
+        <div class="array-row" style="justify-content: flex-start;">
+          {Array.from({ length: maxLength }).map((_, colIdx) => {
+            const char = str[colIdx] || '';
+            return (
+              <div class="array-col" style="min-width: 2.5rem; gap: 0;">
+                <div class="array-cell lcp-cell" data-row={rowIdx} data-col={colIdx}>
+                  <span class={`cell-val ${!char ? 'empty-val' : ''}`} style="border-radius: 2px;">{char}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+
+  </AlgorithmPlayer>
+</longest-common-prefix-visuals>
+
+<script>
+  class LongestCommonPrefixVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".lcp-cell"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+        const currentIdx = e.detail.index;
+
+        this.cells.forEach((cell: any) => {
+          const col = parseInt(cell.dataset.col, 10);
+          const valSpan = cell.querySelector(".cell-val");
+
+          if (valSpan && !valSpan.classList.contains('empty-val')) {
+            valSpan.className = "cell-val";
+
+            if (s.i !== -1 && col < s.i) {
+               valSpan.classList.add("success-val"); // Previous matched columns
+            } else if (s.i !== -1 && col === s.i) {
+               if (s.match) {
+                 valSpan.classList.add("active-eval");
+               } else {
+                 valSpan.classList.add("conflict");
+               }
+            } else if (s.i === -1 && currentIdx > 0 && col <= 1) {
+               // Final state hardcode for 'fl'
+               valSpan.classList.add("success-val");
+            }
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('longest-common-prefix-visuals')) {
+    customElements.define('longest-common-prefix-visuals', LongestCommonPrefixVisuals);
+  }
+</script>
+
+<style>
+  longest-common-prefix-visuals {
+    display: block;
+  }
+
+  .empty-val {
+    background: transparent !important;
+    border: 1px dashed #333 !important;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.15);
+  }
+
+  .cell-val.success-val {
+    border-color: #7dab7d;
+    color: #a0d0a0;
+    background: rgba(125, 171, 125, 0.15);
+  }
+
+  .cell-val.conflict {
+    border-color: #b05a5a !important;
+    color: #e09090 !important;
+    background: rgba(176, 90, 90, 0.15) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+</style>

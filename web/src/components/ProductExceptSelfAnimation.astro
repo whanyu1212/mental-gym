@@ -1,0 +1,188 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 2, 3, 4];
+
+const steps = [
+  { p: 0, prefix: [1, 1, 1, 1], suffix: [1, 1, 1, 1], output: [1, 1, 1, 1], prefixRunning: 1, suffixRunning: 1, exp: "Initial state. Arrays are pre-filled with 1s. We will do two passes: Left-to-Right (Prefix) and Right-to-Left (Suffix)." },
+
+  // Prefix Pass
+  { p: 0, prefix: [1, 1, 1, 1], suffix: [1, 1, 1, 1], output: [1, 1, 1, 1], prefixRunning: 1, suffixRunning: 1, exp: "Pass 1 (Prefix): i=0. prefix[0] = prefixRunning (1). prefixRunning *= nums[0] (1 * 1 = 1)." },
+  { p: 1, prefix: [1, 1, 1, 1], suffix: [1, 1, 1, 1], output: [1, 1, 1, 1], prefixRunning: 1, suffixRunning: 1, exp: "Pass 1 (Prefix): i=1. prefix[1] = prefixRunning (1). prefixRunning *= nums[1] (1 * 2 = 2)." },
+  { p: 2, prefix: [1, 1, 2, 1], suffix: [1, 1, 1, 1], output: [1, 1, 1, 1], prefixRunning: 2, suffixRunning: 1, exp: "Pass 1 (Prefix): i=2. prefix[2] = prefixRunning (2). prefixRunning *= nums[2] (2 * 3 = 6)." },
+  { p: 3, prefix: [1, 1, 2, 6], suffix: [1, 1, 1, 1], output: [1, 1, 1, 1], prefixRunning: 6, suffixRunning: 1, exp: "Pass 1 (Prefix): i=3. prefix[3] = prefixRunning (6). prefixRunning *= nums[3] (6 * 4 = 24). Prefix pass complete!" },
+
+  // Suffix Pass (building output directly)
+  { p: 3, prefix: [1, 1, 2, 6], suffix: [1, 1, 1, 1], output: [1, 1, 2, 6], prefixRunning: 6, suffixRunning: 1, exp: "Pass 2 (Suffix): Start from right. i=3. output[3] = prefix[3] * suffixRunning = 6 * 1 = 6. suffixRunning *= nums[3] (1 * 4 = 4)." },
+  { p: 2, prefix: [1, 1, 2, 6], suffix: [1, 1, 1, 4], output: [1, 1, 8, 6], prefixRunning: 6, suffixRunning: 4, exp: "Pass 2 (Suffix): i=2. output[2] = prefix[2] * suffixRunning = 2 * 4 = 8. suffixRunning *= nums[2] (4 * 3 = 12)." },
+  { p: 1, prefix: [1, 1, 2, 6], suffix: [1, 1, 12, 4], output: [1, 12, 8, 6], prefixRunning: 6, suffixRunning: 12, exp: "Pass 2 (Suffix): i=1. output[1] = prefix[1] * suffixRunning = 1 * 12 = 12. suffixRunning *= nums[1] (12 * 2 = 24)." },
+  { p: 0, prefix: [1, 1, 2, 6], suffix: [1, 24, 12, 4], output: [24, 12, 8, 6], prefixRunning: 6, suffixRunning: 24, exp: "Pass 2 (Suffix): i=0. output[0] = prefix[0] * suffixRunning = 1 * 24 = 24. suffixRunning *= nums[0] (24 * 1 = 24)." },
+
+  { p: -1, prefix: [1, 1, 2, 6], suffix: [1, 24, 12, 4], output: [24, 12, 8, 6], prefixRunning: 6, suffixRunning: 24, exp: "Done! The output array is [24, 12, 8, 6]." }
+];
+---
+
+<product-except-self-visuals>
+  <AlgorithmPlayer title="nums = [1, 2, 3, 4]" steps={steps}>
+
+    <div class="stats-row" style="margin-bottom: 2rem;">
+      <div class="stat-box" style="border-color: rgba(90, 130, 176, 0.4); background: rgba(90, 130, 176, 0.05);">
+        <span class="stat-label">Prefix Running</span>
+        <span class="stat-val po-prefix-val" style="color: #5a82b0;">1</span>
+      </div>
+      <div class="stat-box" style="border-color: rgba(125, 171, 125, 0.4); background: rgba(125, 171, 125, 0.05);">
+        <span class="stat-label">Suffix Running</span>
+        <span class="stat-val po-suffix-val" style="color: #7dab7d;">1</span>
+      </div>
+    </div>
+
+    <!-- Original Array -->
+    <div class="anim-row">
+      <p class="anim-label">nums</p>
+      <div class="array-row po-nums">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell po-num-cell" data-idx={i}>
+              <span class="cell-val">{n}</span>
+            </div>
+            <div class="pointers-row po-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden">i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Prefix Array -->
+    <div class="anim-row">
+      <p class="anim-label">Prefix Array (Left-to-Right)</p>
+      <div class="array-row po-prefix">
+        {nums.map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell po-prefix-cell" data-idx={i}>
+              <span class="cell-val prefix-val">1</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Output Array -->
+    <div class="anim-row">
+      <p class="anim-label">Output Array (Prefix * Suffix)</p>
+      <div class="array-row po-output">
+        {nums.map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell po-out-cell" data-idx={i}>
+              <span class="cell-val out-val">1</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</product-except-self-visuals>
+
+<script>
+  class ProductExceptSelfVisuals extends HTMLElement {
+    connectedCallback() {
+      this.prefixValEl = this.querySelector(".po-prefix-val");
+      this.suffixValEl = this.querySelector(".po-suffix-val");
+
+      this.numCells = Array.from(this.querySelectorAll(".po-num-cell"));
+      this.prefixCells = Array.from(this.querySelectorAll(".po-prefix-cell"));
+      this.outCells = Array.from(this.querySelectorAll(".po-out-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".po-ptr-col"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+        const idx = e.detail.index; // step index
+
+        // Stats
+        if (this.prefixValEl) this.prefixValEl.textContent = s.prefixRunning;
+        if (this.suffixValEl) this.suffixValEl.textContent = s.suffixRunning;
+
+        const isPrefixPass = idx > 0 && idx <= 4;
+        const isSuffixPass = idx > 4 && idx < 9;
+
+        // Pointers
+        this.ptrs.forEach((col: any, i: number) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) {
+            ptr.className = `ptr ptr-up ${i === s.p ? "" : "hidden"}`;
+            if (isPrefixPass) ptr.style.color = '#5a82b0';
+            else if (isSuffixPass) ptr.style.color = '#7dab7d';
+            else ptr.style.color = 'var(--accent)';
+          }
+        });
+
+        // Cells
+        this.numCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+            if (i === s.p) valSpan.classList.add("active-num");
+          }
+        });
+
+        this.prefixCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.textContent = s.prefix[i];
+            valSpan.className = "cell-val prefix-val";
+            if (isPrefixPass && i === s.p) valSpan.classList.add("active-prefix");
+          }
+        });
+
+        this.outCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.textContent = s.output[i];
+            valSpan.className = "cell-val out-val";
+            if (isSuffixPass && i === s.p) valSpan.classList.add("active-out");
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('product-except-self-visuals')) {
+    customElements.define('product-except-self-visuals', ProductExceptSelfVisuals);
+  }
+</script>
+
+<style>
+  product-except-self-visuals {
+    display: block;
+  }
+
+  .cell-val.active-num {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+    transform: translateY(-4px);
+  }
+
+  .prefix-val { color: #90b0e0; border-color: #3a5270; }
+  .cell-val.active-prefix {
+    border-color: #5a82b0;
+    color: #90b0e0;
+    background: rgba(90, 130, 176, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .out-val { color: #a0d0a0; border-color: #4d6b4d; }
+  .cell-val.active-out {
+    border-color: #7dab7d;
+    color: #a0d0a0;
+    background: rgba(125, 171, 125, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s, color 0.2s;
+  }
+</style>

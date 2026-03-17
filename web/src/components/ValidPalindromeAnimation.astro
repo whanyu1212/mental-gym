@@ -1,0 +1,164 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const s = "A man, a plan, a canal: Panama".split("");
+const sClean = "amanaplanacanalpanama".split("");
+
+const steps = [
+  { l: 0, r: 20, lOrig: 0, rOrig: 29, match: true, exp: "Initial state. L points to 'A', R points to 'a'. After cleaning and lowercasing, both are 'a'. They match!" },
+  { l: 1, r: 19, lOrig: 2, rOrig: 28, match: true, exp: "L moves to 'm', R moves to 'm'. They match." },
+  { l: 2, r: 18, lOrig: 3, rOrig: 27, match: true, exp: "L moves to 'a', R moves to 'a'. They match." },
+  { l: 3, r: 17, lOrig: 4, rOrig: 26, match: true, exp: "L moves to 'n', R moves to 'n'. They match." },
+  { l: 4, r: 16, lOrig: 7, rOrig: 24, match: true, exp: "Skip spaces and commas. L moves to 'a', R moves to 'a'. They match." },
+  { l: 5, r: 15, lOrig: 9, rOrig: 23, match: true, exp: "L moves to 'p', R moves to 'p'. They match." },
+  { l: 6, r: 14, lOrig: 10, rOrig: 22, match: true, exp: "L moves to 'l', R moves to 'l'. They match." },
+  { l: 7, r: 13, lOrig: 11, rOrig: 21, match: true, exp: "L moves to 'a', R moves to 'a'. They match." },
+  { l: 8, r: 12, lOrig: 12, rOrig: 19, match: true, exp: "L moves to 'n', R moves to 'n'. They match." },
+  { l: 9, r: 11, lOrig: 15, rOrig: 17, match: true, exp: "L moves to 'a', R moves to 'a'. They match." },
+  { l: 10, r: 10, lOrig: 16, rOrig: 16, match: true, exp: "L and R meet at 'c'. The string is a valid palindrome!" },
+];
+---
+
+<valid-palindrome-visuals>
+  <AlgorithmPlayer title="s = 'A man, a plan, a canal: Panama'" steps={steps}>
+    <div class="anim-row">
+      <p class="anim-label">Original String</p>
+      <div class="array-row vp-orig-row">
+        {s.map((char, i) => (
+          <div class="array-col" style={char === ' ' ? 'min-width: 1.5rem;' : ''}>
+            <div class="array-cell vp-orig-cell" data-idx={i}>
+              <span class={`cell-val ${/[a-zA-Z0-9]/.test(char) ? 'alphanumeric' : 'non-alphanumeric'}`}>{char === ' ' ? '␣' : char}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row" style="margin-top: 2rem;">
+      <p class="anim-label">Cleaned String (Two Pointers)</p>
+      <div class="array-row vp-clean-row">
+        {sClean.map((char, i) => (
+          <div class="array-col">
+            <div class="array-cell vp-clean-cell" data-idx={i}>
+              <span class="cell-val">{char}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row vp-ptr-col" data-idx={i}>
+              <span class="ptr ptr-l hidden">L</span>
+              <span class="ptr ptr-r hidden">R</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</valid-palindrome-visuals>
+
+<script>
+  class ValidPalindromeVisuals extends HTMLElement {
+    connectedCallback() {
+      this.origCells = Array.from(this.querySelectorAll(".vp-orig-cell"));
+      this.cleanCells = Array.from(this.querySelectorAll(".vp-clean-cell"));
+      this.ptrCols = Array.from(this.querySelectorAll(".vp-ptr-col"));
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Original String Highlights
+        this.origCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.classList.remove("active-l", "active-r", "conflict");
+            if (i === s.lOrig) valSpan.classList.add("active-l");
+            if (i === s.rOrig) valSpan.classList.add("active-r");
+            if (!s.match && (i === s.lOrig || i === s.rOrig)) valSpan.classList.add("conflict");
+          }
+        });
+
+        // Cleaned String Highlights
+        this.cleanCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.classList.remove("active-l", "active-r", "conflict", "visited");
+            if (i < s.l || i > s.r) valSpan.classList.add("visited");
+            if (i === s.l) valSpan.classList.add("active-l");
+            if (i === s.r) valSpan.classList.add("active-r");
+            if (!s.match && (i === s.l || i === s.r)) valSpan.classList.add("conflict");
+          }
+        });
+
+        // Pointers
+        this.ptrCols.forEach((col: any, i: number) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('valid-palindrome-visuals')) {
+    customElements.define('valid-palindrome-visuals', ValidPalindromeVisuals);
+  }
+</script>
+
+<style>
+  valid-palindrome-visuals {
+    display: block;
+  }
+
+  .vp-orig-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .non-alphanumeric {
+    background: #111 !important;
+    border-color: #333 !important;
+    color: #555 !important;
+  }
+
+  .cell-val.active-l {
+    border-color: #5a82b0;
+    color: #90b0e0;
+    background: rgba(90, 130, 176, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-r {
+    border-color: #7dab7d;
+    color: #a0d0a0;
+    background: rgba(125, 171, 125, 0.15);
+    transform: translateY(-4px);
+  }
+
+  /* When L and R meet on the same cell */
+  .cell-val.active-l.active-r {
+    border-color: #c9a84c;
+    color: #e0bc5c;
+    background: rgba(201, 168, 76, 0.15);
+  }
+
+  .cell-val.conflict {
+    border-color: #b05a5a !important;
+    color: #e09090 !important;
+    background: rgba(176, 90, 90, 0.15) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
+  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0) translateY(-4px); }
+    25% { transform: translateX(-4px) translateY(-4px); }
+    75% { transform: translateX(4px) translateY(-4px); }
+  }
+</style>

@@ -1,0 +1,158 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [5, 2, 3, 1];
+
+const steps = [
+  { p: 'init', arr: [5, 2, 3, 1], l: -1, r: -1, exp: "Start Merge Sort. We recursively divide the array into halves until we reach single elements." },
+
+  // Split Phase
+  { p: 'split', arr: [5, 2], l: 0, r: 1, exp: "Split left half: [5, 2]." },
+  { p: 'split', arr: [5], l: 0, r: 0, exp: "Split left again: [5]." },
+  { p: 'split', arr: [2], l: 1, r: 1, exp: "Split right of left half: [2]." },
+
+  // Merge [5] and [2]
+  { p: 'merge', arr: [2, 5], l: 0, r: 1, exp: "Merge [5] and [2] -> [2, 5]." },
+
+  // Split right half
+  { p: 'split', arr: [3, 1], l: 2, r: 3, exp: "Split right half: [3, 1]." },
+  { p: 'split', arr: [3], l: 2, r: 2, exp: "Split left of right half: [3]." },
+  { p: 'split', arr: [1], l: 3, r: 3, exp: "Split right of right half: [1]." },
+
+  // Merge [3] and [1]
+  { p: 'merge', arr: [1, 3], l: 2, r: 3, exp: "Merge [3] and [1] -> [1, 3]." },
+
+  // Final Merge
+  { p: 'merge', arr: [1, 2, 3, 5], l: 0, r: 3, exp: "Final merge: [2, 5] and [1, 3] -> [1, 2, 3, 5]." },
+  { p: 'done', arr: [1, 2, 3, 5], l: -1, r: -1, exp: "Array is fully sorted!" }
+];
+---
+
+<sort-array-visuals>
+  <AlgorithmPlayer title="Merge Sort (O(N log N))" steps={steps}>
+
+    <div class="anim-row" style="margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; gap: 2rem;">
+
+      <!-- Full Array View -->
+      <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <p class="anim-label">Current Array State</p>
+        <div class="array-row sa-main-array">
+          {nums.map((n, i) => (
+            <div class="array-col">
+              <div class="array-cell sa-cell" data-idx={i}>
+                <span class="cell-val">{n}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Action View (Split/Merge focus) -->
+      <div style="width: 100%; display: flex; flex-direction: column; align-items: center; min-height: 100px;">
+        <p class="anim-label sa-action-label" style="color: var(--accent); transition: color 0.3s;">Focus Segment</p>
+        <div class="array-row sa-focus-array" style="padding: 1rem; background: #0a0a0a; border: 1px dashed var(--border); border-radius: 4px; min-width: 150px; justify-content: center; min-height: 4rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+  </AlgorithmPlayer>
+</sort-array-visuals>
+
+<script>
+  class SortArrayVisuals extends HTMLElement {
+    connectedCallback() {
+      this.mainCells = Array.from(this.querySelectorAll(".sa-cell"));
+      this.focusArray = this.querySelector(".sa-focus-array");
+      this.actionLabel = this.querySelector(".sa-action-label") as HTMLElement;
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Main Array
+        this.mainCells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (valSpan) {
+            valSpan.className = "cell-val";
+
+            // Update values for merge operations
+            if (s.p === 'merge' || s.p === 'done') {
+               // If this cell is within the bounds of the current merge
+               if (i >= s.l && i <= s.r) {
+                  // We map the local merged array back to the global index
+                  valSpan.textContent = s.arr[i - s.l];
+               }
+            }
+
+            // Highlights
+            if (s.p === 'done') {
+               valSpan.classList.add("success-val");
+            } else if (s.l !== -1 && i >= s.l && i <= s.r) {
+               if (s.p === 'split') valSpan.classList.add("active-split");
+               if (s.p === 'merge') valSpan.classList.add("active-merge");
+            } else {
+               valSpan.classList.add("visited");
+            }
+          }
+        });
+
+        // Focus Array and Label
+        if (this.focusArray && this.actionLabel) {
+           if (s.p === 'init' || s.p === 'done') {
+             this.focusArray.innerHTML = "<span style='color: var(--muted); opacity: 0.5; font-style: italic;'>None</span>";
+             this.actionLabel.textContent = s.p === 'init' ? "Starting..." : "Done!";
+             this.actionLabel.style.color = s.p === 'done' ? "#7dab7d" : "var(--muted)";
+             this.focusArray.style.borderColor = "var(--border)";
+           } else {
+             this.actionLabel.textContent = s.p === 'split' ? "Splitting" : "Merging";
+             this.actionLabel.style.color = s.p === 'split' ? "#e09090" : "#90b0e0";
+             this.focusArray.style.borderColor = s.p === 'split' ? "#b05a5a" : "#5a82b0";
+
+             this.focusArray.innerHTML = s.arr.map((num: number) => `
+               <div class="array-cell">
+                 <span class="cell-val" style="border-color: ${s.p === 'split' ? '#b05a5a' : '#5a82b0'}; color: ${s.p === 'split' ? '#e09090' : '#90b0e0'}; background: ${s.p === 'split' ? 'rgba(176, 90, 90, 0.15)' : 'rgba(90, 130, 176, 0.15)'}; animation: pop-in 0.2s;">${num}</span>
+               </div>
+             `).join("");
+           }
+        }
+
+      });
+    }
+  }
+
+  if (!customElements.get('sort-array-visuals')) {
+    customElements.define('sort-array-visuals', SortArrayVisuals);
+  }
+</script>
+
+<style>
+  sort-array-visuals {
+    display: block;
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .cell-val.active-split {
+    border-color: #b05a5a;
+    color: #e09090;
+    background: rgba(176, 90, 90, 0.1);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-merge {
+    border-color: #5a82b0;
+    color: #90b0e0;
+    background: rgba(90, 130, 176, 0.1);
+    transform: translateY(4px);
+  }
+
+  .cell-val.success-val {
+    border-color: #7dab7d !important;
+    color: #a0d0a0 !important;
+    background: rgba(125, 171, 125, 0.15) !important;
+  }
+</style>
