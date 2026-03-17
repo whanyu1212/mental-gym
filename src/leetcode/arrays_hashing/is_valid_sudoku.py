@@ -4,11 +4,13 @@ from typing import List
 
 class Solution:
     def isValidSudoku(self, board: List[List[str]]) -> bool:
-        # create 3 dictionaries to store the unique elements
-        # row wise, col wise and in the 3x3 square. We use that
-        # to check if the board[i,j] has appeared before or not
+        # Intuition: we are NOT solving the board, only validating current entries.
+        # For each filled cell, the digit must be unique in:
+        # 1) its row, 2) its column, and 3) its 3x3 box.
         rowset = defaultdict(set)
         colset = defaultdict(set)
+        # Box key is (i // 3, j // 3):
+        # rows 0-2 -> 0, 3-5 -> 1, 6-8 -> 2 (same idea for columns).
         squareset = defaultdict(set)
 
         for i in range(len(board)):
