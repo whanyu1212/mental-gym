@@ -56,6 +56,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "sort_colors": "sort-colors",
     "valid_palindrome": "valid-palindrome",
     "majority_element": "majority-element",
+    "majority_element_2": "majority-element-ii",
     "longest_common_prefix": "longest-common-prefix",
     "contains_duplicate": "contains-duplicate",
     "two_sum": "two-sum",

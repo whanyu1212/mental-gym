@@ -1,6 +1,8 @@
 ---
 import { problems } from "../../data/problems";
 import { mlProblems } from "../../data/mlProblems";
+import DueForReview from "../../components/DueForReview.astro";
+import SRDataManager from "../../components/SRDataManager.astro";
 import Layout from "../../layouts/Layout.astro";
 
 // Algorithms
@@ -33,6 +35,9 @@ const mlByCategory = Object.fromEntries(
 			{problems.length} algorithms and {mlProblems.length} ML interview questions
 		</p>
 	</div>
+
+	<DueForReview />
+	<SRDataManager />
 
 	<div class="section-tabs">
 		<button class="section-tab active" data-target="algo-section">Algorithms</button>

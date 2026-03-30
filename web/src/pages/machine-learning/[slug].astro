@@ -1,6 +1,7 @@
 ---
 import { Code } from "astro:components";
 import { mlProblems } from "../../data/mlProblems";
+import RecallRating from "../../components/RecallRating.astro";
 import Layout from "../../layouts/Layout.astro";
 
 export function getStaticPaths() {
@@ -78,6 +79,14 @@ const { problem } = Astro.props;
 			</div>
 		</section>
 	)}
+
+	<RecallRating
+		domain="ml"
+		slug={problem.slug}
+		title={problem.title}
+		difficulty={problem.difficulty}
+		group={problem.category}
+	/>
 </Layout>
 
 <style>

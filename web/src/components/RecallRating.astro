@@ -1,0 +1,258 @@
+---
+interface Props {
+  domain: "algorithms" | "ml";
+  slug: string;
+  title: string;
+  difficulty: string;
+  group: string;
+}
+const { domain, slug, title, difficulty, group } = Astro.props;
+---
+
+<recall-rating
+  data-domain={domain}
+  data-slug={slug}
+  data-title={title}
+  data-difficulty={difficulty}
+  data-group={group}
+>
+  <div class="recall-panel">
+    <div class="recall-header">
+      <h3 class="recall-heading">Spaced Repetition</h3>
+      <span class="recall-status-badge sr-badge"></span>
+    </div>
+
+    <p class="recall-prompt">How well did you recall the solution?</p>
+
+    <div class="recall-buttons">
+      <button class="recall-btn again" data-quality="0">
+        <span class="btn-label">Again</span>
+        <span class="btn-hint">No clue</span>
+      </button>
+      <button class="recall-btn hard" data-quality="1">
+        <span class="btn-label">Hard</span>
+        <span class="btn-hint">Struggled</span>
+      </button>
+      <button class="recall-btn good" data-quality="2">
+        <span class="btn-label">Good</span>
+        <span class="btn-hint">Some effort</span>
+      </button>
+      <button class="recall-btn easy" data-quality="3">
+        <span class="btn-label">Easy</span>
+        <span class="btn-hint">Instant</span>
+      </button>
+    </div>
+
+    <p class="recall-result sr-result"></p>
+  </div>
+</recall-rating>
+
+<script>
+  import { getRecord, putRecord } from "../scripts/sr-db";
+  import {
+    createNewRecord,
+    schedule,
+    statusOf,
+    daysUntilDue,
+  } from "../scripts/sr-scheduler";
+  import type { ReviewQuality } from "../scripts/sr-types";
+
+  class RecallRatingElement extends HTMLElement {
+    connectedCallback() {
+      const domain = this.dataset.domain as "algorithms" | "ml";
+      const slug = this.dataset.slug!;
+      const title = this.dataset.title!;
+      const difficulty = this.dataset.difficulty!;
+      const group = this.dataset.group!;
+      const key = `${domain}:${slug}`;
+
+      const badge = this.querySelector(".sr-badge") as HTMLElement;
+      const resultEl = this.querySelector(".sr-result") as HTMLElement;
+      const buttons = this.querySelectorAll<HTMLButtonElement>(".recall-btn");
+
+      // Show current status
+      getRecord(key).then((record) => {
+        if (record) {
+          const status = statusOf(record);
+          const days = daysUntilDue(record);
+          badge.textContent =
+            status === "overdue"
+              ? `Overdue by ${Math.abs(days)}d`
+              : status === "due"
+                ? "Due today"
+                : status === "upcoming"
+                  ? `Next: ${days}d`
+                  : "";
+          badge.className = `recall-status-badge sr-badge status-${status}`;
+        }
+      });
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const quality = Number(btn.dataset.quality) as ReviewQuality;
+
+          let record = await getRecord(key);
+          if (!record) {
+            record = createNewRecord(domain, slug, title, difficulty, group);
+          }
+
+          const updated = schedule(record, quality);
+          await putRecord(updated);
+
+          // Disable buttons, show result
+          buttons.forEach((b) => (b.disabled = true));
+          btn.classList.add("selected");
+
+          const days = daysUntilDue(updated);
+          if (days === 0) {
+            resultEl.textContent = "Review again today.";
+          } else if (days === 1) {
+            resultEl.textContent = "Next review: tomorrow.";
+          } else {
+            resultEl.textContent = `Next review: in ${days} days.`;
+          }
+          resultEl.classList.add("visible");
+
+          badge.textContent = days === 0 ? "Due today" : `Next: ${days}d`;
+          badge.className = `recall-status-badge sr-badge status-${days === 0 ? "due" : "upcoming"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get("recall-rating")) {
+    customElements.define("recall-rating", RecallRatingElement);
+  }
+</script>
+
+<style>
+  recall-rating {
+    display: block;
+  }
+
+  .recall-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .recall-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .recall-heading {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 0;
+    font-family: Inter, system-ui, sans-serif;
+  }
+
+  .recall-status-badge {
+    font-size: 0.68rem;
+    font-family: Inter, sans-serif;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    letter-spacing: 0.03em;
+  }
+  .recall-status-badge:empty {
+    display: none;
+  }
+  .recall-status-badge.status-overdue {
+    color: #e09090;
+    background: rgba(176, 90, 90, 0.15);
+    border: 1px solid rgba(176, 90, 90, 0.3);
+  }
+  .recall-status-badge.status-due {
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+  }
+  .recall-status-badge.status-upcoming {
+    color: #7dab7d;
+    background: rgba(125, 171, 125, 0.1);
+    border: 1px solid rgba(125, 171, 125, 0.3);
+  }
+
+  .recall-prompt {
+    margin: 0 0 1rem;
+    font-size: 0.88rem;
+    color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+
+  .recall-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .recall-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.65rem 0.5rem;
+    background: #0e0e0e;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+  }
+
+  .recall-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+
+  .recall-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .recall-btn:disabled.selected {
+    opacity: 1;
+  }
+
+  .btn-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: Inter, sans-serif;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-hint {
+    font-size: 0.62rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+  }
+
+  .again .btn-label { color: #e09090; }
+  .again.selected { border-color: #b05a5a; background: rgba(176, 90, 90, 0.1); }
+
+  .hard .btn-label { color: #d4a46a; }
+  .hard.selected { border-color: #d4a46a; background: rgba(212, 164, 106, 0.1); }
+
+  .good .btn-label { color: #7dab7d; }
+  .good.selected { border-color: #7dab7d; background: rgba(125, 171, 125, 0.1); }
+
+  .easy .btn-label { color: #5a82b0; }
+  .easy.selected { border-color: #5a82b0; background: rgba(90, 130, 176, 0.1); }
+
+  .recall-result {
+    margin: 0.75rem 0 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .recall-result.visible {
+    opacity: 1;
+  }
+</style>

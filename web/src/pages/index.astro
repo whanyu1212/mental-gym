@@ -129,9 +129,15 @@ const mlCategoryCounts = Object.fromEntries(
 
 	{notes.length > 0 && (
 		<section class="notes">
-			<h3 class="col-heading">Notes</h3>
+			<div class="section-header">
+				<h3 class="col-heading">Featured Notes</h3>
+				<a href="/notes" class="view-all-link">
+					<span>View all notes</span>
+					<span class="view-all-arrow">→</span>
+				</a>
+			</div>
 			<ol class="notes-list">
-				{notes.map((note, i) => (
+				{notes.slice(0, 3).map((note, i) => (
 					<li class="note-entry">
 						<a href={`/notes/${note.id}/`} class="note-link">
 							<span class="note-index">{String(i + 1).padStart(2, "0")}</span>
@@ -430,6 +436,50 @@ const mlCategoryCounts = Object.fromEntries(
 	/* Notes */
 	.notes {
 		margin-top: 0;
+	}
+
+	.section-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		margin-bottom: 0.75rem;
+	}
+
+	.view-all-link {
+		font-family: var(--font-serif);
+		font-size: 0.95rem;
+		font-style: italic;
+		color: var(--muted);
+		text-decoration: none;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		transition: color 0.2s;
+	}
+
+	.view-all-link span:first-child {
+		border-bottom: 1px solid transparent;
+		transition: border-color 0.2s;
+	}
+
+	.view-all-link:hover {
+		color: var(--accent);
+		text-decoration: none;
+	}
+
+	.view-all-link:hover span:first-child {
+		border-color: var(--accent-dim);
+	}
+
+	.view-all-arrow {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 1rem;
+		transition: transform 0.2s;
+	}
+
+	.view-all-link:hover .view-all-arrow {
+		transform: translateX(4px);
 	}
 
 	.notes-list {

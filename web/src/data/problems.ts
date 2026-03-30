@@ -1154,6 +1154,120 @@ end`,
     sourceUrl: "https://leetcode.com/problems/contains-duplicate/",
   },
   {
+    id: "229",
+    slug: "229-majority-element-ii",
+    leetcodeSlug: "majority-element-ii",
+    title: "Majority Element II",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "hash-table", "sorting", "counting"],
+    description: `<p>Given an integer array of size <code>n</code>, find all elements that appear more than <code>&lfloor; n/3 &rfloor;</code> times.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [3,2,3]
+<strong>Output:</strong> [3]
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1]
+<strong>Output:</strong> [1]
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2]
+<strong>Output:</strong> [1,2]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> Could you solve the problem in linear time and in <code>O(1)</code> space?</p>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def majorityElement(self, nums: List[int]) -> List[int]:
+        """Hash map approach: O(n) time, O(n) space."""
+        d = {}
+        for num in nums:
+            d[num] = d.get(num, 0) + 1
+
+        threshold = len(nums) // 3
+        res = []
+        for num, count in d.items():
+            if count > threshold:
+                res.append(num)
+        return res
+
+
+class SolutionBoyerMoore:
+    def majorityElement(self, nums: List[int]) -> List[int]:
+        """Boyer-Moore Voting (generalized): O(n) time, O(1) space.
+
+        At most 2 elements can appear more than n/3 times.
+        Phase 1: find up to 2 candidates by cancelling groups of 3
+                  distinct elements.
+        Phase 2: verify candidates actually exceed n/3.
+        """
+        c1, c2, count1, count2 = None, None, 0, 0
+
+        for num in nums:
+            if num == c1:
+                count1 += 1
+            elif num == c2:
+                count2 += 1
+            elif count1 == 0:
+                c1, count1 = num, 1
+            elif count2 == 0:
+                c2, count2 = num, 1
+            else:
+                count1 -= 1
+                count2 -= 1
+
+        threshold = len(nums) // 3
+        return [c for c in (c1, c2) if nums.count(c) > threshold]
+
+
+if __name__ == "__main__":
+    sol_hash = Solution()
+    sol_bm = SolutionBoyerMoore()
+
+    cases = [
+        ([3, 2, 3], [3]),
+        ([1], [1]),
+        ([1, 2], [1, 2]),
+        ([2, 2, 1, 3], [2]),
+        ([1, 1, 1, 2, 2, 2, 3], [1, 2]),
+        ([1, 2, 3], []),
+    ]
+
+    for nums, expected in cases:
+        r1 = sorted(sol_hash.majorityElement(nums))
+        r2 = sorted(sol_bm.majorityElement(nums))
+        assert r1 == sorted(expected), f"Hash failed: {nums} -> {r1}"
+        assert r2 == sorted(expected), f"BoyerMoore failed: {nums} -> {r2}"
+
+    print("All test cases passed!")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/majority-element-ii/",
+  },
+  {
     id: "238",
     slug: "238-product-of-array-except-self",
     leetcodeSlug: "product-of-array-except-self",
@@ -2246,6 +2360,28 @@ Note that buying on day 2 and selling on day 1 is not allowed because you must b
       python: `from typing import List
 
 
+# Example: prices = [7, 1, 5, 3, 6, 4]
+#
+# Price
+#   7 | *
+#   6 |                   *
+#   5 |           *
+#   4 |                       *
+#   3 |               *
+#   2 |
+#   1 |       *
+#     +--+---+---+---+---+---+--
+#       d0   d1  d2  d3  d4  d5
+#
+#  Buy on d1 (price=1), sell on d4 (price=6) → profit = 5
+#
+#  Sliding window approach:
+#    - left pointer tracks the minimum buy price seen so far
+#    - right pointer scans forward looking for the best sell price
+#    - if prices[right] < prices[left], we found a cheaper buy → move left to right
+#    - otherwise, compute profit and update max
+
+
 class Solution:
     def maxProfit(self, prices: List[int]) -> int:
         # initialize pointers
@@ -2265,8 +2401,23 @@ class Solution:
 
 if __name__ == "__main__":
     sol = Solution()
-    print(sol.maxProfit([7, 1, 5, 3, 6, 4]))  # output  5
-    print(sol.maxProfit([7, 6, 4, 3, 1]))  # output 0`,
+
+    # Profitable case: buy at 1, sell at 6
+    assert sol.maxProfit([7, 1, 5, 3, 6, 4]) == 5
+    # Monotonically decreasing: no profitable transaction
+    assert sol.maxProfit([7, 6, 4, 3, 1]) == 0
+    # Single element: no transaction possible
+    assert sol.maxProfit([5]) == 0
+    # Two elements, profitable
+    assert sol.maxProfit([1, 2]) == 1
+    # Two elements, not profitable
+    assert sol.maxProfit([2, 1]) == 0
+    # All same prices
+    assert sol.maxProfit([3, 3, 3, 3]) == 0
+    # Buy at the very start, sell at the very end
+    assert sol.maxProfit([1, 2, 3, 4, 5]) == 4
+
+    print("All test cases passed!")`,
       julia: `function MaxProfit(prices::Vector{Int})::Int
     # trackers
     left = 1

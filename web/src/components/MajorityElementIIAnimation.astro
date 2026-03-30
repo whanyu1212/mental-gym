@@ -1,0 +1,258 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 1, 1, 2, 2, 2, 3];
+
+// Boyer-Moore generalized trace for nums = [1,1,1,2,2,2,3]
+// Candidates: c1, c2 with counts
+const steps = [
+  { i: -1, c1: null, c2: null, cnt1: 0, cnt2: 0, phase: 1, exp: "Phase 1: Find candidates. At most 2 elements can appear more than n/3 = 2 times." },
+  { i: 0, c1: 1, c2: null, cnt1: 1, cnt2: 0, phase: 1, exp: "nums[0] = 1. count1 is 0, so set candidate1 = 1, count1 = 1." },
+  { i: 1, c1: 1, c2: null, cnt1: 2, cnt2: 0, phase: 1, exp: "nums[1] = 1. Matches candidate1! count1 increments to 2." },
+  { i: 2, c1: 1, c2: null, cnt1: 3, cnt2: 0, phase: 1, exp: "nums[2] = 1. Matches candidate1! count1 increments to 3." },
+  { i: 3, c1: 1, c2: 2, cnt1: 3, cnt2: 1, phase: 1, exp: "nums[3] = 2. No match. count2 is 0, so set candidate2 = 2, count2 = 1." },
+  { i: 4, c1: 1, c2: 2, cnt1: 3, cnt2: 2, phase: 1, exp: "nums[4] = 2. Matches candidate2! count2 increments to 2." },
+  { i: 5, c1: 1, c2: 2, cnt1: 3, cnt2: 3, phase: 1, exp: "nums[5] = 2. Matches candidate2! count2 increments to 3." },
+  { i: 6, c1: 1, c2: 2, cnt1: 2, cnt2: 2, phase: 1, exp: "nums[6] = 3. No match to either. Both counts decrement: count1 = 2, count2 = 2." },
+  { i: -1, c1: 1, c2: 2, cnt1: 2, cnt2: 2, phase: 2, exp: "Phase 2: Verify. Count occurrences of candidates 1 and 2 in the array." },
+  { i: -1, c1: 1, c2: 2, cnt1: 3, cnt2: 3, phase: 2, verified: true, exp: "1 appears 3 times (> 2). 2 appears 3 times (> 2). Both confirmed! Result: [1, 2]." },
+];
+---
+
+<majority-element-ii-visuals>
+  <AlgorithmPlayer title="nums = [1, 1, 1, 2, 2, 2, 3]" steps={steps}>
+
+    <div class="stats-row" style="margin-bottom: 1rem;">
+      <div class="stat-box me2-c1-box">
+        <span class="stat-label">Candidate 1</span>
+        <span class="stat-val me2-c1">-</span>
+      </div>
+      <div class="stat-box me2-cnt1-box">
+        <span class="stat-label">Count 1</span>
+        <span class="stat-val me2-cnt1">0</span>
+      </div>
+      <div class="stat-box me2-c2-box">
+        <span class="stat-label">Candidate 2</span>
+        <span class="stat-val me2-c2">-</span>
+      </div>
+      <div class="stat-box me2-cnt2-box">
+        <span class="stat-label">Count 2</span>
+        <span class="stat-val me2-cnt2">0</span>
+      </div>
+    </div>
+
+    <div class="me2-phase-badge-row">
+      <span class="me2-phase-badge">Phase 1: Find Candidates</span>
+    </div>
+
+    <!-- Array -->
+    <div class="anim-row">
+      <p class="anim-label">Array (Generalized Boyer-Moore Voting)</p>
+      <div class="array-row me2-array">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell me2-cell" data-idx={i}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row me2-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden">i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+  </AlgorithmPlayer>
+</majority-element-ii-visuals>
+
+<script>
+  class MajorityElementIIVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".me2-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".me2-ptr-col"));
+      this.c1El = this.querySelector(".me2-c1");
+      this.c2El = this.querySelector(".me2-c2");
+      this.cnt1El = this.querySelector(".me2-cnt1");
+      this.cnt2El = this.querySelector(".me2-cnt2");
+      this.c1Box = this.querySelector(".me2-c1-box") as HTMLElement;
+      this.c2Box = this.querySelector(".me2-c2-box") as HTMLElement;
+      this.phaseBadge = this.querySelector(".me2-phase-badge") as HTMLElement;
+
+      this.addEventListener("step-change", (e: any) => {
+        const s = e.detail.step;
+
+        // Stats
+        if (this.c1El) this.c1El.textContent = s.c1 !== null ? s.c1 : "-";
+        if (this.c2El) this.c2El.textContent = s.c2 !== null ? s.c2 : "-";
+        if (this.cnt1El) this.cnt1El.textContent = s.cnt1;
+        if (this.cnt2El) this.cnt2El.textContent = s.cnt2;
+
+        // Candidate box highlights
+        if (this.c1Box) {
+          this.c1Box.classList.toggle("has-candidate", s.c1 !== null);
+          this.c1Box.classList.toggle("verified", !!s.verified);
+        }
+        if (this.c2Box) {
+          this.c2Box.classList.toggle("has-candidate", s.c2 !== null);
+          this.c2Box.classList.toggle("verified", !!s.verified);
+        }
+
+        // Phase badge
+        if (this.phaseBadge) {
+          if (s.phase === 2) {
+            this.phaseBadge.textContent = "Phase 2: Verify Counts";
+            this.phaseBadge.classList.add("phase2");
+          } else {
+            this.phaseBadge.textContent = "Phase 1: Find Candidates";
+            this.phaseBadge.classList.remove("phase2");
+          }
+        }
+
+        // Cells
+        this.cells.forEach((cell: any, i: number) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+          valSpan.className = "cell-val";
+
+          if (s.phase === 2) {
+            // In verification phase, highlight which values are candidates
+            const num = parseInt(valSpan.textContent || "0");
+            if (s.verified && (num === s.c1 || num === s.c2)) {
+              valSpan.classList.add("confirmed");
+            } else {
+              valSpan.classList.add("visited");
+            }
+          } else if (i < s.i) {
+            valSpan.classList.add("visited");
+          } else if (i === s.i) {
+            const num = parseInt(valSpan.textContent || "0");
+            if (num === s.c1 || num === s.c2) {
+              valSpan.classList.add("active-match");
+            } else {
+              valSpan.classList.add("active-cancel");
+            }
+          }
+        });
+
+        // Pointer
+        this.ptrs.forEach((col: any, i: number) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) ptr.className = `ptr ptr-up ${i === s.i ? "" : "hidden"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('majority-element-ii-visuals')) {
+    customElements.define('majority-element-ii-visuals', MajorityElementIIVisuals);
+  }
+</script>
+
+<style>
+  majority-element-ii-visuals {
+    display: block;
+  }
+
+  .me2-phase-badge-row {
+    margin-bottom: 1.25rem;
+  }
+
+  .me2-phase-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-family: Inter, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 2px;
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .me2-phase-badge.phase2 {
+    border-color: rgba(125, 171, 125, 0.4);
+    color: #7dab7d;
+    background: rgba(125, 171, 125, 0.05);
+  }
+
+  .stat-box.me2-c1-box,
+  .stat-box.me2-cnt1-box {
+    border-color: var(--border);
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .stat-box.me2-c1-box.has-candidate {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: rgba(201, 168, 76, 0.05);
+  }
+  .stat-box.me2-c1-box.has-candidate .stat-val {
+    color: var(--accent);
+  }
+  .stat-box.me2-c1-box.verified {
+    border-color: rgba(125, 171, 125, 0.5);
+    background: rgba(125, 171, 125, 0.08);
+  }
+  .stat-box.me2-c1-box.verified .stat-val {
+    color: #7dab7d;
+  }
+
+  .stat-box.me2-c2-box,
+  .stat-box.me2-cnt2-box {
+    border-color: var(--border);
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .stat-box.me2-c2-box.has-candidate {
+    border-color: rgba(90, 130, 176, 0.4);
+    background: rgba(90, 130, 176, 0.05);
+  }
+  .stat-box.me2-c2-box.has-candidate .stat-val {
+    color: #5a82b0;
+  }
+  .stat-box.me2-c2-box.verified {
+    border-color: rgba(125, 171, 125, 0.5);
+    background: rgba(125, 171, 125, 0.08);
+  }
+  .stat-box.me2-c2-box.verified .stat-val {
+    color: #7dab7d;
+  }
+
+  .stat-box.me2-cnt1-box .stat-val {
+    color: var(--accent);
+  }
+  .stat-box.me2-cnt2-box .stat-val {
+    color: #5a82b0;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-match {
+    border-color: #7dab7d;
+    color: #a0d0a0;
+    background: rgba(125, 171, 125, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-cancel {
+    border-color: #b05a5a;
+    color: #e09090;
+    background: rgba(176, 90, 90, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.confirmed {
+    border-color: #7dab7d;
+    color: #a0d0a0;
+    background: rgba(125, 171, 125, 0.15);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+</style>

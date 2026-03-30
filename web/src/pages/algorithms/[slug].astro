@@ -22,6 +22,7 @@ import ValidAnagramAnimation from "../../components/ValidAnagramAnimation.astro"
 import ConcatenationOfArrayAnimation from "../../components/ConcatenationOfArrayAnimation.astro";
 import LongestCommonPrefixAnimation from "../../components/LongestCommonPrefixAnimation.astro";
 import MajorityElementAnimation from "../../components/MajorityElementAnimation.astro";
+import MajorityElementIIAnimation from "../../components/MajorityElementIIAnimation.astro";
 import GroupAnagramsAnimation from "../../components/GroupAnagramsAnimation.astro";
 import LongestConsecutiveSequenceAnimation from "../../components/LongestConsecutiveSequenceAnimation.astro";
 import EncodeDecodeStringsAnimation from "../../components/EncodeDecodeStringsAnimation.astro";
@@ -32,6 +33,7 @@ import MergeTwoSortedListsAnimation from "../../components/MergeTwoSortedListsAn
 import DesignHashSetAnimation from "../../components/DesignHashSetAnimation.astro";
 import DesignHashMapAnimation from "../../components/DesignHashMapAnimation.astro";
 import SortAnArrayAnimation from "../../components/SortAnArrayAnimation.astro";
+import RecallRating from "../../components/RecallRating.astro";
 import Layout from "../../layouts/Layout.astro";
 
 export function getStaticPaths() {
@@ -257,6 +259,15 @@ const hasJulia = problem.solutions.julia.trim().length > 0;
 		</section>
 	)}
 
+	{problem.slug === "229-majority-element-ii" && (
+		<section class="animation-section">
+			<div class="solutions-header">
+				<h2 class="section-title">Animation</h2>
+			</div>
+			<MajorityElementIIAnimation />
+		</section>
+	)}
+
 	{problem.slug === "49-group-anagrams" && (
 		<section class="animation-section">
 			<div class="solutions-header">
@@ -386,6 +397,14 @@ const hasJulia = problem.solutions.julia.trim().length > 0;
 			}
 		</div>
 	</section>
+
+	<RecallRating
+		domain="algorithms"
+		slug={problem.slug}
+		title={problem.title}
+		difficulty={problem.difficulty}
+		group={problem.group}
+	/>
 </Layout>
 
 <script>

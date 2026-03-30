@@ -1,6 +1,7 @@
 ---
-title: "Python Big O Cheatsheet"
-description: "A quick reference for the time complexity of common Python operations across Lists, Dictionaries, Sets, Strings, Deques, and Heaps."
+title: Python Big O Cheatsheet
+description: A quick reference for the time complexity of common Python operations across Lists, Dictionaries, Sets, Strings, Deques, and Heaps.
+category: Languages
 ---
 
 # Python Big O Cheatsheet

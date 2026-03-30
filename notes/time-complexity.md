@@ -1,6 +1,7 @@
 ---
 title: Time Complexity
 description: A systematic guide to analysing and recognising time complexity — data structure operations, sorting, graph algorithms, recurrence patterns, and interview strategy.
+category: Complexity
 ---
 
 # Time Complexity

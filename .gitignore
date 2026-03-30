@@ -168,11 +168,7 @@ cython_debug/
 *.txt
 
 src/codewars/node_modules/
-docs/node_modules/
 notebooks/
-
-docs/.vitepress/dist
-docs/.vitepress/cache
 
 # Astro
 web/dist/

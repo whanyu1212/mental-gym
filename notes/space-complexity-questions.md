@@ -1,3 +1,9 @@
+---
+title: Space Complexity Questions for DSA Assessments
+description: A collection of common space complexity interview questions, patterns, and Python-specific memory considerations.
+category: Complexity
+---
+
 # Space Complexity Questions for DSA Assessments
 
 ## Common Question Types

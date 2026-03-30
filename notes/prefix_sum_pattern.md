@@ -1,3 +1,9 @@
+---
+title: Prefix Sum Pattern
+description: A guide to the Prefix Sum pattern for efficient range sum queries in 1D, 2D, and 3D arrays.
+category: Patterns
+---
+
 # Prefix Sum Pattern
 
 The **Prefix Sum** pattern is an incredibly powerful technique in algorithmic problem solving, particularly for array and matrix questions involving range queries.
