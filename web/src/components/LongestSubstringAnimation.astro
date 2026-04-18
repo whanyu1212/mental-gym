@@ -1,37 +1,336 @@
 ---
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
 
 const s = "abcabcbb".split("");
 
-const steps = [
-  { l: 0, r: -1, max: 0, set: [], conflict: -1, exp: "Initial state. L=0, R starts before the string. We expand R to grow the window." },
-  { l: 0, r: 0,  max: 1, set: ['a'], conflict: -1, exp: "R=0 'a'. Not in set. Add it. Window 'a', length 1. Max=1." },
-  { l: 0, r: 1,  max: 2, set: ['a','b'], conflict: -1, exp: "R=1 'b'. Not in set. Add it. Window 'ab', length 2. Max=2." },
-  { l: 0, r: 2,  max: 3, set: ['a','b','c'], conflict: -1, exp: "R=2 'c'. Not in set. Add it. Window 'abc', length 3. Max=3." },
-  { l: 0, r: 3,  max: 3, set: ['a','b','c'], conflict: 3, exp: "R=3 'a'. Duplicate! 'a' is already in the set. Shrink from L until resolved." },
-  { l: 1, r: 3,  max: 3, set: ['b','c','a'], conflict: -1, exp: "Remove 'a' at L=0, move L to 1. Now add 'a' at R=3. Window 'bca', length 3. Max=3." },
-  { l: 1, r: 4,  max: 3, set: ['b','c','a'], conflict: 4, exp: "R=4 'b'. Duplicate! Shrink from L." },
-  { l: 2, r: 4,  max: 3, set: ['c','a','b'], conflict: -1, exp: "Remove 'b' at L=1, move L to 2. Add 'b' at R=4. Window 'cab', length 3. Max=3." },
-  { l: 2, r: 5,  max: 3, set: ['c','a','b'], conflict: 5, exp: "R=5 'c'. Duplicate! Shrink from L." },
-  { l: 3, r: 5,  max: 3, set: ['a','b','c'], conflict: -1, exp: "Remove 'c' at L=2, move L to 3. Add 'c' at R=5. Window 'abc', length 3. Max=3." },
-  { l: 3, r: 6,  max: 3, set: ['a','b','c'], conflict: 6, exp: "R=6 'b'. Duplicate! Shrink from L." },
-  { l: 4, r: 6,  max: 3, set: ['b','c'], conflict: 6, exp: "Remove 'a' at L=3, move L to 4. 'b' still in set — keep shrinking." },
-  { l: 5, r: 6,  max: 3, set: ['c','b'], conflict: -1, exp: "Remove 'b' at L=4, move L to 5. Add 'b' at R=6. Window 'cb', length 2." },
-  { l: 5, r: 7,  max: 3, set: ['c','b'], conflict: 7, exp: "R=7 'b'. Duplicate! Shrink from L." },
-  { l: 6, r: 7,  max: 3, set: ['b'], conflict: 7, exp: "Remove 'c' at L=5, move L to 6. 'b' still in set — keep shrinking." },
-  { l: 7, r: 7,  max: 3, set: ['b'], conflict: -1, exp: "Remove 'b' at L=6, move L to 7. Add 'b' at R=7. Window 'b', length 1. End of string." },
-  { l: 7, r: 7,  max: 3, set: ['b'], conflict: -1, exp: "Done. Maximum window length found was 3, corresponding to 'abc'." },
+const steps: TeachingStep[] = [
+  {
+    id: 'intro',
+    l: 0,
+    r: -1,
+    max: 0,
+    set: [],
+    conflict: -1,
+    exp: 'We use a sliding window with a hash set. Expand R while the window has unique characters; shrink L when a duplicate appears.',
+    reason: 'The set lets us test duplicates in O(1), so each character enters and leaves the window at most once.',
+    invariant: [
+      'The window s[L..R] contains no duplicate characters when conflict = -1.',
+      'max stores the best valid window length seen so far.',
+    ],
+    action: 'derive',
+    highlights: [
+      { target: 'window-track', kind: 'compare' },
+      { target: 'set-panel', kind: 'focus' },
+      { target: 'max-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'grow-a',
+    l: 0,
+    r: 0,
+    max: 1,
+    set: ['a'],
+    conflict: -1,
+    exp: "R = 0 sees 'a'. It is not in the set, so we add it and grow the window to length 1.",
+    reason: 'No duplicate appears, so expanding the window is safe.',
+    invariant: 'Current window remains unique after inserting a new unseen character.',
+    action: 'expand',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:0', kind: 'write' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'set-panel', kind: 'write' },
+      { target: 'max-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'grow-b',
+    l: 0,
+    r: 1,
+    max: 2,
+    set: ['a', 'b'],
+    conflict: -1,
+    exp: "R = 1 sees 'b'. It is new, so the window becomes 'ab' and max updates to 2.",
+    reason: 'A larger valid window improves the best answer.',
+    invariant: 'Set contents exactly match the characters currently inside the window.',
+    action: 'expand',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:1', kind: 'write' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'set-panel', kind: 'write' },
+      { target: 'max-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'grow-c',
+    l: 0,
+    r: 2,
+    max: 3,
+    set: ['a', 'b', 'c'],
+    conflict: -1,
+    exp: "R = 2 sees 'c'. It is also new, so the valid window grows to 'abc' with max = 3.",
+    reason: 'Each successful expansion tries to improve the best unique substring length.',
+    invariant: 'Window stays unique, so its full length is a valid candidate answer.',
+    action: 'expand',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:2', kind: 'write' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'set-panel', kind: 'write' },
+      { target: 'max-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'duplicate-a',
+    l: 0,
+    r: 3,
+    max: 3,
+    set: ['a', 'b', 'c'],
+    conflict: 3,
+    exp: "R = 3 sees another 'a'. The window is now invalid, so we must shrink from L until the duplicate disappears.",
+    reason: 'A duplicate means the invariant is broken; only moving L can restore uniqueness.',
+    invariant: 'When conflict != -1, the window is temporarily invalid and cannot update the answer.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:0', kind: 'match' },
+      { target: 'char:3', kind: 'match' },
+      { target: 'set-panel', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'shrink-after-a',
+    l: 1,
+    r: 3,
+    max: 3,
+    set: ['b', 'c', 'a'],
+    conflict: -1,
+    exp: "Remove 'a' at L = 0, move L to 1, then add the new 'a'. The window becomes 'bca' and is valid again.",
+    reason: 'Once the old copy leaves the window, the duplicate is resolved.',
+    invariant: 'After shrinking enough, the set again matches a unique window.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'char:0', kind: 'discard' },
+      { target: 'char:3', kind: 'write' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'set-panel', kind: 'write' },
+    ],
+  },
+  {
+    id: 'duplicate-b',
+    l: 1,
+    r: 4,
+    max: 3,
+    set: ['b', 'c', 'a'],
+    conflict: 4,
+    exp: "R = 4 sees another 'b'. The duplicate means we must shrink from the left again.",
+    reason: 'The current character already exists in the active window.',
+    invariant: 'Only a unique window can be considered for max.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:1', kind: 'match' },
+      { target: 'char:4', kind: 'match' },
+      { target: 'set-panel', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'resolve-b',
+    l: 2,
+    r: 4,
+    max: 3,
+    set: ['c', 'a', 'b'],
+    conflict: -1,
+    exp: "Remove 'b' at L = 1, move L to 2, then add the new 'b'. The window becomes 'cab', still length 3.",
+    reason: 'Shrinking stops as soon as the duplicate character is removed.',
+    invariant: 'Window is unique again, but max stays 3 because the new valid length is also 3.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'char:1', kind: 'discard' },
+      { target: 'char:4', kind: 'write' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'set-panel', kind: 'write' },
+    ],
+  },
+  {
+    id: 'duplicate-c',
+    l: 2,
+    r: 5,
+    max: 3,
+    set: ['c', 'a', 'b'],
+    conflict: 5,
+    exp: "R = 5 sees another 'c'. The window becomes invalid, so L must move again.",
+    reason: 'The duplicate blocks further expansion until the old copy is removed.',
+    invariant: 'Set identifies exactly which character is causing the conflict.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:2', kind: 'match' },
+      { target: 'char:5', kind: 'match' },
+      { target: 'set-panel', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'resolve-c',
+    l: 3,
+    r: 5,
+    max: 3,
+    set: ['a', 'b', 'c'],
+    conflict: -1,
+    exp: "Remove 'c' at L = 2, move L to 3, then add the new 'c'. The valid window is back to 'abc'.",
+    reason: 'The same duplicate-resolution pattern restores the invariant.',
+    invariant: 'The algorithm alternates between expansion and shrinking, but every state preserves or restores uniqueness.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'char:2', kind: 'discard' },
+      { target: 'char:5', kind: 'write' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'set-panel', kind: 'write' },
+    ],
+  },
+  {
+    id: 'duplicate-b-again',
+    l: 3,
+    r: 6,
+    max: 3,
+    set: ['a', 'b', 'c'],
+    conflict: 6,
+    exp: "R = 6 sees another 'b'. The window is invalid again, so we begin shrinking from L.",
+    reason: 'The duplicate lives at index 4 inside the current window.',
+    invariant: 'The best answer remains 3 until a longer valid window is found.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:4', kind: 'match' },
+      { target: 'char:6', kind: 'match' },
+      { target: 'set-panel', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'remove-a-only',
+    l: 4,
+    r: 6,
+    max: 3,
+    set: ['b', 'c'],
+    conflict: 6,
+    exp: "Remove 'a' at L = 3 and move L to 4. The duplicate 'b' still remains, so we must keep shrinking.",
+    reason: 'Removing unrelated characters does not fix the actual duplicate yet.',
+    invariant: 'We continue shrinking until the repeated character is removed from the window.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:3', kind: 'discard' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'set-panel', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'resolve-b-late',
+    l: 5,
+    r: 6,
+    max: 3,
+    set: ['c', 'b'],
+    conflict: -1,
+    exp: "Remove 'b' at L = 4, move L to 5, then add the new 'b'. The valid window shrinks to 'cb'.",
+    reason: 'Now the duplicate is finally removed, so uniqueness is restored.',
+    invariant: 'A smaller valid window is fine because max remembers the best earlier answer.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'char:4', kind: 'discard' },
+      { target: 'char:6', kind: 'write' },
+      { target: 'set-panel', kind: 'write' },
+    ],
+  },
+  {
+    id: 'duplicate-last-b',
+    l: 5,
+    r: 7,
+    max: 3,
+    set: ['c', 'b'],
+    conflict: 7,
+    exp: "R = 7 sees another 'b'. We shrink again because the window is no longer unique.",
+    reason: 'The same duplicate-handling rule applies at the end of the string too.',
+    invariant: 'The algorithm treats every duplicate the same way, regardless of position.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:6', kind: 'match' },
+      { target: 'char:7', kind: 'match' },
+      { target: 'set-panel', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'remove-c-only',
+    l: 6,
+    r: 7,
+    max: 3,
+    set: ['b'],
+    conflict: 7,
+    exp: "Remove 'c' at L = 5 and move L to 6. The duplicate 'b' still remains, so shrinking continues.",
+    reason: 'We have not removed the earlier copy of b yet.',
+    invariant: 'The conflict disappears only when the old duplicate exits the window.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:5', kind: 'discard' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'set-panel', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'final-resolve',
+    l: 7,
+    r: 7,
+    max: 3,
+    set: ['b'],
+    conflict: -1,
+    exp: "Remove the old 'b' at L = 6, move L to 7, then keep the new 'b'. The final window is just 'b'.",
+    reason: 'The duplicate is resolved, but the remaining valid window is shorter than the best one already seen.',
+    invariant: 'max still stores the best valid length found anywhere in the scan.',
+    action: 'shrink',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'char:6', kind: 'discard' },
+      { target: 'char:7', kind: 'write' },
+      { target: 'set-panel', kind: 'write' },
+    ],
+  },
+  {
+    id: 'done',
+    l: 7,
+    r: 7,
+    max: 3,
+    set: ['b'],
+    conflict: -1,
+    exp: "Done. The maximum unique-window length is 3, achieved by substrings like 'abc', 'bca', and 'cab'.",
+    reason: 'No later window exceeded length 3 after the first best window was found.',
+    invariant: 'The recorded maximum is the final answer even though the current window is smaller.',
+    action: 'confirm',
+    highlights: [
+      { target: 'window-track', kind: 'confirmed' },
+      { target: 'max-box', kind: 'confirmed' },
+      { target: 'set-panel', kind: 'focus' },
+    ],
+  },
 ];
 ---
 
 <longest-substring-visuals>
   <AlgorithmPlayer title="s = 'abcabcbb'" steps={steps}>
     <div class="stats-row">
-      <div class="stat-box">
+      <div class="stat-box" data-teach-target="current-box">
         <span class="stat-label">Current Window</span>
         <span class="stat-val ls-current-len">0</span>
       </div>
-      <div class="stat-box highlight">
+      <div class="stat-box highlight" data-teach-target="max-box">
         <span class="stat-label">Max Length</span>
         <span class="stat-val ls-max-len">0</span>
       </div>
@@ -39,18 +338,18 @@ const steps = [
 
     <div class="anim-row">
       <p class="anim-label">String & Sliding Window</p>
-      <div class="string-container">
-        <div class="window-highlight ls-window"></div>
+      <div class="string-container" data-teach-target="window-track">
+        <div class="window-highlight ls-window" data-teach-target="window"></div>
         <div class="array-row ls-chars">
           {s.map((char, i) => (
             <div class="array-col">
-              <div class="array-cell ls-cell" data-idx={i}>
+              <div class="array-cell ls-cell" data-idx={i} data-teach-target={`char:${i}`}>
                 <span class="cell-val">{char}</span>
                 <span class="cell-idx">{i}</span>
               </div>
               <div class="pointers-row ls-ptr-col" data-idx={i}>
-                <span class="ptr ptr-l hidden">L</span>
-                <span class="ptr ptr-r hidden">R</span>
+                <span class="ptr ptr-l hidden" data-teach-target={i === 0 ? "pointer:l" : undefined}>L</span>
+                <span class="ptr ptr-r hidden" data-teach-target={i === 0 ? "pointer:r" : undefined}>R</span>
               </div>
             </div>
           ))}
@@ -60,7 +359,7 @@ const steps = [
 
     <div class="anim-row">
       <p class="anim-label">Character Set (Hash Set)</p>
-      <div class="hashmap-row ls-set"></div>
+      <div class="hashmap-row ls-set" data-teach-target="set-panel"></div>
     </div>
   </AlgorithmPlayer>
 </longest-substring-visuals>
@@ -71,92 +370,94 @@ const steps = [
       this.currentLenEl = this.querySelector(".ls-current-len");
       this.maxLenEl = this.querySelector(".ls-max-len");
       this.setEl = this.querySelector(".ls-set");
-      this.windowEl = this.querySelector(".ls-window") as HTMLElement;
+      this.windowEl = this.querySelector(".ls-window");
       this.cells = Array.from(this.querySelectorAll(".ls-cell"));
       this.ptrCols = Array.from(this.querySelectorAll(".ls-ptr-col"));
 
-      let lastStep: any = null;
+      let lastStep = null;
 
-      this._updateHighlight = () => {
-        if (!lastStep) return;
-        const s = lastStep;
-        if (this.windowEl && this.cells.length > 0) {
-          if (s.l <= s.r) {
-            const arrayRow = this.querySelector(".ls-chars");
-            const leftCell = this.cells[s.l] as HTMLElement;
-            const rightCell = this.cells[s.r] as HTMLElement;
-            if (arrayRow && leftCell && rightCell) {
-              const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
-              const width = (rightCell.offsetLeft + rightCell.offsetWidth) - leftCell.offsetLeft + 8;
-              this.windowEl.style.left = `${left}px`;
-              this.windowEl.style.width = `${width}px`;
-              this.windowEl.style.opacity = "1";
-              this.windowEl.classList.toggle("conflict-window", s.conflict !== -1);
-            }
-          } else {
-            this.windowEl.style.opacity = "0";
+      this.updateHighlight = () => {
+        if (!lastStep || !this.windowEl) return;
+        if (lastStep.l <= lastStep.r && this.cells.length > 0) {
+          const arrayRow = this.querySelector(".ls-chars");
+          const leftCell = this.cells[lastStep.l];
+          const rightCell = this.cells[lastStep.r];
+
+          if (arrayRow && leftCell && rightCell) {
+            const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+            const width =
+              rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft + 8;
+            this.windowEl.style.left = `${left}px`;
+            this.windowEl.style.width = `${width}px`;
+            this.windowEl.style.opacity = "1";
+            this.windowEl.classList.toggle("conflict-window", lastStep.conflict !== -1);
           }
+        } else {
+          this.windowEl.style.opacity = "0";
         }
       };
 
-      window.addEventListener('resize', this._updateHighlight);
+      window.addEventListener("resize", this.updateHighlight);
       const arrayRow = this.querySelector(".ls-chars");
       if (arrayRow) {
-        arrayRow.addEventListener('scroll', this._updateHighlight);
+        arrayRow.addEventListener("scroll", this.updateHighlight);
       }
 
-      this.addEventListener("step-change", (e: any) => {
-        const s = e.detail.step;
-        lastStep = s;
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+        lastStep = step;
 
-        // Stats
         if (this.currentLenEl) {
-          const len = (s.r >= s.l && s.conflict === -1 && s.set.length > 0) ? (s.r - s.l + 1) : s.set.length;
+          const len =
+            step.r >= step.l && step.conflict === -1 && step.set.length > 0
+              ? step.r - step.l + 1
+              : step.set.length;
           this.currentLenEl.textContent = len.toString();
         }
-        if (this.maxLenEl) this.maxLenEl.textContent = s.max;
 
-        // Cells & Pointers
-        this.cells.forEach((cell: any, i: number) => {
+        if (this.maxLenEl) {
+          this.maxLenEl.textContent = step.max.toString();
+        }
+
+        this.cells.forEach((cell, i) => {
           cell.className = "array-cell ls-cell";
           const valSpan = cell.querySelector(".cell-val");
 
-          if (valSpan) {
-            valSpan.className = "cell-val";
-            if (i >= s.l && i <= s.r) valSpan.classList.add("in-window");
-            if (i === s.conflict) valSpan.classList.add("conflict");
-          }
+          if (!valSpan) return;
+          valSpan.className = "cell-val";
+
+          if (i >= step.l && i <= step.r) valSpan.classList.add("in-window");
+          if (i === step.conflict) valSpan.classList.add("conflict");
         });
 
-        this.ptrCols.forEach((col: any, i: number) => {
-          const l = col.querySelector(".ptr-l");
-          const r = col.querySelector(".ptr-r");
+        this.ptrCols.forEach((col, i) => {
+          const lPtr = col.querySelector(".ptr-l");
+          const rPtr = col.querySelector(".ptr-r");
 
-          if (l) l.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
-          if (r) r.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+          if (lPtr) lPtr.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (rPtr) rPtr.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
         });
 
-        this._updateHighlight();
+        this.updateHighlight();
 
-        // Set
         if (this.setEl) {
-          if (s.set.length === 0) {
+          if (step.set.length === 0) {
             this.setEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
           } else {
-            this.setEl.innerHTML = s.set.map((char: string) =>
-              `<span class='hashmap-entry'>'${char}'</span>`
-            ).join("");
+            this.setEl.innerHTML = step.set
+              .map((char) => `<span class='hashmap-entry'>'${char}'</span>`)
+              .join("");
           }
         }
       });
     }
 
     disconnectedCallback() {
-      if (this._updateHighlight) {
-        window.removeEventListener('resize', this._updateHighlight);
+      if (this.updateHighlight) {
+        window.removeEventListener("resize", this.updateHighlight);
         const arrayRow = this.querySelector(".ls-chars");
         if (arrayRow) {
-          arrayRow.removeEventListener('scroll', this._updateHighlight);
+          arrayRow.removeEventListener("scroll", this.updateHighlight);
         }
       }
     }
@@ -173,9 +474,10 @@ const steps = [
   }
 
   .stat-box.highlight {
-    border-color: rgba(201, 168, 76, 0.4);
-    background: rgba(201, 168, 76, 0.05);
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
   }
+
   .stat-box.highlight .stat-val {
     color: var(--accent);
   }
@@ -188,17 +490,17 @@ const steps = [
   .window-highlight {
     position: absolute;
     top: 0;
-    bottom: 2rem; /* leave room for pointers */
-    background: rgba(201, 168, 76, 0.08);
-    border: 1px solid rgba(201, 168, 76, 0.3);
+    bottom: 2rem;
+    background: var(--accent-dim);
+    border: 1px solid color-mix(in srgb, var(--status-medium) 30%, transparent);
     border-radius: 4px;
     z-index: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .window-highlight.conflict-window {
-    background: rgba(176, 90, 90, 0.1);
-    border-color: rgba(176, 90, 90, 0.4);
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
+    border-color: color-mix(in srgb, var(--status-hard) 40%, transparent);
   }
 
   .ls-chars {
@@ -208,17 +510,24 @@ const steps = [
 
   .cell-val.in-window {
     color: var(--text);
-    border-color: rgba(201, 168, 76, 0.5);
+    border-color: color-mix(in srgb, var(--status-medium) 50%, transparent);
     background: #151515;
   }
 
   .cell-val.conflict {
-    color: #e09090;
-    border-color: #b05a5a;
-    background: rgba(176, 90, 90, 0.15);
+    color: var(--status-hard);
+    border-color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
     transform: translateY(-4px);
   }
 
-  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
-  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
 </style>

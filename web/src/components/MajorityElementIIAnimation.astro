@@ -2,143 +2,503 @@
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const nums = [1, 1, 1, 2, 2, 2, 3];
+const threshold = Math.floor(nums.length / 3);
 
-// Boyer-Moore generalized trace for nums = [1,1,1,2,2,2,3]
-// Candidates: c1, c2 with counts
 const steps = [
-  { i: -1, c1: null, c2: null, cnt1: 0, cnt2: 0, phase: 1, exp: "Phase 1: Find candidates. At most 2 elements can appear more than n/3 = 2 times." },
-  { i: 0, c1: 1, c2: null, cnt1: 1, cnt2: 0, phase: 1, exp: "nums[0] = 1. count1 is 0, so set candidate1 = 1, count1 = 1." },
-  { i: 1, c1: 1, c2: null, cnt1: 2, cnt2: 0, phase: 1, exp: "nums[1] = 1. Matches candidate1! count1 increments to 2." },
-  { i: 2, c1: 1, c2: null, cnt1: 3, cnt2: 0, phase: 1, exp: "nums[2] = 1. Matches candidate1! count1 increments to 3." },
-  { i: 3, c1: 1, c2: 2, cnt1: 3, cnt2: 1, phase: 1, exp: "nums[3] = 2. No match. count2 is 0, so set candidate2 = 2, count2 = 1." },
-  { i: 4, c1: 1, c2: 2, cnt1: 3, cnt2: 2, phase: 1, exp: "nums[4] = 2. Matches candidate2! count2 increments to 2." },
-  { i: 5, c1: 1, c2: 2, cnt1: 3, cnt2: 3, phase: 1, exp: "nums[5] = 2. Matches candidate2! count2 increments to 3." },
-  { i: 6, c1: 1, c2: 2, cnt1: 2, cnt2: 2, phase: 1, exp: "nums[6] = 3. No match to either. Both counts decrement: count1 = 2, count2 = 2." },
-  { i: -1, c1: 1, c2: 2, cnt1: 2, cnt2: 2, phase: 2, exp: "Phase 2: Verify. Count occurrences of candidates 1 and 2 in the array." },
-  { i: -1, c1: 1, c2: 2, cnt1: 3, cnt2: 3, phase: 2, verified: true, exp: "1 appears 3 times (> 2). 2 appears 3 times (> 2). Both confirmed! Result: [1, 2]." },
+  {
+    phase: 1,
+    i: -1,
+    current: null,
+    c1: null,
+    c2: null,
+    cnt1: 0,
+    cnt2: 0,
+    v1: 0,
+    v2: 0,
+    action: 'write',
+    reason:
+      'At most two values can appear more than n/3 times, so track two candidate slots.',
+    invariant:
+      'After processing any prefix, all non-candidate values can be paired away against candidate votes.',
+    formula: 'candidate slots = 2, threshold = floor(n / 3) = 2',
+    decision: 'Initialize empty candidates and zero counters.',
+    targets: ['phase', 'c1-box', 'c2-box', 'threshold'],
+  },
+  {
+    phase: 1,
+    i: 0,
+    current: 1,
+    c1: 1,
+    c2: null,
+    cnt1: 1,
+    cnt2: 0,
+    v1: 0,
+    v2: 0,
+    action: 'write',
+    reason: 'count1 is zero, so fill slot 1 with the current number.',
+    invariant: 'A zero count means that slot can safely adopt a new candidate.',
+    formula: 'if count1 == 0 -> candidate1 = x, count1 = 1',
+    decision: 'Set candidate1 = 1.',
+    slot: 'c1',
+    targets: ['cell-0', 'c1-box', 'cnt1-box'],
+  },
+  {
+    phase: 1,
+    i: 1,
+    current: 1,
+    c1: 1,
+    c2: null,
+    cnt1: 2,
+    cnt2: 0,
+    v1: 0,
+    v2: 0,
+    action: 'expand',
+    reason: 'Current value matches candidate1, so candidate1 gains one vote.',
+    invariant: 'Matching a candidate increases only that candidate counter.',
+    formula: 'x == candidate1 -> count1++',
+    decision: 'Increment count1 to 2.',
+    slot: 'c1',
+    targets: ['cell-1', 'c1-box', 'cnt1-box'],
+  },
+  {
+    phase: 1,
+    i: 2,
+    current: 1,
+    c1: 1,
+    c2: null,
+    cnt1: 3,
+    cnt2: 0,
+    v1: 0,
+    v2: 0,
+    action: 'expand',
+    reason: 'Another match for candidate1; continue accumulating vote balance.',
+    invariant: 'Frequent elements preserve positive vote balance over time.',
+    formula: 'x == candidate1 -> count1++',
+    decision: 'Increment count1 to 3.',
+    slot: 'c1',
+    targets: ['cell-2', 'c1-box', 'cnt1-box'],
+  },
+  {
+    phase: 1,
+    i: 3,
+    current: 2,
+    c1: 1,
+    c2: 2,
+    cnt1: 3,
+    cnt2: 1,
+    v1: 0,
+    v2: 0,
+    action: 'write',
+    reason: 'No match with candidate1 and count2 is zero, so fill slot 2.',
+    invariant: 'Second empty slot absorbs a new potential majority candidate.',
+    formula: 'if count2 == 0 -> candidate2 = x, count2 = 1',
+    decision: 'Set candidate2 = 2.',
+    slot: 'c2',
+    targets: ['cell-3', 'c2-box', 'cnt2-box'],
+  },
+  {
+    phase: 1,
+    i: 4,
+    current: 2,
+    c1: 1,
+    c2: 2,
+    cnt1: 3,
+    cnt2: 2,
+    v1: 0,
+    v2: 0,
+    action: 'expand',
+    reason: 'Current value matches candidate2, so candidate2 gains a vote.',
+    invariant: 'Votes for each candidate are tracked independently.',
+    formula: 'x == candidate2 -> count2++',
+    decision: 'Increment count2 to 2.',
+    slot: 'c2',
+    targets: ['cell-4', 'c2-box', 'cnt2-box'],
+  },
+  {
+    phase: 1,
+    i: 5,
+    current: 2,
+    c1: 1,
+    c2: 2,
+    cnt1: 3,
+    cnt2: 3,
+    v1: 0,
+    v2: 0,
+    action: 'expand',
+    reason: 'Another match with candidate2, strengthening its vote balance.',
+    invariant: 'High-frequency numbers keep surviving cancellation pressure.',
+    formula: 'x == candidate2 -> count2++',
+    decision: 'Increment count2 to 3.',
+    slot: 'c2',
+    targets: ['cell-5', 'c2-box', 'cnt2-box'],
+  },
+  {
+    phase: 1,
+    i: 6,
+    current: 3,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 0,
+    v2: 0,
+    action: 'discard',
+    reason:
+      'Current value matches neither candidate and both counts are positive, so cancel one vote from each.',
+    invariant:
+      'A triple (candidate1, candidate2, outsider) can be removed without changing true > n/3 answers.',
+    formula: 'x != c1 and x != c2 and count1>0 and count2>0 -> count1--, count2--',
+    decision: 'Decrement both counters.',
+    slot: 'both',
+    targets: ['cell-6', 'c1-box', 'c2-box', 'cnt1-box', 'cnt2-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: -1,
+    current: null,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 0,
+    v2: 0,
+    action: 'compare',
+    reason:
+      'Pass 1 only gives possible candidates; pass 2 must count real frequencies.',
+    invariant:
+      'Only candidate1 and candidate2 can still be valid answers after cancellation.',
+    formula: 'verify count(candidate1) and count(candidate2), then compare to floor(n/3)',
+    decision: 'Start verification sweep.',
+    targets: ['phase', 'verify1-box', 'verify2-box', 'threshold'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 0,
+    current: 1,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 1,
+    v2: 0,
+    action: 'compare',
+    reason: 'nums[0] equals candidate1, so verification count for candidate1 increases.',
+    invariant: 'Verification pass does not change candidates, only true frequencies.',
+    formula: 'if x == candidate1 -> verify1++',
+    decision: 'verify1 = 1.',
+    targets: ['cell-0', 'verify1-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 1,
+    current: 1,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 2,
+    v2: 0,
+    action: 'compare',
+    reason: 'Another 1 found, so candidate1 verification count increases again.',
+    invariant: 'Every exact match contributes one to the corresponding verify counter.',
+    formula: 'if x == candidate1 -> verify1++',
+    decision: 'verify1 = 2.',
+    targets: ['cell-1', 'verify1-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 2,
+    current: 1,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 3,
+    v2: 0,
+    action: 'compare',
+    reason: 'Third 1 confirms strong support for candidate1.',
+    invariant: 'Verification counters track exact occurrences in full array.',
+    formula: 'if x == candidate1 -> verify1++',
+    decision: 'verify1 = 3.',
+    targets: ['cell-2', 'verify1-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 3,
+    current: 2,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 3,
+    v2: 1,
+    action: 'compare',
+    reason: 'nums[3] equals candidate2, so candidate2 verification count increases.',
+    invariant: 'Each candidate is validated independently in pass 2.',
+    formula: 'if x == candidate2 -> verify2++',
+    decision: 'verify2 = 1.',
+    targets: ['cell-3', 'verify2-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 4,
+    current: 2,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 3,
+    v2: 2,
+    action: 'compare',
+    reason: 'Another 2 found for candidate2.',
+    invariant: 'Verification counters are simple frequency counts.',
+    formula: 'if x == candidate2 -> verify2++',
+    decision: 'verify2 = 2.',
+    targets: ['cell-4', 'verify2-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 5,
+    current: 2,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 3,
+    v2: 3,
+    action: 'compare',
+    reason: 'Third 2 found, so candidate2 also reaches three occurrences.',
+    invariant: 'Candidates that truly exceed n/3 survive verification.',
+    formula: 'if x == candidate2 -> verify2++',
+    decision: 'verify2 = 3.',
+    targets: ['cell-5', 'verify2-box'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: 6,
+    current: 3,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 3,
+    v2: 3,
+    action: 'compare',
+    reason: '3 matches neither candidate, so verification counts stay unchanged.',
+    invariant: 'Non-candidate values do not contribute during verification.',
+    formula: 'x not in {candidate1, candidate2} -> no change',
+    decision: 'Keep verify counters as-is.',
+    targets: ['cell-6'],
+  },
+  {
+    phase: 2,
+    i: -1,
+    vi: -1,
+    current: null,
+    c1: 1,
+    c2: 2,
+    cnt1: 2,
+    cnt2: 2,
+    v1: 3,
+    v2: 3,
+    action: 'confirm',
+    reason:
+      'Both verification counts are greater than floor(n/3), so both candidates are valid answers.',
+    invariant: 'Output includes exactly candidates with frequency > n/3.',
+    formula: '3 > 2 and 3 > 2 -> result = [1, 2]',
+    decision: 'Confirm result [1, 2].',
+    result: [1, 2],
+    verified: true,
+    targets: ['verify1-box', 'verify2-box', 'result-box', 'c1-box', 'c2-box'],
+  },
 ];
 ---
 
 <majority-element-ii-visuals>
   <AlgorithmPlayer title="nums = [1, 1, 1, 2, 2, 2, 3]" steps={steps}>
-
-    <div class="stats-row" style="margin-bottom: 1rem;">
-      <div class="stat-box me2-c1-box">
+    <div class="stats-row me2-stats">
+      <div class="stat-box me2-c1-box" data-teach-target="c1-box">
         <span class="stat-label">Candidate 1</span>
         <span class="stat-val me2-c1">-</span>
       </div>
-      <div class="stat-box me2-cnt1-box">
+      <div class="stat-box me2-cnt1-box" data-teach-target="cnt1-box">
         <span class="stat-label">Count 1</span>
         <span class="stat-val me2-cnt1">0</span>
       </div>
-      <div class="stat-box me2-c2-box">
+      <div class="stat-box me2-c2-box" data-teach-target="c2-box">
         <span class="stat-label">Candidate 2</span>
         <span class="stat-val me2-c2">-</span>
       </div>
-      <div class="stat-box me2-cnt2-box">
+      <div class="stat-box me2-cnt2-box" data-teach-target="cnt2-box">
         <span class="stat-label">Count 2</span>
         <span class="stat-val me2-cnt2">0</span>
       </div>
     </div>
 
-    <div class="me2-phase-badge-row">
-      <span class="me2-phase-badge">Phase 1: Find Candidates</span>
+    <div class="stats-row me2-stats verify-row">
+      <div class="stat-box me2-v1-box" data-teach-target="verify1-box">
+        <span class="stat-label">Verify c1</span>
+        <span class="stat-val me2-v1">0</span>
+      </div>
+      <div class="stat-box me2-v2-box" data-teach-target="verify2-box">
+        <span class="stat-label">Verify c2</span>
+        <span class="stat-val me2-v2">0</span>
+      </div>
+      <div class="stat-box me2-threshold-box" data-teach-target="threshold">
+        <span class="stat-label">Threshold</span>
+        <span class="stat-val">>{threshold}</span>
+      </div>
+      <div class="stat-box me2-result-box" data-teach-target="result-box">
+        <span class="stat-label">Result</span>
+        <span class="stat-val me2-result">[]</span>
+      </div>
     </div>
 
-    <!-- Array -->
+    <div class="me2-phase-badge-row">
+      <span class="me2-phase-badge" data-teach-target="phase">Phase 1: Find Candidates</span>
+    </div>
+
     <div class="anim-row">
-      <p class="anim-label">Array (Generalized Boyer-Moore Voting)</p>
+      <p class="anim-label">Generalized Boyer-Moore (n/3) — Two Candidate Voting</p>
       <div class="array-row me2-array">
         {nums.map((n, i) => (
           <div class="array-col">
-            <div class="array-cell me2-cell" data-idx={i}>
+            <div class="array-cell me2-cell" data-idx={i} data-teach-target={`cell-${i}`}>
               <span class="cell-val">{n}</span>
               <span class="cell-idx">{i}</span>
             </div>
             <div class="pointers-row me2-ptr-col" data-idx={i}>
               <span class="ptr ptr-up hidden">i</span>
             </div>
+            <div class="pointers-row me2-vptr-col" data-idx={i}>
+              <span class="ptr ptr-down hidden">v</span>
+            </div>
           </div>
         ))}
       </div>
     </div>
-
   </AlgorithmPlayer>
 </majority-element-ii-visuals>
 
 <script>
   class MajorityElementIIVisuals extends HTMLElement {
     connectedCallback() {
-      this.cells = Array.from(this.querySelectorAll(".me2-cell"));
-      this.ptrs = Array.from(this.querySelectorAll(".me2-ptr-col"));
-      this.c1El = this.querySelector(".me2-c1");
-      this.c2El = this.querySelector(".me2-c2");
-      this.cnt1El = this.querySelector(".me2-cnt1");
-      this.cnt2El = this.querySelector(".me2-cnt2");
-      this.c1Box = this.querySelector(".me2-c1-box") as HTMLElement;
-      this.c2Box = this.querySelector(".me2-c2-box") as HTMLElement;
-      this.phaseBadge = this.querySelector(".me2-phase-badge") as HTMLElement;
+      this.cells = Array.from(this.querySelectorAll('.me2-cell'));
+      this.ptrs = Array.from(this.querySelectorAll('.me2-ptr-col'));
+      this.vptrs = Array.from(this.querySelectorAll('.me2-vptr-col'));
 
-      this.addEventListener("step-change", (e: any) => {
+      this.c1El = this.querySelector('.me2-c1');
+      this.c2El = this.querySelector('.me2-c2');
+      this.cnt1El = this.querySelector('.me2-cnt1');
+      this.cnt2El = this.querySelector('.me2-cnt2');
+      this.v1El = this.querySelector('.me2-v1');
+      this.v2El = this.querySelector('.me2-v2');
+      this.resultEl = this.querySelector('.me2-result');
+
+      this.c1Box = this.querySelector('.me2-c1-box');
+      this.c2Box = this.querySelector('.me2-c2-box');
+      this.v1Box = this.querySelector('.me2-v1-box');
+      this.v2Box = this.querySelector('.me2-v2-box');
+      this.resultBox = this.querySelector('.me2-result-box');
+      this.phaseBadge = this.querySelector('.me2-phase-badge');
+
+      this.addEventListener('step-change', (e) => {
         const s = e.detail.step;
 
-        // Stats
-        if (this.c1El) this.c1El.textContent = s.c1 !== null ? s.c1 : "-";
-        if (this.c2El) this.c2El.textContent = s.c2 !== null ? s.c2 : "-";
-        if (this.cnt1El) this.cnt1El.textContent = s.cnt1;
-        if (this.cnt2El) this.cnt2El.textContent = s.cnt2;
+        if (this.c1El) this.c1El.textContent = s.c1 ?? '-';
+        if (this.c2El) this.c2El.textContent = s.c2 ?? '-';
+        if (this.cnt1El) this.cnt1El.textContent = String(s.cnt1 ?? 0);
+        if (this.cnt2El) this.cnt2El.textContent = String(s.cnt2 ?? 0);
+        if (this.v1El) this.v1El.textContent = String(s.v1 ?? 0);
+        if (this.v2El) this.v2El.textContent = String(s.v2 ?? 0);
 
-        // Candidate box highlights
-        if (this.c1Box) {
-          this.c1Box.classList.toggle("has-candidate", s.c1 !== null);
-          this.c1Box.classList.toggle("verified", !!s.verified);
-        }
-        if (this.c2Box) {
-          this.c2Box.classList.toggle("has-candidate", s.c2 !== null);
-          this.c2Box.classList.toggle("verified", !!s.verified);
+        if (this.resultEl) {
+          const out = Array.isArray(s.result) ? s.result : [];
+          this.resultEl.textContent = `[${out.join(', ')}]`;
         }
 
-        // Phase badge
         if (this.phaseBadge) {
           if (s.phase === 2) {
-            this.phaseBadge.textContent = "Phase 2: Verify Counts";
-            this.phaseBadge.classList.add("phase2");
+            this.phaseBadge.textContent = 'Phase 2: Verify Counts';
+            this.phaseBadge.classList.add('phase2');
           } else {
-            this.phaseBadge.textContent = "Phase 1: Find Candidates";
-            this.phaseBadge.classList.remove("phase2");
+            this.phaseBadge.textContent = 'Phase 1: Find Candidates';
+            this.phaseBadge.classList.remove('phase2');
           }
         }
 
-        // Cells
-        this.cells.forEach((cell: any, i: number) => {
-          const valSpan = cell.querySelector(".cell-val");
-          if (!valSpan) return;
-          valSpan.className = "cell-val";
+        this.c1Box?.classList.remove('pulse', 'confirmed', 'canceled');
+        this.c2Box?.classList.remove('pulse', 'confirmed', 'canceled');
+        this.v1Box?.classList.remove('pulse', 'confirmed');
+        this.v2Box?.classList.remove('pulse', 'confirmed');
+        this.resultBox?.classList.remove('confirmed');
 
-          if (s.phase === 2) {
-            // In verification phase, highlight which values are candidates
-            const num = parseInt(valSpan.textContent || "0");
-            if (s.verified && (num === s.c1 || num === s.c2)) {
-              valSpan.classList.add("confirmed");
-            } else {
-              valSpan.classList.add("visited");
+        if (s.action === 'write' || s.action === 'expand') {
+          if (s.slot === 'c1') this.c1Box?.classList.add('pulse');
+          if (s.slot === 'c2') this.c2Box?.classList.add('pulse');
+        }
+        if (s.action === 'discard') {
+          this.c1Box?.classList.add('canceled');
+          this.c2Box?.classList.add('canceled');
+        }
+        if (s.phase === 2 && s.action === 'compare') {
+          if (s.current === s.c1) this.v1Box?.classList.add('pulse');
+          if (s.current === s.c2) this.v2Box?.classList.add('pulse');
+        }
+        if (s.action === 'confirm') {
+          this.c1Box?.classList.add('confirmed');
+          this.c2Box?.classList.add('confirmed');
+          this.v1Box?.classList.add('confirmed');
+          this.v2Box?.classList.add('confirmed');
+          this.resultBox?.classList.add('confirmed');
+        }
+
+        this.cells.forEach((cell, idx) => {
+          const val = cell.querySelector('.cell-val');
+          if (!val) return;
+          val.className = 'cell-val';
+
+          if (s.phase === 1) {
+            if (idx < s.i) {
+              val.classList.add('visited');
+            } else if (idx === s.i) {
+              if (s.current === s.c1 || s.current === s.c2) {
+                val.classList.add('active-match');
+              } else {
+                val.classList.add('active-cancel');
+              }
             }
-          } else if (i < s.i) {
-            valSpan.classList.add("visited");
-          } else if (i === s.i) {
-            const num = parseInt(valSpan.textContent || "0");
-            if (num === s.c1 || num === s.c2) {
-              valSpan.classList.add("active-match");
-            } else {
-              valSpan.classList.add("active-cancel");
+          } else {
+            if (idx < (s.vi ?? -1)) val.classList.add('visited');
+            if (idx === s.vi) {
+              if (s.current === s.c1 || s.current === s.c2) {
+                val.classList.add('active-match');
+              } else {
+                val.classList.add('active-cancel');
+              }
+            }
+            if (s.verified && (Number(val.textContent) === s.c1 || Number(val.textContent) === s.c2)) {
+              val.classList.add('confirmed');
             }
           }
         });
 
-        // Pointer
-        this.ptrs.forEach((col: any, i: number) => {
-          const ptr = col.querySelector(".ptr-up");
-          if (ptr) ptr.className = `ptr ptr-up ${i === s.i ? "" : "hidden"}`;
+        this.ptrs.forEach((col, idx) => {
+          const ptr = col.querySelector('.ptr-up');
+          if (ptr) ptr.className = `ptr ptr-up ${s.phase === 1 && idx === s.i ? '' : 'hidden'}`;
+        });
+
+        this.vptrs.forEach((col, idx) => {
+          const ptr = col.querySelector('.ptr-down');
+          if (ptr) ptr.className = `ptr ptr-down ${s.phase === 2 && idx === s.vi ? '' : 'hidden'}`;
         });
       });
     }
@@ -154,6 +514,14 @@ const steps = [
     display: block;
   }
 
+  .me2-stats {
+    margin-bottom: 0.9rem;
+  }
+
+  .verify-row {
+    margin-bottom: 1.25rem;
+  }
+
   .me2-phase-badge-row {
     margin-bottom: 1.25rem;
   }
@@ -165,94 +533,93 @@ const steps = [
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 0.25rem 0.75rem;
-    border: 1px solid rgba(201, 168, 76, 0.3);
+    border: 1px solid color-mix(in srgb, var(--status-medium) 30%, transparent);
     border-radius: 2px;
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.05);
+    background: var(--accent-dim);
     transition: all 0.3s ease;
   }
 
   .me2-phase-badge.phase2 {
-    border-color: rgba(125, 171, 125, 0.4);
-    color: #7dab7d;
-    background: rgba(125, 171, 125, 0.05);
+    border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
   }
 
-  .stat-box.me2-c1-box,
-  .stat-box.me2-cnt1-box {
-    border-color: var(--border);
-    transition: border-color 0.3s, background 0.3s;
-  }
-  .stat-box.me2-c1-box.has-candidate {
-    border-color: rgba(201, 168, 76, 0.4);
-    background: rgba(201, 168, 76, 0.05);
-  }
-  .stat-box.me2-c1-box.has-candidate .stat-val {
+  .me2-c1-box .stat-val,
+  .me2-cnt1-box .stat-val {
     color: var(--accent);
   }
-  .stat-box.me2-c1-box.verified {
-    border-color: rgba(125, 171, 125, 0.5);
-    background: rgba(125, 171, 125, 0.08);
-  }
-  .stat-box.me2-c1-box.verified .stat-val {
-    color: #7dab7d;
+
+  .me2-c2-box .stat-val,
+  .me2-cnt2-box .stat-val {
+    color: var(--status-info);
   }
 
-  .stat-box.me2-c2-box,
-  .stat-box.me2-cnt2-box {
-    border-color: var(--border);
-    transition: border-color 0.3s, background 0.3s;
-  }
-  .stat-box.me2-c2-box.has-candidate {
-    border-color: rgba(90, 130, 176, 0.4);
-    background: rgba(90, 130, 176, 0.05);
-  }
-  .stat-box.me2-c2-box.has-candidate .stat-val {
-    color: #5a82b0;
-  }
-  .stat-box.me2-c2-box.verified {
-    border-color: rgba(125, 171, 125, 0.5);
-    background: rgba(125, 171, 125, 0.08);
-  }
-  .stat-box.me2-c2-box.verified .stat-val {
-    color: #7dab7d;
+  .me2-v1-box .stat-val,
+  .me2-v2-box .stat-val {
+    color: var(--fg);
   }
 
-  .stat-box.me2-cnt1-box .stat-val {
-    color: var(--accent);
+  .me2-threshold-box .stat-val {
+    color: var(--status-hard);
   }
-  .stat-box.me2-cnt2-box .stat-val {
-    color: #5a82b0;
+
+  .me2-result-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  .stat-box.pulse {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .stat-box.canceled {
+    border-color: color-mix(in srgb, var(--status-hard) 45%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
+  }
+
+  .stat-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 55%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
   }
 
   .cell-val.visited {
-    opacity: 0.4;
+    opacity: 0.45;
   }
 
   .cell-val.active-match {
-    border-color: #7dab7d;
-    color: #a0d0a0;
-    background: rgba(125, 171, 125, 0.15);
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
     transform: translateY(-4px);
   }
 
   .cell-val.active-cancel {
-    border-color: #b05a5a;
-    color: #e09090;
-    background: rgba(176, 90, 90, 0.15);
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
     transform: translateY(-4px);
   }
 
   .cell-val.confirmed {
-    border-color: #7dab7d;
-    color: #a0d0a0;
-    background: rgba(125, 171, 125, 0.15);
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
   }
 
   .ptr-up {
     color: var(--accent);
-    font-weight: bold;
-    font-size: 1.2rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: opacity 0.2s;
+  }
+
+  .ptr-down {
+    color: var(--status-easy);
+    font-weight: 700;
+    font-size: 0.95rem;
     transition: opacity 0.2s;
   }
 </style>

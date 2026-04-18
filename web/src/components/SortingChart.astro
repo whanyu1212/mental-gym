@@ -31,6 +31,18 @@
     { name: "Tim",       best: "O(n)", avg: "O(n log n)", worst: "O(n log n)" },
   ];
 
+  const rootStyles = getComputedStyle(document.documentElement);
+  const theme = {
+    text: rootStyles.getPropertyValue("--text").trim(),
+    muted: rootStyles.getPropertyValue("--muted").trim(),
+    border: rootStyles.getPropertyValue("--border").trim(),
+    panel: rootStyles.getPropertyValue("--panel").trim(),
+    easy: rootStyles.getPropertyValue("--status-easy").trim(),
+    medium: rootStyles.getPropertyValue("--status-medium").trim(),
+    hard: rootStyles.getPropertyValue("--status-hard").trim(),
+  };
+
+  const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
   const ctx = (document.getElementById("sorting-chart") as HTMLCanvasElement).getContext("2d")!;
 
   new Chart(ctx, {
@@ -41,22 +53,22 @@
         {
           label: "Best case",
           data: algorithms.map((a) => complexityScore[a.best]),
-          backgroundColor: "#7dab7d88",
-          borderColor: "#7dab7d",
+          backgroundColor: alpha(theme.easy, "88"),
+          borderColor: theme.easy,
           borderWidth: 1,
         },
         {
           label: "Average case",
           data: algorithms.map((a) => complexityScore[a.avg]),
-          backgroundColor: "#c9a84c88",
-          borderColor: "#c9a84c",
+          backgroundColor: alpha(theme.medium, "88"),
+          borderColor: theme.medium,
           borderWidth: 1,
         },
         {
           label: "Worst case",
           data: algorithms.map((a) => complexityScore[a.worst]),
-          backgroundColor: "#b05a5a88",
-          borderColor: "#b05a5a",
+          backgroundColor: alpha(theme.hard, "88"),
+          borderColor: theme.hard,
           borderWidth: 1,
         },
       ],
@@ -65,30 +77,30 @@
       responsive: true,
       scales: {
         x: {
-          ticks: { color: "#a6b1d3" },
-          grid: { color: "#2a2520" },
+          ticks: { color: theme.text },
+          grid: { color: theme.border },
         },
         y: {
           min: 0,
           max: 6,
           ticks: {
-            color: "#8a8070",
+            color: theme.muted,
             stepSize: 1,
             callback: (v) => scoreLabel[Number(v)] ?? "",
           },
-          grid: { color: "#2a2520" },
+          grid: { color: theme.border },
         },
       },
       plugins: {
         legend: {
-          labels: { color: "#a6b1d3", boxWidth: 12, padding: 16 },
+          labels: { color: theme.text, boxWidth: 12, padding: 16 },
         },
         tooltip: {
-          backgroundColor: "#161616",
-          borderColor: "#2a2520",
+          backgroundColor: theme.panel,
+          borderColor: theme.border,
           borderWidth: 1,
-          titleColor: "#f0ead6",
-          bodyColor: "#8a8070",
+          titleColor: theme.text,
+          bodyColor: theme.muted,
           callbacks: {
             label: (ctx) => {
               const algo = algorithms[ctx.dataIndex];

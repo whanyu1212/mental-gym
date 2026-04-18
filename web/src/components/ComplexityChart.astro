@@ -16,13 +16,25 @@
 
 	const clamp = (v: number) => Math.min(v, 2e9);
 
+	const rootStyles = getComputedStyle(document.documentElement);
+	const theme = {
+		text: rootStyles.getPropertyValue("--text").trim(),
+		muted: rootStyles.getPropertyValue("--muted").trim(),
+		border: rootStyles.getPropertyValue("--border").trim(),
+		panel: rootStyles.getPropertyValue("--panel").trim(),
+		easy: rootStyles.getPropertyValue("--status-easy").trim(),
+		medium: rootStyles.getPropertyValue("--status-medium").trim(),
+		hard: rootStyles.getPropertyValue("--status-hard").trim(),
+		info: rootStyles.getPropertyValue("--status-info").trim(),
+	};
+
 	const curves = [
-		{ label: "O(1)",       color: "#7dab7d", fn: ()     => 1 },
-		{ label: "O(log n)",   color: "#8aab8a", fn: (n: number) => Math.log2(n) },
-		{ label: "O(n)",       color: "#c9a84c", fn: (n: number) => n },
-		{ label: "O(n log n)", color: "#b8944a", fn: (n: number) => n * Math.log2(n) },
+		{ label: "O(1)",       color: theme.easy, fn: ()     => 1 },
+		{ label: "O(log n)",   color: theme.info, fn: (n: number) => Math.log2(n) },
+		{ label: "O(n)",       color: theme.medium, fn: (n: number) => n },
+		{ label: "O(n log n)", color: theme.accent ?? theme.medium, fn: (n: number) => n * Math.log2(n) },
 		{ label: "O(n²)",      color: "#c07040", fn: (n: number) => n * n },
-		{ label: "O(2ⁿ)",      color: "#b05a5a", fn: (n: number) => clamp(Math.pow(2, n)) },
+		{ label: "O(2ⁿ)",      color: theme.hard, fn: (n: number) => clamp(Math.pow(2, n)) },
 		{ label: "O(n!)",      color: "#8a3a3a", fn: (n: number) => clamp([1,1,2,6,24,120,720,5040,40320,362880,3628800][N.indexOf(n)] ?? 2e9) },
 	];
 
@@ -30,7 +42,7 @@
 		label: c.label,
 		data: N.map(c.fn),
 		borderColor: c.color,
-		backgroundColor: c.color + "22",
+		backgroundColor: `${c.color}22`,
 		borderWidth: 2,
 		pointRadius: 3,
 		pointHoverRadius: 6,
@@ -47,15 +59,15 @@
 			interaction: { mode: "index", intersect: false },
 			scales: {
 				x: {
-					title: { display: true, text: "n (input size)", color: "#a6b1d3" },
-					ticks: { color: "#a6b1d3" },
-					grid: { color: "#2a365f" },
+					title: { display: true, text: "n (input size)", color: theme.text },
+					ticks: { color: theme.text },
+					grid: { color: theme.border },
 				},
 				y: {
 					type: "logarithmic",
-					title: { display: true, text: "Operations (log scale)", color: "#a6b1d3" },
+					title: { display: true, text: "Operations (log scale)", color: theme.text },
 					ticks: {
-						color: "#a6b1d3",
+						color: theme.text,
 						callback: (v) => {
 							const val = Number(v);
 							if (val >= 1e9) return "1B+";
@@ -64,17 +76,17 @@
 							return val.toFixed(0);
 						},
 					},
-					grid: { color: "#2a365f" },
+					grid: { color: theme.border },
 				},
 			},
 			plugins: {
 				legend: { display: false },
 				tooltip: {
-					backgroundColor: "#131a30",
-					borderColor: "#2a365f",
+					backgroundColor: theme.panel,
+					borderColor: theme.border,
 					borderWidth: 1,
-					titleColor: "#e6ebff",
-					bodyColor: "#a6b1d3",
+					titleColor: theme.text,
+					bodyColor: theme.muted,
 					callbacks: {
 						label: (ctx) => {
 							const v = ctx.raw as number;

@@ -1,0 +1,15 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = "Decision" } = Astro.props;
+---
+
+<div class="anim-row teaching-panel is-hidden" data-decision-panel aria-live="polite">
+  <p class="anim-label">{label}</p>
+  <div class="teaching-panel-body decision-panel-body">
+    <p class="decision-title" data-decision-title></p>
+    <p class="decision-body" data-decision-body></p>
+  </div>
+</div>

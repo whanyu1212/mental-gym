@@ -172,12 +172,12 @@
   }
 
   .sr-reset {
-    color: #b05a5a;
-    border-color: rgba(176, 90, 90, 0.3);
+    color: var(--status-hard);
+    border-color: color-mix(in srgb, var(--status-hard) 30%, transparent);
   }
   .sr-reset:hover {
-    color: #e09090;
-    border-color: #b05a5a;
+    color: var(--status-hard);
+    border-color: var(--status-hard);
   }
 
   .sr-feedback {
@@ -234,13 +234,13 @@
   }
 
   .sr-dialog-confirm {
-    color: #e09090;
-    border-color: rgba(176, 90, 90, 0.4);
-    background: rgba(176, 90, 90, 0.1);
+    color: var(--status-hard);
+    border-color: color-mix(in srgb, var(--status-hard) 40%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
   }
   .sr-dialog-confirm:hover {
     color: #fff;
-    border-color: #b05a5a;
-    background: rgba(176, 90, 90, 0.3);
+    border-color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 30%, transparent);
   }
 </style>

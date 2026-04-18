@@ -105,9 +105,9 @@
   .due-count {
     font-size: 0.65rem;
     font-family: Inter, sans-serif;
-    color: #e09090;
-    background: rgba(176, 90, 90, 0.15);
-    border: 1px solid rgba(176, 90, 90, 0.3);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--status-hard) 30%, transparent);
     border-radius: 2px;
     padding: 0.1rem 0.45rem;
     font-weight: 600;
@@ -121,7 +121,7 @@
   .due-cards :global(.due-card) {
     display: block;
     padding: 0.75rem 1rem;
-    background: #0e0e0e;
+    background: var(--surface-base);
     border: 1px solid var(--border);
     border-radius: 2px;
     text-decoration: none;
@@ -130,7 +130,7 @@
 
   .due-cards :global(.due-card:hover) {
     border-color: var(--accent);
-    background: rgba(201, 168, 76, 0.04);
+    background: color-mix(in srgb, var(--status-medium) 4%, transparent);
   }
 
   .due-cards :global(.due-card-top) {
@@ -159,13 +159,13 @@
   }
 
   .due-cards :global(.status-overdue) {
-    color: #e09090;
-    background: rgba(176, 90, 90, 0.15);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
   }
 
   .due-cards :global(.status-due) {
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.1);
+    background: var(--accent-dim);
   }
 
   .due-cards :global(.due-card-meta) {
@@ -188,7 +188,7 @@
     font-family: Inter, sans-serif;
   }
 
-  .due-cards :global(.easy) { color: #7dab7d; }
-  .due-cards :global(.medium) { color: #c9a84c; }
-  .due-cards :global(.hard) { color: #b05a5a; }
+  .due-cards :global(.easy) { color: var(--status-easy); }
+  .due-cards :global(.medium) { color: var(--status-medium); }
+  .due-cards :global(.hard) { color: var(--status-hard); }
 </style>

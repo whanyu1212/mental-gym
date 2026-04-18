@@ -1,33 +1,308 @@
 ---
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
 
 const s = "A man, a plan, a canal: Panama".split("");
 const sClean = "amanaplanacanalpanama".split("");
 
-const steps = [
-  { l: 0, r: 20, lOrig: 0, rOrig: 29, match: true, exp: "Initial state. L points to 'A', R points to 'a'. After cleaning and lowercasing, both are 'a'. They match!" },
-  { l: 1, r: 19, lOrig: 2, rOrig: 28, match: true, exp: "L moves to 'm', R moves to 'm'. They match." },
-  { l: 2, r: 18, lOrig: 3, rOrig: 27, match: true, exp: "L moves to 'a', R moves to 'a'. They match." },
-  { l: 3, r: 17, lOrig: 4, rOrig: 26, match: true, exp: "L moves to 'n', R moves to 'n'. They match." },
-  { l: 4, r: 16, lOrig: 7, rOrig: 24, match: true, exp: "Skip spaces and commas. L moves to 'a', R moves to 'a'. They match." },
-  { l: 5, r: 15, lOrig: 9, rOrig: 23, match: true, exp: "L moves to 'p', R moves to 'p'. They match." },
-  { l: 6, r: 14, lOrig: 10, rOrig: 22, match: true, exp: "L moves to 'l', R moves to 'l'. They match." },
-  { l: 7, r: 13, lOrig: 11, rOrig: 21, match: true, exp: "L moves to 'a', R moves to 'a'. They match." },
-  { l: 8, r: 12, lOrig: 12, rOrig: 19, match: true, exp: "L moves to 'n', R moves to 'n'. They match." },
-  { l: 9, r: 11, lOrig: 15, rOrig: 17, match: true, exp: "L moves to 'a', R moves to 'a'. They match." },
-  { l: 10, r: 10, lOrig: 16, rOrig: 16, match: true, exp: "L and R meet at 'c'. The string is a valid palindrome!" },
+const steps: TeachingStep[] = [
+  {
+    id: 'initial-compare',
+    l: 0,
+    r: 20,
+    lOrig: 0,
+    rOrig: 29,
+    leftChar: 'a',
+    rightChar: 'a',
+    skipped: 'none',
+    match: true,
+    isDone: false,
+    exp: "Start at both ends. After lowercasing and ignoring punctuation, 'A' and 'a' both become 'a', so the first comparison matches.",
+    reason: 'A palindrome reads the same forward and backward after filtering out non-alphanumeric characters.',
+    invariant: [
+      'We only compare lowercase alphanumeric characters.',
+      'If every mirrored pair matches, the string is a palindrome.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'original-view', kind: 'focus' },
+      { target: 'clean-view', kind: 'focus' },
+      { target: 'orig:0', kind: 'focus' },
+      { target: 'orig:29', kind: 'focus' },
+      { target: 'clean:0', kind: 'focus' },
+      { target: 'clean:20', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-m',
+    l: 1,
+    r: 19,
+    lOrig: 2,
+    rOrig: 28,
+    leftChar: 'm',
+    rightChar: 'm',
+    skipped: 'Skipped the space after A on the left.',
+    match: true,
+    isDone: false,
+    exp: "Move inward to the next valid letters. After skipping the space, we compare 'm' and 'm', and they match.",
+    reason: 'Non-alphanumeric characters do not affect palindrome validity, so we skip them before comparing.',
+    invariant: 'Pointer movement may skip punctuation/spaces, but comparisons only happen on valid characters.',
+    action: 'compare',
+    highlights: [
+      { target: 'skip-box', kind: 'discard' },
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'orig:2', kind: 'focus' },
+      { target: 'orig:28', kind: 'focus' },
+      { target: 'clean:1', kind: 'focus' },
+      { target: 'clean:19', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-a',
+    l: 2,
+    r: 18,
+    lOrig: 3,
+    rOrig: 27,
+    leftChar: 'a',
+    rightChar: 'a',
+    skipped: 'none',
+    match: true,
+    isDone: false,
+    exp: "Compare the next mirrored pair: 'a' and 'a'. They still match, so keep moving inward.",
+    reason: 'Each successful mirrored comparison preserves the palindrome possibility.',
+    invariant: 'All previously checked outer pairs remain confirmed.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'clean:2', kind: 'focus' },
+      { target: 'clean:18', kind: 'focus' },
+      { target: 'orig:3', kind: 'focus' },
+      { target: 'orig:27', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-n',
+    l: 3,
+    r: 17,
+    lOrig: 4,
+    rOrig: 26,
+    leftChar: 'n',
+    rightChar: 'n',
+    skipped: 'none',
+    match: true,
+    isDone: false,
+    exp: "Now 'n' is compared with 'n'. Another successful mirrored match.",
+    reason: 'The two-pointer method validates the string from the outside in.',
+    invariant: 'The remaining unchecked substring is always between L and R.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'clean:3', kind: 'focus' },
+      { target: 'clean:17', kind: 'focus' },
+      { target: 'orig:4', kind: 'focus' },
+      { target: 'orig:26', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'skip-punctuation',
+    l: 4,
+    r: 16,
+    lOrig: 7,
+    rOrig: 24,
+    leftChar: 'a',
+    rightChar: 'a',
+    skipped: 'Skipped spaces and commas on both sides.',
+    match: true,
+    isDone: false,
+    exp: "Before the next comparison, both pointers skip over punctuation and spaces. The next valid letters are 'a' and 'a', which match.",
+    reason: 'Cleaning can be done conceptually while scanning; we do not need to build a new string in memory to compare valid characters.',
+    invariant: 'Skipped characters are ignored, not compared.',
+    action: 'discard',
+    highlights: [
+      { target: 'skip-box', kind: 'discard' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'orig:7', kind: 'focus' },
+      { target: 'orig:24', kind: 'focus' },
+      { target: 'clean:4', kind: 'focus' },
+      { target: 'clean:16', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-p',
+    l: 5,
+    r: 15,
+    lOrig: 9,
+    rOrig: 23,
+    leftChar: 'p',
+    rightChar: 'p',
+    skipped: 'none',
+    match: true,
+    isDone: false,
+    exp: "Compare 'p' and 'p'. Still symmetric.",
+    reason: 'As long as each mirrored pair matches, no contradiction has appeared.',
+    invariant: 'A single mismatch would be enough to stop and return false.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'clean:5', kind: 'focus' },
+      { target: 'clean:15', kind: 'focus' },
+      { target: 'orig:9', kind: 'focus' },
+      { target: 'orig:23', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-l',
+    l: 6,
+    r: 14,
+    lOrig: 10,
+    rOrig: 22,
+    leftChar: 'l',
+    rightChar: 'l',
+    skipped: 'none',
+    match: true,
+    isDone: false,
+    exp: "Compare 'l' and 'l'. The inward scan continues successfully.",
+    reason: 'Two pointers reduce the problem size after every successful comparison.',
+    invariant: 'The unchecked middle becomes smaller after each step.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'clean:6', kind: 'focus' },
+      { target: 'clean:14', kind: 'focus' },
+      { target: 'orig:10', kind: 'focus' },
+      { target: 'orig:22', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-a-2',
+    l: 7,
+    r: 13,
+    lOrig: 11,
+    rOrig: 21,
+    leftChar: 'a',
+    rightChar: 'a',
+    skipped: 'none',
+    match: true,
+    isDone: false,
+    exp: "Compare 'a' and 'a'. Another clean match in the middle section.",
+    reason: 'Middle comparisons are handled the same way as outer ones.',
+    invariant: 'The algorithm is uniform: skip invalids, compare valids, move inward.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'clean:7', kind: 'focus' },
+      { target: 'clean:13', kind: 'focus' },
+      { target: 'orig:11', kind: 'focus' },
+      { target: 'orig:21', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-n-2',
+    l: 8,
+    r: 12,
+    lOrig: 12,
+    rOrig: 19,
+    leftChar: 'n',
+    rightChar: 'n',
+    skipped: 'Skipped the colon area on the right previously.',
+    match: true,
+    isDone: false,
+    exp: "Compare 'n' and 'n'. Even with punctuation in the original string, the cleaned comparison stays symmetric.",
+    reason: 'The original raw string may look uneven, but the filtered comparison is what matters.',
+    invariant: 'Original indices can jump while cleaned indices move one valid character at a time.',
+    action: 'compare',
+    highlights: [
+      { target: 'original-view', kind: 'focus' },
+      { target: 'clean-view', kind: 'focus' },
+      { target: 'clean:8', kind: 'focus' },
+      { target: 'clean:12', kind: 'focus' },
+      { target: 'orig:12', kind: 'focus' },
+      { target: 'orig:19', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-a-3',
+    l: 9,
+    r: 11,
+    lOrig: 15,
+    rOrig: 17,
+    leftChar: 'a',
+    rightChar: 'a',
+    skipped: 'Skipped spaces around the center.',
+    match: true,
+    isDone: false,
+    exp: "Now compare 'a' and 'a' near the center. They match too.",
+    reason: 'Near the center, the same palindrome rule applies: mirrored characters must agree.',
+    invariant: 'If all outer pairs matched so far, only the tiny center remains.',
+    action: 'compare',
+    highlights: [
+      { target: 'skip-box', kind: 'discard' },
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'clean:9', kind: 'focus' },
+      { target: 'clean:11', kind: 'focus' },
+      { target: 'orig:15', kind: 'focus' },
+      { target: 'orig:17', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'meet-center',
+    l: 10,
+    r: 10,
+    lOrig: 16,
+    rOrig: 16,
+    leftChar: 'c',
+    rightChar: 'c',
+    skipped: 'none',
+    match: true,
+    isDone: true,
+    exp: "L and R meet at the center character 'c'. Since every mirrored comparison matched, the string is a valid palindrome.",
+    reason: 'Reaching the middle without a mismatch proves the whole filtered string is symmetric.',
+    invariant: 'No contradiction was found in any mirrored pair.',
+    action: 'confirm',
+    highlights: [
+      { target: 'compare-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'clean:10', kind: 'confirmed' },
+      { target: 'orig:16', kind: 'confirmed' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
 ];
 ---
 
 <valid-palindrome-visuals>
   <AlgorithmPlayer title="s = 'A man, a plan, a canal: Panama'" steps={steps}>
+    <div class="stats-row vp-stats-row">
+      <div class="stat-box" data-teach-target="compare-box">
+        <span class="stat-label">Comparing</span>
+        <span class="stat-val vp-compare">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="skip-box">
+        <span class="stat-label">Skipped</span>
+        <span class="stat-val vp-skip">none</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val vp-decision">-</span>
+      </div>
+    </div>
+
     <div class="anim-row">
       <p class="anim-label">Original String</p>
-      <div class="array-row vp-orig-row">
+      <div class="array-row vp-orig-row" data-teach-target="original-view">
         {s.map((char, i) => (
           <div class="array-col" style={char === ' ' ? 'min-width: 1.5rem;' : ''}>
-            <div class="array-cell vp-orig-cell" data-idx={i}>
-              <span class={`cell-val ${/[a-zA-Z0-9]/.test(char) ? 'alphanumeric' : 'non-alphanumeric'}`}>{char === ' ' ? '␣' : char}</span>
+            <div class="array-cell vp-orig-cell" data-idx={i} data-teach-target={`orig:${i}`}>
+              <span class={`cell-val ${/[a-zA-Z0-9]/.test(char) ? 'alphanumeric' : 'non-alphanumeric'}`}>
+                {char === ' ' ? '␣' : char}
+              </span>
               <span class="cell-idx">{i}</span>
             </div>
           </div>
@@ -35,18 +310,18 @@ const steps = [
       </div>
     </div>
 
-    <div class="anim-row" style="margin-top: 2rem;">
+    <div class="anim-row vp-clean-section">
       <p class="anim-label">Cleaned String (Two Pointers)</p>
-      <div class="array-row vp-clean-row">
+      <div class="array-row vp-clean-row" data-teach-target="clean-view">
         {sClean.map((char, i) => (
           <div class="array-col">
-            <div class="array-cell vp-clean-cell" data-idx={i}>
+            <div class="array-cell vp-clean-cell" data-idx={i} data-teach-target={`clean:${i}`}>
               <span class="cell-val">{char}</span>
               <span class="cell-idx">{i}</span>
             </div>
             <div class="pointers-row vp-ptr-col" data-idx={i}>
-              <span class="ptr ptr-l hidden">L</span>
-              <span class="ptr ptr-r hidden">R</span>
+              <span class="ptr ptr-l hidden" data-teach-target={i === 0 ? 'pointer:l' : undefined}>L</span>
+              <span class="ptr ptr-r hidden" data-teach-target={i === 0 ? 'pointer:r' : undefined}>R</span>
             </div>
           </div>
         ))}
@@ -61,40 +336,79 @@ const steps = [
       this.origCells = Array.from(this.querySelectorAll(".vp-orig-cell"));
       this.cleanCells = Array.from(this.querySelectorAll(".vp-clean-cell"));
       this.ptrCols = Array.from(this.querySelectorAll(".vp-ptr-col"));
+      this.compareEl = this.querySelector(".vp-compare");
+      this.skipEl = this.querySelector(".vp-skip");
+      this.decisionEl = this.querySelector(".vp-decision");
+      this.compareBox = this.querySelector('[data-teach-target="compare-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
 
-      this.addEventListener("step-change", (e: any) => {
-        const s = e.detail.step;
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
 
-        // Original String Highlights
-        this.origCells.forEach((cell: any, i: number) => {
+        if (this.compareEl) {
+          this.compareEl.textContent = `${step.leftChar} ↔ ${step.rightChar}`;
+        }
+
+        if (this.skipEl) {
+          this.skipEl.textContent = step.skipped ?? 'none';
+        }
+
+        if (this.decisionEl) {
+          if (!step.match) {
+            this.decisionEl.textContent = 'Mismatch → not a palindrome';
+          } else if (step.isDone) {
+            this.decisionEl.textContent = 'All mirrored pairs matched';
+          } else {
+            this.decisionEl.textContent = 'Match → move both pointers inward';
+          }
+        }
+
+        this.compareBox?.classList.toggle('success-box', Boolean(step.isDone));
+        this.decisionBox?.classList.toggle('success-box', Boolean(step.isDone));
+
+        this.origCells.forEach((cell, i) => {
           const valSpan = cell.querySelector(".cell-val");
-          if (valSpan) {
-            valSpan.classList.remove("active-l", "active-r", "conflict");
-            if (i === s.lOrig) valSpan.classList.add("active-l");
-            if (i === s.rOrig) valSpan.classList.add("active-r");
-            if (!s.match && (i === s.lOrig || i === s.rOrig)) valSpan.classList.add("conflict");
+          if (!valSpan) return;
+
+          valSpan.classList.remove("active-l", "active-r", "conflict", "confirmed");
+          if (i === step.lOrig) valSpan.classList.add("active-l");
+          if (i === step.rOrig) valSpan.classList.add("active-r");
+          if (!step.match && (i === step.lOrig || i === step.rOrig)) {
+            valSpan.classList.add("conflict");
+          }
+          if (step.isDone && i === step.lOrig && i === step.rOrig) {
+            valSpan.classList.add("confirmed");
           }
         });
 
-        // Cleaned String Highlights
-        this.cleanCells.forEach((cell: any, i: number) => {
+        this.cleanCells.forEach((cell, i) => {
           const valSpan = cell.querySelector(".cell-val");
-          if (valSpan) {
-            valSpan.classList.remove("active-l", "active-r", "conflict", "visited");
-            if (i < s.l || i > s.r) valSpan.classList.add("visited");
-            if (i === s.l) valSpan.classList.add("active-l");
-            if (i === s.r) valSpan.classList.add("active-r");
-            if (!s.match && (i === s.l || i === s.r)) valSpan.classList.add("conflict");
+          if (!valSpan) return;
+
+          valSpan.classList.remove(
+            "active-l",
+            "active-r",
+            "conflict",
+            "visited",
+            "confirmed"
+          );
+          if (i < step.l || i > step.r) valSpan.classList.add("visited");
+          if (i === step.l) valSpan.classList.add("active-l");
+          if (i === step.r) valSpan.classList.add("active-r");
+          if (!step.match && (i === step.l || i === step.r)) {
+            valSpan.classList.add("conflict");
+          }
+          if (step.isDone && i === step.l && i === step.r) {
+            valSpan.classList.add("confirmed");
           }
         });
 
-        // Pointers
-        this.ptrCols.forEach((col: any, i: number) => {
+        this.ptrCols.forEach((col, i) => {
           const l = col.querySelector(".ptr-l");
           const r = col.querySelector(".ptr-r");
 
-          if (l) l.className = `ptr ptr-l ${i === s.l ? "" : "hidden"}`;
-          if (r) r.className = `ptr ptr-r ${i === s.r ? "" : "hidden"}`;
+          if (l) l.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
         });
       });
     }
@@ -110,9 +424,26 @@ const steps = [
     display: block;
   }
 
+  .vp-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
   .vp-orig-row {
     flex-wrap: nowrap;
     overflow-x: auto;
+  }
+
+  .vp-clean-section {
+    margin-top: 2rem;
   }
 
   .non-alphanumeric {
@@ -122,30 +453,30 @@ const steps = [
   }
 
   .cell-val.active-l {
-    border-color: #5a82b0;
-    color: #90b0e0;
-    background: rgba(90, 130, 176, 0.15);
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
     transform: translateY(-4px);
   }
 
   .cell-val.active-r {
-    border-color: #7dab7d;
-    color: #a0d0a0;
-    background: rgba(125, 171, 125, 0.15);
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
     transform: translateY(-4px);
   }
 
-  /* When L and R meet on the same cell */
-  .cell-val.active-l.active-r {
-    border-color: #c9a84c;
+  .cell-val.active-l.active-r,
+  .cell-val.confirmed {
+    border-color: var(--status-medium);
     color: #e0bc5c;
-    background: rgba(201, 168, 76, 0.15);
+    background: var(--accent-dim);
   }
 
   .cell-val.conflict {
-    border-color: #b05a5a !important;
-    color: #e09090 !important;
-    background: rgba(176, 90, 90, 0.15) !important;
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
     animation: shake 0.4s ease-in-out;
   }
 
@@ -153,12 +484,25 @@ const steps = [
     opacity: 0.3;
   }
 
-  .ptr-l { background: rgba(90, 130, 176, 0.2); color: #5a82b0; }
-  .ptr-r { background: rgba(125, 171, 125, 0.2); color: #7dab7d; }
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
 
   @keyframes shake {
-    0%, 100% { transform: translateX(0) translateY(-4px); }
-    25% { transform: translateX(-4px) translateY(-4px); }
-    75% { transform: translateX(4px) translateY(-4px); }
+    0%, 100% {
+      transform: translateX(0) translateY(-4px);
+    }
+    25% {
+      transform: translateX(-4px) translateY(-4px);
+    }
+    75% {
+      transform: translateX(4px) translateY(-4px);
+    }
   }
 </style>

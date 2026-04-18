@@ -211,9 +211,12 @@ const mlCategoryCounts = Object.fromEntries(
 		justify-content: center;
 		gap: 2.5rem;
 		padding: 1.25rem 1.5rem;
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: 2px;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: 10px;
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 		margin-bottom: 2.5rem;
 	}
 
@@ -239,9 +242,9 @@ const mlCategoryCounts = Object.fromEntries(
 		font-family: var(--font-sans);
 	}
 
-	.easy { color: #7dab7d; }
-	.medium { color: #c9a84c; }
-	.hard { color: #b05a5a; }
+	.easy { color: var(--status-easy); }
+	.medium { color: var(--status-medium); }
+	.hard { color: var(--status-hard); }
 
 	/* Domain cards */
 	.domains {
@@ -255,18 +258,28 @@ const mlCategoryCounts = Object.fromEntries(
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: 2px;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: 10px;
 		overflow: hidden;
 		text-decoration: none;
-		transition: border-color 0.2s, transform 0.2s;
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 	}
 
 	.domain-card:hover {
 		border-color: var(--accent);
-		transform: translateY(-2px);
+		transform: translateY(-4px);
+		box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 12px var(--accent-dim);
 		text-decoration: none;
+	}
+
+	.domain-card:active {
+		transform: translateY(-1px) scale(0.99);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		transition: all 0.1s ease-out;
 	}
 
 	.domain-card--muted:hover {

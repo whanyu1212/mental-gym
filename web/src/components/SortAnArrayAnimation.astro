@@ -4,43 +4,193 @@ import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 const nums = [5, 2, 3, 1];
 
 const steps = [
-  { p: 'init', arr: [5, 2, 3, 1], l: -1, r: -1, exp: "Start Merge Sort. We recursively divide the array into halves until we reach single elements." },
+  {
+    phase: 'init',
+    arrFull: [5, 2, 3, 1],
+    segment: [],
+    l: -1,
+    r: -1,
+    action: 'write',
+    exp: 'Start Merge Sort. Recursively split until single elements, then merge back in order.',
+    reason: 'Divide-and-conquer reduces sorting into smaller sorted merges.',
+    invariant: 'After each merge, the merged range is sorted.',
+    formula: 'T(n) = 2T(n/2) + O(n)',
+    decision: 'Begin with full range [0..3].',
+    targets: ['phase-box', 'main-box', 'focus-box', 'rule-box'],
+  },
 
-  // Split Phase
-  { p: 'split', arr: [5, 2], l: 0, r: 1, exp: "Split left half: [5, 2]." },
-  { p: 'split', arr: [5], l: 0, r: 0, exp: "Split left again: [5]." },
-  { p: 'split', arr: [2], l: 1, r: 1, exp: "Split right of left half: [2]." },
+  {
+    phase: 'split',
+    arrFull: [5, 2, 3, 1],
+    segment: [5, 2],
+    l: 0,
+    r: 1,
+    action: 'shrink',
+    exp: 'Split left half: [5, 2].',
+    reason: 'First recursion step divides the array into two halves.',
+    invariant: 'Split preserves element order within each segment.',
+    formula: 'mid = (l+r)//2',
+    decision: 'Recurse on left half.',
+    targets: ['main-0', 'main-1', 'focus-box'],
+  },
+  {
+    phase: 'split',
+    arrFull: [5, 2, 3, 1],
+    segment: [5],
+    l: 0,
+    r: 0,
+    action: 'shrink',
+    exp: 'Split left again: [5].',
+    reason: 'Single element segment is already sorted.',
+    invariant: 'Base case size 1 needs no sorting.',
+    formula: 'if l == r -> return',
+    decision: 'Left base case reached.',
+    targets: ['main-0', 'focus-box'],
+  },
+  {
+    phase: 'split',
+    arrFull: [5, 2, 3, 1],
+    segment: [2],
+    l: 1,
+    r: 1,
+    action: 'shrink',
+    exp: 'Split right of left half: [2].',
+    reason: 'Second base case for left branch.',
+    invariant: 'Both children are now individually sorted.',
+    formula: 'size 1 is sorted',
+    decision: 'Ready to merge [5] and [2].',
+    targets: ['main-1', 'focus-box'],
+  },
 
-  // Merge [5] and [2]
-  { p: 'merge', arr: [2, 5], l: 0, r: 1, exp: "Merge [5] and [2] -> [2, 5]." },
+  {
+    phase: 'merge',
+    arrFull: [2, 5, 3, 1],
+    segment: [2, 5],
+    l: 0,
+    r: 1,
+    action: 'expand',
+    exp: 'Merge [5] and [2] -> [2, 5].',
+    reason: 'Pick smaller head first while merging two sorted lists.',
+    invariant: 'Merged range [0..1] is sorted after this step.',
+    formula: 'merge two sorted arrays in O(k)',
+    decision: 'Update indices 0..1 to [2,5].',
+    targets: ['main-0', 'main-1', 'focus-box'],
+  },
 
-  // Split right half
-  { p: 'split', arr: [3, 1], l: 2, r: 3, exp: "Split right half: [3, 1]." },
-  { p: 'split', arr: [3], l: 2, r: 2, exp: "Split left of right half: [3]." },
-  { p: 'split', arr: [1], l: 3, r: 3, exp: "Split right of right half: [1]." },
+  {
+    phase: 'split',
+    arrFull: [2, 5, 3, 1],
+    segment: [3, 1],
+    l: 2,
+    r: 3,
+    action: 'shrink',
+    exp: 'Split right half: [3, 1].',
+    reason: 'Process the other half recursively.',
+    invariant: 'Unprocessed ranges keep original relative order.',
+    formula: 'recurse on right half',
+    decision: 'Split [2..3].',
+    targets: ['main-2', 'main-3', 'focus-box'],
+  },
+  {
+    phase: 'split',
+    arrFull: [2, 5, 3, 1],
+    segment: [3],
+    l: 2,
+    r: 2,
+    action: 'shrink',
+    exp: 'Split left of right half: [3].',
+    reason: 'Base case reached for index 2.',
+    invariant: 'Single item is sorted.',
+    formula: 'size 1',
+    decision: 'Hold [3].',
+    targets: ['main-2', 'focus-box'],
+  },
+  {
+    phase: 'split',
+    arrFull: [2, 5, 3, 1],
+    segment: [1],
+    l: 3,
+    r: 3,
+    action: 'shrink',
+    exp: 'Split right of right half: [1].',
+    reason: 'Base case reached for index 3.',
+    invariant: 'Both subsegments ready to merge.',
+    formula: 'size 1',
+    decision: 'Prepare merge [3] and [1].',
+    targets: ['main-3', 'focus-box'],
+  },
 
-  // Merge [3] and [1]
-  { p: 'merge', arr: [1, 3], l: 2, r: 3, exp: "Merge [3] and [1] -> [1, 3]." },
+  {
+    phase: 'merge',
+    arrFull: [2, 5, 1, 3],
+    segment: [1, 3],
+    l: 2,
+    r: 3,
+    action: 'expand',
+    exp: 'Merge [3] and [1] -> [1, 3].',
+    reason: 'Sorted merge places 1 before 3.',
+    invariant: 'Range [2..3] is now sorted.',
+    formula: 'merge([3],[1]) = [1,3]',
+    decision: 'Update indices 2..3 to [1,3].',
+    targets: ['main-2', 'main-3', 'focus-box'],
+  },
 
-  // Final Merge
-  { p: 'merge', arr: [1, 2, 3, 5], l: 0, r: 3, exp: "Final merge: [2, 5] and [1, 3] -> [1, 2, 3, 5]." },
-  { p: 'done', arr: [1, 2, 3, 5], l: -1, r: -1, exp: "Array is fully sorted!" }
+  {
+    phase: 'merge',
+    arrFull: [1, 2, 3, 5],
+    segment: [1, 2, 3, 5],
+    l: 0,
+    r: 3,
+    action: 'expand',
+    exp: 'Final merge: [2, 5] and [1, 3] -> [1, 2, 3, 5].',
+    reason: 'Merging two sorted halves gives globally sorted array.',
+    invariant: 'Whole range [0..3] becomes sorted.',
+    formula: 'merge([2,5],[1,3]) = [1,2,3,5]',
+    decision: 'Finish global merge.',
+    targets: ['main-0', 'main-1', 'main-2', 'main-3', 'focus-box', 'main-box'],
+  },
+  {
+    phase: 'done',
+    arrFull: [1, 2, 3, 5],
+    segment: [],
+    l: -1,
+    r: -1,
+    action: 'confirm',
+    exp: 'Array is fully sorted.',
+    reason: 'All recursive merges completed.',
+    invariant: 'Final array is non-decreasing.',
+    formula: '[1,2,3,5]',
+    decision: 'Return sorted array.',
+    targets: ['main-box', 'result-box'],
+  },
 ];
 ---
 
 <sort-array-visuals>
   <AlgorithmPlayer title="Merge Sort (O(N log N))" steps={steps}>
+    <div class="stats-row sa-meta-row">
+      <div class="stat-box sa-phase-box" data-teach-target="phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val sa-phase-val">init</span>
+      </div>
+      <div class="stat-box sa-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">split to size 1, then merge sorted halves</span>
+      </div>
+      <div class="stat-box sa-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val sa-status-val">In Progress</span>
+      </div>
+    </div>
 
-    <div class="anim-row" style="margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; gap: 2rem;">
-
-      <!-- Full Array View -->
-      <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+    <div class="anim-row sa-layout">
+      <div class="sa-main-wrap" data-teach-target="main-box">
         <p class="anim-label">Current Array State</p>
         <div class="array-row sa-main-array">
-          {nums.map((n, i) => (
+          {nums.map((num, i) => (
             <div class="array-col">
-              <div class="array-cell sa-cell" data-idx={i}>
-                <span class="cell-val">{n}</span>
+              <div class="array-cell sa-cell" data-idx={i} data-teach-target={`main-${i}`}>
+                <span class="cell-val">{num}</span>
                 <span class="cell-idx">{i}</span>
               </div>
             </div>
@@ -48,76 +198,86 @@ const steps = [
         </div>
       </div>
 
-      <!-- Action View (Split/Merge focus) -->
-      <div style="width: 100%; display: flex; flex-direction: column; align-items: center; min-height: 100px;">
-        <p class="anim-label sa-action-label" style="color: var(--accent); transition: color 0.3s;">Focus Segment</p>
-        <div class="array-row sa-focus-array" style="padding: 1rem; background: #0a0a0a; border: 1px dashed var(--border); border-radius: 4px; min-width: 150px; justify-content: center; min-height: 4rem;">
-          <!-- Rendered via JS -->
-        </div>
+      <div class="sa-focus-wrap">
+        <p class="anim-label sa-action-label">Focus Segment</p>
+        <div class="array-row sa-focus-array" data-teach-target="focus-box"></div>
       </div>
-
     </div>
-
   </AlgorithmPlayer>
 </sort-array-visuals>
 
 <script>
   class SortArrayVisuals extends HTMLElement {
     connectedCallback() {
-      this.mainCells = Array.from(this.querySelectorAll(".sa-cell"));
-      this.focusArray = this.querySelector(".sa-focus-array");
-      this.actionLabel = this.querySelector(".sa-action-label") as HTMLElement;
+      this.mainCells = Array.from(this.querySelectorAll('.sa-cell'));
+      this.focusArray = this.querySelector('.sa-focus-array');
+      this.actionLabel = this.querySelector('.sa-action-label');
+      this.phaseVal = this.querySelector('.sa-phase-val');
+      this.statusVal = this.querySelector('.sa-status-val');
+      this.phaseBox = this.querySelector('.sa-phase-box');
+      this.resultBox = this.querySelector('.sa-result-box');
 
-      this.addEventListener("step-change", (e: any) => {
+      this.addEventListener('step-change', (e) => {
         const s = e.detail.step;
 
-        // Main Array
-        this.mainCells.forEach((cell: any, i: number) => {
-          const valSpan = cell.querySelector(".cell-val");
-          if (valSpan) {
-            valSpan.className = "cell-val";
+        if (this.phaseVal) this.phaseVal.textContent = s.phase;
+        if (this.statusVal) {
+          this.statusVal.textContent = s.phase === 'done' ? 'Complete' : 'In Progress';
+        }
 
-            // Update values for merge operations
-            if (s.p === 'merge' || s.p === 'done') {
-               // If this cell is within the bounds of the current merge
-               if (i >= s.l && i <= s.r) {
-                  // We map the local merged array back to the global index
-                  valSpan.textContent = s.arr[i - s.l];
-               }
-            }
+        this.phaseBox?.classList.remove('split', 'merge', 'done');
+        if (s.phase === 'split') this.phaseBox?.classList.add('split');
+        if (s.phase === 'merge') this.phaseBox?.classList.add('merge');
+        if (s.phase === 'done') this.phaseBox?.classList.add('done');
 
-            // Highlights
-            if (s.p === 'done') {
-               valSpan.classList.add("success-val");
-            } else if (s.l !== -1 && i >= s.l && i <= s.r) {
-               if (s.p === 'split') valSpan.classList.add("active-split");
-               if (s.p === 'merge') valSpan.classList.add("active-merge");
-            } else {
-               valSpan.classList.add("visited");
-            }
+        this.resultBox?.classList.remove('confirmed');
+        if (s.phase === 'done') this.resultBox?.classList.add('confirmed');
+
+        this.mainCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+
+          valSpan.textContent = String(s.arrFull[i]);
+          valSpan.className = 'cell-val';
+
+          if (s.phase === 'done') {
+            valSpan.classList.add('success-val');
+          } else if (s.l !== -1 && i >= s.l && i <= s.r) {
+            if (s.phase === 'split') valSpan.classList.add('active-split');
+            if (s.phase === 'merge') valSpan.classList.add('active-merge');
+          } else {
+            valSpan.classList.add('visited');
           }
         });
 
-        // Focus Array and Label
-        if (this.focusArray && this.actionLabel) {
-           if (s.p === 'init' || s.p === 'done') {
-             this.focusArray.innerHTML = "<span style='color: var(--muted); opacity: 0.5; font-style: italic;'>None</span>";
-             this.actionLabel.textContent = s.p === 'init' ? "Starting..." : "Done!";
-             this.actionLabel.style.color = s.p === 'done' ? "#7dab7d" : "var(--muted)";
-             this.focusArray.style.borderColor = "var(--border)";
-           } else {
-             this.actionLabel.textContent = s.p === 'split' ? "Splitting" : "Merging";
-             this.actionLabel.style.color = s.p === 'split' ? "#e09090" : "#90b0e0";
-             this.focusArray.style.borderColor = s.p === 'split' ? "#b05a5a" : "#5a82b0";
+        if (!this.focusArray || !this.actionLabel) return;
 
-             this.focusArray.innerHTML = s.arr.map((num: number) => `
-               <div class="array-cell">
-                 <span class="cell-val" style="border-color: ${s.p === 'split' ? '#b05a5a' : '#5a82b0'}; color: ${s.p === 'split' ? '#e09090' : '#90b0e0'}; background: ${s.p === 'split' ? 'rgba(176, 90, 90, 0.15)' : 'rgba(90, 130, 176, 0.15)'}; animation: pop-in 0.2s;">${num}</span>
-               </div>
-             `).join("");
-           }
+        if (s.phase === 'init' || s.phase === 'done' || !s.segment || s.segment.length === 0) {
+          this.focusArray.innerHTML = "<span class='sa-empty'>None</span>";
+          this.actionLabel.textContent = s.phase === 'done' ? 'Done!' : 'Starting...';
+          this.actionLabel.classList.remove('split', 'merge');
+          if (s.phase === 'done') this.actionLabel.classList.add('done');
+          else this.actionLabel.classList.remove('done');
+          this.focusArray.classList.remove('split', 'merge');
+        } else {
+          this.actionLabel.textContent = s.phase === 'split' ? 'Splitting' : 'Merging';
+          this.actionLabel.classList.remove('done');
+          this.actionLabel.classList.toggle('split', s.phase === 'split');
+          this.actionLabel.classList.toggle('merge', s.phase === 'merge');
+
+          this.focusArray.classList.toggle('split', s.phase === 'split');
+          this.focusArray.classList.toggle('merge', s.phase === 'merge');
+
+          this.focusArray.innerHTML = s.segment
+            .map((num) => {
+              return `
+                <div class="array-cell">
+                  <span class="cell-val ${s.phase === 'split' ? 'focus-split' : 'focus-merge'}">${num}</span>
+                </div>
+              `;
+            })
+            .join('');
         }
-
       });
     }
   }
@@ -132,27 +292,141 @@ const steps = [
     display: block;
   }
 
+  .sa-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .sa-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .sa-phase-box.split {
+    border-color: color-mix(in srgb, var(--status-hard) 55%, transparent);
+  }
+
+  .sa-phase-box.merge {
+    border-color: color-mix(in srgb, var(--status-info) 55%, transparent);
+  }
+
+  .sa-phase-box.done {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .sa-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .sa-layout {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .sa-main-wrap,
+  .sa-focus-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sa-focus-wrap {
+    min-height: 100px;
+  }
+
+  .sa-action-label {
+    color: var(--accent);
+    transition: color 0.3s;
+  }
+
+  .sa-action-label.split {
+    color: var(--status-hard);
+  }
+
+  .sa-action-label.merge {
+    color: var(--status-info);
+  }
+
+  .sa-action-label.done {
+    color: var(--status-easy);
+  }
+
+  .sa-focus-array {
+    padding: 1rem;
+    background: var(--surface-strong);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    min-width: 150px;
+    justify-content: center;
+    min-height: 4rem;
+  }
+
+  .sa-focus-array.split {
+    border-color: var(--status-hard);
+  }
+
+  .sa-focus-array.merge {
+    border-color: var(--status-info);
+  }
+
+  .sa-empty {
+    color: var(--muted);
+    opacity: 0.5;
+    font-style: italic;
+  }
+
+  .focus-split {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+    animation: pop-in 0.2s;
+  }
+
+  .focus-merge {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    animation: pop-in 0.2s;
+  }
+
   .cell-val.visited {
     opacity: 0.3;
   }
 
   .cell-val.active-split {
-    border-color: #b05a5a;
-    color: #e09090;
-    background: rgba(176, 90, 90, 0.1);
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
     transform: translateY(-4px);
   }
 
   .cell-val.active-merge {
-    border-color: #5a82b0;
-    color: #90b0e0;
-    background: rgba(90, 130, 176, 0.1);
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 10%, transparent);
     transform: translateY(4px);
   }
 
   .cell-val.success-val {
-    border-color: #7dab7d !important;
-    color: #a0d0a0 !important;
-    background: rgba(125, 171, 125, 0.15) !important;
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent) !important;
+  }
+
+  @keyframes pop-in {
+    from {
+      transform: scale(0.94);
+      opacity: 0.35;
+    }
+
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 </style>

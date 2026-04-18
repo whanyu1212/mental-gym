@@ -1,150 +1,159 @@
 ---
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
 
 const matrix = [
   [3, 0, 1],
   [5, 6, 3],
-  [1, 2, 0]
+  [1, 2, 0],
 ];
 
 const prefix = [
   [0, 0, 0, 0],
   [0, 3, 3, 4],
   [0, 8, 14, 18],
-  [0, 9, 17, 21]
+  [0, 9, 17, 21],
 ];
 
-const steps = [
-  { phase: 'init', r: -1, c: -1, formula: "", exp: "We want to compute the sum of any rectangular region in O(1) time. First, we build a Prefix Sum matrix padded with an extra row and column of 0s." },
-
-  // Generating prefix[2][2] for matrix[1][1] (which is 6)
-  { phase: 'build', r: 1, c: 1, pR: 2, pC: 2,
-    formula: "P[2][2] = P[1][2] + P[2][1] - P[1][1] + M[1][1] = 3 + 8 - 3 + 6 = 14",
-    exp: "To compute a prefix sum, we take the sum from above, add the sum from the left, subtract the top-left intersection (to avoid double counting), and add the current matrix value." },
-
-  { phase: 'build_done', r: -1, c: -1, formula: "", exp: "We apply this to all cells to generate the full Prefix Sum Matrix." },
-
-  // Querying region (1,1) to (2,2)
-  { phase: 'query_region', qR1: 1, qC1: 1, qR2: 2, qC2: 2, formula: "", exp: "Let's query the sum of the region from (1,1) to (2,2). The cells are [6, 3] and [2, 0]. Actual sum is 11." },
-  { phase: 'query_formula', qR1: 1, qC1: 1, qR2: 2, qC2: 2,
-    formula: "Sum = P[3][3] - P[1][3] - P[3][1] + P[1][1] = 21 - 4 - 9 + 3 = 11",
-    exp: "Formula: Sum = BottomRight - TopRegion - LeftRegion + TopLeftIntersection. It perfectly calculates 11 in O(1) time!" }
+const steps: TeachingStep[] = [
+  {
+    id: 'prefix-intro',
+    phase: 'init',
+    exp: 'We precompute a padded prefix matrix so any later rectangle sum can be answered in O(1) time.',
+    reason: 'Spend O(mn) once up front, then every query becomes constant time.',
+    invariant: 'Each prefix cell P[r+1][c+1] stores the sum of matrix rows 0..r and cols 0..c.',
+    action: 'derive',
+    formula: {
+      mode: 'block',
+      latex: 'P[r+1][c+1] = P[r][c+1] + P[r+1][c] - P[r][c] + M[r][c]',
+    },
+    highlights: [
+      { target: 'matrix-grid', kind: 'compare' },
+      { target: 'prefix-grid', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'build-cell',
+    phase: 'build',
+    exp: 'To compute P[2][2], combine the prefix from above and left, subtract the overlap once, then add the current matrix value 6.',
+    reason: 'Above and left both include the top-left overlap, so subtracting it avoids double counting.',
+    invariant: [
+      'Every finished prefix cell equals the sum of its rectangle from the top-left corner.',
+      'The overlap region must be added exactly once overall.',
+    ],
+    action: 'write',
+    formula: {
+      mode: 'block',
+      latex: 'P[2][2] = P[1][2] + P[2][1] - P[1][1] + M[1][1] = 3 + 8 - 3 + 6 = 14',
+    },
+    highlights: [
+      { target: 'matrix:1,1', kind: 'focus', label: 'Current matrix cell' },
+      { target: 'prefix:1,2', kind: 'region-subtract', label: 'Above' },
+      { target: 'prefix:2,1', kind: 'region-subtract', label: 'Left' },
+      { target: 'prefix:1,1', kind: 'region-add', label: 'Overlap back' },
+      { target: 'prefix:2,2', kind: 'write', label: 'Write result' },
+    ],
+  },
+  {
+    id: 'query-region',
+    phase: 'query-region',
+    exp: 'Now query the rectangle from (1,1) to (2,2). The covered cells are 6, 3, 2, and 0.',
+    reason: 'The visual region is the exact area we want the range query to recover.',
+    invariant: 'The answer must equal the sum of the highlighted query cells.',
+    action: 'compare',
+    highlights: [
+      { target: 'matrix:1,1', kind: 'match' },
+      { target: 'matrix:1,2', kind: 'match' },
+      { target: 'matrix:2,1', kind: 'match' },
+      { target: 'matrix:2,2', kind: 'match' },
+    ],
+  },
+  {
+    id: 'query-formula',
+    phase: 'query-formula',
+    exp: 'Use inclusion-exclusion on the prefix matrix: take the bottom-right total, subtract the top and left excess regions, then add the overlap back once.',
+    reason: 'This is why prefix sums turn a large rectangular sum into four table lookups.',
+    invariant: 'Rectangle sum = bottom-right - top strip - left strip + overlap.',
+    action: 'confirm',
+    formula: {
+      mode: 'block',
+      latex: 'sum = P[3][3] - P[1][3] - P[3][1] + P[1][1] = 21 - 4 - 9 + 3 = 11',
+    },
+    highlights: [
+      { target: 'prefix:3,3', kind: 'confirmed', label: 'Bottom-right total' },
+      { target: 'prefix:1,3', kind: 'region-subtract', label: 'Top strip' },
+      { target: 'prefix:3,1', kind: 'region-subtract', label: 'Left strip' },
+      { target: 'prefix:1,1', kind: 'region-add', label: 'Overlap back' },
+    ],
+  },
 ];
 ---
 
-<range-sum-2d-visuals>
-  <AlgorithmPlayer title="Matrix: 3x3" steps={steps}>
-
-    <div class="anim-row" style="display: flex; gap: 4rem; justify-content: center; flex-wrap: wrap;">
-
-      <!-- Original Matrix -->
-      <div>
-        <p class="anim-label">Original Matrix (M)</p>
-        <div class="matrix-grid orig-matrix" style="display: grid; grid-template-columns: repeat(3, 2.5rem); gap: 2px;">
-          {matrix.map((row, r) => (
-            row.map((val, c) => (
-              <div class="matrix-cell orig-cell" data-r={r} data-c={c}>
-                {val}
-              </div>
-            ))
-          ))}
-        </div>
-      </div>
-
-      <!-- Prefix Matrix -->
-      <div>
-        <p class="anim-label highlight-label">Prefix Sum Matrix (P)</p>
-        <div class="matrix-grid prefix-matrix" style="display: grid; grid-template-columns: repeat(4, 2.5rem); gap: 2px;">
-          {prefix.map((row, r) => (
-            row.map((val, c) => (
-              <div class="matrix-cell prefix-cell" data-r={r} data-c={c}>
-                {val}
-              </div>
-            ))
-          ))}
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Formula Display -->
-    <div class="anim-row" style="margin-top: 2rem; min-height: 3rem;">
-      <div class="formula-box" style="background: #0a0a0a; border: 1px dashed var(--accent); padding: 1rem; border-radius: 4px; text-align: center; font-family: ui-monospace, monospace; color: var(--accent); opacity: 0; transition: opacity 0.3s;">
-        <!-- Formula text -->
+<AlgorithmPlayer title="Matrix: 3x3" steps={steps}>
+  <div class="anim-row matrices-row">
+    <div>
+      <p class="anim-label">Original Matrix (M)</p>
+      <div
+        class="matrix-grid orig-matrix"
+        data-teach-target="matrix-grid"
+      >
+        {matrix.map((row, r) =>
+          row.map((val, c) => (
+            <div
+              class="matrix-cell orig-cell"
+              data-teach-target={`matrix:${r},${c}`}
+            >
+              {val}
+            </div>
+          )),
+        )}
       </div>
     </div>
 
-  </AlgorithmPlayer>
-</range-sum-2d-visuals>
-
-<script>
-  class RangeSum2DVisuals extends HTMLElement {
-    connectedCallback() {
-      this.origCells = Array.from(this.querySelectorAll(".orig-cell"));
-      this.prefixCells = Array.from(this.querySelectorAll(".prefix-cell"));
-      this.formulaBox = this.querySelector(".formula-box") as HTMLElement;
-
-      this.addEventListener("step-change", (e: any) => {
-        const s = e.detail.step;
-
-        // Formula
-        if (this.formulaBox) {
-          if (s.formula) {
-            this.formulaBox.textContent = s.formula;
-            this.formulaBox.style.opacity = "1";
-          } else {
-            this.formulaBox.style.opacity = "0";
-          }
-        }
-
-        // Original Matrix highlights
-        this.origCells.forEach((cell: any) => {
-          const r = parseInt(cell.dataset.r, 10);
-          const c = parseInt(cell.dataset.c, 10);
-          cell.className = "matrix-cell orig-cell";
-
-          if (s.phase === 'build' && r === s.r && c === s.c) {
-             cell.classList.add("active-eval");
-          } else if ((s.phase === 'query_region' || s.phase === 'query_formula') &&
-                     r >= s.qR1 && r <= s.qR2 && c >= s.qC1 && c <= s.qC2) {
-             cell.classList.add("query-region");
-          }
-        });
-
-        // Prefix Matrix highlights
-        this.prefixCells.forEach((cell: any) => {
-          const r = parseInt(cell.dataset.r, 10);
-          const c = parseInt(cell.dataset.c, 10);
-          cell.className = "matrix-cell prefix-cell";
-
-          if (s.phase === 'build') {
-             if (r === s.pR && c === s.pC) cell.classList.add("active-write"); // P[2][2]
-             else if (r === s.pR - 1 && c === s.pC) cell.classList.add("sub-region"); // P[1][2]
-             else if (r === s.pR && c === s.pC - 1) cell.classList.add("sub-region"); // P[2][1]
-             else if (r === s.pR - 1 && c === s.pC - 1) cell.classList.add("add-region"); // P[1][1]
-          } else if (s.phase === 'query_formula') {
-             if (r === s.qR2 + 1 && c === s.qC2 + 1) cell.classList.add("active-write"); // BottomRight
-             else if (r === s.qR1 && c === s.qC2 + 1) cell.classList.add("sub-region"); // TopRegion
-             else if (r === s.qR2 + 1 && c === s.qC1) cell.classList.add("sub-region"); // LeftRegion
-             else if (r === s.qR1 && c === s.qC1) cell.classList.add("add-region"); // TopLeft
-          }
-        });
-      });
-    }
-  }
-
-  if (!customElements.get('range-sum-2d-visuals')) {
-    customElements.define('range-sum-2d-visuals', RangeSum2DVisuals);
-  }
-</script>
+    <div>
+      <p class="anim-label highlight-label">Prefix Sum Matrix (P)</p>
+      <div
+        class="matrix-grid prefix-matrix"
+        data-teach-target="prefix-grid"
+      >
+        {prefix.map((row, r) =>
+          row.map((val, c) => (
+            <div
+              class="matrix-cell prefix-cell"
+              data-teach-target={`prefix:${r},${c}`}
+            >
+              {val}
+            </div>
+          )),
+        )}
+      </div>
+    </div>
+  </div>
+</AlgorithmPlayer>
 
 <style>
-  range-sum-2d-visuals {
-    display: block;
+  .matrices-row {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .highlight-label {
     color: var(--accent) !important;
+  }
+
+  .matrix-grid {
+    display: grid;
+    gap: 2px;
+  }
+
+  .orig-matrix {
+    grid-template-columns: repeat(3, 2.5rem);
+  }
+
+  .prefix-matrix {
+    grid-template-columns: repeat(4, 2.5rem);
   }
 
   .matrix-cell {
@@ -153,48 +162,11 @@ const steps = [
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0e0e0e;
+    background: var(--surface-base);
     border: 1px solid var(--border);
     border-radius: 2px;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     color: var(--muted);
-    transition: all 0.3s;
-  }
-
-  /* Orig matrix highlights */
-  .orig-cell.active-eval {
-    background: rgba(201, 168, 76, 0.15);
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: translateY(-2px);
-  }
-
-  .orig-cell.query-region {
-    background: rgba(125, 171, 125, 0.15);
-    border-color: #7dab7d;
-    color: #a0d0a0;
-  }
-
-  /* Prefix matrix highlights */
-  .prefix-cell.active-write {
-    background: rgba(201, 168, 76, 0.2);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: bold;
-    transform: translateY(-2px);
-    box-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
-  }
-
-  .prefix-cell.sub-region {
-    background: rgba(176, 90, 90, 0.15);
-    border-color: #b05a5a;
-    color: #e09090;
-  }
-
-  .prefix-cell.add-region {
-    background: rgba(90, 130, 176, 0.15);
-    border-color: #5a82b0;
-    color: #90b0e0;
   }
 </style>

@@ -1,0 +1,14 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = "Formula" } = Astro.props;
+---
+
+<div class="anim-row teaching-panel is-hidden" data-formula-panel aria-live="polite">
+  <p class="anim-label">{label}</p>
+  <div class="teaching-panel-body formula-panel-body" data-formula-panel-body>
+    <p class="formula-text" data-formula-text></p>
+  </div>
+</div>

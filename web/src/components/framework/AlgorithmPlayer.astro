@@ -1,8 +1,14 @@
 ---
+import DecisionBar from './DecisionBar.astro';
+import InvariantBar from './InvariantBar.astro';
+import TeachingFormula from './TeachingFormula.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
 interface Props {
   title: string;
-  steps: any[];
+  steps: TeachingStep[];
 }
+
 const { title, steps } = Astro.props;
 const stepsJson = JSON.stringify(steps);
 ---
@@ -17,17 +23,25 @@ const stepsJson = JSON.stringify(steps);
     </div>
   </div>
 
-  <div class="anim-visuals">
-    <slot />
+  <div class="teaching-content">
+    <div class="anim-row">
+      <p class="anim-label">Step</p>
+      <p class="anim-explanation player-explanation"></p>
+    </div>
+
+    <InvariantBar />
+    <DecisionBar />
+    <TeachingFormula />
   </div>
 
-  <div class="anim-row">
-    <p class="anim-label">Step</p>
-    <p class="anim-explanation player-explanation"></p>
+  <div class="anim-visuals">
+    <slot />
   </div>
 </algo-player>
 
 <script>
+  import { applyTeachingHighlights, clearTeachingHighlights } from "../../lib/teaching/highlight";
+
   class AlgoPlayer extends HTMLElement {
     connectedCallback() {
       const stepsData = this.dataset.steps;
@@ -40,31 +54,138 @@ const stepsJson = JSON.stringify(steps);
       this.nextBtn = this.querySelector(".player-next");
       this.stepEl = this.querySelector(".player-step");
       this.explanationEl = this.querySelector(".player-explanation");
+      this.invariantPanel = this.querySelector("[data-invariant-panel]");
+      this.invariantList = this.querySelector("[data-invariant-list]");
+      this.decisionPanel = this.querySelector("[data-decision-panel]");
+      this.decisionTitle = this.querySelector("[data-decision-title]");
+      this.decisionBody = this.querySelector("[data-decision-body]");
+      this.formulaPanel = this.querySelector("[data-formula-panel]");
+      this.formulaText = this.querySelector("[data-formula-text]");
 
       if (this.prevBtn) {
         this.prevBtn.addEventListener("click", () => {
-          if (this.current > 0) { this.current--; this.update(); }
+          if (this.current > 0) {
+            this.current--;
+            this.update();
+          }
         });
       }
 
       if (this.nextBtn) {
         this.nextBtn.addEventListener("click", () => {
-          if (this.current < this.steps.length - 1) { this.current++; this.update(); }
+          if (this.current < this.steps.length - 1) {
+            this.current++;
+            this.update();
+          }
         });
       }
 
-      this.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft' && this.prevBtn && !this.prevBtn.disabled) this.prevBtn.click();
-        if (e.key === 'ArrowRight' && this.nextBtn && !this.nextBtn.disabled) this.nextBtn.click();
+      this.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft" && this.prevBtn && !this.prevBtn.disabled) {
+          this.prevBtn.click();
+        }
+
+        if (e.key === "ArrowRight" && this.nextBtn && !this.nextBtn.disabled) {
+          this.nextBtn.click();
+        }
       });
 
-      // Fire the initial render tick
       setTimeout(() => this.update(), 0);
+    }
+
+    setPanelVisibility(panel, isVisible) {
+      if (!panel) return;
+      panel.classList.toggle("is-hidden", !isVisible);
+    }
+
+    getInvariantLines(step) {
+      if (!step?.invariant) return [];
+      return Array.isArray(step.invariant) ? step.invariant : [step.invariant];
+    }
+
+    getDecision(step) {
+      const title =
+        step?.callout?.title ??
+        (step?.action
+          ? `${step.action.charAt(0).toUpperCase()}${step.action.slice(1)}`
+          : "Decision");
+      const body = step?.reason ?? step?.callout?.body ?? "";
+      const tone = step?.callout?.tone ?? "info";
+      return { title, body, tone };
+    }
+
+    getFormulaText(step) {
+      if (!step?.formula) return "";
+
+      if (typeof step.formula === "string") {
+        return step.formula;
+      }
+
+      if (step.formula.latex) {
+        return step.formula.latex;
+      }
+
+      if (Array.isArray(step.formula.tokens) && step.formula.tokens.length > 0) {
+        return step.formula.tokens.map((token) => token.text).join(" ");
+      }
+
+      return "";
+    }
+
+    renderInvariant(step) {
+      const invariantLines = this.getInvariantLines(step);
+
+      if (!this.invariantList || !this.invariantPanel) return;
+
+      if (invariantLines.length === 0) {
+        this.invariantList.innerHTML = "";
+        this.setPanelVisibility(this.invariantPanel, false);
+        return;
+      }
+
+      this.invariantList.innerHTML = invariantLines
+        .map((line) => `<li>${line}</li>`)
+        .join("");
+      this.setPanelVisibility(this.invariantPanel, true);
+    }
+
+    renderDecision(step) {
+      if (!this.decisionPanel || !this.decisionTitle || !this.decisionBody) return;
+
+      const { title, body, tone } = this.getDecision(step);
+
+      if (!body) {
+        this.decisionTitle.textContent = "";
+        this.decisionBody.textContent = "";
+        this.decisionPanel.removeAttribute("data-tone");
+        this.setPanelVisibility(this.decisionPanel, false);
+        return;
+      }
+
+      this.decisionTitle.textContent = title;
+      this.decisionBody.textContent = body;
+      this.decisionPanel.setAttribute("data-tone", tone);
+      this.setPanelVisibility(this.decisionPanel, true);
+    }
+
+    renderFormula(step) {
+      if (!this.formulaPanel || !this.formulaText) return;
+
+      const formulaText = this.getFormulaText(step);
+
+      if (!formulaText) {
+        this.formulaText.textContent = "";
+        this.setPanelVisibility(this.formulaPanel, false);
+        return;
+      }
+
+      this.formulaText.textContent = formulaText;
+      this.setPanelVisibility(this.formulaPanel, true);
     }
 
     update() {
       if (!this.steps || this.steps.length === 0) return;
-      const s = this.steps[this.current];
+      const step = this.steps[this.current];
 
       if (this.stepEl) {
         this.stepEl.textContent = `Step ${this.current + 1} / ${this.steps.length}`;
@@ -74,18 +195,30 @@ const stepsJson = JSON.stringify(steps);
       if (this.nextBtn) this.nextBtn.disabled = this.current === this.steps.length - 1;
 
       if (this.explanationEl) {
-        this.explanationEl.textContent = s.explanation || s.exp || "";
+        this.explanationEl.textContent = step.explanation || step.exp || "";
       }
 
-      this.dispatchEvent(new CustomEvent('step-change', {
-        detail: { step: s, index: this.current },
-        bubbles: true
-      }));
+      this.renderInvariant(step);
+      this.renderDecision(step);
+      this.renderFormula(step);
+
+      if (Array.isArray(step.highlights) && step.highlights.length > 0) {
+        applyTeachingHighlights(this, step.highlights);
+      } else {
+        clearTeachingHighlights(this);
+      }
+
+      this.dispatchEvent(
+        new CustomEvent("step-change", {
+          detail: { step, index: this.current },
+          bubbles: true,
+        }),
+      );
     }
   }
 
-  if (!customElements.get('algo-player')) {
-    customElements.define('algo-player', AlgoPlayer);
+  if (!customElements.get("algo-player")) {
+    customElements.define("algo-player", AlgoPlayer);
   }
 </script>
 
@@ -101,11 +234,14 @@ const stepsJson = JSON.stringify(steps);
     border-radius: 2px;
   }
   algo-player .animation {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 2px;
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 2rem;
+    backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-lg);
   }
   algo-player .anim-header {
     display: flex;
@@ -117,7 +253,7 @@ const stepsJson = JSON.stringify(steps);
   }
   algo-player .anim-title {
     font-size: 0.78rem;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     color: var(--muted);
   }
   algo-player .anim-controls {
@@ -126,19 +262,27 @@ const stepsJson = JSON.stringify(steps);
     gap: 0.75rem;
   }
   algo-player .anim-btn {
-    background: transparent;
-    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--glass-surface-strong) 88%, transparent);
+    border: 1px solid var(--glass-border);
     color: var(--muted);
     padding: 0.3rem 0.75rem;
     font-size: 0.78rem;
     font-family: Inter, sans-serif;
-    border-radius: 2px;
+    border-radius: 8px;
+    backdrop-filter: blur(calc(var(--glass-blur) * 0.55)) saturate(130%);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 0.55)) saturate(130%);
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s, transform 0.15s;
   }
   algo-player .anim-btn:hover:not(:disabled) {
-    border-color: var(--accent);
+    border-color: var(--glass-border-strong);
     color: var(--accent);
+    background: color-mix(in srgb, var(--glass-surface) 86%, transparent);
+    transform: translateY(-1px);
+  }
+  algo-player .anim-btn:active:not(:disabled) {
+    transform: scale(0.95);
   }
   algo-player .anim-btn:disabled {
     opacity: 0.3;
@@ -150,6 +294,9 @@ const stepsJson = JSON.stringify(steps);
     font-family: Inter, sans-serif;
     min-width: 5rem;
     text-align: center;
+  }
+  algo-player .teaching-content {
+    margin-bottom: 1.5rem;
   }
   algo-player .anim-visuals {
     margin-bottom: 1.25rem;
@@ -172,7 +319,110 @@ const stepsJson = JSON.stringify(steps);
     font-family: Inter, sans-serif;
     color: var(--text);
     line-height: 1.65;
-    min-height: 2.5rem;
+    min-height: 4.5rem;
+  }
+
+  /* Teaching panels */
+  algo-player .teaching-panel.is-hidden {
+    display: none;
+  }
+  algo-player .teaching-panel-body {
+    background: color-mix(in srgb, var(--surface-strong) 85%, transparent);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+  }
+  algo-player .invariant-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--text);
+    font-size: 0.84rem;
+    font-family: Inter, sans-serif;
+    line-height: 1.6;
+  }
+  algo-player .invariant-list li + li {
+    margin-top: 0.3rem;
+  }
+  algo-player .decision-panel-body[data-tone="success"],
+  algo-player [data-decision-panel][data-tone="success"] .decision-panel-body {
+    border-color: color-mix(in srgb, var(--status-easy) 35%, var(--glass-border));
+  }
+  algo-player [data-decision-panel][data-tone="warning"] .decision-panel-body {
+    border-color: color-mix(in srgb, var(--status-medium) 35%, var(--glass-border));
+  }
+  algo-player [data-decision-panel][data-tone="danger"] .decision-panel-body {
+    border-color: color-mix(in srgb, var(--status-hard) 35%, var(--glass-border));
+  }
+  algo-player .decision-title {
+    margin: 0 0 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    font-family: Inter, sans-serif;
+  }
+  algo-player .decision-body {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.84rem;
+    font-family: Inter, sans-serif;
+    line-height: 1.6;
+  }
+  algo-player .formula-panel-body {
+    overflow-x: auto;
+  }
+  algo-player .formula-text {
+    margin: 0;
+    white-space: pre-wrap;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    line-height: 1.65;
+  }
+
+  /* Shared teaching highlights */
+  algo-player [data-teach-target] {
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease,
+      opacity 0.2s ease;
+  }
+  algo-player .teach-focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+    transform: translateY(-1px);
+  }
+  algo-player .teach-compare {
+    border-color: var(--status-info) !important;
+    background: color-mix(in srgb, var(--status-info) 15%, transparent) !important;
+    color: var(--status-info) !important;
+  }
+  algo-player .teach-write {
+    border-color: var(--accent) !important;
+    background: color-mix(in srgb, var(--status-medium) 20%, transparent) !important;
+    color: var(--accent) !important;
+    box-shadow: var(--shadow-sm);
+  }
+  algo-player .teach-discard {
+    opacity: 0.45;
+  }
+  algo-player .teach-match,
+  algo-player .teach-confirmed {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent) !important;
+    color: var(--status-easy) !important;
+  }
+  algo-player .teach-region-add {
+    border-color: var(--status-info) !important;
+    background: color-mix(in srgb, var(--status-info) 15%, transparent) !important;
+    color: var(--status-info) !important;
+  }
+  algo-player .teach-region-subtract {
+    border-color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+    color: var(--status-hard) !important;
   }
 
   /* Shared Data Structure Visuals (Available to all renderers) */
@@ -207,9 +457,10 @@ const stepsJson = JSON.stringify(steps);
     border: 1px solid var(--border);
     border-radius: 2px;
     font-size: 1rem;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
+    font-weight: 500;
     color: var(--text);
-    background: #0e0e0e;
+    background: var(--surface-base);
     transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
   }
   algo-player .cell-idx {
@@ -228,7 +479,7 @@ const stepsJson = JSON.stringify(steps);
   }
   algo-player .ptr {
     font-size: 0.65rem;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-weight: bold;
     padding: 0.1rem 0.3rem;
     border-radius: 2px;
@@ -250,14 +501,14 @@ const stepsJson = JSON.stringify(steps);
     font-size: 0.8rem;
     color: var(--muted);
     opacity: 0.4;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-style: italic;
   }
   algo-player .hashmap-entry {
     font-size: 0.82rem;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     color: var(--text);
-    background: #0e0e0e;
+    background: var(--surface-base);
     border: 1px solid var(--border);
     border-radius: 2px;
     padding: 0.25rem 0.6rem;
@@ -275,7 +526,7 @@ const stepsJson = JSON.stringify(steps);
     margin-bottom: 1.5rem;
   }
   algo-player .stat-box {
-    background: #0e0e0e;
+    background: var(--surface-base);
     border: 1px solid var(--border);
     border-radius: 2px;
     padding: 0.5rem 1rem;
@@ -295,7 +546,7 @@ const stepsJson = JSON.stringify(steps);
   }
   algo-player .stat-val {
     font-size: 1.25rem;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     color: var(--text);
     font-weight: bold;
   }

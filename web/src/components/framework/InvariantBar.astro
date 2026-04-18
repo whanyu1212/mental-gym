@@ -1,0 +1,14 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = "Invariant" } = Astro.props;
+---
+
+<div class="anim-row teaching-panel is-hidden" data-invariant-panel aria-live="polite">
+  <p class="anim-label">{label}</p>
+  <div class="teaching-panel-body">
+    <ul class="invariant-list" data-invariant-list></ul>
+  </div>
+</div>

@@ -4,111 +4,312 @@ import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 const nums = [100, 4, 200, 1, 3, 2];
 
 const steps = [
-  { phase: 'init', active: -1, longest: 0, curr: 0, chain: [], exp: "First, add all elements to a Hash Set for O(1) lookups." },
+  {
+    phase: 'init',
+    active: -1,
+    longest: 0,
+    curr: 0,
+    chain: [],
+    action: 'write',
+    exp: 'Insert all numbers into a hash set for O(1) membership checks.',
+    reason: 'Consecutive detection depends on fast x-1 and x+1 lookups.',
+    invariant: 'Set contains every input value exactly once.',
+    formula: 'set.has(x)',
+    decision: 'Initialize set and longest = 0.',
+    targets: ['set-box', 'longest-box', 'rule-box'],
+  },
 
-  { phase: 'check', active: 100, longest: 0, curr: 0, chain: [], exp: "Check 100. Does 99 exist in the set? No. This means 100 is the start of a sequence!" },
-  { phase: 'count', active: 100, longest: 1, curr: 1, chain: [100], exp: "Sequence starts at 100. Does 101 exist? No. Sequence ends. Length is 1." },
+  {
+    phase: 'check',
+    active: 100,
+    longest: 0,
+    curr: 0,
+    chain: [],
+    start: true,
+    action: 'compare',
+    exp: 'Check 100: 99 is not in set, so 100 is a sequence start.',
+    reason: 'A number starts a sequence only when x-1 does not exist.',
+    invariant: 'Only starts launch counting to avoid redundant scans.',
+    formula: 'if !set.has(x-1) -> start',
+    decision: 'Start counting from 100.',
+    targets: ['set-100', 'rule-box'],
+  },
+  {
+    phase: 'count',
+    active: 100,
+    longest: 1,
+    curr: 1,
+    chain: [100],
+    action: 'expand',
+    exp: 'Count sequence from 100: 101 missing, so length is 1.',
+    reason: 'No next value means sequence ends immediately.',
+    invariant: 'curr equals chain length while expanding.',
+    formula: 'while set.has(x+len)',
+    decision: 'Update longest to 1.',
+    targets: ['set-100', 'chain-box', 'longest-box'],
+  },
 
-  { phase: 'check', active: 4, longest: 1, curr: 0, chain: [], exp: "Check 4. Does 3 exist in the set? YES. So 4 is NOT the start of a sequence. Skip it to avoid redundant work." },
+  {
+    phase: 'check',
+    active: 4,
+    longest: 1,
+    curr: 0,
+    chain: [],
+    start: false,
+    action: 'discard',
+    exp: 'Check 4: 3 exists, so 4 is not a start. Skip.',
+    reason: 'Skipping non-starts avoids recounting same sequence.',
+    invariant: 'Each sequence is counted exactly once from its smallest element.',
+    formula: 'if set.has(x-1) -> skip',
+    decision: 'Do not count from 4.',
+    targets: ['set-4'],
+  },
 
-  { phase: 'check', active: 200, longest: 1, curr: 0, chain: [], exp: "Check 200. Does 199 exist? No. Start of a sequence!" },
-  { phase: 'count', active: 200, longest: 1, curr: 1, chain: [200], exp: "Sequence starts at 200. Does 201 exist? No. Sequence ends. Length is 1. Max remains 1." },
+  {
+    phase: 'check',
+    active: 200,
+    longest: 1,
+    curr: 0,
+    chain: [],
+    start: true,
+    action: 'compare',
+    exp: 'Check 200: 199 missing, so 200 is a start.',
+    reason: 'Predecessor absence confirms start.',
+    invariant: 'Starts define unique sequence entry points.',
+    formula: '!set.has(199)',
+    decision: 'Start counting from 200.',
+    targets: ['set-200'],
+  },
+  {
+    phase: 'count',
+    active: 200,
+    longest: 1,
+    curr: 1,
+    chain: [200],
+    action: 'expand',
+    exp: 'Count from 200: 201 missing, sequence length is 1.',
+    reason: 'Single element sequence.',
+    invariant: 'Longest remains max(previous, curr).',
+    formula: 'longest = max(longest, curr)',
+    decision: 'Longest stays 1.',
+    targets: ['set-200', 'chain-box', 'longest-box'],
+  },
 
-  { phase: 'check', active: 1, longest: 1, curr: 0, chain: [], exp: "Check 1. Does 0 exist? No. Start of a sequence!" },
-  { phase: 'count', active: 1, longest: 1, curr: 1, chain: [1], exp: "Found 1. Current length = 1. Does 2 exist? YES!" },
-  { phase: 'count', active: 2, longest: 1, curr: 2, chain: [1, 2], exp: "Found 2. Current length = 2. Does 3 exist? YES!" },
-  { phase: 'count', active: 3, longest: 1, curr: 3, chain: [1, 2, 3], exp: "Found 3. Current length = 3. Does 4 exist? YES!" },
-  { phase: 'count', active: 4, longest: 4, curr: 4, chain: [1, 2, 3, 4], exp: "Found 4. Current length = 4. Does 5 exist? No. Sequence ends. New max length is 4!" },
+  {
+    phase: 'check',
+    active: 1,
+    longest: 1,
+    curr: 0,
+    chain: [],
+    start: true,
+    action: 'compare',
+    exp: 'Check 1: 0 missing, so 1 is a start.',
+    reason: 'Potential beginning of a longer run.',
+    invariant: 'Only start points trigger forward expansion.',
+    formula: '!set.has(0)',
+    decision: 'Start counting from 1.',
+    targets: ['set-1'],
+  },
+  {
+    phase: 'count',
+    active: 1,
+    longest: 1,
+    curr: 1,
+    chain: [1],
+    action: 'expand',
+    exp: 'Found 1. Next value 2 exists, continue.',
+    reason: 'Consecutive successor found.',
+    invariant: 'Chain stores contiguous values.',
+    formula: 'set.has(1+1)',
+    decision: 'Extend chain.',
+    targets: ['set-1', 'chain-box'],
+  },
+  {
+    phase: 'count',
+    active: 2,
+    longest: 1,
+    curr: 2,
+    chain: [1, 2],
+    action: 'expand',
+    exp: 'Found 2. Next value 3 exists, continue.',
+    reason: 'Still consecutive.',
+    invariant: 'curr increments by 1 per successful successor.',
+    formula: 'set.has(2+1)',
+    decision: 'Extend chain.',
+    targets: ['set-2', 'chain-box'],
+  },
+  {
+    phase: 'count',
+    active: 3,
+    longest: 1,
+    curr: 3,
+    chain: [1, 2, 3],
+    action: 'expand',
+    exp: 'Found 3. Next value 4 exists, continue.',
+    reason: 'Run continues through 4.',
+    invariant: 'Chain remains strictly increasing by 1.',
+    formula: 'set.has(3+1)',
+    decision: 'Extend chain.',
+    targets: ['set-3', 'chain-box'],
+  },
+  {
+    phase: 'count',
+    active: 4,
+    longest: 4,
+    curr: 4,
+    chain: [1, 2, 3, 4],
+    action: 'confirm',
+    exp: 'Found 4. Next value 5 missing, run ends at length 4.',
+    reason: 'End of maximal consecutive chain from start 1.',
+    invariant: 'longest tracks best chain length seen so far.',
+    formula: 'longest = max(1, 4) = 4',
+    decision: 'Update longest to 4.',
+    targets: ['set-4', 'chain-box', 'longest-box'],
+  },
 
-  { phase: 'check', active: 3, longest: 4, curr: 0, chain: [], exp: "Check 3. Does 2 exist? YES. Skip." },
-  { phase: 'check', active: 2, longest: 4, curr: 0, chain: [], exp: "Check 2. Does 1 exist? YES. Skip." },
+  {
+    phase: 'check',
+    active: 3,
+    longest: 4,
+    curr: 0,
+    chain: [],
+    start: false,
+    action: 'discard',
+    exp: 'Check 3: 2 exists, so skip.',
+    reason: 'Not a sequence start.',
+    invariant: 'Non-start elements are never recounted.',
+    formula: 'set.has(3-1)',
+    decision: 'Skip 3.',
+    targets: ['set-3'],
+  },
+  {
+    phase: 'check',
+    active: 2,
+    longest: 4,
+    curr: 0,
+    chain: [],
+    start: false,
+    action: 'discard',
+    exp: 'Check 2: 1 exists, so skip.',
+    reason: 'Not a sequence start.',
+    invariant: 'Only minimal value of sequence can start counting.',
+    formula: 'set.has(2-1)',
+    decision: 'Skip 2.',
+    targets: ['set-2'],
+  },
 
-  { phase: 'done', active: -1, longest: 4, curr: 0, chain: [], exp: "Done! The longest consecutive sequence is length 4." }
+  {
+    phase: 'done',
+    active: -1,
+    longest: 4,
+    curr: 0,
+    chain: [],
+    action: 'confirm',
+    exp: 'Done! Longest consecutive sequence length is 4.',
+    reason: 'Best run found was [1,2,3,4].',
+    invariant: 'Result equals maximum run length among all valid starts.',
+    formula: 'answer = 4',
+    decision: 'Return 4.',
+    targets: ['longest-box', 'result-box'],
+  },
 ];
 ---
 
 <longest-consecutive-visuals>
   <AlgorithmPlayer title="nums = [100, 4, 200, 1, 3, 2]" steps={steps}>
-
-    <div class="stats-row" style="margin-bottom: 2rem;">
-      <div class="stat-box highlight">
+    <div class="stats-row lcs-meta-row">
+      <div class="stat-box lcs-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Start Rule</span>
+        <span class="stat-val">start if (x-1) not in set</span>
+      </div>
+      <div class="stat-box lcs-longest-box" data-teach-target="longest-box">
         <span class="stat-label">Longest Sequence</span>
         <span class="stat-val lcs-longest">0</span>
       </div>
-      <div class="stat-box" style="border-color: rgba(90, 130, 176, 0.4); background: rgba(90, 130, 176, 0.05);">
+      <div class="stat-box lcs-curr-box">
         <span class="stat-label">Current Sequence</span>
-        <span class="stat-val lcs-curr" style="color: #5a82b0;">0</span>
+        <span class="stat-val lcs-curr">0</span>
+      </div>
+      <div class="stat-box lcs-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val lcs-status">In Progress</span>
       </div>
     </div>
 
-    <!-- Active Chain -->
-    <div class="anim-row" style="min-height: 4rem;">
+    <div class="anim-row lcs-chain-wrap">
       <p class="anim-label">Active Sequence Chain</p>
-      <div class="array-row lcs-chain">
-        <!-- Rendered via JS -->
-      </div>
+      <div class="array-row lcs-chain" data-teach-target="chain-box"></div>
     </div>
 
-    <!-- Hash Set -->
-    <div class="anim-row" style="margin-top: 2rem;">
+    <div class="anim-row lcs-set-wrap" data-teach-target="set-box">
       <p class="anim-label">Hash Set O(1) Lookups</p>
-      <div class="hashmap-row lcs-set" style="gap: 0.8rem;">
-        {nums.map(n => (
-          <div class="array-cell lcs-set-cell" data-val={n}>
-            <span class="cell-val" style="border-radius: 50%;">{n}</span>
+      <div class="hashmap-row lcs-set">
+        {nums.map((num) => (
+          <div class="array-cell lcs-set-cell" data-val={num} data-teach-target={`set-${num}`}>
+            <span class="cell-val lcs-set-val">{num}</span>
           </div>
         ))}
       </div>
     </div>
-
   </AlgorithmPlayer>
 </longest-consecutive-visuals>
 
 <script>
   class LongestConsecutiveVisuals extends HTMLElement {
     connectedCallback() {
-      this.longestEl = this.querySelector(".lcs-longest");
-      this.currEl = this.querySelector(".lcs-curr");
-      this.chainEl = this.querySelector(".lcs-chain");
-      this.setCells = Array.from(this.querySelectorAll(".lcs-set-cell"));
+      this.longestEl = this.querySelector('.lcs-longest');
+      this.currEl = this.querySelector('.lcs-curr');
+      this.statusEl = this.querySelector('.lcs-status');
+      this.chainEl = this.querySelector('.lcs-chain');
+      this.setCells = Array.from(this.querySelectorAll('.lcs-set-cell'));
+      this.resultBox = this.querySelector('.lcs-result-box');
+      this.longestBox = this.querySelector('.lcs-longest-box');
 
-      this.addEventListener("step-change", (e: any) => {
+      this.addEventListener('step-change', (e) => {
         const s = e.detail.step;
 
-        // Stats
-        if (this.longestEl) this.longestEl.textContent = s.longest;
-        if (this.currEl) this.currEl.textContent = s.curr;
+        if (this.longestEl) this.longestEl.textContent = String(s.longest);
+        if (this.currEl) this.currEl.textContent = String(s.curr);
+        if (this.statusEl) {
+          this.statusEl.textContent = s.phase === 'done' ? 'Complete' : 'In Progress';
+        }
 
-        // Chain Render
+        this.resultBox?.classList.remove('confirmed');
+        this.longestBox?.classList.remove('highlight');
+        if (s.phase === 'done') this.resultBox?.classList.add('confirmed');
+        if (s.longest > 0) this.longestBox?.classList.add('highlight');
+
         if (this.chainEl) {
           if (!s.chain || s.chain.length === 0) {
-            this.chainEl.innerHTML = "<span style='color: var(--muted); font-style: italic; opacity: 0.5;'>None</span>";
+            this.chainEl.innerHTML = "<span class='lcs-empty'>None</span>";
           } else {
-            this.chainEl.innerHTML = s.chain.map((n: number, idx: number) => `
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <div class="array-cell active-chain-cell">
-                  <span class="cell-val" style="border-color: #5a82b0; color: #90b0e0; background: rgba(90, 130, 176, 0.15); transform: translateY(0); border-radius: 50%; width: 2.5rem; height: 2.5rem;">${n}</span>
-                </div>
-                ${idx < s.chain.length - 1 ? `<span style="color: #5a82b0;">→</span>` : ''}
-              </div>
-            `).join("");
+            this.chainEl.innerHTML = s.chain
+              .map((num, idx) => {
+                return `
+                  <div class="lcs-chain-node">
+                    <div class="array-cell active-chain-cell">
+                      <span class="cell-val lcs-chain-val">${num}</span>
+                    </div>
+                    ${idx < s.chain.length - 1 ? `<span class="lcs-chain-arrow">→</span>` : ''}
+                  </div>
+                `;
+              })
+              .join('');
           }
         }
 
-        // Set Cells
-        this.setCells.forEach((cell: any) => {
+        this.setCells.forEach((cell) => {
           const val = parseInt(cell.dataset.val, 10);
-          const valSpan = cell.querySelector(".cell-val");
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
 
-          if (valSpan) {
-            valSpan.className = "cell-val";
-            valSpan.style.borderRadius = "50%";
+          valSpan.className = 'cell-val lcs-set-val';
 
-            if (s.phase === 'check' && val === s.active) {
-              valSpan.classList.add("active-eval");
-            } else if (s.phase === 'count' && s.chain.includes(val)) {
-              valSpan.classList.add("success-val");
-            }
+          if (s.phase === 'check' && val === s.active) {
+            if (s.start) valSpan.classList.add('active-start');
+            else valSpan.classList.add('active-skip');
+          } else if (s.phase === 'count' && s.chain.includes(val)) {
+            valSpan.classList.add('success-val');
           }
         });
       });
@@ -125,28 +326,113 @@ const steps = [
     display: block;
   }
 
-  .stat-box.highlight {
-    border-color: rgba(201, 168, 76, 0.4);
-    background: rgba(201, 168, 76, 0.05);
+  .lcs-meta-row {
+    margin-bottom: 2rem;
   }
-  .stat-box.highlight .stat-val {
+
+  .lcs-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .lcs-curr-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+  }
+
+  .lcs-curr-box .stat-val {
+    color: var(--status-info);
+  }
+
+  .lcs-longest-box.highlight {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .lcs-longest-box .stat-val {
     color: var(--accent);
   }
 
-  .cell-val.active-eval {
+  .lcs-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .lcs-chain-wrap {
+    min-height: 4rem;
+  }
+
+  .lcs-empty {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .lcs-chain-node {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .lcs-chain-val {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    transform: translateY(0);
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .lcs-chain-arrow {
+    color: var(--status-info);
+  }
+
+  .lcs-set-wrap {
+    margin-top: 2rem;
+  }
+
+  .lcs-set {
+    gap: 0.8rem;
+  }
+
+  .lcs-set-val {
+    border-radius: 50%;
+  }
+
+  .cell-val.active-start {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.15);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-skip {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
     transform: translateY(-4px);
   }
 
   .cell-val.success-val {
-    border-color: #5a82b0;
-    color: #90b0e0;
-    background: rgba(90, 130, 176, 0.15);
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
   }
 
   .active-chain-cell {
     animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes pop-in {
+    from {
+      transform: scale(0.9);
+      opacity: 0.4;
+    }
+
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 </style>

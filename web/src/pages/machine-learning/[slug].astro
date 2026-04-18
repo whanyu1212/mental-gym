@@ -74,7 +74,7 @@ const { problem } = Astro.props;
 			</div>
 			<div class="code-panels">
 				<div class="code-wrapper">
-					<Code code={problem.solution.python} lang="python" theme="github-dark" />
+					<Code code={problem.solution.python} lang="python" theme={{ light: "github-light", dark: "github-dark" }} />
 				</div>
 			</div>
 		</section>
@@ -164,15 +164,15 @@ const { problem } = Astro.props;
 	}
 
 	.easy {
-		color: #7dab7d;
+		color: var(--status-easy);
 	}
 
 	.medium {
-		color: #c9a84c;
+		color: var(--status-medium);
 	}
 
 	.hard {
-		color: #b05a5a;
+		color: var(--status-hard);
 	}
 
 	.tag {
@@ -275,6 +275,6 @@ const { problem } = Astro.props;
 	}
 
 	.code-wrapper :global(code) {
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-family: var(--font-mono);
 	}
 </style>

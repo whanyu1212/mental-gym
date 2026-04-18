@@ -132,16 +132,17 @@ const { Content } = await render(note);
 	}
 
 	.note :global(code) {
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-family: var(--font-mono);
+		font-weight: 500;
 		font-size: 0.87em;
-		background: rgba(201, 168, 76, 0.1);
+		background: var(--accent-dim);
 		padding: 0.1em 0.4em;
 		border-radius: 2px;
 		color: #d4b86a;
 	}
 
 	.note :global(pre) {
-		background: #0a0a0a;
+		background: var(--surface-strong);
 		border: 1px solid var(--border);
 		border-radius: 2px;
 		padding: 1rem 1.25rem;
@@ -185,7 +186,7 @@ const { Content } = await render(note);
 	}
 
 	.note :global(tr:hover td) {
-		background: rgba(201, 168, 76, 0.04);
+		background: color-mix(in srgb, var(--status-medium) 4%, transparent);
 	}
 
 	.note :global(blockquote) {

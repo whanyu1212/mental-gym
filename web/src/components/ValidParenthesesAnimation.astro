@@ -1,30 +1,145 @@
 ---
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
-const s = "()[]{}".split("");
+const s = '()[]{}'.split('');
+const pairs = {
+  ')': '(',
+  ']': '[',
+  '}': '{',
+};
 
 const steps = [
-  { i: 0, char: '(', stack: ['('], valid: true, exp: "Read '('. It's an opening bracket, push to stack." },
-  { i: 1, char: ')', stack: [], valid: true, exp: "Read ')'. Matches top of stack '('. Pop from stack." },
-  { i: 2, char: '[', stack: ['['], valid: true, exp: "Read '['. It's an opening bracket, push to stack." },
-  { i: 3, char: ']', stack: [], valid: true, exp: "Read ']'. Matches top of stack '['. Pop from stack." },
-  { i: 4, char: '{', stack: ['{'], valid: true, exp: "Read '{'. It's an opening bracket, push to stack." },
-  { i: 5, char: '}', stack: [], valid: true, exp: "Read '}'. Matches top of stack '{'. Pop from stack." },
-  { i: 6, char: '', stack: [], valid: true, exp: "End of string. Stack is empty. Valid parentheses!" },
+  {
+    i: -1,
+    char: '',
+    stack: [],
+    valid: true,
+    action: 'write',
+    exp: 'Initialize an empty stack to track unmatched opening brackets.',
+    reason: 'Open brackets wait for their matching closer later in the string.',
+    invariant: 'Stack always contains unmatched opening brackets in order.',
+    formula: 'open -> push, close -> must match stack top then pop',
+    decision: 'Start with stack = [].',
+    targets: ['stack-box', 'rule-box'],
+  },
+  {
+    i: 0,
+    char: '(',
+    stack: ['('],
+    valid: true,
+    action: 'write',
+    exp: "Read '('. It is an opening bracket, so push it.",
+    reason: 'Opening brackets are unresolved until a closer appears.',
+    invariant: 'Top of stack is the most recent unmatched opener.',
+    formula: 'push("(")',
+    decision: 'Stack becomes [(].',
+    targets: ['char-0', 'stack-box'],
+  },
+  {
+    i: 1,
+    char: ')',
+    stack: [],
+    valid: true,
+    action: 'compare',
+    exp: "Read ')'. It matches stack top '(' so pop.",
+    reason: 'A closing bracket is valid only if it matches the latest opener.',
+    invariant: 'Matched pair removes one opener from stack.',
+    formula: 'top == pairs[")"] -> pop()',
+    decision: "Pop '('.",
+    targets: ['char-1', 'stack-box', 'match-box'],
+  },
+  {
+    i: 2,
+    char: '[',
+    stack: ['['],
+    valid: true,
+    action: 'write',
+    exp: "Read '['. It is an opening bracket, so push it.",
+    reason: 'New opener starts a new pending match.',
+    invariant: 'Stack stores nested/ordered openers.',
+    formula: 'push("[")',
+    decision: 'Stack becomes [[].',
+    targets: ['char-2', 'stack-box'],
+  },
+  {
+    i: 3,
+    char: ']',
+    stack: [],
+    valid: true,
+    action: 'compare',
+    exp: "Read ']'. It matches stack top '[' so pop.",
+    reason: 'Close must match exact opener type at stack top.',
+    invariant: 'No crossing matches are allowed.',
+    formula: 'top == pairs["]"] -> pop()',
+    decision: "Pop '['.",
+    targets: ['char-3', 'stack-box', 'match-box'],
+  },
+  {
+    i: 4,
+    char: '{',
+    stack: ['{'],
+    valid: true,
+    action: 'write',
+    exp: "Read '{'. It is an opening bracket, so push it.",
+    reason: 'Still building pending matches.',
+    invariant: 'Every pushed opener needs a future matching closer.',
+    formula: 'push("{")',
+    decision: 'Stack becomes [{].',
+    targets: ['char-4', 'stack-box'],
+  },
+  {
+    i: 5,
+    char: '}',
+    stack: [],
+    valid: true,
+    action: 'compare',
+    exp: "Read '}'. It matches stack top '{' so pop.",
+    reason: 'Exact type match resolves the latest pending opener.',
+    invariant: 'After processing this index, all seen brackets are matched.',
+    formula: 'top == pairs["}"] -> pop()',
+    decision: "Pop '{'.",
+    targets: ['char-5', 'stack-box', 'match-box'],
+  },
+  {
+    i: 6,
+    char: '',
+    stack: [],
+    valid: true,
+    action: 'confirm',
+    exp: 'End of string and stack is empty, so parentheses are valid.',
+    reason: 'All openers were matched in correct order.',
+    invariant: 'Valid iff no mismatch occurred and final stack length is 0.',
+    formula: 'valid = (no mismatch) and (stack.length == 0)',
+    decision: 'Return true.',
+    targets: ['stack-box', 'result-box'],
+  },
 ];
 ---
 
 <valid-parentheses-visuals>
   <AlgorithmPlayer title="s = '()[]{}'" steps={steps}>
-    <div class="anim-row" style="display: flex; gap: 3rem; align-items: flex-end; min-height: 200px;">
+    <div class="stats-row vp-meta-row">
+      <div class="stat-box vp-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">open: push | close: match top then pop</span>
+      </div>
+      <div class="stat-box vp-match-box" data-teach-target="match-box">
+        <span class="stat-label">Current Check</span>
+        <span class="stat-val vp-match">-</span>
+      </div>
+      <div class="stat-box vp-result-box" data-teach-target="result-box">
+        <span class="stat-label">Result</span>
+        <span class="stat-val vp-result">-</span>
+      </div>
+    </div>
 
-      <!-- Left: String Array -->
-      <div style="flex: 1;">
+    <div class="anim-row vp-layout">
+      <div class="vp-left">
         <p class="anim-label">String</p>
         <div class="array-row vp-string-row">
           {s.map((char, i) => (
             <div class="array-col">
-              <div class="array-cell vp-char-cell" data-idx={i}>
+              <div class="array-cell vp-char-cell" data-idx={i} data-teach-target={`char-${i}`}>
                 <span class="cell-val">{char}</span>
                 <span class="cell-idx">{i}</span>
               </div>
@@ -36,12 +151,9 @@ const steps = [
         </div>
       </div>
 
-      <!-- Right: Stack -->
-      <div style="width: 120px; display: flex; flex-direction: column; align-items: center;">
+      <div class="vp-right">
         <p class="anim-label">Stack</p>
-        <div class="stack-container vp-stack">
-          <!-- Stack elements dynamically rendered here -->
-        </div>
+        <div class="stack-container vp-stack" data-teach-target="stack-box"></div>
         <div class="stack-base"></div>
       </div>
     </div>
@@ -51,44 +163,69 @@ const steps = [
 <script>
   class ValidParenthesesVisuals extends HTMLElement {
     connectedCallback() {
-      this.charCells = Array.from(this.querySelectorAll(".vp-char-cell"));
-      this.ptrCols = Array.from(this.querySelectorAll(".vp-ptr-col"));
-      this.stackEl = this.querySelector(".vp-stack");
+      this.charCells = Array.from(this.querySelectorAll('.vp-char-cell'));
+      this.ptrCols = Array.from(this.querySelectorAll('.vp-ptr-col'));
+      this.stackEl = this.querySelector('.vp-stack');
+      this.matchEl = this.querySelector('.vp-match');
+      this.resultEl = this.querySelector('.vp-result');
+      this.matchBox = this.querySelector('.vp-match-box');
+      this.resultBox = this.querySelector('.vp-result-box');
 
-      this.addEventListener("step-change", (e: any) => {
-        const s = e.detail.step;
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
 
-        // String Highlights
-        this.charCells.forEach((cell: any, i: number) => {
-          const valSpan = cell.querySelector(".cell-val");
-          if (valSpan) {
-            valSpan.classList.remove("active-eval", "visited", "conflict");
-            if (i < s.i) valSpan.classList.add("visited");
-            if (i === s.i) {
-              valSpan.classList.add("active-eval");
-              if (!s.valid) valSpan.classList.add("conflict");
-            }
+        this.charCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.classList.remove('active-open', 'active-close', 'visited', 'conflict');
+
+          if (i < step.i) valSpan.classList.add('visited');
+          if (i === step.i) {
+            if (['(', '[', '{'].includes(step.char)) valSpan.classList.add('active-open');
+            else valSpan.classList.add('active-close');
+            if (!step.valid) valSpan.classList.add('conflict');
           }
         });
 
-        // Pointer
-        this.ptrCols.forEach((col: any, i: number) => {
-          const ptr = col.querySelector(".ptr-l");
-          if (ptr) ptr.className = `ptr ptr-l ${i === s.i ? "" : "hidden"}`;
+        this.ptrCols.forEach((col, i) => {
+          const ptr = col.querySelector('.ptr-l');
+          if (ptr) ptr.className = `ptr ptr-l ${i === step.i ? '' : 'hidden'}`;
         });
 
-        // Stack Render
         if (this.stackEl) {
-          const stackItems = s.stack.map((char: string, idx: number) => {
-            const isTop = idx === s.stack.length - 1;
-            return `<div class="stack-item ${isTop ? 'stack-top' : ''}">${char}</div>`;
-          });
-
-          // Add placeholders to keep height consistent (optional, or let flex-end handle it)
-          this.stackEl.innerHTML = stackItems.reverse().join(""); // visually top element first
-
-          if (s.stack.length === 0) {
+          if (!step.stack || step.stack.length === 0) {
             this.stackEl.innerHTML = `<span class="stack-empty">Empty</span>`;
+          } else {
+            const reversed = [...step.stack].reverse();
+            this.stackEl.innerHTML = reversed
+              .map((char, idx) => {
+                const isTop = idx === 0;
+                return `<div class="stack-item ${isTop ? 'stack-top' : ''}">${char}</div>`;
+              })
+              .join('');
+          }
+        }
+
+        this.matchBox?.classList.remove('pulse', 'conflict');
+        this.resultBox?.classList.remove('confirmed', 'conflict');
+
+        if (this.matchEl) {
+          if (step.action === 'compare') {
+            const expected = pairs[step.char] ?? '?';
+            this.matchEl.textContent = `${step.char} ↔ ${expected}`;
+            this.matchBox?.classList.add('pulse');
+            if (!step.valid) this.matchBox?.classList.add('conflict');
+          } else {
+            this.matchEl.textContent = '-';
+          }
+        }
+
+        if (this.resultEl) {
+          if (step.action === 'confirm') {
+            this.resultEl.textContent = String(step.valid);
+            this.resultBox?.classList.add(step.valid ? 'confirmed' : 'conflict');
+          } else {
+            this.resultEl.textContent = '-';
           }
         }
       });
@@ -105,22 +242,80 @@ const steps = [
     display: block;
   }
 
+  .vp-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .vp-layout {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-end;
+    min-height: 200px;
+  }
+
+  .vp-left {
+    flex: 1;
+  }
+
+  .vp-right {
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+
+  .vp-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .vp-match-box .stat-val {
+    color: var(--accent);
+  }
+
+  .vp-result-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  .stat-box.pulse {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .stat-box.conflict {
+    border-color: color-mix(in srgb, var(--status-hard) 55%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+  }
+
+  .stat-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 55%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
   .vp-string-row {
     flex-wrap: nowrap;
     overflow-x: auto;
   }
 
-  .cell-val.active-eval {
+  .cell-val.active-open {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-close {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.15);
+    background: var(--accent-dim);
     transform: translateY(-4px);
   }
 
   .cell-val.conflict {
-    border-color: #b05a5a !important;
-    color: #e09090 !important;
-    background: rgba(176, 90, 90, 0.15) !important;
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
     animation: shake 0.4s ease-in-out;
   }
 
@@ -128,16 +323,18 @@ const steps = [
     opacity: 0.3;
   }
 
-  .ptr-l { background: rgba(201, 168, 76, 0.2); color: #c9a84c; }
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-medium) 20%, transparent);
+    color: var(--status-medium);
+  }
 
-  /* Stack Styles */
   .stack-container {
     width: 100px;
     height: 150px;
     border-left: 2px solid var(--border);
     border-right: 2px solid var(--border);
     border-bottom: 2px solid var(--border);
-    background: #0a0a0a;
+    background: var(--surface-strong);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -167,7 +364,7 @@ const steps = [
     background: #1a1a1a;
     border: 1px solid #333;
     border-radius: 2px;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 1rem;
     color: var(--text);
     animation: slide-down 0.2s ease-out forwards;
@@ -177,7 +374,7 @@ const steps = [
     border-color: var(--accent);
     color: var(--accent);
     background: rgba(201, 168, 76, 0.1);
-    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--status-medium) 20%, transparent);
   }
 
   .stack-empty {
@@ -189,13 +386,29 @@ const steps = [
   }
 
   @keyframes slide-down {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   @keyframes shake {
-    0%, 100% { transform: translateX(0) translateY(-4px); }
-    25% { transform: translateX(-4px) translateY(-4px); }
-    75% { transform: translateX(4px) translateY(-4px); }
+    0%,
+    100% {
+      transform: translateX(0) translateY(-4px);
+    }
+
+    25% {
+      transform: translateX(-4px) translateY(-4px);
+    }
+
+    75% {
+      transform: translateX(4px) translateY(-4px);
+    }
   }
 </style>

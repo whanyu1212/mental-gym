@@ -63,7 +63,7 @@ const { language, code } = Astro.props;
 	.solution-code {
 		margin: 0;
 		padding: 0.9rem;
-		background: #0a0f1d;
+		background: var(--surface-strong);
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		overflow-x: auto;
@@ -78,8 +78,7 @@ const { language, code } = Astro.props;
 	}
 
 	code {
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-			"Courier New", monospace;
+		font-family: var(--font-mono);
 		font-size: 0.9rem;
 		line-height: 1.5;
 	}

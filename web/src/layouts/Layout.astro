@@ -17,9 +17,17 @@ const pathname = Astro.url.pathname;
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<script is:inline>
+			(() => {
+				const saved = localStorage.getItem("theme");
+				const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+				const theme = saved === "light" || saved === "dark" ? saved : prefersDark ? "dark" : "light";
+				document.documentElement.setAttribute("data-theme", theme);
+			})();
+		</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
 		{math && <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />}
 	</head>
 	<body>
@@ -34,29 +42,109 @@ const pathname = Astro.url.pathname;
 					<a href="/notes" class={pathname.startsWith("/notes") ? "active" : ""}
 						>Notes</a
 					>
+					<button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+						<span class="theme-toggle__icon" aria-hidden="true">◐</span>
+					</button>
 				</nav>
 			</div>
 		</header>
 		<main class="container page-content">
 			<slot />
 		</main>
+		<script is:inline>
+			(() => {
+				const html = document.documentElement;
+				const btn = document.getElementById("theme-toggle");
+				const icon = btn?.querySelector(".theme-toggle__icon");
+
+				if (!btn || !icon) {
+					return;
+				}
+
+				const applyTheme = (theme) => {
+					html.setAttribute("data-theme", theme);
+					localStorage.setItem("theme", theme);
+					const isDark = theme === "dark";
+					icon.textContent = isDark ? "☀" : "☾";
+					btn.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+				};
+
+				const current = html.getAttribute("data-theme") === "dark" ? "dark" : "light";
+				applyTheme(current);
+
+				btn.addEventListener("click", () => {
+					const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+					applyTheme(next);
+				});
+			})();
+		</script>
 	</body>
 </html>
 
 <style>
 	:root {
+		--font-serif: "Cormorant Garamond", Georgia, serif;
+		--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+		--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	}
+
+	:root,
+	[data-theme="dark"] {
 		color-scheme: dark;
 		--bg: #0e0e0e;
 		--panel: #161616;
+		--surface-base: #0e0e0e;
+		--surface-strong: #0a0a0a;
 		--text: #f0ead6;
 		--muted: #8a8070;
 		--border: #2a2520;
 		--link: #c9a84c;
 		--accent: #c9a84c;
-		--accent-dim: #7a6530;
-		--font-serif: "Cormorant Garamond", Georgia, serif;
-		--font-sans: "Inter", system-ui, -apple-system, sans-serif;
-		--font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		--accent-dim: rgba(201, 168, 76, 0.15);
+		--header-bg: rgba(14, 14, 14, 0.85);
+		--bg-gradient: radial-gradient(ellipse at top, #1a1710 0%, var(--bg) 60%);
+		--status-easy: #7dab7d;
+		--status-medium: #c9a84c;
+		--status-hard: #b05a5a;
+		--status-info: #5a82b0;
+		--glass-surface: rgba(22, 22, 22, 0.68);
+		--glass-surface-strong: rgba(12, 12, 12, 0.78);
+		--glass-border: rgba(240, 234, 214, 0.12);
+		--glass-border-strong: rgba(240, 234, 214, 0.18);
+		--glass-highlight: rgba(255, 255, 255, 0.08);
+		--glass-highlight-strong: rgba(255, 255, 255, 0.12);
+		--glass-blur: 14px;
+		--shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.18);
+		--shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.38);
+	}
+
+	[data-theme="light"] {
+		color-scheme: light;
+		--bg: #fdfbf6;
+		--panel: #f6f0e4;
+		--surface-base: #efe7d8;
+		--surface-strong: #e5dbc9;
+		--text: #201d17;
+		--muted: #6f6657;
+		--border: #d8cfbd;
+		--link: #a6852d;
+		--accent: #a6852d;
+		--accent-dim: rgba(166, 133, 45, 0.11);
+		--header-bg: rgba(253, 251, 246, 0.88);
+		--bg-gradient: radial-gradient(ellipse at top, #f1e7d4 0%, var(--bg) 70%);
+		--status-easy: #2e7d32;
+		--status-medium: #b26a00;
+		--status-hard: #b23b3b;
+		--status-info: #2f6fa6;
+		--glass-surface: rgba(246, 240, 228, 0.68);
+		--glass-surface-strong: rgba(239, 231, 216, 0.78);
+		--glass-border: rgba(255, 255, 255, 0.42);
+		--glass-border-strong: rgba(255, 255, 255, 0.58);
+		--glass-highlight: rgba(255, 255, 255, 0.28);
+		--glass-highlight-strong: rgba(255, 255, 255, 0.4);
+		--glass-blur: 16px;
+		--shadow-sm: 0 2px 8px rgba(32, 29, 23, 0.06);
+		--shadow-lg: 0 10px 24px rgba(32, 29, 23, 0.1);
 	}
 
 	* {
@@ -69,7 +157,7 @@ const pathname = Astro.url.pathname;
 		padding: 0;
 		width: 100%;
 		min-height: 100%;
-		background: radial-gradient(ellipse at top, #1a1710 0%, var(--bg) 60%);
+		background: var(--bg-gradient);
 		color: var(--text);
 		font-family: var(--font-sans);
 	}
@@ -90,9 +178,11 @@ const pathname = Astro.url.pathname;
 	}
 
 	.site-header {
-		border-bottom: 1px solid var(--border);
-		background: rgba(14, 14, 14, 0.85);
-		backdrop-filter: blur(12px);
+		border-bottom: 1px solid var(--glass-border);
+		background: color-mix(in srgb, var(--header-bg) 76%, transparent);
+		backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 		position: sticky;
 		top: 0;
 		z-index: 10;
@@ -120,7 +210,8 @@ const pathname = Astro.url.pathname;
 
 	nav {
 		display: flex;
-		gap: 1.75rem;
+		align-items: center;
+		gap: 1.2rem;
 	}
 
 	nav a {
@@ -135,6 +226,35 @@ const pathname = Astro.url.pathname;
 	nav a.active {
 		color: var(--accent);
 		text-decoration: none;
+	}
+
+	.theme-toggle {
+		border: 1px solid var(--border);
+		background: var(--panel);
+		color: var(--muted);
+		border-radius: 999px;
+		width: 2rem;
+		height: 2rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.theme-toggle:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+		box-shadow: 0 0 0 2px var(--accent-dim);
+	}
+
+	.theme-toggle:active {
+		transform: scale(0.96);
+	}
+
+	.theme-toggle__icon {
+		font-size: 0.9rem;
+		line-height: 1;
 	}
 
 	.page-content {

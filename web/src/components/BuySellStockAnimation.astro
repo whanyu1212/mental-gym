@@ -5,31 +5,155 @@ const prices = [7, 1, 5, 3, 6, 4];
 const maxPrice = Math.max(...prices);
 
 const steps = [
-  { i: -1, min: null, maxP: 0, exp: "Initial state. We haven't seen any prices yet." },
-  { i: 0, min: 7, maxP: 0, exp: "Day 1: Price is 7. This is our first price, so it becomes our minimum seen so far. Profit: 0." },
-  { i: 1, min: 1, maxP: 0, exp: "Day 2: Price is 1. 1 < 7, so we found a new minimum! We'd rather buy here. Profit: 0." },
-  { i: 2, min: 1, maxP: 4, exp: "Day 3: Price is 5. If we bought at our min (1) and sold today (5), profit is 4. New max profit!" },
-  { i: 3, min: 1, maxP: 4, exp: "Day 4: Price is 3. Profit would be 3 - 1 = 2. 2 is less than our max profit of 4, so max profit stays 4." },
-  { i: 4, min: 1, maxP: 5, exp: "Day 5: Price is 6. Profit would be 6 - 1 = 5. 5 > 4! New max profit!" },
-  { i: 5, min: 1, maxP: 5, exp: "Day 6: Price is 4. Profit would be 4 - 1 = 3. Max profit stays 5." },
-  { i: 5, min: 1, maxP: 5, exp: "Done! The maximum profit we can achieve is 5 (Buy at 1, Sell at 6)." }
+  {
+    i: -1,
+    min: null,
+    minIdx: -1,
+    maxP: 0,
+    dayProfit: 0,
+    phase: 'init',
+    action: 'write',
+    exp: "Initial state. We haven't seen any prices yet.",
+    reason: 'Track lowest buy price so far and best sell profit so far.',
+    invariant: 'maxProfit is best (price - minSeenBeforeDay) among processed days.',
+    formula: 'maxProfit = max(maxProfit, price[i] - minPrice)',
+    decision: 'Start with min unset and profit 0.',
+    targets: ['min-box', 'profit-box', 'chart-box', 'rule-box'],
+  },
+  {
+    i: 0,
+    min: 7,
+    minIdx: 0,
+    maxP: 0,
+    dayProfit: 0,
+    phase: 'scan',
+    action: 'write',
+    exp: 'Day 1: price is 7. First seen price becomes current minimum.',
+    reason: 'Need a candidate buy price before computing profitable sells.',
+    invariant: 'minPrice is the smallest value seen up to current day.',
+    formula: 'minPrice = min(minPrice, 7)',
+    decision: 'Set min=7 at day 1.',
+    targets: ['bar-0', 'min-box'],
+  },
+  {
+    i: 1,
+    min: 1,
+    minIdx: 1,
+    maxP: 0,
+    dayProfit: 0,
+    phase: 'scan',
+    action: 'write',
+    exp: 'Day 2: price is 1. New lower minimum found.',
+    reason: 'Buying lower improves future potential profit.',
+    invariant: 'Only update min when a smaller price appears.',
+    formula: '1 < 7 -> minPrice = 1',
+    decision: 'Move best buy day to day 2.',
+    targets: ['bar-1', 'min-box'],
+  },
+  {
+    i: 2,
+    min: 1,
+    minIdx: 1,
+    maxP: 4,
+    dayProfit: 4,
+    phase: 'scan',
+    action: 'compare',
+    exp: 'Day 3: price is 5. Profit if sold today = 5 - 1 = 4. New max profit.',
+    reason: 'Selling today with best prior buy gives candidate answer.',
+    invariant: 'maxProfit stores best realized candidate so far.',
+    formula: 'profitToday = 5 - 1 = 4',
+    decision: 'Update maxProfit to 4.',
+    targets: ['bar-2', 'profit-box', 'day-profit-box'],
+  },
+  {
+    i: 3,
+    min: 1,
+    minIdx: 1,
+    maxP: 4,
+    dayProfit: 2,
+    phase: 'scan',
+    action: 'compare',
+    exp: 'Day 4: price is 3. Profit today = 3 - 1 = 2, less than 4.',
+    reason: 'Candidate is weaker than current best.',
+    invariant: 'maxProfit never decreases.',
+    formula: 'profitToday = 2 < maxProfit(4)',
+    decision: 'Keep maxProfit at 4.',
+    targets: ['bar-3', 'profit-box', 'day-profit-box'],
+  },
+  {
+    i: 4,
+    min: 1,
+    minIdx: 1,
+    maxP: 5,
+    dayProfit: 5,
+    phase: 'scan',
+    action: 'confirm',
+    exp: 'Day 5: price is 6. Profit today = 6 - 1 = 5. New max profit.',
+    reason: 'Best sell point so far paired with minimum buy.',
+    invariant: 'Profit uses earlier buy day only (buy before sell).',
+    formula: 'profitToday = 6 - 1 = 5',
+    decision: 'Update maxProfit to 5.',
+    targets: ['bar-4', 'profit-box', 'day-profit-box'],
+  },
+  {
+    i: 5,
+    min: 1,
+    minIdx: 1,
+    maxP: 5,
+    dayProfit: 3,
+    phase: 'scan',
+    action: 'compare',
+    exp: 'Day 6: price is 4. Profit today = 4 - 1 = 3. Max profit stays 5.',
+    reason: 'Not better than existing best transaction.',
+    invariant: 'Best answer retained after each day.',
+    formula: 'profitToday = 3 < maxProfit(5)',
+    decision: 'No update.',
+    targets: ['bar-5', 'profit-box', 'day-profit-box'],
+  },
+  {
+    i: 5,
+    min: 1,
+    minIdx: 1,
+    maxP: 5,
+    dayProfit: 3,
+    phase: 'done',
+    action: 'confirm',
+    exp: 'Done! Maximum profit is 5 (buy at 1, sell at 6).',
+    reason: 'Single pass evaluated every legal sell day.',
+    invariant: 'Final maxProfit is optimal over entire array.',
+    formula: 'answer = 5',
+    decision: 'Return 5.',
+    targets: ['profit-box', 'result-box', 'chart-box'],
+  },
 ];
 ---
 
 <buy-sell-stock-visuals>
   <AlgorithmPlayer title="prices = [7, 1, 5, 3, 6, 4]" steps={steps}>
-    <div class="stats-row">
-      <div class="stat-box">
+    <div class="stats-row bss-meta-row">
+      <div class="stat-box bss-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">profitToday = price - minSeen; maximize it</span>
+      </div>
+      <div class="stat-box bss-min-box" data-teach-target="min-box">
         <span class="stat-label">Min Price Seen</span>
         <span class="stat-val bss-min">-</span>
       </div>
-      <div class="stat-box highlight">
+      <div class="stat-box bss-day-profit-box" data-teach-target="day-profit-box">
+        <span class="stat-label">Profit Today</span>
+        <span class="stat-val bss-day-profit">0</span>
+      </div>
+      <div class="stat-box bss-profit-box" data-teach-target="profit-box">
         <span class="stat-label">Max Profit</span>
         <span class="stat-val bss-maxp">0</span>
       </div>
+      <div class="stat-box bss-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val bss-status">In Progress</span>
+      </div>
     </div>
 
-    <div class="anim-row">
+    <div class="anim-row" data-teach-target="chart-box">
       <p class="anim-label">Price Chart</p>
       <div class="chart-container">
         <div class="min-line bss-min-line"></div>
@@ -38,7 +162,12 @@ const steps = [
             <div class="bar-col">
               <span class="bar-val">{p}</span>
               <div class="bar-wrapper">
-                <div class="bar bss-bar" data-idx={idx} style={`height: ${(p / maxPrice) * 100}%`}></div>
+                <div
+                  class="bar bss-bar"
+                  data-idx={idx}
+                  data-teach-target={`bar-${idx}`}
+                  style={`height: ${(p / maxPrice) * 100}%`}
+                ></div>
               </div>
               <span class="bar-idx">Day {idx + 1}</span>
               <div class="pointer-container bss-ptr-col" data-idx={idx}>
@@ -55,39 +184,50 @@ const steps = [
 <script>
   class BuySellStockVisuals extends HTMLElement {
     connectedCallback() {
-      this.minEl = this.querySelector(".bss-min");
-      this.maxpEl = this.querySelector(".bss-maxp");
-      this.minLine = this.querySelector(".bss-min-line") as HTMLElement;
-      this.bars = Array.from(this.querySelectorAll(".bss-bar"));
-      this.ptrs = Array.from(this.querySelectorAll(".bss-ptr-col"));
+      this.minEl = this.querySelector('.bss-min');
+      this.maxpEl = this.querySelector('.bss-maxp');
+      this.dayProfitEl = this.querySelector('.bss-day-profit');
+      this.statusEl = this.querySelector('.bss-status');
+      this.minLine = this.querySelector('.bss-min-line');
+      this.resultBox = this.querySelector('.bss-result-box');
+      this.bars = Array.from(this.querySelectorAll('.bss-bar'));
+      this.ptrs = Array.from(this.querySelectorAll('.bss-ptr-col'));
 
-      this.addEventListener("step-change", (e: any) => {
+      this.addEventListener('step-change', (e) => {
         const s = e.detail.step;
 
-        // Stats
-        if (this.minEl) this.minEl.textContent = s.min !== null ? s.min : "-";
-        if (this.maxpEl) this.maxpEl.textContent = s.maxP;
+        if (this.minEl) this.minEl.textContent = s.min !== null ? String(s.min) : '-';
+        if (this.maxpEl) this.maxpEl.textContent = String(s.maxP);
+        if (this.dayProfitEl) this.dayProfitEl.textContent = String(s.dayProfit ?? 0);
+        if (this.statusEl) {
+          this.statusEl.textContent = s.phase === 'done' ? 'Complete' : 'In Progress';
+        }
 
-        // Min Line
+        this.resultBox?.classList.remove('confirmed');
+        if (s.phase === 'done') this.resultBox?.classList.add('confirmed');
+
         if (this.minLine) {
           if (s.min !== null) {
-            this.minLine.style.bottom = `${(s.min / 7) * 100}%`;
-            this.minLine.style.opacity = "1";
+            this.minLine.style.bottom = `${(s.min / maxPrice) * 100}%`;
+            this.minLine.style.opacity = '1';
           } else {
-            this.minLine.style.opacity = "0";
+            this.minLine.style.opacity = '0';
           }
         }
 
-        // Bars & Pointers
-        this.bars.forEach((bar: any, idx: number) => {
-          bar.className = "bar bss-bar";
-          if (idx === s.i) bar.classList.add("active");
-          else if (idx < s.i) bar.classList.add("visited");
+        this.bars.forEach((bar, idx) => {
+          bar.className = 'bar bss-bar';
+          if (idx === s.i) bar.classList.add('active');
+          else if (idx < s.i) bar.classList.add('visited');
+
+          if (s.minIdx !== undefined && s.minIdx !== -1 && idx === s.minIdx) {
+            bar.classList.add('buy-marker');
+          }
         });
 
-        this.ptrs.forEach((col: any, idx: number) => {
-          const ptr = col.querySelector(".ptr-up");
-          if (ptr) ptr.className = `ptr ptr-up ${idx === s.i ? "" : "hidden"}`;
+        this.ptrs.forEach((col, idx) => {
+          const ptr = col.querySelector('.ptr-up');
+          if (ptr) ptr.className = `ptr ptr-up ${idx === s.i ? '' : 'hidden'}`;
         });
       });
     }
@@ -103,12 +243,35 @@ const steps = [
     display: block;
   }
 
-  .stat-box.highlight {
-    border-color: rgba(125, 171, 125, 0.4);
-    background: rgba(125, 171, 125, 0.05);
+  .bss-meta-row {
+    margin-bottom: 1rem;
   }
-  .stat-box.highlight .stat-val {
-    color: #7dab7d;
+
+  .bss-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .bss-min-box .stat-val {
+    color: var(--status-hard);
+  }
+
+  .bss-day-profit-box .stat-val {
+    color: var(--status-info);
+  }
+
+  .bss-profit-box {
+    border-color: color-mix(in srgb, var(--status-easy) 45%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 8%, transparent);
+  }
+
+  .bss-profit-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  .bss-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
   }
 
   .chart-container {
@@ -127,18 +290,19 @@ const steps = [
     left: 0;
     right: 0;
     height: 1px;
-    background: rgba(176, 90, 90, 0.5);
-    border-top: 1px dashed #b05a5a;
+    background: color-mix(in srgb, var(--status-hard) 35%, transparent);
+    border-top: 1px dashed var(--status-hard);
     transition: bottom 0.3s ease, opacity 0.3s;
     z-index: 0;
   }
+
   .min-line::after {
     content: 'MIN';
     position: absolute;
     right: 5px;
     bottom: 2px;
     font-size: 0.6rem;
-    color: #b05a5a;
+    color: var(--status-hard);
     font-family: Inter, sans-serif;
   }
 
@@ -162,7 +326,7 @@ const steps = [
 
   .bar-val {
     font-size: 0.8rem;
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     color: var(--text);
     margin-bottom: 0.3rem;
   }
@@ -186,10 +350,15 @@ const steps = [
   .bar.visited {
     background: rgba(255, 255, 255, 0.05);
   }
+
   .bar.active {
-    background: rgba(201, 168, 76, 0.2);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
     border-color: var(--accent);
-    box-shadow: 0 0 10px rgba(201, 168, 76, 0.2);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  .bar.buy-marker {
+    border-color: color-mix(in srgb, var(--status-hard) 70%, transparent);
   }
 
   .bar-idx {
@@ -206,10 +375,11 @@ const steps = [
 
   .ptr-up {
     color: var(--accent);
-    font-weight: bold;
+    font-weight: 700;
     font-size: 1.2rem;
     transition: opacity 0.2s;
   }
+
   .ptr-up.hidden {
     opacity: 0;
   }
