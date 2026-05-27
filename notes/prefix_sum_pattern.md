@@ -2,6 +2,7 @@
 title: Prefix Sum Pattern
 description: A guide to the Prefix Sum pattern for efficient range sum queries in 1D, 2D, and 3D arrays.
 category: Patterns
+order: 2
 ---
 
 # Prefix Sum Pattern
@@ -200,7 +201,28 @@ Sum = (
 ## Variations and Related Patterns
 
 1.  **Product of Array Except Self (LeetCode 238):** While not strictly a sum, computing "prefix products" and "suffix products" is a direct application of this pattern. By precomputing products from the left (prefix) and from the right (suffix), you can find the product of all elements except the current one in $O(1)$ time per element, strictly avoiding division.
-2.  **Subarray Sum Equals K (LeetCode 560):** You can use a hash map alongside a running prefix sum to efficiently count the number of subarrays that sum to exactly `k` in $O(N)$ time. Instead of nested loops, you check if `current_prefix_sum - k` exists in your frequency hash map.
+2.  **Subarray Sum Equals K (LeetCode 560):** Count subarrays that sum to exactly `k` in O(n) time using a running prefix sum and a frequency map.
+
+    **Why it works:** Every subarray sum `sum(nums[i:j])` equals `prefix[j] - prefix[i]`. So a subarray ending at `j` sums to `k` iff `prefix[j] - k` was seen before. Count, not just detect, by storing frequencies.
+
+    ```python
+    def subarraySum(nums, k):
+        count = 0
+        prefix = 0
+        seen = {0: 1}          # prefix sum 0 seen once (empty prefix)
+
+        for num in nums:
+            prefix += num
+            count += seen.get(prefix - k, 0)   # how many prior prefixes give sum k
+            seen[prefix] = seen.get(prefix, 0) + 1
+
+        return count
+    ```
+
+    **The `{0: 1}` initialisation matters:** It accounts for subarrays that start at index 0 (i.e., where the prefix itself equals `k`). Without it, those subarrays would be missed.
+
+    **Contrast with Two Sum:** The pattern is structurally identical — "have I seen `current - target` before?" — but here you count all occurrences, not just find one pair.
+
 3.  **Difference Array (e.g., LeetCode 370 - Range Addition):** The inverse of a prefix sum. It's used when you need to apply multiple range updates (e.g., "add X to all elements between index L and R") efficiently. Instead of updating every element, you add $X$ at index $L$ and subtract $X$ at $R+1$. After all updates, computing the prefix sum of the difference array yields the final updated array.
 4.  **Continuous Subarray Sum / Modulo Arithmetic (LeetCode 523):** Similar to Subarray Sum Equals K, but tracking the prefix sum modulo $K$. If the same modulo result is seen twice at least two indices apart, a valid subarray exists.
 5.  **Matrix Block Sum (LeetCode 1074):** A direct application of the 2D prefix sum. Given a matrix, return a new matrix where each element is the sum of a block bounded by a distance `k` from the element.
