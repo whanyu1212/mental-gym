@@ -58,7 +58,7 @@ const { Content } = await render(note);
 		font-size: 0.78rem;
 		color: var(--muted);
 		margin-bottom: 2rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.04em;
 	}
 
@@ -106,11 +106,11 @@ const { Content } = await render(note);
 	}
 
 	.note :global(p) {
-		line-height: 1.8;
+		line-height: 1.85;
 		margin: 0 0 1rem;
 		color: var(--text);
 		font-family: var(--font-sans);
-		font-size: 0.93rem;
+		font-size: 0.95rem;
 	}
 
 	.note :global(ul),
@@ -118,12 +118,12 @@ const { Content } = await render(note);
 		padding-left: 1.5rem;
 		margin: 0 0 1rem;
 		font-family: var(--font-sans);
-		font-size: 0.93rem;
+		font-size: 0.95rem;
 	}
 
 	.note :global(li) {
-		line-height: 1.75;
-		margin-bottom: 0.35rem;
+		line-height: 1.8;
+		margin-bottom: 0.4rem;
 	}
 
 	.note :global(strong) {

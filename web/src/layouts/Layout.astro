@@ -14,7 +14,7 @@ const pathname = Astro.url.pathname;
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<script is:inline>
@@ -27,7 +27,7 @@ const pathname = Astro.url.pathname;
 		</script>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
 		{math && <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />}
 	</head>
 	<body>
@@ -35,7 +35,6 @@ const pathname = Astro.url.pathname;
 			<div class="container">
 				<a class="brand" href="/">Mental Gym</a>
 				<nav>
-					<a href="/" class={pathname === "/" ? "active" : ""}>Home</a>
 					<a href="/problems" class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") ? "active" : ""}
 						>Problems</a
 					>
@@ -84,7 +83,7 @@ const pathname = Astro.url.pathname;
 <style>
 	:root {
 		--font-serif: "Cormorant Garamond", Georgia, serif;
-		--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+		--font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
 		--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	}
 
@@ -160,6 +159,9 @@ const pathname = Astro.url.pathname;
 		background: var(--bg-gradient);
 		color: var(--text);
 		font-family: var(--font-sans);
+		font-feature-settings: "ss01", "cv11";
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 
 	a {
