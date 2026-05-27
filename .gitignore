@@ -174,6 +174,7 @@ notebooks/
 web/dist/
 web/.astro/
 web/node_modules/
+!web/src/lib/
 
 # LeetCode API cache
 scripts/leetcode_cache.json
