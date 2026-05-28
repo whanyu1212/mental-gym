@@ -1,0 +1,290 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [-4, -1, -1, 0, 1, 2];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    pivot: -1,
+    left: -1,
+    right: -1,
+    triplets: [],
+    exp: 'Input sorted: [-4,-1,-1,0,1,2]. 3Sum reduces to: for each pivot i, find a pair in nums[i+1..] that sums to −nums[i] using two pointers.',
+    reason: 'Sorting lets us use the converging two-pointer trick and skip duplicate values cleanly.',
+    invariant: 'After sorting, triplets appear in non-decreasing order, enabling systematic deduplication.',
+    formula: 'target_pair = −nums[pivot]; find nums[L] + nums[R] = target_pair',
+    highlights: [],
+  },
+  {
+    id: 'pivot-0',
+    phase: 'pivot',
+    pivot: 0,
+    left: 1,
+    right: 5,
+    triplets: [],
+    exp: 'pivot=0, nums[0]=−4. We need L+R = 4. Set L=1, R=5.',
+    reason: 'Fix the smallest element; search the rest with two pointers.',
+    invariant: 'L > pivot always, to avoid reusing the pivot element.',
+    formula: 'need: nums[L]+nums[R] = −(−4) = 4',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:1', kind: 'write' },
+      { target: 'cell:5', kind: 'write' },
+    ],
+  },
+  {
+    id: 'pivot-0-miss',
+    phase: 'compare',
+    pivot: 0,
+    left: 1,
+    right: 5,
+    triplets: [],
+    exp: 'nums[1]+nums[5] = −1+2 = 1 < 4. Sum too small — move L right.',
+    reason: 'Increasing L increases the sum monotonically (array is sorted).',
+    invariant: 'R=5 is not eliminated yet — a larger L might pair with it.',
+    formula: '−1 + 2 = 1 < 4 → L++',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:1', kind: 'compare' },
+      { target: 'cell:5', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'pivot-0-exhaust',
+    phase: 'skip',
+    pivot: 0,
+    left: 5,
+    right: 5,
+    triplets: [],
+    exp: 'L and R converged without finding 4. No triplet with −4 exists. Move pivot to 1.',
+    reason: 'When L ≥ R, all pairs for this pivot have been checked.',
+    invariant: 'Pivot −4 is permanently eliminated.',
+    formula: 'L ≥ R → no result for pivot=0',
+    highlights: [
+      { target: 'cell:0', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'pivot-1',
+    phase: 'pivot',
+    pivot: 1,
+    left: 2,
+    right: 5,
+    triplets: [],
+    exp: 'pivot=1, nums[1]=−1. Need L+R = 1. Set L=2, R=5.',
+    reason: 'New pivot, new two-pointer window starting at pivot+1.',
+    invariant: 'pivot=0 is done; we never look back.',
+    formula: 'need: nums[L]+nums[R] = 1',
+    highlights: [
+      { target: 'cell:1', kind: 'focus' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'cell:5', kind: 'write' },
+    ],
+  },
+  {
+    id: 'pivot-1-found',
+    phase: 'found',
+    pivot: 1,
+    left: 2,
+    right: 5,
+    triplets: [[-1, -1, 2]],
+    exp: 'nums[2]+nums[5] = −1+2 = 1 = target! Record [−1,−1,2]. Advance L and R inward.',
+    reason: 'Both pointers must advance after a match to search for additional triplets.',
+    invariant: 'A match is found; we must also skip duplicates.',
+    formula: '−1 + 2 = 1 ✓ → record [−1,−1,2]',
+    highlights: [
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'cell:2', kind: 'confirmed' },
+      { target: 'cell:5', kind: 'confirmed' },
+      { target: 'triplets-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'pivot-1-second',
+    phase: 'found',
+    pivot: 1,
+    left: 3,
+    right: 4,
+    triplets: [[-1, -1, 2], [-1, 0, 1]],
+    exp: 'L=3, R=4: nums[3]+nums[4] = 0+1 = 1 = target! Record [−1,0,1]. L and R now meet — done with pivot 1.',
+    reason: 'Two distinct triplets exist for this pivot value.',
+    invariant: 'No duplicate triplets: each unique L,R pair found once.',
+    formula: '0 + 1 = 1 ✓ → record [−1,0,1]',
+    highlights: [
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'cell:3', kind: 'confirmed' },
+      { target: 'cell:4', kind: 'confirmed' },
+      { target: 'triplets-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'pivot-2-skip',
+    phase: 'skip',
+    pivot: 2,
+    left: 3,
+    right: 5,
+    triplets: [[-1, -1, 2], [-1, 0, 1]],
+    exp: 'pivot=2, nums[2]=−1 = nums[1]. Duplicate pivot — skip entirely to avoid duplicate triplets.',
+    reason: 'Dedup rule: if nums[pivot] == nums[pivot−1] and pivot > 0, skip this pivot. Already found all −1 triplets above.',
+    invariant: 'Skipping duplicate pivots is what makes 3Sum O(n²) instead of O(n³) with a set for deduplication.',
+    formula: 'nums[2] == nums[1] → skip pivot 2',
+    highlights: [
+      { target: 'cell:2', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'pivot-3',
+    phase: 'pivot',
+    pivot: 3,
+    left: 4,
+    right: 5,
+    triplets: [[-1, -1, 2], [-1, 0, 1]],
+    exp: 'pivot=3, nums[3]=0. Need L+R = 0. L=4, R=5: nums[4]+nums[5] = 1+2 = 3 ≠ 0. L≥R next step — no result.',
+    reason: 'No pair in the remaining window sums to 0.',
+    invariant: 'Pivot >= 0 means any triplet sum >= 0+0+0 = 0; need negative pairs which are exhausted.',
+    formula: '1 + 2 = 3 ≠ 0; L≥R → done',
+    highlights: [
+      { target: 'cell:3', kind: 'focus' },
+      { target: 'cell:4', kind: 'compare' },
+      { target: 'cell:5', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'found',
+    pivot: 3,
+    left: 5,
+    right: 5,
+    triplets: [[-1, -1, 2], [-1, 0, 1]],
+    exp: 'Final answer: [[-1,-1,2],[-1,0,1]]. O(n²) time (outer O(n) × inner O(n) two-pointer), O(1) extra space.',
+    reason: 'Each element is visited at most O(n) times total across the inner loops. Sorting is O(n log n) which is dominated.',
+    invariant: 'All triplets found, no duplicates, no element reused within a triplet.',
+    formula: 'Total: O(n log n) sort + O(n²) scan = O(n²)',
+    highlights: [
+      { target: 'triplets-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<ks-viz>
+  <AlgorithmPlayer title="3Sum Reduction — nums=[-4,-1,-1,0,1,2]" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box ks-triplets-box" data-teach-target="triplets-box">
+        <span class="stat-label">Triplets</span>
+        <span class="stat-val ks-triplets">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Sorted Array</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-cell ks-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+            <span class="cell-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+      <div class="ks-ptr-row">
+        <span class="ks-ptr-label ks-pivot-label">pivot</span>
+        <span class="ks-ptr-label ks-l-label">L</span>
+        <span class="ks-ptr-label ks-r-label">R</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</ks-viz>
+
+<script>
+  class KsViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.ks-cell'));
+      this.tripletsEl = this.querySelector('.ks-triplets');
+      this.tripletsBox = this.querySelector('.ks-triplets-box');
+      this.pivotLabel = this.querySelector('.ks-pivot-label');
+      this.lLabel = this.querySelector('.ks-l-label');
+      this.rLabel = this.querySelector('.ks-r-label');
+      this.ptrRow = this.querySelector('.ks-ptr-row');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+        const cellCount = this.cells.length;
+        const cellWidth = 100 / cellCount;
+
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell ks-cell';
+          if (i === step.pivot) cell.classList.add('pivot');
+          else if (i === step.left) cell.classList.add('left-ptr');
+          else if (i === step.right) cell.classList.add('right-ptr');
+          else if (step.pivot >= 0 && i < step.pivot) cell.classList.add('visited');
+        });
+
+        const setPtr = (el, idx) => {
+          if (!el || idx < 0) { if (el) el.style.visibility = 'hidden'; return; }
+          el.style.visibility = 'visible';
+          el.style.left = `${idx * cellWidth + cellWidth / 2}%`;
+          el.style.transform = 'translateX(-50%)';
+        };
+        setPtr(this.pivotLabel, step.pivot);
+        setPtr(this.lLabel, step.left);
+        setPtr(this.rLabel, step.right);
+
+        if (this.tripletsEl) {
+          const t = step.triplets ?? [];
+          this.tripletsEl.textContent = t.length ? t.map(tr => `[${tr.join(',')}]`).join('  ') : '—';
+        }
+        this.tripletsBox?.classList.toggle('success-box', step.phase === 'found' && step.triplets?.length > 0);
+      });
+    }
+  }
+
+  if (!customElements.get('ks-viz')) {
+    customElements.define('ks-viz', KsViz);
+  }
+</script>
+
+<style>
+  ks-viz { display: block; }
+
+  .ks-ptr-row {
+    position: relative;
+    height: 1.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .ks-ptr-label {
+    position: absolute;
+    font-size: 0.68rem;
+    font-weight: 700;
+    transition: left 0.25s ease;
+  }
+
+  .ks-pivot-label { color: var(--accent); }
+  .ks-l-label { color: var(--status-medium); }
+  .ks-r-label { color: var(--status-medium); }
+
+  .ks-cell.visited .cell-val { opacity: 0.3; }
+
+  .ks-cell.pivot .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.12);
+  }
+
+  .ks-cell.left-ptr .cell-val,
+  .ks-cell.right-ptr .cell-val {
+    border-color: var(--status-medium);
+    color: var(--status-medium);
+    background: rgba(255, 192, 30, 0.08);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val { color: var(--status-easy) !important; }
+</style>

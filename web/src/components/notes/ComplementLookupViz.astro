@@ -1,0 +1,212 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    active: -1,
+    mapKeys: [],
+    mapVals: [],
+    found: [],
+    exp: 'The goal: find two indices whose values sum to 9. The naive approach checks every pair — O(n²). Instead, build a hash map as you scan.',
+    reason: 'A hash map answers "have I already seen the complement?" in O(1).',
+    invariant: 'The map contains value → index for every element already processed.',
+    formula: 'complement = target − nums[i]',
+    highlights: [
+      { target: 'map-box', kind: 'focus' },
+      { target: 'target-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'check-2',
+    phase: 'lookup',
+    active: 0,
+    mapKeys: [],
+    mapVals: [],
+    found: [],
+    exp: 'i = 0, nums[i] = 2. Complement needed: 9 − 2 = 7. The map is empty — 7 is not here yet.',
+    reason: 'No elements have been processed yet, so a match is impossible.',
+    invariant: 'The map only contains elements seen before index i.',
+    formula: '9 − 2 = 7 → not in map',
+    highlights: [
+      { target: 'cell:0', kind: 'compare' },
+      { target: 'map-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'store-2',
+    phase: 'store',
+    active: 0,
+    mapKeys: [2],
+    mapVals: [0],
+    found: [],
+    exp: 'Complement not found → store 2 at index 0 in the map. A future element may need 2 as its complement.',
+    reason: 'Every unmatched element becomes a resource for future lookups.',
+    invariant: 'After processing index i, nums[i] is stored and available for future lookups.',
+    formula: 'map[2] = 0',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:0', kind: 'write' },
+    ],
+  },
+  {
+    id: 'check-7',
+    phase: 'lookup',
+    active: 1,
+    mapKeys: [2],
+    mapVals: [0],
+    found: [],
+    exp: 'i = 1, nums[i] = 7. Complement needed: 9 − 7 = 2. The map has 2 → 0. Match found!',
+    reason: 'The map instantly confirms index 0 holds the partner value.',
+    invariant: 'A successful lookup means indices map[complement] and i sum to the target.',
+    formula: '9 − 7 = 2 → map[2] = 0 ✓',
+    highlights: [
+      { target: 'cell:1', kind: 'compare' },
+      { target: 'map-box', kind: 'match' },
+      { target: 'entry:0', kind: 'match' },
+    ],
+  },
+  {
+    id: 'return',
+    phase: 'found',
+    active: 1,
+    mapKeys: [2],
+    mapVals: [0],
+    found: [0, 1],
+    exp: 'Return [0, 1]. nums[0] + nums[1] = 2 + 7 = 9. One pass, O(n) time, O(n) space.',
+    reason: 'The hash map turned a two-pointer search into a single linear scan.',
+    invariant: 'Once a complement is found, the answer is immediately available without further scanning.',
+    formula: 'nums[0] + nums[1] = 2 + 7 = 9 ✓',
+    highlights: [
+      { target: 'cell:0', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'answer-box', kind: 'confirmed' },
+      { target: 'map-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<cl-viz>
+  <AlgorithmPlayer title="Complement Lookup — nums=[2,7,11,15], target=9" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="target-box">
+        <span class="stat-label">Target</span>
+        <span class="stat-val">{target}</span>
+      </div>
+      <div class="stat-box" data-teach-target="answer-box">
+        <span class="stat-label">Answer</span>
+        <span class="stat-val cl-answer">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-cell cl-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+            <span class="cell-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Hash map</p>
+      <div class="hashmap-row cl-map" data-teach-target="map-box">
+        <span class="hashmap-empty">empty</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</cl-viz>
+
+<script>
+  class ClViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.cl-cell'));
+      this.mapEl = this.querySelector('.cl-map');
+      this.answerEl = this.querySelector('.cl-answer');
+      this.answerBox = this.querySelector('[data-teach-target="answer-box"]');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell cl-cell';
+          if (step.found?.includes(i)) cell.classList.add('found');
+          else if (i === step.active) cell.classList.add('active');
+          else if (i < step.active) cell.classList.add('visited');
+        });
+
+        if (this.mapEl) {
+          if (!step.mapKeys?.length) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = step.mapKeys
+              .map((key, idx) => {
+                const isMatch = step.phase === 'lookup' && key === (9 - step.mapKeys[step.active]);
+                return `<span class="hashmap-entry${isMatch ? ' matched-entry' : ''}" data-teach-target="entry:${idx}">${key} : ${step.mapVals[idx]}</span>`;
+              })
+              .join('');
+          }
+        }
+
+        if (this.answerEl) {
+          this.answerEl.textContent = step.found?.length === 2
+            ? `[${step.found[0]}, ${step.found[1]}]`
+            : '—';
+        }
+
+        this.answerBox?.classList.toggle(
+          'success-box',
+          step.phase === 'found'
+        );
+      });
+    }
+  }
+
+  if (!customElements.get('cl-viz')) {
+    customElements.define('cl-viz', ClViz);
+  }
+</script>
+
+<style>
+  cl-viz { display: block; }
+
+  .cl-cell.visited .cell-val { opacity: 0.35; }
+
+  .cl-cell.active { transform: translateY(-4px); }
+  .cl-cell.active .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+  }
+
+  .cl-cell.found .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .matched-entry {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent) !important;
+  }
+</style>

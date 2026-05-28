@@ -1,0 +1,151 @@
+---
+interface Props {
+  label: string;
+}
+const { label } = Astro.props;
+---
+
+<pattern-viz-modal>
+  <button class="viz-trigger">▶ {label}</button>
+  <dialog class="viz-dialog">
+    <div class="viz-dialog-inner">
+      <button class="viz-close" aria-label="Close">✕</button>
+      <slot />
+    </div>
+  </dialog>
+</pattern-viz-modal>
+
+<script>
+  class PatternVizModal extends HTMLElement {
+    connectedCallback() {
+      const trigger = this.querySelector('.viz-trigger');
+      const dialog = this.querySelector('.viz-dialog');
+      const close = this.querySelector('.viz-close');
+
+      trigger?.addEventListener('click', () => (dialog as HTMLDialogElement)?.showModal());
+      close?.addEventListener('click', () => (dialog as HTMLDialogElement)?.close());
+
+      dialog?.addEventListener('click', (e) => {
+        if (e.target === dialog) (dialog as HTMLDialogElement).close();
+      });
+    }
+  }
+
+  if (!customElements.get('pattern-viz-modal')) {
+    customElements.define('pattern-viz-modal', PatternVizModal);
+  }
+</script>
+
+<style>
+  pattern-viz-modal {
+    display: block;
+    margin: 1rem 0;
+  }
+
+  .viz-trigger {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 0.35rem 1rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+  }
+
+  .viz-trigger:hover {
+    background: var(--accent);
+    color: var(--bg);
+    transform: translateY(-1px);
+  }
+
+  .viz-trigger:active {
+    transform: scale(0.96);
+  }
+
+  .viz-dialog {
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    max-width: min(860px, 95vw);
+    width: 100%;
+    max-height: 90vh;
+    background: var(--panel);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .viz-dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .viz-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .viz-dialog-inner {
+    padding: 0;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Stick the player header (title + Prev/Next) to the top of the modal */
+  .viz-dialog-inner :global(algo-player .anim-header) {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+    padding: 0.9rem 1.5rem;
+  }
+
+  .viz-dialog-inner :global(algo-player .teaching-content),
+  .viz-dialog-inner :global(algo-player .anim-visuals) {
+    padding: 0 1.5rem;
+  }
+
+  .viz-dialog-inner :global(algo-player .anim-visuals) {
+    padding-bottom: 1.5rem;
+  }
+
+  .viz-dialog-inner > * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .viz-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    z-index: 1;
+  }
+
+  .viz-close:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>

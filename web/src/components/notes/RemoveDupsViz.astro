@@ -1,0 +1,232 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [1, 1, 2, 3, 3];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    slow: 0,
+    fast: 0,
+    arr: [1, 1, 2, 3, 3],
+    kept: 0,
+    exp: 'Remove duplicates from sorted [1,1,2,3,3]. slow=0 is the write pointer; fast=1 is the read pointer. Goal: unique values in nums[0..slow], return slow+1.',
+    reason: 'The array is sorted, so duplicates are always adjacent. A slow pointer only advances when we find a new unique value.',
+    invariant: 'nums[0..slow] contains all unique values seen so far, in order.',
+    formula: 'if nums[fast] != nums[slow]: slow++; nums[slow] = nums[fast]',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'cell:1', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'f1-dup',
+    phase: 'skip',
+    slow: 0,
+    fast: 2,
+    arr: [1, 1, 2, 3, 3],
+    kept: 1,
+    exp: 'fast=1: nums[1]=1 == nums[0]=1 → duplicate. Skip: fast advances to 2, slow stays at 0.',
+    reason: 'Equal values mean we haven\'t found anything new — don\'t advance slow.',
+    invariant: 'slow=0: only 1 unique value recorded so far.',
+    formula: 'nums[1]=1 == nums[0]=1 → skip; fast=2',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:1', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'f2-new',
+    phase: 'keep',
+    slow: 1,
+    fast: 3,
+    arr: [1, 2, 2, 3, 3],
+    kept: 2,
+    exp: 'fast=2: nums[2]=2 != nums[0]=1 → new value! slow++; nums[1]=2. Now slow=1, fast=3.',
+    reason: 'A new unique value is written into the next "kept" slot.',
+    invariant: 'nums[0..1] = [1,2] — two unique values recorded.',
+    formula: 'nums[2]=2 ≠ nums[0]=1 → slow=1; nums[1]=2',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:1', kind: 'write' },
+      { target: 'cell:2', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'f3-new',
+    phase: 'keep',
+    slow: 2,
+    fast: 4,
+    arr: [1, 2, 3, 3, 3],
+    kept: 3,
+    exp: 'fast=3: nums[3]=3 != nums[1]=2 → new value! slow++; nums[2]=3. Now slow=2, fast=4.',
+    reason: 'Third unique value found.',
+    invariant: 'nums[0..2] = [1,2,3].',
+    formula: 'nums[3]=3 ≠ nums[1]=2 → slow=2; nums[2]=3',
+    highlights: [
+      { target: 'cell:1', kind: 'focus' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'cell:3', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'f4-dup',
+    phase: 'skip',
+    slow: 2,
+    fast: 5,
+    arr: [1, 2, 3, 3, 3],
+    kept: 3,
+    exp: 'fast=4: nums[4]=3 == nums[2]=3 → duplicate. fast exhausted (=5). Loop ends.',
+    reason: 'Last element is a repeat — slow doesn\'t advance.',
+    invariant: 'Final kept count = slow+1 = 3.',
+    formula: 'nums[4]=3 == nums[2]=3 → skip; fast=5 (done)',
+    highlights: [
+      { target: 'cell:2', kind: 'focus' },
+      { target: 'cell:4', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'found',
+    slow: 2,
+    fast: 5,
+    arr: [1, 2, 3, 3, 3],
+    kept: 3,
+    exp: 'Return slow+1 = 3. The first 3 elements [1,2,3] are the unique values. O(n) time, O(1) space.',
+    reason: 'slow+1 is the count because slow is 0-indexed.',
+    invariant: 'Positions beyond index slow are ignored — they still hold old data.',
+    formula: 'return slow + 1 = 3 ✓',
+    highlights: [
+      { target: 'cell:0', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'cell:2', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<rd-viz>
+  <AlgorithmPlayer title="Remove Duplicates — nums=[1,1,2,3,3]" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="kept-box">
+        <span class="stat-label">Unique count</span>
+        <span class="stat-val rd-kept">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array (in-place)</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-cell rd-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+            <span class="cell-val rd-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+      <div class="rd-ptr-row">
+        <span class="rd-ptr-label rd-slow-label">slow</span>
+        <span class="rd-ptr-label rd-fast-label">fast</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</rd-viz>
+
+<script>
+  class RdViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.rd-cell'));
+      this.vals = Array.from(this.querySelectorAll('.rd-val'));
+      this.keptEl = this.querySelector('.rd-kept');
+      this.keptBox = this.querySelector('[data-teach-target="kept-box"]');
+      this.slowLabel = this.querySelector('.rd-slow-label');
+      this.fastLabel = this.querySelector('.rd-fast-label');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+        const count = this.cells.length;
+        const cellWidth = 100 / count;
+
+        if (step.arr && this.vals.length === step.arr.length) {
+          step.arr.forEach((v, i) => { this.vals[i].textContent = String(v); });
+        }
+
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell rd-cell';
+          if (step.phase === 'found' && i <= step.slow) cell.classList.add('found');
+          else if (i === step.slow) cell.classList.add('slow-ptr');
+          else if (i === step.fast) cell.classList.add('fast-ptr');
+          else if (i > step.slow && i < step.fast) cell.classList.add('scanned');
+        });
+
+        const setPtr = (el, idx) => {
+          if (!el) return;
+          if (idx < 0 || idx >= count) { el.style.visibility = 'hidden'; return; }
+          el.style.visibility = 'visible';
+          el.style.left = `${idx * cellWidth + cellWidth / 2}%`;
+          el.style.transform = 'translateX(-50%)';
+        };
+        setPtr(this.slowLabel, step.slow ?? -1);
+        setPtr(this.fastLabel, step.fast >= count ? -1 : (step.fast ?? -1));
+
+        if (this.keptEl) this.keptEl.textContent = String(step.kept ?? 0);
+        this.keptBox?.classList.toggle('success-box', step.phase === 'found');
+      });
+    }
+  }
+
+  if (!customElements.get('rd-viz')) {
+    customElements.define('rd-viz', RdViz);
+  }
+</script>
+
+<style>
+  rd-viz { display: block; }
+
+  .rd-ptr-row {
+    position: relative;
+    height: 1.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .rd-ptr-label {
+    position: absolute;
+    font-size: 0.68rem;
+    font-weight: 700;
+    transition: left 0.25s ease;
+  }
+
+  .rd-slow-label { color: var(--accent); }
+  .rd-fast-label { color: var(--status-medium); }
+
+  .rd-cell.scanned .cell-val { opacity: 0.35; }
+
+  .rd-cell.slow-ptr .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+    transform: translateY(-4px);
+  }
+
+  .rd-cell.fast-ptr .cell-val {
+    border-color: var(--status-medium);
+    color: var(--status-medium);
+    background: rgba(255, 192, 30, 0.08);
+    transform: translateY(-4px);
+  }
+
+  .rd-cell.found .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val { color: var(--status-easy) !important; }
+</style>

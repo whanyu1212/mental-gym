@@ -5,9 +5,69 @@ category: Patterns
 order: 1
 ---
 
+import PatternVizModal from '../web/src/components/notes/PatternVizModal.astro';
+import ComplementLookupViz from '../web/src/components/notes/ComplementLookupViz.astro';
+import FrequencyCountingViz from '../web/src/components/notes/FrequencyCountingViz.astro';
+import CanonicalKeyViz from '../web/src/components/notes/CanonicalKeyViz.astro';
+import SetMembershipViz from '../web/src/components/notes/SetMembershipViz.astro';
+import MultiConstraintViz from '../web/src/components/notes/MultiConstraintViz.astro';
+import PrefixSuffixViz from '../web/src/components/notes/PrefixSuffixViz.astro';
+import BoyerMooreViz from '../web/src/components/notes/BoyerMooreViz.astro';
+import LengthPrefixViz from '../web/src/components/notes/LengthPrefixViz.astro';
+import WritePointerViz from '../web/src/components/notes/WritePointerViz.astro';
+import ColumnwiseViz from '../web/src/components/notes/ColumnwiseViz.astro';
+import GreedyProfitViz from '../web/src/components/notes/GreedyProfitViz.astro';
+import IndexAsHashViz from '../web/src/components/notes/IndexAsHashViz.astro';
+
 # Arrays & Hashing
 
 This note covers the patterns, data structures, and decision logic needed for the Arrays & Hashing section of NeetCode 250. Complexity analysis, Python built-ins, and prefix sums already have their own dedicated notes — this note focuses on the *hashing-specific strategy* and the problem patterns that compose this topic.
+
+---
+
+## Table of Contents
+
+- [Why Hashing Matters for Arrays](#why-hashing-matters-for-arrays)
+- [Hash Table Internals](#hash-table-internals-what-the-interview-asks)
+- [Pattern Recognition Guide](#pattern-recognition-guide)
+- [Core Patterns](#core-patterns)
+  - [1. Complement Lookup](#1-complement-lookup-two-sum-family)
+  - [2. Frequency Counting](#2-frequency-counting)
+  - [3. Grouping by Canonical Key](#3-grouping-by-canonical-key)
+  - [4. Set Membership for Sequence Problems](#4-set-membership-for-sequence-problems)
+  - [5. Multi-Constraint Hashing](#5-multi-constraint-hashing-valid-sudoku)
+  - [6. Prefix/Suffix Pass](#6-prefixsuffix-pass-product-except-self)
+  - [7. Boyer-Moore Voting](#7-boyer-moore-voting)
+  - [8. Length-Prefixed Encoding](#8-length-prefixed-encoding-encodedecode-strings)
+  - [9. Write Pointer](#9-write-pointer-remove-element)
+  - [10. Column-wise String Comparison](#10-column-wise-string-comparison-longest-common-prefix)
+  - [11. Greedy Daily Profit](#11-greedy-daily-profit-best-time-to-buy-and-sell-stock-ii)
+  - [12. Index-as-Hash / Cyclic Sort](#12-index-as-hash--cyclic-sort-first-missing-positive)
+- [Sorting Algorithms](#sorting-algorithms-sort-an-array-sort-colors)
+- [Decision Guide: Which Structure?](#decision-guide-which-structure)
+- [Complexity Reference](#complexity-reference-for-this-topic)
+
+---
+
+## Pattern Recognition Guide
+
+Use this table to go from *problem statement* → *pattern name*. For data-structure selection once you have the pattern, see the [Decision Guide](#decision-guide-which-structure) below.
+
+| If the problem asks / constraints say… | Pattern to reach for |
+|---|---|
+| "Find two numbers/indices that sum to X" | [Complement Lookup](#1-complement-lookup-two-sum-family) |
+| "Most frequent", "top K", "valid anagram", "count occurrences" | [Frequency Counting](#2-frequency-counting) |
+| "Group by", "anagram groups", "same characters" | [Grouping by Canonical Key](#3-grouping-by-canonical-key) |
+| "Longest consecutive sequence", "sequence without gaps" | [Set Membership](#4-set-membership-for-sequence-problems) |
+| Multiple uniqueness constraints simultaneously (row AND column AND box) | [Multi-Constraint Hashing](#5-multi-constraint-hashing-valid-sudoku) |
+| "Product except self", no division, prefix/suffix | [Prefix/Suffix Pass](#6-prefixsuffix-pass-product-except-self) |
+| "Majority element", appears > n/2 or > n/3 times, O(1) space | [Boyer-Moore Voting](#7-boyer-moore-voting) |
+| Serialize/deserialize strings with arbitrary characters | [Length-Prefixed Encoding](#8-length-prefixed-encoding-encodedecode-strings) |
+| "Remove in-place", "move zeroes", "remove duplicates", O(1) space | [Write Pointer](#9-write-pointer-remove-element) |
+| "Longest common prefix" across multiple strings | [Column-wise Comparison](#10-column-wise-string-comparison-longest-common-prefix) |
+| "Unlimited transactions", maximize profit over array | [Greedy Daily Profit](#11-greedy-daily-profit-best-time-to-buy-and-sell-stock-ii) |
+| "First missing positive", O(n) time **and** O(1) space, values in [1, n] | [Index-as-Hash](#12-index-as-hash--cyclic-sort-first-missing-positive) |
+| "Subarray sum equals K", count subarrays | Prefix Sum note (running sum + hash map) |
 
 ---
 
@@ -65,6 +125,12 @@ The only structural difference is that HashMap buckets store `(key, value)` tupl
 
 ### 1. Complement Lookup (Two Sum family)
 
+> **Signals:** "find two numbers/indices summing to X", "find pair with difference X", "does a partner exist", "return indices of two elements"
+
+<PatternVizModal label="Complement Lookup">
+  <ComplementLookupViz />
+</PatternVizModal>
+
 **Idea:** Instead of searching for a partner for each element (O(n²)), store what you *need* and check if you've already seen it.
 
 ```python
@@ -84,6 +150,12 @@ for i, num in enumerate(nums):
 ---
 
 ### 2. Frequency Counting
+
+> **Signals:** "most frequent K elements", "valid anagram", "count occurrences", "appears more than n/2 times", "check if two strings are permutations"
+
+<PatternVizModal label="Frequency Counting">
+  <FrequencyCountingViz />
+</PatternVizModal>
 
 **Idea:** Count occurrences with a dict or `Counter`. Then reason about the counts.
 
@@ -122,6 +194,12 @@ for count in range(len(bucket) - 1, 0, -1):
 
 ### 3. Grouping by Canonical Key
 
+> **Signals:** "group anagrams", "group by shared property", "partition into equivalence classes", "same characters / same digits"
+
+<PatternVizModal label="Canonical Key Grouping">
+  <CanonicalKeyViz />
+</PatternVizModal>
+
 **Idea:** Two items that belong together share a *canonical form*. Use that form as the hash key.
 
 **Anagram grouping:**
@@ -150,6 +228,12 @@ for s in strs:
 
 ### 4. Set Membership for Sequence Problems
 
+> **Signals:** "longest consecutive sequence", "does X exist in the array", "sequence of integers without gaps", O(n) time required
+
+<PatternVizModal label="Set Membership">
+  <SetMembershipViz />
+</PatternVizModal>
+
 **Idea:** Convert array to a set for O(1) lookups. Then walk through the data with a controlled condition to avoid redundant work.
 
 **Longest Consecutive Sequence:**
@@ -172,6 +256,12 @@ Without the `num - 1 not in nums_set` guard, you'd restart counting from every e
 ---
 
 ### 5. Multi-Constraint Hashing (Valid Sudoku)
+
+> **Signals:** "valid sudoku", "unique across multiple dimensions simultaneously", multiple independent uniqueness rules on the same element
+
+<PatternVizModal label="Multi-Constraint Hashing">
+  <MultiConstraintViz />
+</PatternVizModal>
 
 **Idea:** A cell's value must be unique across three independent constraints simultaneously: its row, its column, and its 3×3 box. Model each constraint as a separate set and index them by their identifier.
 
@@ -198,6 +288,12 @@ for i in range(9):
 
 ### 6. Prefix/Suffix Pass (Product Except Self)
 
+> **Signals:** "product of all elements except self", "no division allowed", result depends on elements to the left AND right of each position
+
+<PatternVizModal label="Prefix / Suffix Pass">
+  <PrefixSuffixViz />
+</PatternVizModal>
+
 This is covered in depth in the **Prefix Sum Pattern** note. The key idea here is avoiding division by making two passes:
 
 ```python
@@ -218,6 +314,12 @@ The left pass fills each slot with the product of everything to its left. The ri
 ---
 
 ### 7. Boyer-Moore Voting
+
+> **Signals:** "majority element", "appears more than n/2 times", "appears more than n/3 times", O(1) space required, guaranteed majority exists
+
+<PatternVizModal label="Boyer-Moore Voting">
+  <BoyerMooreViz />
+</PatternVizModal>
 
 For **Majority Element** problems where you need O(1) space.
 
@@ -258,6 +360,12 @@ The verification pass is required because the voting phase only eliminates non-c
 
 ### 8. Length-Prefixed Encoding (Encode/Decode Strings)
 
+> **Signals:** "encode/decode a list of strings", "serialize to a single string", strings may contain any characters including the delimiter
+
+<PatternVizModal label="Length-Prefixed Encoding">
+  <LengthPrefixViz />
+</PatternVizModal>
+
 **Problem:** Serialize a list of strings into one string, then deserialize back. A delimiter like `#` fails if strings contain `#`.
 
 **Solution:** Prefix each string with its length, then the delimiter:
@@ -287,6 +395,12 @@ def decode(s):
 
 ### 9. Write Pointer (Remove Element)
 
+> **Signals:** "remove in-place", "move zeroes to end", "remove duplicates from sorted array", O(1) extra space, modify the array itself
+
+<PatternVizModal label="Write Pointer">
+  <WritePointerViz />
+</PatternVizModal>
+
 **Idea:** When you need to remove values in-place without extra space, keep a `write` pointer that only advances when you find a value worth keeping. The `read` pointer scans everything.
 
 ```python
@@ -306,6 +420,12 @@ def removeElement(nums, val):
 ---
 
 ### 10. Column-wise String Comparison (Longest Common Prefix)
+
+> **Signals:** "longest common prefix", compare multiple strings character by character, answer is a prefix of all inputs
+
+<PatternVizModal label="Column-wise Comparison">
+  <ColumnwiseViz />
+</PatternVizModal>
 
 **Idea:** Instead of comparing strings to each other pairwise, compare *character positions* across all strings at once. `zip(*strs)` transposes the list of strings into tuples of characters at each column:
 
@@ -338,6 +458,12 @@ Horizontal scan is simpler to explain in an interview; vertical scan with `zip` 
 
 ### 11. Greedy Daily Profit (Best Time to Buy and Sell Stock II)
 
+> **Signals:** "unlimited transactions", "buy and sell stock multiple times", maximize total profit, no cooldown or transaction cost
+
+<PatternVizModal label="Greedy Daily Profit">
+  <GreedyProfitViz />
+</PatternVizModal>
+
 **Note:** Stock I (single transaction) is in the sliding window topic. Stock II allows *unlimited* transactions — different algorithm entirely.
 
 **Idea:** You can buy and sell on consecutive days. The maximum profit equals the sum of every positive day-over-day price increase. Mathematically, this is equivalent to holding during every upswing:
@@ -362,6 +488,12 @@ def maxProfit(prices):
 ---
 
 ### 12. Index-as-Hash / Cyclic Sort (First Missing Positive)
+
+> **Signals:** "first missing positive", O(n) time AND O(1) space, values are integers in [1, n], find the smallest missing value
+
+<PatternVizModal label="Index-as-Hash / Cyclic Sort">
+  <IndexAsHashViz />
+</PatternVizModal>
 
 This is the hardest problem in the topic. The constraint is O(n) time **and O(1) space**, which rules out a separate hash set.
 

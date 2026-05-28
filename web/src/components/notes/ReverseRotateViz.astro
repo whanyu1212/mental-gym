@@ -1,0 +1,168 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const s = ['h', 'e', 'l', 'l', 'o'];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    left: 0,
+    right: 4,
+    arr: ['h', 'e', 'l', 'l', 'o'],
+    exp: 'Reverse "hello" in-place. L=0, R=4. Swap s[L] and s[R], then converge inward. No extra array needed.',
+    reason: 'Swapping from both ends simultaneously reverses the sequence in O(n/2) swaps.',
+    invariant: 'Characters outside [L,R] are already in their final reversed positions.',
+    formula: 'swap(s[L], s[R]); L++; R--',
+    highlights: [
+      { target: 'char:0', kind: 'write' },
+      { target: 'char:4', kind: 'write' },
+    ],
+  },
+  {
+    id: 'swap-0-4',
+    phase: 'swap',
+    left: 1,
+    right: 3,
+    arr: ['o', 'e', 'l', 'l', 'h'],
+    exp: 'Swap s[0]="h" ↔ s[4]="o" → ["o","e","l","l","h"]. L=1, R=3.',
+    reason: '"h" and "o" are symmetric — swapping places them correctly.',
+    invariant: 'Positions 0 and 4 are finalized.',
+    formula: 'swap(h, o) → L=1, R=3',
+    highlights: [
+      { target: 'char:0', kind: 'confirmed' },
+      { target: 'char:4', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'swap-1-3',
+    phase: 'swap',
+    left: 2,
+    right: 2,
+    arr: ['o', 'l', 'l', 'e', 'h'],
+    exp: 'Swap s[1]="e" ↔ s[3]="l" → ["o","l","l","e","h"]. L=2, R=2 — center reached.',
+    reason: '"e" and the second "l" swap to their final positions.',
+    invariant: 'Positions 1 and 3 are finalized.',
+    formula: 'swap(e, l) → L=R=2',
+    highlights: [
+      { target: 'char:1', kind: 'confirmed' },
+      { target: 'char:3', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'found',
+    left: 2,
+    right: 2,
+    arr: ['o', 'l', 'l', 'e', 'h'],
+    exp: 'L == R → loop exits. Result: "olleh". O(n) time, O(1) space. No extra string created.',
+    reason: 'Center character of an odd-length string is already in its correct position.',
+    invariant: 'All positions reversed in-place.',
+    formula: '"hello" → "olleh" ✓',
+    highlights: [
+      { target: 'char:0', kind: 'confirmed' },
+      { target: 'char:1', kind: 'confirmed' },
+      { target: 'char:2', kind: 'confirmed' },
+      { target: 'char:3', kind: 'confirmed' },
+      { target: 'char:4', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<rr-viz>
+  <AlgorithmPlayer title="Reverse String — s=[&quot;h&quot;,&quot;e&quot;,&quot;l&quot;,&quot;l&quot;,&quot;o&quot;]" steps={steps}>
+    <div class="anim-row">
+      <p class="anim-label">String (in-place)</p>
+      <div class="array-row">
+        {s.map((ch, i) => (
+          <div class="array-cell rr-char" data-idx={i} data-teach-target={`char:${i}`}>
+            <span class="cell-val rr-val">{ch}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+      <div class="rr-ptr-row">
+        <span class="rr-ptr-label rr-l-label">L</span>
+        <span class="rr-ptr-label rr-r-label">R</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</rr-viz>
+
+<script>
+  class RrViz extends HTMLElement {
+    connectedCallback() {
+      this.chars = Array.from(this.querySelectorAll('.rr-char'));
+      this.vals = Array.from(this.querySelectorAll('.rr-val'));
+      this.lLabel = this.querySelector('.rr-l-label');
+      this.rLabel = this.querySelector('.rr-r-label');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+        const count = this.chars.length;
+        const cellWidth = 100 / count;
+
+        if (step.arr && this.vals.length === step.arr.length) {
+          step.arr.forEach((ch, i) => { this.vals[i].textContent = ch; });
+        }
+
+        this.chars.forEach((ch) => {
+          const i = parseInt(ch.dataset.idx ?? '0', 10);
+          ch.className = 'array-cell rr-char';
+          if (step.phase === 'found') ch.classList.add('found');
+          else if (i === step.left || i === step.right) ch.classList.add('active');
+          else if (i < step.left || i > step.right) ch.classList.add('done');
+        });
+
+        const setPtr = (el, idx) => {
+          if (!el) return;
+          if (idx < 0) { el.style.visibility = 'hidden'; return; }
+          el.style.visibility = 'visible';
+          el.style.left = `${idx * cellWidth + cellWidth / 2}%`;
+          el.style.transform = 'translateX(-50%)';
+        };
+        setPtr(this.lLabel, step.left ?? -1);
+        setPtr(this.rLabel, step.right ?? -1);
+      });
+    }
+  }
+
+  if (!customElements.get('rr-viz')) {
+    customElements.define('rr-viz', RrViz);
+  }
+</script>
+
+<style>
+  rr-viz { display: block; }
+
+  .rr-ptr-row {
+    position: relative;
+    height: 1.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .rr-ptr-label {
+    position: absolute;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    transition: left 0.25s ease;
+  }
+
+  .rr-char.done .cell-val { opacity: 0.4; }
+
+  .rr-char.active { transform: translateY(-4px); }
+  .rr-char.active .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+  }
+
+  .rr-char.found .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+</style>

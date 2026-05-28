@@ -12,10 +12,15 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.9",
     "astro": "^6.0.4",
     "chart.js": "^4.5.1",
     "katex": "^0.16.38",
     "rehype-katex": "^7.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@astrojs/mdx": "^5.0.6"
   }
 }

@@ -1,0 +1,208 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const arr1 = [1, 2, 3, 0, 0, 0];
+const arr2 = [2, 5, 6];
+const m = 3;
+const n = 3;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    p1: 2,
+    p2: 2,
+    pw: 5,
+    arr1: [1, 2, 3, 0, 0, 0],
+    exp: 'Merge Sorted Array. nums1=[1,2,3,_,_,_] (m=3), nums2=[2,5,6] (n=3). Pointers: p1=m−1=2, p2=n−1=2, write=m+n−1=5. Fill from the back.',
+    reason: 'Filling from the back avoids overwriting nums1 elements that haven\'t been processed yet — no extra array needed.',
+    invariant: 'write always points to the next slot to fill. Elements after write are already finalized.',
+    formula: 'compare nums1[p1] vs nums2[p2]; place larger at nums1[write]; write--',
+    highlights: [
+      { target: 'a1:2', kind: 'focus' },
+      { target: 'a2:2', kind: 'focus' },
+      { target: 'a1:5', kind: 'write' },
+    ],
+  },
+  {
+    id: 'step1',
+    phase: 'compare',
+    p1: 2,
+    p2: 1,
+    pw: 4,
+    arr1: [1, 2, 3, 0, 0, 6],
+    exp: 'nums1[2]=3 vs nums2[2]=6: 6 > 3 → place 6 at nums1[5]. p2=1, write=4.',
+    reason: 'Always place the larger value first — this fills the array from the largest down.',
+    invariant: 'nums1[5]=6 is finalized.',
+    formula: '6 > 3 → nums1[5]=6; p2--; write--',
+    highlights: [
+      { target: 'a1:2', kind: 'compare' },
+      { target: 'a2:2', kind: 'confirmed' },
+      { target: 'a1:5', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'step2',
+    phase: 'compare',
+    p1: 1,
+    p2: 1,
+    pw: 3,
+    arr1: [1, 2, 3, 0, 5, 6],
+    exp: 'nums1[2]=3 vs nums2[1]=5: 5 > 3 → place 5 at nums1[4]. p2=0, write=3.',
+    reason: '5 is still larger — continue filling with nums2.',
+    invariant: 'nums1[4]=5 is finalized.',
+    formula: '5 > 3 → nums1[4]=5; p2--; write--',
+    highlights: [
+      { target: 'a1:2', kind: 'compare' },
+      { target: 'a2:1', kind: 'confirmed' },
+      { target: 'a1:4', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'step3',
+    phase: 'compare',
+    p1: 0,
+    p2: 1,
+    pw: 2,
+    arr1: [1, 2, 3, 3, 5, 6],
+    exp: 'nums1[2]=3 vs nums2[0]=2: 3 ≥ 2 → place 3 at nums1[3]. p1=1, write=2.',
+    reason: 'Now the nums1 element wins. Copy it back into the later position.',
+    invariant: 'nums1[3]=3 is finalized.',
+    formula: '3 ≥ 2 → nums1[3]=3; p1--; write--',
+    highlights: [
+      { target: 'a1:2', kind: 'confirmed' },
+      { target: 'a2:0', kind: 'compare' },
+      { target: 'a1:3', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'step4',
+    phase: 'compare',
+    p1: -1,
+    p2: 0,
+    pw: 1,
+    arr1: [1, 2, 2, 3, 5, 6],
+    exp: 'nums1[1]=2 vs nums2[0]=2: equal → place nums1[1]=2 at nums1[2]. p1=0, write=1.',
+    reason: 'Either can go — taking from nums1 first is fine; both have value 2.',
+    invariant: 'nums1[2]=2 finalized.',
+    formula: '2 ≥ 2 → nums1[2]=2; p1--; write--',
+    highlights: [
+      { target: 'a1:1', kind: 'confirmed' },
+      { target: 'a2:0', kind: 'compare' },
+      { target: 'a1:2', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'found',
+    p1: -1,
+    p2: -1,
+    pw: 0,
+    arr1: [1, 2, 2, 3, 5, 6],
+    exp: 'p1 exhausted. Remaining nums2[0]=2 → nums1[1]=2. p2 now −1. nums1=[1,2,2,3,5,6]. Done.',
+    reason: 'When nums2 is exhausted, remaining nums1 elements are already in place. When nums1 is exhausted, remaining nums2 elements copy directly in.',
+    invariant: 'All m+n elements merged in-place, O(m+n) time, O(1) extra space.',
+    formula: 'merged: [1,2,2,3,5,6] ✓',
+    highlights: [
+      { target: 'a1:0', kind: 'confirmed' },
+      { target: 'a1:1', kind: 'confirmed' },
+      { target: 'a1:2', kind: 'confirmed' },
+      { target: 'a1:3', kind: 'confirmed' },
+      { target: 'a1:4', kind: 'confirmed' },
+      { target: 'a1:5', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<mt-viz>
+  <AlgorithmPlayer title="Merge Sorted Array — nums1=[1,2,3,_,_,_], nums2=[2,5,6]" steps={steps}>
+    <div class="anim-row">
+      <p class="anim-label">nums1 (in-place)</p>
+      <div class="array-row">
+        {arr1.map((n, i) => (
+          <div class={`array-cell mt-a1-cell ${i >= m ? 'slot' : ''}`} data-idx={i} data-teach-target={`a1:${i}`}>
+            <span class="cell-val mt-a1-val">{i < m ? n : '_'}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">nums2</p>
+      <div class="array-row">
+        {Array.from({length: n}, (_, i) => (
+          <div class="array-cell mt-a2-cell" data-idx={i} data-teach-target={`a2:${i}`}>
+            <span class="cell-val">{[2, 5, 6][i]}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</mt-viz>
+
+<script>
+  class MtViz extends HTMLElement {
+    connectedCallback() {
+      this.a1Cells = Array.from(this.querySelectorAll('.mt-a1-cell'));
+      this.a1Vals = Array.from(this.querySelectorAll('.mt-a1-val'));
+      this.a2Cells = Array.from(this.querySelectorAll('.mt-a2-cell'));
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        if (step.arr1 && this.a1Vals.length === step.arr1.length) {
+          step.arr1.forEach((v, i) => {
+            this.a1Vals[i].textContent = v === 0 && i >= 3 && step.phase === 'start' ? '_' : String(v);
+          });
+        }
+
+        this.a1Cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell mt-a1-cell' + (i >= 3 ? ' slot' : '');
+          if (i === step.pw) cell.classList.add('write-ptr');
+          else if (i === step.p1) cell.classList.add('p1-ptr');
+          else if (i > step.pw) cell.classList.add('done');
+        });
+
+        this.a2Cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell mt-a2-cell';
+          if (i === step.p2) cell.classList.add('p2-ptr');
+          else if (i > step.p2) cell.classList.add('done');
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('mt-viz')) {
+    customElements.define('mt-viz', MtViz);
+  }
+</script>
+
+<style>
+  mt-viz { display: block; }
+
+  .mt-a1-cell.slot .cell-val { opacity: 0.35; font-style: italic; }
+
+  .mt-a1-cell.p1-ptr .cell-val,
+  .mt-a2-cell.p2-ptr .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+    transform: translateY(-4px);
+  }
+
+  .mt-a1-cell.write-ptr .cell-val {
+    border-color: var(--status-medium);
+    color: var(--status-medium);
+    background: rgba(255, 192, 30, 0.08);
+    transform: translateY(-4px);
+  }
+
+  .mt-a1-cell.done .cell-val,
+  .mt-a2-cell.done .cell-val { opacity: 0.3; }
+</style>
