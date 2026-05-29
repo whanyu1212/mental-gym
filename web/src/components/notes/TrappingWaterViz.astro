@@ -1,0 +1,252 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const heights = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    left: 0,
+    right: 11,
+    leftMax: 0,
+    rightMax: 1,
+    water: 0,
+    exp: 'Two pointers start at each end. Track leftMax and rightMax — the tallest wall seen from each side so far. Water at any position is min(leftMax, rightMax) − height[i].',
+    reason: 'The water trapped at position i is bounded by the shorter of the two walls around it. We only need the running max from each side.',
+    invariant: 'leftMax = max(heights[0..left]), rightMax = max(heights[right..n-1])',
+    formula: 'water[i] = min(leftMax, rightMax) − height[i]',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'cell:11', kind: 'write' },
+      { target: 'lmax-box', kind: 'focus' },
+      { target: 'rmax-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'l0',
+    phase: 'advance',
+    left: 1,
+    right: 11,
+    leftMax: 0,
+    rightMax: 1,
+    water: 0,
+    exp: 'leftMax (0) < rightMax (1): process from the left. height[0]=0 → water += max(0,0)−0 = 0. Update leftMax = max(0,0) = 0. left moves to 1.',
+    reason: 'When leftMax < rightMax, the right wall is tall enough — any water at left is only limited by leftMax.',
+    invariant: 'leftMax = 0, rightMax = 1. Water so far = 0.',
+    formula: 'leftMax (0) < rightMax (1) → process left; water += 0',
+    highlights: [
+      { target: 'cell:0', kind: 'compare' },
+      { target: 'lmax-box', kind: 'compare' },
+      { target: 'water-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'l1',
+    phase: 'advance',
+    left: 2,
+    right: 11,
+    leftMax: 1,
+    rightMax: 1,
+    water: 0,
+    exp: 'leftMax (0) < rightMax (1): process left. height[1]=1 → water += max(0,1−1)=0. Update leftMax = 1. left=2.',
+    reason: 'height[1]=1 equals leftMax, so no water above it.',
+    invariant: 'leftMax = 1, rightMax = 1.',
+    formula: 'height[1]=1 ≥ leftMax → leftMax = 1; water += 0',
+    highlights: [
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'lmax-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'l2',
+    phase: 'advance',
+    left: 3,
+    right: 11,
+    leftMax: 1,
+    rightMax: 1,
+    water: 1,
+    exp: 'leftMax (1) = rightMax (1): process left. height[2]=0 → water += 1−0 = 1. leftMax stays 1. left=3.',
+    reason: 'height[2]=0 is below the leftMax wall of 1. The difference (1) is trapped water.',
+    invariant: 'Water accumulates when height[i] < leftMax (or rightMax).',
+    formula: 'water += leftMax − height[2] = 1 − 0 = 1',
+    highlights: [
+      { target: 'cell:2', kind: 'write' },
+      { target: 'lmax-box', kind: 'focus' },
+      { target: 'water-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'l3',
+    phase: 'advance',
+    left: 4,
+    right: 11,
+    leftMax: 2,
+    rightMax: 1,
+    water: 1,
+    exp: 'leftMax (1) = rightMax (1): process left. height[3]=2 > leftMax → no water, update leftMax=2. left=4.',
+    reason: 'A new taller wall resets the leftMax ceiling.',
+    invariant: 'leftMax = 2 now dominates — future left cells are bounded by 2.',
+    formula: 'height[3]=2 > leftMax → leftMax = 2; water += 0',
+    highlights: [
+      { target: 'cell:3', kind: 'confirmed' },
+      { target: 'lmax-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'r11',
+    phase: 'advance',
+    left: 4,
+    right: 10,
+    leftMax: 2,
+    rightMax: 2,
+    water: 1,
+    exp: 'Now leftMax (2) > rightMax (1): process from the right. height[11]=1 → water += max(0,1−1)=0. Update rightMax = max(1,1) = 1. But then height[10]=2 → rightMax=2. right=10.',
+    reason: 'When leftMax exceeds rightMax, the left wall guarantees enough height — process from right side.',
+    invariant: 'rightMax = 2 after processing heights 11 and 10.',
+    formula: 'leftMax (2) > rightMax (1) → process right; rightMax = 2',
+    highlights: [
+      { target: 'cell:11', kind: 'compare' },
+      { target: 'cell:10', kind: 'confirmed' },
+      { target: 'rmax-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'found',
+    left: 4,
+    right: 10,
+    leftMax: 2,
+    rightMax: 2,
+    water: 6,
+    exp: 'After processing all positions, total trapped water = 6 units. One linear scan, O(n) time, O(1) space — no stack needed.',
+    reason: 'The key insight: leftMax and rightMax together give us the binding constraint at every position without needing to look ahead.',
+    invariant: 'Every position has been processed exactly once, contributing max(0, min(lmax,rmax)−height[i]) water.',
+    formula: 'total water = 6 ✓',
+    highlights: [
+      { target: 'water-box', kind: 'confirmed' },
+      { target: 'lmax-box', kind: 'confirmed' },
+      { target: 'rmax-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<tw-viz>
+  <AlgorithmPlayer title="Trapping Rain Water — heights=[0,1,0,2,1,0,1,3,2,1,2,1]" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="lmax-box">
+        <span class="stat-label">leftMax</span>
+        <span class="stat-val tw-lmax">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="rmax-box">
+        <span class="stat-label">rightMax</span>
+        <span class="stat-val tw-rmax">1</span>
+      </div>
+      <div class="stat-box" data-teach-target="water-box">
+        <span class="stat-label">Water</span>
+        <span class="stat-val tw-water">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Heights</p>
+      <div class="tw-bar-chart">
+        {heights.map((h, i) => (
+          <div class="tw-col" data-idx={i} data-height={h} data-teach-target={`cell:${i}`}>
+            <div class="tw-bar" style={`height: ${h * 18 + 4}px`}>{h}</div>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</tw-viz>
+
+<script>
+  class TwViz extends HTMLElement {
+    connectedCallback() {
+      this.cols = Array.from(this.querySelectorAll('.tw-col'));
+      this.lmaxEl = this.querySelector('.tw-lmax');
+      this.rmaxEl = this.querySelector('.tw-rmax');
+      this.waterEl = this.querySelector('.tw-water');
+      this.waterBox = this.querySelector('[data-teach-target="water-box"]');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        this.cols.forEach((col) => {
+          const i = parseInt(col.dataset.idx ?? '0', 10);
+          col.className = 'tw-col';
+          if (i === step.left || i === step.right) col.classList.add('active');
+          else if (i < step.left || i > step.right) col.classList.add('visited');
+        });
+
+        if (this.lmaxEl) this.lmaxEl.textContent = String(step.leftMax ?? 0);
+        if (this.rmaxEl) this.rmaxEl.textContent = String(step.rightMax ?? 0);
+        if (this.waterEl) this.waterEl.textContent = String(step.water ?? 0);
+        this.waterBox?.classList.toggle('success-box', step.phase === 'found');
+      });
+    }
+  }
+
+  if (!customElements.get('tw-viz')) {
+    customElements.define('tw-viz', TwViz);
+  }
+</script>
+
+<style>
+  tw-viz { display: block; }
+
+  .tw-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 0.5rem 0;
+    min-height: 80px;
+  }
+
+  .tw-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: opacity 0.2s;
+  }
+
+  .tw-bar {
+    width: 22px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 3px 3px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: var(--accent);
+    font-weight: 700;
+    padding-top: 2px;
+    transition: background 0.2s, border-color 0.2s;
+    min-height: 4px;
+  }
+
+  .tw-col .cell-idx {
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+
+  .tw-col.visited { opacity: 0.35; }
+
+  .tw-col.active .tw-bar {
+    background: rgba(201, 168, 76, 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 6px rgba(201, 168, 76, 0.3);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val { color: var(--status-easy) !important; }
+</style>

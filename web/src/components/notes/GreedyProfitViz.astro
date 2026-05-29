@@ -1,0 +1,299 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const prices = [7, 1, 5, 3, 6, 4];
+const maxPrice = Math.max(...prices);
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'init',
+    activeDay: -1,
+    prevDay: -1,
+    delta: 0,
+    total: 0,
+    exp: 'Stock II — unlimited trades, collect every upward move. Instead of finding one best window, sum every positive day-over-day increase.',
+    reason: 'Any sum of consecutive gains equals the profit of buying at every local minimum and selling at the next local maximum.',
+    invariant: 'total holds the accumulated profit from all collected increases so far.',
+    formula: 'if prices[i] > prices[i-1]: total += prices[i] − prices[i-1]',
+    highlights: [
+      { target: 'total-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'day-1-to-2',
+    phase: 'skip',
+    activeDay: 1,
+    prevDay: 0,
+    delta: -6,
+    total: 0,
+    exp: 'Day 1→2: 1 < 7, price dropped by 6 → no profit collected. Never buy into a decline.',
+    reason: 'Collecting a negative delta would reduce total profit.',
+    invariant: 'total=0: no upward moves seen yet.',
+    formula: '1 − 7 = −6 < 0 → skip',
+    highlights: [
+      { target: 'bar:0', kind: 'discard' },
+      { target: 'bar:1', kind: 'compare' },
+      { target: 'delta-box', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'day-2-to-3',
+    phase: 'collect',
+    activeDay: 2,
+    prevDay: 1,
+    delta: 4,
+    total: 4,
+    exp: 'Day 2→3: 5 > 1, increase of +4 → collect. total = 0 + 4 = 4.',
+    reason: 'Every positive gap is a free profit; we always capture it.',
+    invariant: 'total=4 reflects all upward gaps processed so far.',
+    formula: '5 − 1 = +4 → total += 4 → total=4',
+    highlights: [
+      { target: 'bar:1', kind: 'candidate' },
+      { target: 'bar:2', kind: 'write' },
+      { target: 'delta-box', kind: 'write' },
+      { target: 'total-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'day-3-to-4',
+    phase: 'skip',
+    activeDay: 3,
+    prevDay: 2,
+    delta: -2,
+    total: 4,
+    exp: 'Day 3→4: 3 < 5, price dropped by 2 → skip. total stays at 4.',
+    reason: 'Ignore every decrease — it would subtract from gains.',
+    invariant: 'total=4 unchanged, decline not collected.',
+    formula: '3 − 5 = −2 < 0 → skip',
+    highlights: [
+      { target: 'bar:2', kind: 'discard' },
+      { target: 'bar:3', kind: 'compare' },
+      { target: 'delta-box', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'day-4-to-5',
+    phase: 'collect',
+    activeDay: 4,
+    prevDay: 3,
+    delta: 3,
+    total: 7,
+    exp: 'Day 4→5: 6 > 3, increase of +3 → collect. total = 4 + 3 = 7.',
+    reason: 'Another upward gap — add it in.',
+    invariant: 'total=7: sum of all positive day-over-day changes processed.',
+    formula: '6 − 3 = +3 → total += 3 → total=7',
+    highlights: [
+      { target: 'bar:3', kind: 'candidate' },
+      { target: 'bar:4', kind: 'write' },
+      { target: 'delta-box', kind: 'write' },
+      { target: 'total-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'day-5-to-6',
+    phase: 'done',
+    activeDay: 5,
+    prevDay: 4,
+    delta: -2,
+    total: 7,
+    exp: 'Day 5→6: 4 < 6, price dropped by 2 → skip. Final profit = 7.',
+    reason: 'The last move is negative; collecting it would only hurt.',
+    invariant: 'Total profit = sum of all positive deltas = 7.',
+    formula: '4 − 6 = −2 < 0 → skip. Return total=7',
+    highlights: [
+      { target: 'bar:4', kind: 'discard' },
+      { target: 'bar:5', kind: 'compare' },
+      { target: 'delta-box', kind: 'discard' },
+      { target: 'total-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<greedy-profit-viz>
+  <AlgorithmPlayer title="Best Time to Buy and Sell Stock II — prices=[7,1,5,3,6,4]" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="total-box">
+        <span class="stat-label">Total Profit</span>
+        <span class="stat-val gp-total">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="delta-box">
+        <span class="stat-label">Day Delta</span>
+        <span class="stat-val gp-delta">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Price chart</p>
+      <div class="chart-area">
+        <div class="bars-row">
+          {prices.map((p, i) => (
+            <div class="bar-wrapper" data-teach-target={`bar:${i}`} data-day={i}>
+              <span class="bar-price-label">{p}</span>
+              <div
+                class="bar gp-bar"
+                data-bar-idx={i}
+                style={`height: ${Math.round((p / maxPrice) * 100)}px`}
+              ></div>
+              <span class="bar-day-label">D{i + 1}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</greedy-profit-viz>
+
+<script>
+  class GreedyProfitViz extends HTMLElement {
+    connectedCallback() {
+      this.barWrappers = Array.from(this.querySelectorAll('.bar-wrapper'));
+      this.totalEl = this.querySelector('.gp-total');
+      this.deltaEl = this.querySelector('.gp-delta');
+      this.totalBox = this.querySelector('[data-teach-target="total-box"]');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        // Update running total
+        if (this.totalEl) this.totalEl.textContent = step.total ?? 0;
+
+        // Update delta display
+        if (this.deltaEl) {
+          if (step.activeDay < 1) {
+            this.deltaEl.textContent = '—';
+          } else {
+            const sign = step.delta > 0 ? '+' : '';
+            this.deltaEl.textContent = `${sign}${step.delta}`;
+          }
+          this.deltaEl.className = 'stat-val gp-delta';
+          if (step.delta > 0) this.deltaEl.classList.add('delta-pos');
+          else if (step.delta < 0) this.deltaEl.classList.add('delta-neg');
+        }
+
+        // Reset bar states
+        this.barWrappers.forEach((bw) => {
+          bw.classList.remove('bar-active', 'bar-prev', 'bar-collect', 'bar-skip');
+        });
+
+        if (step.activeDay >= 0) {
+          const activeWrap = this.querySelector(`[data-day="${step.activeDay}"]`);
+          const prevWrap = step.prevDay >= 0 ? this.querySelector(`[data-day="${step.prevDay}"]`) : null;
+
+          if (activeWrap) {
+            if (step.phase === 'collect') activeWrap.classList.add('bar-collect');
+            else if (step.phase === 'skip' || step.phase === 'done') activeWrap.classList.add('bar-skip');
+            else activeWrap.classList.add('bar-active');
+          }
+          if (prevWrap) prevWrap.classList.add('bar-prev');
+        }
+
+        // Success state for done phase
+        if (this.totalBox) {
+          this.totalBox.classList.toggle('success-box', step.phase === 'done');
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('greedy-profit-viz')) {
+    customElements.define('greedy-profit-viz', GreedyProfitViz);
+  }
+</script>
+
+<style>
+  greedy-profit-viz { display: block; }
+
+  .chart-area {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 16px 8px;
+    display: inline-block;
+  }
+
+  .bars-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 120px;
+  }
+
+  .bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: opacity 0.2s;
+  }
+
+  .bar-price-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    min-height: 14px;
+  }
+
+  .bar {
+    width: 36px;
+    border-radius: 4px 4px 0 0;
+    background: var(--muted);
+    opacity: 0.45;
+    transition: background 0.25s, opacity 0.25s, transform 0.2s;
+    min-height: 8px;
+  }
+
+  .bar-day-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
+  /* bar states via wrapper class */
+  .bar-wrapper.bar-prev .bar {
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  .bar-wrapper.bar-collect .bar {
+    background: var(--status-easy);
+    opacity: 1;
+    transform: scaleY(1.04);
+    transform-origin: bottom;
+  }
+
+  .bar-wrapper.bar-skip .bar {
+    background: var(--status-hard);
+    opacity: 0.65;
+  }
+
+  .bar-wrapper.bar-active .bar {
+    background: var(--accent);
+    opacity: 0.85;
+  }
+
+  .bar-wrapper.bar-collect .bar-price-label,
+  .bar-wrapper.bar-collect .bar-day-label {
+    color: var(--status-easy);
+    font-weight: 600;
+  }
+
+  .bar-wrapper.bar-skip .bar-price-label,
+  .bar-wrapper.bar-skip .bar-day-label {
+    color: var(--status-hard);
+  }
+
+  /* delta colour classes on .gp-delta */
+  .gp-delta.delta-pos { color: var(--status-easy) !important; }
+  .gp-delta.delta-neg { color: var(--status-hard) !important; }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+</style>

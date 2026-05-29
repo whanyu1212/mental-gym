@@ -1,0 +1,194 @@
+---
+---
+
+<due-for-review>
+  <section class="due-section" style="display:none">
+    <div class="due-header">
+      <h2 class="due-heading">Due for Review</h2>
+      <span class="due-count"></span>
+    </div>
+    <div class="due-cards"></div>
+  </section>
+</due-for-review>
+
+<script>
+  import { getDueRecords } from "../scripts/sr-db";
+  import { statusOf, daysUntilDue, todayISO } from "../scripts/sr-scheduler";
+
+  class DueForReviewElement extends HTMLElement {
+    connectedCallback() {
+      this.render();
+    }
+
+    async render() {
+      const section = this.querySelector(".due-section") as HTMLElement;
+      const countEl = this.querySelector(".due-count") as HTMLElement;
+      const cardsEl = this.querySelector(".due-cards") as HTMLElement;
+
+      const today = todayISO();
+      const records = await getDueRecords(today);
+
+      if (records.length === 0) return;
+
+      // Sort: overdue first (oldest first), then due today
+      records.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+      countEl.textContent = `${records.length}`;
+      section.style.display = "";
+
+      cardsEl.innerHTML = records
+        .map((r) => {
+          const status = statusOf(r, today);
+          const days = daysUntilDue(r, today);
+          const href =
+            r.domain === "algorithms"
+              ? `/algorithms/${r.slug}/`
+              : `/machine-learning/${r.slug}/`;
+          const overdueDays = Math.abs(days);
+          const statusText =
+            status === "overdue"
+              ? `${overdueDays}d overdue`
+              : "Due today";
+
+          return `
+            <a href="${href}" class="due-card">
+              <div class="due-card-top">
+                <span class="due-card-title">${r.title}</span>
+                <span class="due-card-status status-${status}">${statusText}</span>
+              </div>
+              <div class="due-card-meta">
+                <span class="due-card-group">${r.group}</span>
+                <span class="due-card-diff ${r.difficulty.toLowerCase()}">${r.difficulty}</span>
+              </div>
+            </a>
+          `;
+        })
+        .join("");
+    }
+  }
+
+  if (!customElements.get("due-for-review")) {
+    customElements.define("due-for-review", DueForReviewElement);
+  }
+</script>
+
+<style>
+  due-for-review {
+    display: block;
+  }
+
+  .due-section {
+    margin-bottom: 2rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.25rem;
+  }
+
+  .due-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .due-heading {
+    margin: 0;
+    font-size: var(--text-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    font-weight: 600;
+    font-family: Inter, system-ui, sans-serif;
+  }
+
+  .due-count {
+    font-size: 0.65rem;
+    font-family: Inter, sans-serif;
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--status-hard) 30%, transparent);
+    border-radius: 2px;
+    padding: 0.1rem 0.45rem;
+    font-weight: 600;
+  }
+
+  .due-cards {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .due-cards :global(.due-card) {
+    display: block;
+    padding: 0.75rem 1rem;
+    background: var(--surface-base);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    text-decoration: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .due-cards :global(.due-card:hover) {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--status-medium) 4%, transparent);
+  }
+
+  .due-cards :global(.due-card-top) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .due-cards :global(.due-card-title) {
+    font-size: 0.88rem;
+    font-family: Inter, sans-serif;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .due-cards :global(.due-card-status) {
+    font-size: 0.65rem;
+    font-family: Inter, sans-serif;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .due-cards :global(.status-overdue) {
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+  }
+
+  .due-cards :global(.status-due) {
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .due-cards :global(.due-card-meta) {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .due-cards :global(.due-card-group) {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+  }
+
+  .due-cards :global(.due-card-diff) {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    font-family: Inter, sans-serif;
+  }
+
+  .due-cards :global(.easy) { color: var(--status-easy); }
+  .due-cards :global(.medium) { color: var(--status-medium); }
+  .due-cards :global(.hard) { color: var(--status-hard); }
+</style>

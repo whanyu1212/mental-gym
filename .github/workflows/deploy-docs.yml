@@ -1,14 +1,10 @@
-name: Deploy Docs to GitHub Pages
+name: Deploy Astro Site to GitHub Pages
 
 on:
   push:
     branches:
+      - develop
       - main
-    paths:
-      - 'docs/**'
-      - 'src/leetcode/**'
-      - 'scripts/generate_leetcode_docs.py'
-      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -26,36 +22,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install Python dependencies
+        run: poetry install --no-interaction
+
+      - name: Generate problems data
+        run: poetry run python scripts/generate_problems.py
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
-          cache-dependency-path: docs/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
-      - name: Install dependencies
-        working-directory: docs
+      - name: Install Node dependencies
+        working-directory: web
         run: npm ci
 
-      - name: Build docs
-        working-directory: docs
-        run: npm run docs:build
-
-      - name: Verify dist
-        run: ls docs/.vitepress/dist
+      - name: Build Astro site
+        working-directory: web
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: web/dist
 
   deploy:
     environment:

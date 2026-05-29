@@ -1,0 +1,366 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [2, 2, 1, 1, 1, 2, 2];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    i: -1,
+    candidate: null,
+    count: 0,
+    exp: 'Start Boyer-Moore Voting with no candidate and count = 0. We scan once, keeping just two variables: candidate and count.',
+    reason: 'The algorithm maintains a "vote balance": candidate votes cancel against non-candidate votes. The majority element can never be fully canceled.',
+    invariant: 'count tracks (candidate votes) − (non-candidate votes) in the processed prefix. When count = 0, previous votes are fully canceled.',
+    formula: 'if count == 0: pick new candidate; elif val == candidate: count++; else: count--',
+    highlights: [
+      { target: 'candidate-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'pick-2-first',
+    phase: 'vote',
+    i: 0,
+    candidate: 2,
+    count: 1,
+    exp: 'i=0, val=2: count is 0, so pick 2 as the new candidate and set count to 1.',
+    reason: 'A zero count means no candidate has any net votes — start fresh with the current element.',
+    invariant: 'Candidate is always drawn from the unprocessed part of the array.',
+    formula: 'count == 0 → candidate = 2, count = 1',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'candidate-box', kind: 'write' },
+      { target: 'count-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'inc-2',
+    phase: 'vote',
+    i: 1,
+    candidate: 2,
+    count: 2,
+    exp: 'i=1, val=2: matches candidate 2, so count increases to 2.',
+    reason: 'Each matching element adds one net vote to the candidate\'s balance.',
+    invariant: 'count > 0 means the candidate leads by that many net votes.',
+    formula: 'val == candidate → count = 2',
+    highlights: [
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'count-box', kind: 'confirmed' },
+      { target: 'candidate-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'dec-1-a',
+    phase: 'vote',
+    i: 2,
+    candidate: 2,
+    count: 1,
+    exp: 'i=2, val=1: different from candidate 2, so count drops to 1. One vote is canceled.',
+    reason: 'Non-candidate values cancel candidate votes one-for-one.',
+    invariant: 'count remains positive — candidate 2 still leads.',
+    formula: 'val != candidate → count = 1',
+    highlights: [
+      { target: 'cell:2', kind: 'discard' },
+      { target: 'count-box', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'dec-1-b',
+    phase: 'vote',
+    i: 3,
+    candidate: 2,
+    count: 0,
+    exp: 'i=3, val=1: another mismatch. count drops to 0 — candidate 2 is fully canceled out.',
+    reason: 'A zero count means the sub-array [2,2,1,1] is perfectly balanced; no candidate has survived.',
+    invariant: 'count = 0 means the processed prefix up to this point cancels itself out completely.',
+    formula: 'val != candidate → count = 0 (full cancel)',
+    highlights: [
+      { target: 'cell:3', kind: 'discard' },
+      { target: 'count-box', kind: 'discard' },
+      { target: 'candidate-box', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'pick-1',
+    phase: 'vote',
+    i: 4,
+    candidate: 1,
+    count: 1,
+    exp: 'i=4, val=1: count is 0, so pick 1 as the new candidate and reset count to 1.',
+    reason: 'After full cancellation the next element always wins the vote unopposed.',
+    invariant: 'Candidate can only change when count is exactly 0.',
+    formula: 'count == 0 → candidate = 1, count = 1',
+    highlights: [
+      { target: 'cell:4', kind: 'write' },
+      { target: 'candidate-box', kind: 'write' },
+      { target: 'count-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'final-swing',
+    phase: 'done',
+    i: 6,
+    candidate: 2,
+    count: 1,
+    exp: 'i=5, val=2: cancels candidate 1 back to count 0. i=6, val=2: count is 0 → pick 2, count=1. Final candidate is 2 — the majority element.',
+    reason: 'Because 2 appears 4 out of 7 times (> n/2), it cannot be fully canceled by all others combined.',
+    invariant: 'The final surviving candidate is guaranteed to be the majority element (assuming one exists).',
+    formula: 'majority = 2 (appears 4/7 times > n/2)',
+    highlights: [
+      { target: 'cell:5', kind: 'discard' },
+      { target: 'cell:6', kind: 'confirmed' },
+      { target: 'candidate-box', kind: 'confirmed' },
+      { target: 'count-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<boyer-moore-viz>
+  <AlgorithmPlayer title="Boyer-Moore Voting — nums=[2,2,1,1,1,2,2], majority=2" steps={steps}>
+    <div class="stats-row bm-stats-row">
+      <div class="stat-box bm-candidate-box" data-teach-target="candidate-box">
+        <span class="stat-label">Candidate</span>
+        <span class="stat-val bm-candidate-val">—</span>
+      </div>
+      <div class="stat-box bm-count-box" data-teach-target="count-box">
+        <span class="stat-label">Count (Votes)</span>
+        <span class="stat-val bm-count-val">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array (Boyer-Moore Voting)</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell bm-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row bm-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden">i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Vote balance</p>
+      <div class="bm-vote-bar-wrap">
+        <div class="bm-vote-bar-track">
+          <div class="bm-vote-bar-fill"></div>
+        </div>
+        <span class="bm-vote-label">0 net votes</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</boyer-moore-viz>
+
+<script>
+  class BoyerMooreViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.bm-cell'));
+      this.ptrs = Array.from(this.querySelectorAll('.bm-ptr-col'));
+      this.candidateValEl = this.querySelector('.bm-candidate-val');
+      this.countValEl = this.querySelector('.bm-count-val');
+      this.candidateBox = this.querySelector('.bm-candidate-box');
+      this.countBox = this.querySelector('.bm-count-box');
+      this.voteBarFill = this.querySelector('.bm-vote-bar-fill');
+      this.voteLabel = this.querySelector('.bm-vote-label');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+        const stepIndex = e.detail.index;
+
+        // Update stat boxes
+        if (this.candidateValEl) {
+          this.candidateValEl.textContent = step.candidate !== null && step.candidate !== undefined
+            ? String(step.candidate)
+            : '—';
+        }
+        if (this.countValEl) {
+          this.countValEl.textContent = String(step.count ?? 0);
+        }
+
+        // Vote bar: map count 0–4 to 0%–100%
+        const maxVotes = 4;
+        const pct = Math.min(((step.count ?? 0) / maxVotes) * 100, 100);
+        if (this.voteBarFill) {
+          this.voteBarFill.style.width = `${pct}%`;
+          this.voteBarFill.className = 'bm-vote-bar-fill';
+          if (step.phase === 'done') this.voteBarFill.classList.add('bm-bar-done');
+          else if ((step.count ?? 0) === 0 && step.phase !== 'start') this.voteBarFill.classList.add('bm-bar-zero');
+          else this.voteBarFill.classList.add('bm-bar-active');
+        }
+        if (this.voteLabel) {
+          this.voteLabel.textContent = `${step.count ?? 0} net vote${(step.count ?? 0) !== 1 ? 's' : ''}`;
+        }
+
+        // Done state on candidate box
+        this.candidateBox?.classList.toggle('bm-success', step.phase === 'done');
+        this.countBox?.classList.toggle('bm-success', step.phase === 'done');
+
+        // Cell states
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+
+          const activeI = step.i ?? -1;
+          // For the final combined step, both i=5 and i=6 are "active"
+          const isFinalStep = step.id === 'final-swing';
+
+          if (step.phase === 'done' && i <= activeI) {
+            // Final step: mark i=6 confirmed, i=5 discarded, rest visited
+            if (isFinalStep && i === 6) {
+              valSpan.classList.add('bm-cell-confirmed');
+            } else if (isFinalStep && i === 5) {
+              valSpan.classList.add('bm-cell-conflict');
+            } else {
+              valSpan.classList.add('bm-cell-visited');
+            }
+          } else if (i < activeI) {
+            valSpan.classList.add('bm-cell-visited');
+          } else if (i === activeI && step.phase !== 'start') {
+            if (step.action === 'confirm' || step.id === 'inc-2') {
+              valSpan.classList.add('bm-cell-match');
+            } else if (step.action === 'discard' || step.id?.startsWith('dec-')) {
+              valSpan.classList.add('bm-cell-conflict');
+            } else {
+              valSpan.classList.add('bm-cell-active');
+            }
+          }
+        });
+
+        // Pointer
+        this.ptrs.forEach((col, i) => {
+          const ptr = col.querySelector('.ptr-up');
+          if (!ptr) return;
+          const activeI = step.i ?? -1;
+          // Show pointer at active index (and for final step show at 6)
+          const show = step.id === 'final-swing' ? i === 6 : i === activeI;
+          ptr.className = `ptr ptr-up ${show ? '' : 'hidden'}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('boyer-moore-viz')) {
+    customElements.define('boyer-moore-viz', BoyerMooreViz);
+  }
+</script>
+
+<style>
+  boyer-moore-viz { display: block; }
+
+  .bm-stats-row {
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  /* Candidate box */
+  .bm-candidate-box {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+  .bm-candidate-box .stat-val {
+    color: var(--accent);
+  }
+
+  /* Count box */
+  .bm-count-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 6%, transparent);
+  }
+  .bm-count-box .stat-val {
+    color: var(--status-info);
+  }
+
+  /* Done / success state */
+  .stat-box.bm-success {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.bm-success .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  /* Vote bar */
+  .bm-vote-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .bm-vote-bar-track {
+    flex: 1;
+    max-width: 14rem;
+    height: 0.6rem;
+    background: var(--panel, var(--surface-base));
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bm-vote-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.25s ease, background-color 0.2s;
+  }
+  .bm-vote-bar-fill.bm-bar-active {
+    background: var(--status-info);
+  }
+  .bm-vote-bar-fill.bm-bar-zero {
+    background: color-mix(in srgb, var(--status-hard) 60%, transparent);
+  }
+  .bm-vote-bar-fill.bm-bar-done {
+    background: var(--status-easy);
+  }
+  .bm-vote-label {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Cell states */
+  .cell-val.bm-cell-active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.bm-cell-match {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 14%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.bm-cell-conflict {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 14%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.bm-cell-confirmed {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 14%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.bm-cell-visited {
+    opacity: 0.35;
+  }
+
+  /* Pointer */
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+</style>

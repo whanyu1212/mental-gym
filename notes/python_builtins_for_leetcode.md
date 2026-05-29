@@ -1,3 +1,9 @@
+---
+title: Python Built-in Functions & Operators for LeetCode
+description: A comprehensive reference of Python built-in functions, data structures, and libraries commonly used in LeetCode problems.
+category: Languages
+---
+
 # Python Built-in Functions & Operators for LeetCode
 
 A comprehensive reference of Python built-ins commonly used in competitive programming and LeetCode problems.
@@ -273,7 +279,7 @@ def maxDepth(root):
         max_d = max(max_d, depth)
         dfs(node.left, depth + 1)
         dfs(node.right, depth + 1)
-    
+
     dfs(root, 1)
     return max_d
 ```

@@ -1,0 +1,425 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const strs = ["eat", "tea", "tan", "ate", "nat", "bat"];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initialize-map',
+    i: -1,
+    word: "",
+    key: "",
+    groupSize: 0,
+    actionType: 'start',
+    map: {},
+    formula: 'key = sorted(word)',
+    exp: 'Start with an empty hash map. For each word, sort its letters to create a canonical key.',
+    reason: 'Anagrams produce the same sorted-letter key, so they naturally fall into the same bucket.',
+    invariant: [
+      'Every map key is the sorted form of some word.',
+      'All words stored under the same key are anagrams of each other.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'map-box', kind: 'focus' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'place-eat',
+    i: 0,
+    word: "eat",
+    key: "aet",
+    groupSize: 1,
+    actionType: 'new-group',
+    map: { aet: ["eat"] },
+    formula: '"eat" → "aet"',
+    exp: "Take 'eat', sort it to 'aet', and create a new group for that key.",
+    reason: 'The first time a key appears, we must create a new bucket in the map.',
+    invariant: 'Each word belongs to exactly one group determined by its sorted key.',
+    action: 'write',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'cell:0', kind: 'write' },
+      { target: 'entry:aet', kind: 'write' },
+    ],
+  },
+  {
+    id: 'append-tea',
+    i: 1,
+    word: "tea",
+    key: "aet",
+    groupSize: 2,
+    actionType: 'append-group',
+    map: { aet: ["eat", "tea"] },
+    formula: '"tea" → "aet"',
+    exp: "Now process 'tea'. Its sorted key is also 'aet', so append it to the existing 'aet' group.",
+    reason: 'Matching keys mean the new word is an anagram of the words already in that bucket.',
+    invariant: 'Equal sorted keys imply equal character multisets.',
+    action: 'write',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'match' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'cell:1', kind: 'write' },
+      { target: 'entry:aet', kind: 'match' },
+    ],
+  },
+  {
+    id: 'place-tan',
+    i: 2,
+    word: "tan",
+    key: "ant",
+    groupSize: 1,
+    actionType: 'new-group',
+    map: { aet: ["eat", "tea"], ant: ["tan"] },
+    formula: '"tan" → "ant"',
+    exp: "Process 'tan'. Its sorted key is 'ant', which does not exist yet, so create a new group.",
+    reason: 'A new key means this word does not belong in any previous anagram bucket.',
+    invariant: 'Different keys represent different character compositions.',
+    action: 'write',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'entry:ant', kind: 'write' },
+    ],
+  },
+  {
+    id: 'append-ate',
+    i: 3,
+    word: "ate",
+    key: "aet",
+    groupSize: 3,
+    actionType: 'append-group',
+    map: { aet: ["eat", "tea", "ate"], ant: ["tan"] },
+    formula: '"ate" → "aet"',
+    exp: "Process 'ate'. Its key is again 'aet', so append it to the same group as 'eat' and 'tea'.",
+    reason: 'Words that sort to the same key must be permutations of the same letters.',
+    invariant: 'Buckets grow by appending new anagrams under the matching key.',
+    action: 'write',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'match' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'cell:3', kind: 'write' },
+      { target: 'entry:aet', kind: 'match' },
+    ],
+  },
+  {
+    id: 'append-nat',
+    i: 4,
+    word: "nat",
+    key: "ant",
+    groupSize: 2,
+    actionType: 'append-group',
+    map: { aet: ["eat", "tea", "ate"], ant: ["tan", "nat"] },
+    formula: '"nat" → "ant"',
+    exp: "Process 'nat'. Its sorted key is 'ant', so it joins the same group as 'tan'.",
+    reason: "The shared key proves 'nat' and 'tan' have the same letter counts.",
+    invariant: 'Every group contains only words with identical sorted keys.',
+    action: 'write',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'match' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'cell:4', kind: 'write' },
+      { target: 'entry:ant', kind: 'match' },
+    ],
+  },
+  {
+    id: 'place-bat',
+    i: 5,
+    word: "bat",
+    key: "abt",
+    groupSize: 1,
+    actionType: 'new-group',
+    map: {
+      aet: ["eat", "tea", "ate"],
+      ant: ["tan", "nat"],
+      abt: ["bat"],
+    },
+    formula: '"bat" → "abt"',
+    exp: "Finally, process 'bat'. Its sorted key is 'abt', so it starts its own new group.",
+    reason: "Since no earlier word had key 'abt', this word forms a new anagram class.",
+    invariant: 'The map partitions the input into groups by canonical sorted key.',
+    action: 'write',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'cell:5', kind: 'write' },
+      { target: 'entry:abt', kind: 'write' },
+    ],
+  },
+  {
+    id: 'done',
+    i: -1,
+    word: "",
+    key: "",
+    groupSize: 0,
+    actionType: 'done',
+    map: {
+      aet: ["eat", "tea", "ate"],
+      ant: ["tan", "nat"],
+      abt: ["bat"],
+    },
+    formula: 'return map.values()',
+    exp: 'Done. The groups stored as the values of the map are the grouped anagrams.',
+    reason: 'Once every word has been placed into its key bucket, the grouping is complete.',
+    invariant: 'The final answer is the collection of all grouped buckets.',
+    action: 'confirm',
+    highlights: [
+      { target: 'map-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'entry:aet', kind: 'confirmed' },
+      { target: 'entry:ant', kind: 'confirmed' },
+      { target: 'entry:abt', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<group-anagrams-visuals>
+  <AlgorithmPlayer title='strs = ["eat", "tea", "tan", "ate", "nat", "bat"]' steps={steps}>
+    <div class="stats-row ga-stats-row">
+      <div class="stat-box" data-teach-target="word-box">
+        <span class="stat-label">Current Word</span>
+        <span class="stat-val ga-curr-word">-</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="key-box">
+        <span class="stat-label">Sorted Key</span>
+        <span class="stat-val ga-curr-key">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Transform</span>
+        <span class="stat-val ga-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val ga-decision">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row ga-input-row">
+      <p class="anim-label">Input Array</p>
+      <div class="array-row ga-array">
+        {strs.map((str, i) => (
+          <div class="array-col">
+            <div
+              class="array-cell ga-cell"
+              data-idx={i}
+              data-teach-target={`cell:${i}`}
+              style="width: auto; padding: 0 0.5rem;"
+            >
+              <span class="cell-val">{str}</span>
+            </div>
+            <div class="pointers-row ga-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden" data-teach-target={i === 0 ? "pointer:i" : undefined}>i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">HashMap (key → grouped words)</p>
+      <div class="ga-map" data-teach-target="map-box">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</group-anagrams-visuals>
+
+<script>
+  class GroupAnagramsVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".ga-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".ga-ptr-col"));
+      this.wordEl = this.querySelector(".ga-curr-word");
+      this.keyEl = this.querySelector(".ga-curr-key");
+      this.formulaEl = this.querySelector(".ga-formula");
+      this.decisionEl = this.querySelector(".ga-decision");
+      this.mapEl = this.querySelector(".ga-map");
+      this.mapBox = this.querySelector('[data-teach-target="map-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.wordEl) this.wordEl.textContent = step.word || "-";
+        if (this.keyEl) this.keyEl.textContent = step.key || "-";
+        if (this.formulaEl) this.formulaEl.textContent = step.formula ?? "-";
+
+        if (this.decisionEl) {
+          if (step.actionType === 'start') {
+            this.decisionEl.textContent = 'Initialize empty grouping map';
+          } else if (step.actionType === 'new-group') {
+            this.decisionEl.textContent = 'Key is new → create a new group';
+          } else if (step.actionType === 'append-group') {
+            this.decisionEl.textContent = 'Key exists → append to existing group';
+          } else {
+            this.decisionEl.textContent = 'Return all grouped buckets';
+          }
+        }
+
+        this.mapBox?.classList.toggle('success-box', step.actionType === 'done');
+        this.decisionBox?.classList.toggle('success-box', step.actionType === 'done');
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i < step.i) valSpan.classList.add("visited");
+          if (i === step.i) valSpan.classList.add("active-eval");
+          if (step.i === -1 && e.detail.index > 0) valSpan.classList.add("visited");
+        });
+
+        this.ptrs.forEach((col, i) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) ptr.className = `ptr ptr-up ${i === step.i ? "" : "hidden"}`;
+        });
+
+        if (this.mapEl) {
+          const keys = Object.keys(step.map);
+          if (keys.length === 0) {
+            this.mapEl.innerHTML =
+              "<span class='ga-map-empty'>Empty Map</span>";
+          } else {
+            this.mapEl.innerHTML = keys
+              .map((key) => {
+                const isActive = key === step.key;
+                const values = step.map[key];
+                const quotedValues = values.map((value) => `"${value}"`).join(", ");
+                return `
+                  <div class="ga-map-entry ${isActive ? "active-entry" : ""}" data-teach-target="entry:${key}">
+                    <span class="ga-map-key">"${key}"</span>
+                    <span class="ga-map-sep">:</span>
+                    <span class="ga-map-values">[${quotedValues}]</span>
+                  </div>
+                `;
+              })
+              .join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('group-anagrams-visuals')) {
+    customElements.define('group-anagrams-visuals', GroupAnagramsVisuals);
+  }
+</script>
+
+<style>
+  group-anagrams-visuals {
+    display: block;
+  }
+
+  .ga-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .ga-input-row {
+    margin-bottom: 2rem;
+  }
+
+  .ga-map {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1rem;
+    background: var(--surface-strong);
+    min-height: 150px;
+  }
+
+  .ga-map-empty {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .ga-map-entry {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem;
+    background: #151515;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .ga-map-entry.active-entry {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+
+  .ga-map-key {
+    font-family: var(--font-mono);
+    width: 40px;
+    color: var(--muted);
+  }
+
+  .ga-map-entry.active-entry .ga-map-key {
+    color: var(--accent);
+  }
+
+  .ga-map-sep {
+    color: var(--muted);
+  }
+
+  .ga-map-values {
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+
+  .cell-val {
+    padding: 0 0.5rem !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(201, 168, 76, 0.4);
+    background: var(--accent-dim);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+</style>

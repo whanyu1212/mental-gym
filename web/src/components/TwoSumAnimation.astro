@@ -1,0 +1,330 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initialize',
+    active: -1,
+    currentValue: null,
+    complement: null,
+    found: [],
+    mapKeys: [],
+    mapVals: [],
+    phase: 'start',
+    formula: 'complement = target - nums[i]',
+    exp: 'Start with an empty hash map. For each number, compute its complement and check whether that complement has already been seen.',
+    reason: 'A hash map lets us answer “have we seen the complement?” in constant time.',
+    invariant: [
+      'The map stores value → index for numbers already processed.',
+      'If complement is already in the map, the answer is found immediately.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'target-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'map-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'check-2',
+    active: 0,
+    currentValue: 2,
+    complement: 7,
+    found: [],
+    mapKeys: [],
+    mapVals: [],
+    phase: 'lookup',
+    formula: '9 - 2 = 7',
+    exp: 'At i = 0, the current number is 2, so the complement we need is 7. The map is still empty, so 7 is not found.',
+    reason: 'Because no earlier numbers exist yet, the first lookup must fail.',
+    invariant: 'We only search among numbers already processed, never future ones.',
+    action: 'compare',
+    highlights: [
+      { target: 'target-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'array-box', kind: 'focus' },
+      { target: 'cell:0', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'store-2',
+    active: 0,
+    currentValue: 2,
+    complement: 7,
+    found: [],
+    mapKeys: [2],
+    mapVals: [0],
+    phase: 'store',
+    formula: 'store 2 → 0',
+    exp: 'Since the complement was not in the map, store the current value 2 with its index 0.',
+    reason: 'Every failed lookup turns into a future resource: the current value may become someone else’s complement.',
+    invariant: 'After processing index i, nums[i] is available for future complement checks.',
+    action: 'write',
+    highlights: [
+      { target: 'map-box', kind: 'write' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:0', kind: 'write' },
+      { target: 'entry:0', kind: 'write' },
+    ],
+  },
+  {
+    id: 'check-7',
+    active: 1,
+    currentValue: 7,
+    complement: 2,
+    found: [],
+    mapKeys: [2],
+    mapVals: [0],
+    phase: 'lookup',
+    formula: '9 - 7 = 2',
+    exp: 'At i = 1, the current number is 7, so the needed complement is 2. This time, 2 is already in the map at index 0.',
+    reason: 'The earlier stored value 2 completes the target sum with 7.',
+    invariant: 'A successful lookup means we have found two indices whose values sum to the target.',
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'map-box', kind: 'match' },
+      { target: 'cell:1', kind: 'focus' },
+      { target: 'entry:0', kind: 'match' },
+    ],
+  },
+  {
+    id: 'return-answer',
+    active: 1,
+    currentValue: 7,
+    complement: 2,
+    found: [0, 1],
+    mapKeys: [2],
+    mapVals: [0],
+    phase: 'found',
+    formula: 'nums[0] + nums[1] = 2 + 7 = 9',
+    exp: 'Return [0, 1]. The numbers at those indices are 2 and 7, and together they equal the target 9.',
+    reason: 'The map gave the earlier index instantly, so there is no need to keep scanning.',
+    invariant: 'Once a complement match is found, the search is complete.',
+    action: 'confirm',
+    highlights: [
+      { target: 'answer-box', kind: 'confirmed' },
+      { target: 'formula-box', kind: 'confirmed' },
+      { target: 'map-box', kind: 'match' },
+      { target: 'cell:0', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'entry:0', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'counterfactual-11',
+    active: 2,
+    currentValue: 11,
+    complement: -2,
+    found: [],
+    mapKeys: [2, 7],
+    mapVals: [0, 1],
+    phase: 'store',
+    formula: '9 - 11 = -2',
+    exp: 'If no answer had already been found, the next step would check 11, need complement -2, fail the lookup, and then store 11.',
+    reason: 'This illustrates the same repeating pattern: compute complement, lookup, then store if needed.',
+    invariant: 'The algorithm behaves uniformly at every index.',
+    action: 'write',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:1', kind: 'write' },
+    ],
+  },
+  {
+    id: 'counterfactual-15',
+    active: 3,
+    currentValue: 15,
+    complement: -6,
+    found: [],
+    mapKeys: [2, 7, 11],
+    mapVals: [0, 1, 2],
+    phase: 'done',
+    formula: '9 - 15 = -6',
+    exp: 'Likewise, 15 would need complement -6, which is not in the map. After that, there would be no elements left.',
+    reason: 'Without a match, the scan ends after the last index.',
+    invariant: 'If no lookup ever succeeds, there is no valid pair in the array.',
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:3', kind: 'focus' },
+      { target: 'map-box', kind: 'focus' },
+    ],
+  },
+];
+---
+
+<two-sum-visuals>
+  <AlgorithmPlayer title="nums = [2, 7, 11, 15], target = 9" steps={steps}>
+    <div class="stats-row ts-stats-row">
+      <div class="stat-box" data-teach-target="target-box">
+        <span class="stat-label">Target</span>
+        <span class="stat-val ts-target">{target}</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Complement Check</span>
+        <span class="stat-val ts-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val ts-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="answer-box">
+        <span class="stat-label">Answer</span>
+        <span class="stat-val ts-answer">not found</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-row" data-teach-target="array-box">
+        {nums.map((n, i) => (
+          <div class="array-cell ts-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+            <span class="cell-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Hash map</p>
+      <div class="hashmap-row ts-map" data-teach-target="map-box"></div>
+    </div>
+  </AlgorithmPlayer>
+</two-sum-visuals>
+
+<script>
+  class TwoSumVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".ts-cell"));
+      this.mapEl = this.querySelector(".ts-map");
+      this.formulaEl = this.querySelector(".ts-formula");
+      this.decisionEl = this.querySelector(".ts-decision");
+      this.answerEl = this.querySelector(".ts-answer");
+      this.answerBox = this.querySelector('[data-teach-target="answer-box"]');
+      this.mapBox = this.querySelector('[data-teach-target="map-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.formulaEl) {
+          this.formulaEl.textContent = step.formula ?? '-';
+        }
+
+        if (this.decisionEl) {
+          if (step.phase === 'start') {
+            this.decisionEl.textContent = 'Initialize empty map';
+          } else if (step.phase === 'lookup') {
+            this.decisionEl.textContent = 'Check whether complement is already seen';
+          } else if (step.phase === 'store') {
+            this.decisionEl.textContent = 'Complement missing → store current value';
+          } else if (step.phase === 'found') {
+            this.decisionEl.textContent = 'Complement found → return indices';
+          } else {
+            this.decisionEl.textContent = 'No elements left';
+          }
+        }
+
+        if (this.answerEl) {
+          this.answerEl.textContent =
+            step.found && step.found.length === 2
+              ? `[${step.found[0]}, ${step.found[1]}]`
+              : 'not found';
+        }
+
+        this.answerBox?.classList.toggle(
+          "success-box",
+          Boolean(step.found && step.found.length === 2)
+        );
+        this.mapBox?.classList.toggle("success-box", step.phase === 'found');
+
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx || "0", 10);
+          cell.className = "array-cell ts-cell";
+          if (step.found.includes(i)) {
+            cell.classList.add("found");
+          } else if (i === step.active) {
+            cell.classList.add("active");
+          } else if (i < step.active) {
+            cell.classList.add("visited");
+          }
+        });
+
+        if (this.mapEl) {
+          if (step.mapKeys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = step.mapKeys
+              .map((key, idx) => {
+                const isMatchedEntry =
+                  step.phase === 'found' && key === step.complement;
+                return `<span class='hashmap-entry ${isMatchedEntry ? 'matched-entry' : ''}' data-teach-target="entry:${idx}">${key} : ${step.mapVals[idx]}</span>`;
+              })
+              .join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('two-sum-visuals')) {
+    customElements.define('two-sum-visuals', TwoSumVisuals);
+  }
+</script>
+
+<style>
+  two-sum-visuals {
+    display: block;
+  }
+
+  .ts-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .ts-cell.visited .cell-val {
+    opacity: 0.35;
+  }
+
+  .ts-cell.active .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+  }
+
+  .ts-cell.active {
+    transform: translateY(-4px);
+  }
+
+  .ts-cell.found .cell-val {
+    border-color: #7dab7d;
+    color: #7dab7d;
+    background: rgba(125, 171, 125, 0.1);
+  }
+
+  .matched-entry {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent) !important;
+    box-shadow: var(--shadow-sm);
+  }
+</style>

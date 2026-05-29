@@ -1,0 +1,172 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const matrix = [
+  [3, 0, 1],
+  [5, 6, 3],
+  [1, 2, 0],
+];
+
+const prefix = [
+  [0, 0, 0, 0],
+  [0, 3, 3, 4],
+  [0, 8, 14, 18],
+  [0, 9, 17, 21],
+];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'prefix-intro',
+    phase: 'init',
+    exp: 'We precompute a padded prefix matrix so any later rectangle sum can be answered in O(1) time.',
+    reason: 'Spend O(mn) once up front, then every query becomes constant time.',
+    invariant: 'Each prefix cell P[r+1][c+1] stores the sum of matrix rows 0..r and cols 0..c.',
+    action: 'derive',
+    formula: {
+      mode: 'block',
+      latex: 'P[r+1][c+1] = P[r][c+1] + P[r+1][c] - P[r][c] + M[r][c]',
+    },
+    highlights: [
+      { target: 'matrix-grid', kind: 'compare' },
+      { target: 'prefix-grid', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'build-cell',
+    phase: 'build',
+    exp: 'To compute P[2][2], combine the prefix from above and left, subtract the overlap once, then add the current matrix value 6.',
+    reason: 'Above and left both include the top-left overlap, so subtracting it avoids double counting.',
+    invariant: [
+      'Every finished prefix cell equals the sum of its rectangle from the top-left corner.',
+      'The overlap region must be added exactly once overall.',
+    ],
+    action: 'write',
+    formula: {
+      mode: 'block',
+      latex: 'P[2][2] = P[1][2] + P[2][1] - P[1][1] + M[1][1] = 3 + 8 - 3 + 6 = 14',
+    },
+    highlights: [
+      { target: 'matrix:1,1', kind: 'focus', label: 'Current matrix cell' },
+      { target: 'prefix:1,2', kind: 'region-subtract', label: 'Above' },
+      { target: 'prefix:2,1', kind: 'region-subtract', label: 'Left' },
+      { target: 'prefix:1,1', kind: 'region-add', label: 'Overlap back' },
+      { target: 'prefix:2,2', kind: 'write', label: 'Write result' },
+    ],
+  },
+  {
+    id: 'query-region',
+    phase: 'query-region',
+    exp: 'Now query the rectangle from (1,1) to (2,2). The covered cells are 6, 3, 2, and 0.',
+    reason: 'The visual region is the exact area we want the range query to recover.',
+    invariant: 'The answer must equal the sum of the highlighted query cells.',
+    action: 'compare',
+    highlights: [
+      { target: 'matrix:1,1', kind: 'match' },
+      { target: 'matrix:1,2', kind: 'match' },
+      { target: 'matrix:2,1', kind: 'match' },
+      { target: 'matrix:2,2', kind: 'match' },
+    ],
+  },
+  {
+    id: 'query-formula',
+    phase: 'query-formula',
+    exp: 'Use inclusion-exclusion on the prefix matrix: take the bottom-right total, subtract the top and left excess regions, then add the overlap back once.',
+    reason: 'This is why prefix sums turn a large rectangular sum into four table lookups.',
+    invariant: 'Rectangle sum = bottom-right - top strip - left strip + overlap.',
+    action: 'confirm',
+    formula: {
+      mode: 'block',
+      latex: 'sum = P[3][3] - P[1][3] - P[3][1] + P[1][1] = 21 - 4 - 9 + 3 = 11',
+    },
+    highlights: [
+      { target: 'prefix:3,3', kind: 'confirmed', label: 'Bottom-right total' },
+      { target: 'prefix:1,3', kind: 'region-subtract', label: 'Top strip' },
+      { target: 'prefix:3,1', kind: 'region-subtract', label: 'Left strip' },
+      { target: 'prefix:1,1', kind: 'region-add', label: 'Overlap back' },
+    ],
+  },
+];
+---
+
+<AlgorithmPlayer title="Matrix: 3x3" steps={steps}>
+  <div class="anim-row matrices-row">
+    <div>
+      <p class="anim-label">Original Matrix (M)</p>
+      <div
+        class="matrix-grid orig-matrix"
+        data-teach-target="matrix-grid"
+      >
+        {matrix.map((row, r) =>
+          row.map((val, c) => (
+            <div
+              class="matrix-cell orig-cell"
+              data-teach-target={`matrix:${r},${c}`}
+            >
+              {val}
+            </div>
+          )),
+        )}
+      </div>
+    </div>
+
+    <div>
+      <p class="anim-label highlight-label">Prefix Sum Matrix (P)</p>
+      <div
+        class="matrix-grid prefix-matrix"
+        data-teach-target="prefix-grid"
+      >
+        {prefix.map((row, r) =>
+          row.map((val, c) => (
+            <div
+              class="matrix-cell prefix-cell"
+              data-teach-target={`prefix:${r},${c}`}
+            >
+              {val}
+            </div>
+          )),
+        )}
+      </div>
+    </div>
+  </div>
+</AlgorithmPlayer>
+
+<style>
+  .matrices-row {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .highlight-label {
+    color: var(--accent) !important;
+  }
+
+  .matrix-grid {
+    display: grid;
+    gap: 2px;
+  }
+
+  .orig-matrix {
+    grid-template-columns: repeat(3, 2.5rem);
+  }
+
+  .prefix-matrix {
+    grid-template-columns: repeat(4, 2.5rem);
+  }
+
+  .matrix-cell {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-base);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+</style>

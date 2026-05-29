@@ -1,0 +1,550 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const nums = [-1, 0, 1, 2, -1, -4];
+const sortedNums = [...nums].sort((a, b) => a - b);
+
+const steps: TeachingStep[] = [
+  {
+    id: 'start-i-0',
+    i: 0,
+    l: 1,
+    r: 5,
+    fixedValue: -4,
+    target: 4,
+    pair: [-1, 2],
+    sum: 1,
+    relation: '<',
+    found: false,
+    skippedDuplicate: false,
+    results: [],
+    formula: '-1 + 2 = 1 < 4',
+    exp: 'Sort first. Fix i = 0 at value -4, so now we need two numbers that sum to 4. The first pair is (-1, 2), which sums to 1.',
+    reason: 'Sorting lets the inner two-pointer scan move predictably: left increases the sum, right decreases it.',
+    invariant: [
+      'For each fixed i, we search the suffix with two pointers.',
+      'If sum < target, move L right; if sum > target, move R left.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'fixed-box', kind: 'focus' },
+      { target: 'target-box', kind: 'focus' },
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'results-box', kind: 'focus' },
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:1', kind: 'focus' },
+      { target: 'cell:5', kind: 'focus' },
+      { target: 'pointer:i', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-l-to-2',
+    i: 0,
+    l: 2,
+    r: 5,
+    fixedValue: -4,
+    target: 4,
+    pair: [-1, 2],
+    sum: 1,
+    relation: '<',
+    found: false,
+    skippedDuplicate: false,
+    results: [],
+    formula: '-1 + 2 = 1 < 4',
+    exp: 'The sum is too small, so move L right to increase it. Even after moving to the next -1, the pair sum is still 1.',
+    reason: 'In a sorted array, moving L right is the only way to increase the pair sum.',
+    invariant: 'When sum < target, every smaller left choice is already too small.',
+    action: 'expand',
+    highlights: [
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-l-to-3',
+    i: 0,
+    l: 3,
+    r: 5,
+    fixedValue: -4,
+    target: 4,
+    pair: [0, 2],
+    sum: 2,
+    relation: '<',
+    found: false,
+    skippedDuplicate: false,
+    results: [],
+    formula: '0 + 2 = 2 < 4',
+    exp: 'Now the pair is (0, 2), which sums to 2. It is still below the target 4, so L must keep moving right.',
+    reason: 'The target remains unreachable unless the pair sum grows.',
+    invariant: 'The sorted order turns the inner search into monotonic pointer movement.',
+    action: 'expand',
+    highlights: [
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'cell:3', kind: 'focus' },
+      { target: 'cell:5', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-l-to-4',
+    i: 0,
+    l: 4,
+    r: 5,
+    fixedValue: -4,
+    target: 4,
+    pair: [1, 2],
+    sum: 3,
+    relation: '<',
+    found: false,
+    skippedDuplicate: false,
+    results: [],
+    formula: '1 + 2 = 3 < 4',
+    exp: 'The pair (1, 2) sums to 3, still too small. L and R are now adjacent, so no valid triplet exists for i = 0.',
+    reason: 'Even the largest remaining left choice cannot reach the target with the current right value.',
+    invariant: 'Once L reaches R, the inner search for that fixed i is done.',
+    action: 'shrink',
+    highlights: [
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:4', kind: 'focus' },
+      { target: 'cell:5', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'found-first-triplet',
+    i: 1,
+    l: 2,
+    r: 5,
+    fixedValue: -1,
+    target: 1,
+    pair: [-1, 2],
+    sum: 1,
+    relation: '=',
+    found: true,
+    skippedDuplicate: false,
+    results: ['[-1, -1, 2]'],
+    formula: '-1 + 2 = 1 = target',
+    exp: 'Advance i to 1, fixing value -1. Now we need a pair summing to 1. The pair (-1, 2) hits the target immediately, so record [-1, -1, 2].',
+    reason: 'When pair sum equals the target, the fixed value plus this pair forms a valid zero-sum triplet.',
+    invariant: 'Every recorded triplet is sorted and valid because it comes from the sorted array.',
+    action: 'confirm',
+    highlights: [
+      { target: 'fixed-box', kind: 'focus' },
+      { target: 'target-box', kind: 'focus' },
+      { target: 'sum-box', kind: 'confirmed' },
+      { target: 'results-box', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'cell:2', kind: 'confirmed' },
+      { target: 'cell:5', kind: 'confirmed' },
+      { target: 'result:0', kind: 'confirmed' },
+      { target: 'pointer:i', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'found-second-triplet',
+    i: 1,
+    l: 3,
+    r: 4,
+    fixedValue: -1,
+    target: 1,
+    pair: [0, 1],
+    sum: 1,
+    relation: '=',
+    found: true,
+    skippedDuplicate: false,
+    results: ['[-1, -1, 2]', '[-1, 0, 1]'],
+    formula: '0 + 1 = 1 = target',
+    exp: 'After recording a match, move both pointers inward. The next pair (0, 1) also sums to 1, so record [-1, 0, 1].',
+    reason: 'After a match, both pointers move to search for a new pair while avoiding repeating the same pair.',
+    invariant: 'The results list contains only unique valid triplets found so far.',
+    action: 'confirm',
+    highlights: [
+      { target: 'sum-box', kind: 'confirmed' },
+      { target: 'results-box', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'cell:3', kind: 'confirmed' },
+      { target: 'cell:4', kind: 'confirmed' },
+      { target: 'result:1', kind: 'confirmed' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'skip-duplicate-i',
+    i: 2,
+    l: 3,
+    r: 4,
+    fixedValue: -1,
+    target: 1,
+    pair: null,
+    sum: null,
+    relation: 'skip',
+    found: false,
+    skippedDuplicate: true,
+    results: ['[-1, -1, 2]', '[-1, 0, 1]'],
+    formula: 'sortedNums[2] === sortedNums[1]',
+    exp: 'Move i to index 2, but this is another -1, the same fixed value as before. Skip it to avoid duplicate triplets.',
+    reason: 'If we reuse the same fixed value at i, we would rediscover triplets already counted.',
+    invariant: 'Duplicate fixed values must be skipped to keep results unique.',
+    action: 'discard',
+    highlights: [
+      { target: 'fixed-box', kind: 'discard' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'duplicate-box', kind: 'discard' },
+      { target: 'cell:2', kind: 'discard' },
+      { target: 'pointer:i', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'start-i-3',
+    i: 3,
+    l: 4,
+    r: 5,
+    fixedValue: 0,
+    target: 0,
+    pair: [1, 2],
+    sum: 3,
+    relation: '>',
+    found: false,
+    skippedDuplicate: false,
+    results: ['[-1, -1, 2]', '[-1, 0, 1]'],
+    formula: '1 + 2 = 3 > 0',
+    exp: 'Advance i to 3, fixing value 0. The target pair sum is now 0, but (1, 2) sums to 3, which is too large.',
+    reason: 'When pair sum exceeds target, moving R left is the only way to reduce it.',
+    invariant: 'The two-pointer rule is unchanged for each new fixed i.',
+    action: 'shrink',
+    highlights: [
+      { target: 'fixed-box', kind: 'focus' },
+      { target: 'target-box', kind: 'focus' },
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:3', kind: 'focus' },
+      { target: 'cell:4', kind: 'focus' },
+      { target: 'cell:5', kind: 'focus' },
+      { target: 'pointer:i', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'end-inner-search',
+    i: 3,
+    l: 4,
+    r: 4,
+    fixedValue: 0,
+    target: 0,
+    pair: null,
+    sum: null,
+    relation: 'done',
+    found: false,
+    skippedDuplicate: false,
+    results: ['[-1, -1, 2]', '[-1, 0, 1]'],
+    formula: 'L met R',
+    exp: 'Move R left and L meets R, so there are no more pairs to try for i = 3.',
+    reason: 'Once the two pointers cross or meet, the inner search window is exhausted.',
+    invariant: 'No unseen pair remains once L >= R.',
+    action: 'shrink',
+    highlights: [
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:4', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'finished',
+    i: 4,
+    l: 5,
+    r: 5,
+    fixedValue: 1,
+    target: -1,
+    pair: null,
+    sum: null,
+    relation: 'done',
+    found: false,
+    skippedDuplicate: false,
+    results: ['[-1, -1, 2]', '[-1, 0, 1]'],
+    formula: 'Search complete',
+    exp: 'Advance i one last time, but there is no longer room for a valid L-R window. The algorithm finishes with two unique triplets.',
+    reason: 'Every viable fixed index has been processed or skipped by duplicate rules.',
+    invariant: 'The collected triplets are the final deduplicated answer set.',
+    action: 'confirm',
+    highlights: [
+      { target: 'results-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'duplicate-box', kind: 'confirmed' },
+      { target: 'result:0', kind: 'confirmed' },
+      { target: 'result:1', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<three-sum-visuals>
+  <AlgorithmPlayer title="nums = [-1, 0, 1, 2, -1, -4]" steps={steps}>
+    <div class="stats-row ts-stats-row">
+      <div class="stat-box" data-teach-target="fixed-box">
+        <span class="stat-label">Fixed i</span>
+        <span class="stat-val ts-fixed">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="target-box">
+        <span class="stat-label">Needed Pair Sum</span>
+        <span class="stat-val ts-target">-</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="sum-box">
+        <span class="stat-label">L + R Sum</span>
+        <span class="stat-val ts-sum">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Pair Check</span>
+        <span class="stat-val ts-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val ts-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="duplicate-box">
+        <span class="stat-label">Duplicate Rule</span>
+        <span class="stat-val ts-duplicate">No duplicate to skip</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Sorted Array & Pointers</p>
+      <div class="array-row">
+        {sortedNums.map((n, i) => (
+          <div class="array-col">
+            <div
+              class="array-cell ts-cell"
+              data-idx={i}
+              data-teach-target={`cell:${i}`}
+            >
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row ts-ptr-col" data-idx={i}>
+              <span class="ptr ptr-i hidden" data-teach-target={i === 0 ? 'pointer:i' : undefined}>i</span>
+              <span class="ptr ptr-l hidden" data-teach-target={i === 0 ? 'pointer:l' : undefined}>L</span>
+              <span class="ptr ptr-r hidden" data-teach-target={i === 0 ? 'pointer:r' : undefined}>R</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row ts-results-section">
+      <p class="anim-label">Valid Triplets Found</p>
+      <div class="hashmap-row ts-results" data-teach-target="results-box">
+        <span class="hashmap-empty">none</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</three-sum-visuals>
+
+<script>
+  class ThreeSumVisuals extends HTMLElement {
+    connectedCallback() {
+      this.fixedEl = this.querySelector(".ts-fixed");
+      this.targetEl = this.querySelector(".ts-target");
+      this.sumEl = this.querySelector(".ts-sum");
+      this.formulaEl = this.querySelector(".ts-formula");
+      this.decisionEl = this.querySelector(".ts-decision");
+      this.duplicateEl = this.querySelector(".ts-duplicate");
+      this.resultsEl = this.querySelector(".ts-results");
+      this.cells = Array.from(this.querySelectorAll(".ts-cell"));
+      this.ptrCols = Array.from(this.querySelectorAll(".ts-ptr-col"));
+      this.sumBox = this.querySelector('[data-teach-target="sum-box"]');
+      this.resultsBox = this.querySelector('[data-teach-target="results-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+      this.duplicateBox = this.querySelector('[data-teach-target="duplicate-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.fixedEl) this.fixedEl.textContent = `${step.i} → ${step.fixedValue}`;
+        if (this.targetEl) {
+          this.targetEl.textContent =
+            step.target !== null && step.target !== undefined
+              ? String(step.target)
+              : '-';
+        }
+        if (this.sumEl) {
+          this.sumEl.textContent =
+            step.sum !== null && step.sum !== undefined
+              ? String(step.sum)
+              : '-';
+        }
+        if (this.formulaEl) {
+          this.formulaEl.textContent = step.formula ?? '-';
+        }
+
+        if (this.decisionEl) {
+          if (step.skippedDuplicate) {
+            this.decisionEl.textContent = 'Skip duplicate fixed value';
+          } else if (step.relation === '<') {
+            this.decisionEl.textContent = 'Sum too small → move L right';
+          } else if (step.relation === '>') {
+            this.decisionEl.textContent = 'Sum too large → move R left';
+          } else if (step.relation === '=') {
+            this.decisionEl.textContent = 'Triplet found → record and shrink both';
+          } else {
+            this.decisionEl.textContent = 'Current window finished';
+          }
+        }
+
+        if (this.duplicateEl) {
+          this.duplicateEl.textContent = step.skippedDuplicate
+            ? 'sortedNums[i] equals previous fixed value → skip'
+            : 'No duplicate to skip';
+        }
+
+        this.sumBox?.classList.toggle('success-box', Boolean(step.found));
+        this.resultsBox?.classList.toggle('success-box', step.relation === 'done');
+        this.decisionBox?.classList.toggle('success-box', step.relation === 'done');
+        this.duplicateBox?.classList.toggle('warning-box', Boolean(step.skippedDuplicate));
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i < step.i) valSpan.classList.add("visited");
+          if (i === step.i) valSpan.classList.add("active-i");
+          if (i === step.l || i === step.r) {
+            valSpan.classList.add("active-lr");
+            if (step.found) valSpan.classList.add("found-lr");
+          }
+          if (step.skippedDuplicate && i === step.i) {
+            valSpan.classList.add("duplicate-i");
+          }
+        });
+
+        this.ptrCols.forEach((col, i) => {
+          const ptrI = col.querySelector(".ptr-i");
+          const ptrL = col.querySelector(".ptr-l");
+          const ptrR = col.querySelector(".ptr-r");
+
+          if (ptrI) ptrI.className = `ptr ptr-i ${i === step.i ? "" : "hidden"}`;
+          if (ptrL) ptrL.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (ptrR) ptrR.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
+        });
+
+        if (this.resultsEl) {
+          if (!step.results || step.results.length === 0) {
+            this.resultsEl.innerHTML = "<span class='hashmap-empty'>none</span>";
+          } else {
+            this.resultsEl.innerHTML = step.results
+              .map(
+                (res, index) =>
+                  `<span class='hashmap-entry result-entry' data-teach-target="result:${index}">${res}</span>`
+              )
+              .join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('three-sum-visuals')) {
+    customElements.define('three-sum-visuals', ThreeSumVisuals);
+  }
+</script>
+
+<style>
+  three-sum-visuals {
+    display: block;
+  }
+
+  .ts-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .ts-results-section {
+    margin-top: 2rem;
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .stat-box.warning-box {
+    border-color: var(--status-medium) !important;
+    background: color-mix(in srgb, var(--status-medium) 10%, transparent) !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.35;
+  }
+
+  .cell-val.active-i {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.duplicate-i {
+    border-color: var(--status-medium) !important;
+    color: var(--status-medium) !important;
+    background: color-mix(in srgb, var(--status-medium) 15%, transparent) !important;
+  }
+
+  .cell-val.active-lr {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.found-lr {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent) !important;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ptr-i {
+    background: color-mix(in srgb, var(--status-hard) 20%, transparent);
+    color: var(--status-hard);
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
+
+  .result-entry {
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+  }
+</style>

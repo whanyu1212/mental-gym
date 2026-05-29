@@ -1,0 +1,402 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const strs = ['flower', 'flow', 'flight'];
+const maxLen = Math.max(...strs.map((s) => s.length));
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    colIdx: -1,
+    match: true,
+    prefix: '',
+    done: false,
+    exp: 'zip(*strs) groups characters by column. We scan each column left-to-right and stop the moment any string disagrees.',
+    reason: 'A common prefix must be shared by every string, so the first mismatch terminates the search.',
+    invariant: 'prefix contains only characters confirmed identical across all strings.',
+    formula: 'for char_col in zip(*strs): if all same → extend prefix; else → stop',
+    highlights: [
+      { target: 'grid-box', kind: 'focus' },
+      { target: 'prefix-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'col-0',
+    phase: 'scan',
+    colIdx: 0,
+    match: true,
+    prefix: 'f',
+    done: false,
+    exp: "Column 0: 'flower'[0]='f', 'flow'[0]='f', 'flight'[0]='f'. All match → prefix = \"f\".",
+    reason: 'Every string shares the same character at this column.',
+    invariant: "prefix is the longest common prefix of all strings seen so far.",
+    formula: "strs[*][0] = 'f'  →  prefix += 'f'",
+    highlights: [
+      { target: 'col:0', kind: 'match' },
+      { target: 'prefix-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'col-1',
+    phase: 'scan',
+    colIdx: 1,
+    match: true,
+    prefix: 'fl',
+    done: false,
+    exp: "Column 1: 'flower'[1]='l', 'flow'[1]='l', 'flight'[1]='l'. All match → prefix = \"fl\".",
+    reason: 'Second column still agrees across all rows.',
+    invariant: 'Prefix grows by exactly one character per matched column.',
+    formula: "strs[*][1] = 'l'  →  prefix += 'l'",
+    highlights: [
+      { target: 'col:1', kind: 'match' },
+      { target: 'prefix-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'col-2',
+    phase: 'mismatch',
+    colIdx: 2,
+    match: false,
+    prefix: 'fl',
+    done: false,
+    exp: "Column 2: 'flower'[2]='o', 'flow'[2]='o', 'flight'[2]='i'. Mismatch! Stop here.",
+    reason: "Not all rows agree — the prefix cannot extend past column 1.",
+    invariant: 'On first mismatch, the current prefix is the final answer.',
+    formula: "strs[0][2]='o' ≠ strs[2][2]='i'  →  stop",
+    highlights: [
+      { target: 'col:2', kind: 'discard' },
+      { target: 'prefix-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'result',
+    phase: 'done',
+    colIdx: -1,
+    match: false,
+    prefix: 'fl',
+    done: true,
+    exp: "Result: longest common prefix = \"fl\". O(S) time where S is total characters compared.",
+    reason: "We never read past the first mismatch, so redundant work is impossible.",
+    invariant: "LCP cannot be extended; any longer candidate would exclude at least one string.",
+    formula: 'LCP(["flower","flow","flight"]) = "fl"  ✓',
+    highlights: [
+      { target: 'prefix-box', kind: 'confirmed' },
+      { target: 'result-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<columnwise-viz>
+  <AlgorithmPlayer title='strs = ["flower", "flow", "flight"]  — columnwise zip scan' steps={steps}>
+
+    <!-- Stat row -->
+    <div class="stats-row cw-meta-row">
+      <div class="stat-box cw-mode-box" data-teach-target="mode-box">
+        <span class="stat-label">Mode</span>
+        <span class="stat-val cw-mode-val">init</span>
+      </div>
+      <div class="stat-box cw-prefix-box" data-teach-target="prefix-box">
+        <span class="stat-label">Prefix</span>
+        <span class="stat-val cw-prefix-val">""</span>
+      </div>
+      <div class="stat-box cw-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val cw-status-val">In Progress</span>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="cw-grid-wrap" data-teach-target="grid-box">
+      <!-- Column index header -->
+      <div class="cw-header-row">
+        {Array.from({ length: maxLen }).map((_, ci) => (
+          <div class="cw-header-cell" data-col={ci}>
+            <span class="cw-col-idx">{ci}</span>
+          </div>
+        ))}
+      </div>
+
+      <!-- Rows -->
+      {strs.map((str, ri) => (
+        <div class="cw-row">
+          {Array.from({ length: maxLen }).map((_, ci) => {
+            const ch = str[ci] ?? '';
+            return (
+              <div
+                class={`cw-cell${ch === '' ? ' cw-empty' : ''}`}
+                data-row={ri}
+                data-col={ci}
+                data-char={ch}
+                data-teach-target={`cell:${ri}:${ci}`}
+              >
+                <span class="cw-char">{ch}</span>
+              </div>
+            );
+          })}
+          <span class="cw-row-label">{str}</span>
+        </div>
+      ))}
+    </div>
+
+  </AlgorithmPlayer>
+</columnwise-viz>
+
+<script>
+  class ColumnwiseViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.cw-cell'));
+      this.headers = Array.from(this.querySelectorAll('.cw-header-cell'));
+      this.modeVal = this.querySelector('.cw-mode-val');
+      this.prefixVal = this.querySelector('.cw-prefix-val');
+      this.statusVal = this.querySelector('.cw-status-val');
+      this.modeBox = this.querySelector('.cw-mode-box');
+      this.resultBox = this.querySelector('.cw-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        // Mode label
+        if (this.modeVal) {
+          if (s.done) this.modeVal.textContent = 'done';
+          else if (s.phase === 'mismatch') this.modeVal.textContent = 'mismatch';
+          else if (s.colIdx >= 0) this.modeVal.textContent = 'scan';
+          else this.modeVal.textContent = 'init';
+        }
+
+        // Prefix
+        if (this.prefixVal) this.prefixVal.textContent = `"${s.prefix}"`;
+
+        // Status
+        if (this.statusVal) {
+          this.statusVal.textContent = s.done ? 'Complete' : 'In Progress';
+        }
+
+        // Mode box tint
+        if (this.modeBox) {
+          this.modeBox.className = 'stat-box cw-mode-box';
+          if (s.phase === 'scan') this.modeBox.classList.add('cw-mode-scan');
+          else if (s.phase === 'mismatch') this.modeBox.classList.add('cw-mode-mismatch');
+          else if (s.done) this.modeBox.classList.add('cw-mode-done');
+        }
+
+        // Result box
+        this.resultBox?.classList.toggle('cw-confirmed', s.done === true);
+
+        // Update cell appearances
+        this.cells.forEach((cell) => {
+          const col = parseInt(cell.dataset.col, 10);
+          const charSpan = cell.querySelector('.cw-char');
+          if (!charSpan || cell.classList.contains('cw-empty')) return;
+
+          charSpan.className = 'cw-char';
+
+          if (s.done) {
+            // Final state: colour confirmed prefix cols green, rest faded
+            if (col < s.prefix.length) charSpan.classList.add('cw-char-success');
+            else charSpan.classList.add('cw-char-faded');
+          } else if (s.colIdx < 0) {
+            // init — no colouring
+          } else if (col < s.colIdx) {
+            // already matched columns
+            charSpan.classList.add('cw-char-success');
+          } else if (col === s.colIdx) {
+            if (s.match) charSpan.classList.add('cw-char-active');
+            else charSpan.classList.add('cw-char-conflict');
+          } else {
+            charSpan.classList.add('cw-char-faded');
+          }
+        });
+
+        // Column headers
+        this.headers.forEach((hdr) => {
+          const col = parseInt(hdr.dataset.col, 10);
+          hdr.className = 'cw-header-cell';
+          if (!s.done && s.colIdx >= 0) {
+            if (col < s.colIdx) hdr.classList.add('cw-hdr-done');
+            else if (col === s.colIdx) {
+              hdr.classList.add(s.match ? 'cw-hdr-active' : 'cw-hdr-mismatch');
+            }
+          } else if (s.done && col < s.prefix.length) {
+            hdr.classList.add('cw-hdr-confirmed');
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('columnwise-viz')) {
+    customElements.define('columnwise-viz', ColumnwiseViz);
+  }
+</script>
+
+<style>
+  columnwise-viz { display: block; }
+
+  .cw-meta-row { margin-bottom: 1rem; }
+
+  /* Grid wrapper */
+  .cw-grid-wrap {
+    max-width: 480px;
+    margin: 0 auto 2rem auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  /* Header row */
+  .cw-header-row {
+    display: flex;
+    gap: 0.35rem;
+    padding-left: 0;
+    margin-bottom: 0.25rem;
+  }
+
+  .cw-header-cell {
+    width: 2.4rem;
+    text-align: center;
+    transition: background 0.2s;
+    border-radius: 3px;
+    padding: 0.15rem 0;
+  }
+
+  .cw-col-idx {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  .cw-header-cell.cw-hdr-active .cw-col-idx {
+    color: var(--accent);
+    opacity: 1;
+  }
+
+  .cw-header-cell.cw-hdr-mismatch .cw-col-idx {
+    color: var(--status-hard);
+    opacity: 1;
+  }
+
+  .cw-header-cell.cw-hdr-done .cw-col-idx {
+    color: var(--status-easy);
+    opacity: 0.7;
+  }
+
+  .cw-header-cell.cw-hdr-confirmed .cw-col-idx {
+    color: var(--status-easy);
+    opacity: 1;
+  }
+
+  /* Data rows */
+  .cw-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .cw-row-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: 0.5rem;
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+
+  /* Individual cells */
+  .cw-cell {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--panel);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .cw-cell.cw-empty {
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--border) 40%, transparent);
+  }
+
+  .cw-char {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+
+  /* Character states */
+  .cw-char.cw-char-active {
+    color: var(--accent);
+  }
+
+  .cw-cell:has(.cw-char-active) {
+    border-color: var(--accent);
+    background: rgba(201, 168, 76, 0.09);
+  }
+
+  .cw-char.cw-char-conflict {
+    color: var(--status-hard);
+    animation: cw-shake 0.4s ease-in-out;
+  }
+
+  .cw-cell:has(.cw-char-conflict) {
+    border-color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+  }
+
+  .cw-char.cw-char-success {
+    color: var(--status-easy);
+  }
+
+  .cw-cell:has(.cw-char-success) {
+    border-color: color-mix(in srgb, var(--status-easy) 45%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 8%, transparent);
+  }
+
+  .cw-char.cw-char-faded {
+    opacity: 0.25;
+  }
+
+  /* Prefix box states */
+  .cw-prefix-box {
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .cw-prefix-box.cw-confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  /* Mode box tints */
+  .cw-mode-box.cw-mode-scan {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .cw-mode-box.cw-mode-mismatch {
+    border-color: color-mix(in srgb, var(--status-hard) 55%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 8%, transparent);
+  }
+
+  .cw-mode-box.cw-mode-done {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  /* Result box */
+  .cw-result-box.cw-confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  @keyframes cw-shake {
+    0%,  100% { transform: translateX(0); }
+    25%        { transform: translateX(-4px); }
+    75%        { transform: translateX(4px); }
+  }
+</style>

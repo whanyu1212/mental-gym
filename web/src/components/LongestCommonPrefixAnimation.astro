@@ -1,0 +1,240 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const strs = ['flower', 'flow', 'flight'];
+const maxLength = Math.max(...strs.map((s) => s.length));
+
+const steps = [
+  {
+    i: -1,
+    char: '',
+    match: true,
+    prefix: '',
+    action: 'write',
+    exp: 'Start checking characters column by column across all strings.',
+    reason: 'All strings must agree at index i for prefix to grow.',
+    invariant: 'Current prefix contains only fully matched columns.',
+    formula: 'while all strs[j][i] are equal -> prefix += char',
+    decision: 'Begin at i = 0.',
+    targets: ['phase-box', 'prefix-box', 'grid-box'],
+  },
+  {
+    i: 0,
+    char: 'f',
+    match: true,
+    prefix: 'f',
+    action: 'compare',
+    exp: "Index 0: all strings have 'f'. Match.",
+    reason: 'Same character appears in every row at this column.',
+    invariant: 'Matched columns become part of prefix.',
+    formula: "strs[*][0] = 'f'",
+    decision: "Append 'f' to prefix.",
+    targets: ['col-0', 'prefix-box', 'grid-box'],
+  },
+  {
+    i: 1,
+    char: 'l',
+    match: true,
+    prefix: 'fl',
+    action: 'compare',
+    exp: "Index 1: all strings have 'l'. Match.",
+    reason: 'Second column also agrees across all strings.',
+    invariant: 'Prefix remains contiguous from index 0.',
+    formula: "strs[*][1] = 'l'",
+    decision: "Append 'l' to prefix.",
+    targets: ['col-1', 'prefix-box', 'grid-box'],
+  },
+  {
+    i: 2,
+    char: 'o',
+    match: false,
+    prefix: 'fl',
+    action: 'discard',
+    exp: "Index 2: 'flower' and 'flow' have 'o', but 'flight' has 'i'. Mismatch.",
+    reason: 'Not all rows share the same character at column 2.',
+    invariant: 'First mismatch stops prefix expansion.',
+    formula: "exists row a,b: strs[a][2] != strs[b][2]",
+    decision: "Stop and keep prefix as 'fl'.",
+    targets: ['col-2', 'prefix-box', 'grid-box'],
+  },
+  {
+    i: -1,
+    char: '',
+    match: false,
+    prefix: 'fl',
+    action: 'confirm',
+    exp: "Done. The longest common prefix is 'fl'.",
+    reason: "Algorithm stops at first mismatch; prior matches are maximal prefix.",
+    invariant: "Returned prefix is shared by all strings and can't be extended.",
+    formula: "LCP = 'fl'",
+    decision: "Return 'fl'.",
+    targets: ['prefix-box', 'result-box'],
+  },
+];
+---
+
+<longest-common-prefix-visuals>
+  <AlgorithmPlayer title='strs = ["flower", "flow", "flight"]' steps={steps}>
+    <div class="stats-row lcp-meta-row">
+      <div class="stat-box lcp-phase-box" data-teach-target="phase-box">
+        <span class="stat-label">Mode</span>
+        <span class="stat-val lcp-mode-val">scan</span>
+      </div>
+      <div class="stat-box lcp-prefix-box" data-teach-target="prefix-box">
+        <span class="stat-label">Current Prefix</span>
+        <span class="stat-val lcp-prefix-val">""</span>
+      </div>
+      <div class="stat-box lcp-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val lcp-status-val">In Progress</span>
+      </div>
+    </div>
+
+    <div class="anim-row lcp-grid-wrap" data-teach-target="grid-box">
+      {strs.map((str, rowIdx) => (
+        <div class="array-row lcp-row">
+          {Array.from({ length: maxLength }).map((_, colIdx) => {
+            const char = str[colIdx] || '';
+            return (
+              <div class="array-col lcp-col" data-teach-target={`col-${colIdx}`}>
+                <div class="array-cell lcp-cell" data-row={rowIdx} data-col={colIdx}>
+                  <span class={`cell-val ${!char ? 'empty-val' : ''}`}>{char}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  </AlgorithmPlayer>
+</longest-common-prefix-visuals>
+
+<script>
+  class LongestCommonPrefixVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.lcp-cell'));
+      this.modeVal = this.querySelector('.lcp-mode-val');
+      this.prefixVal = this.querySelector('.lcp-prefix-val');
+      this.statusVal = this.querySelector('.lcp-status-val');
+      this.phaseBox = this.querySelector('.lcp-phase-box');
+      this.resultBox = this.querySelector('.lcp-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        if (this.modeVal) this.modeVal.textContent = s.i === -1 ? 'finalize' : 'scan';
+        if (this.prefixVal) this.prefixVal.textContent = `"${s.prefix}"`;
+        if (this.statusVal) {
+          this.statusVal.textContent = s.action === 'confirm' ? 'Complete' : 'In Progress';
+        }
+
+        this.phaseBox?.classList.remove('scan', 'finalize');
+        this.phaseBox?.classList.add(s.i === -1 ? 'finalize' : 'scan');
+
+        this.resultBox?.classList.remove('confirmed');
+        if (s.action === 'confirm') this.resultBox?.classList.add('confirmed');
+
+        this.cells.forEach((cell) => {
+          const col = parseInt(cell.dataset.col, 10);
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan || valSpan.classList.contains('empty-val')) return;
+
+          valSpan.className = 'cell-val';
+
+          if (s.i !== -1 && col < s.i) {
+            valSpan.classList.add('success-val');
+          } else if (s.i !== -1 && col === s.i) {
+            if (s.match) valSpan.classList.add('active-eval');
+            else valSpan.classList.add('conflict');
+          } else if (s.action === 'confirm' && col < s.prefix.length) {
+            valSpan.classList.add('success-val');
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('longest-common-prefix-visuals')) {
+    customElements.define('longest-common-prefix-visuals', LongestCommonPrefixVisuals);
+  }
+</script>
+
+<style>
+  longest-common-prefix-visuals {
+    display: block;
+  }
+
+  .lcp-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .lcp-grid-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 400px;
+    margin: 0 auto 2rem auto;
+  }
+
+  .lcp-row {
+    justify-content: flex-start;
+  }
+
+  .lcp-col {
+    min-width: 2.5rem;
+    gap: 0;
+  }
+
+  .empty-val {
+    background: transparent !important;
+    border: 1px dashed #333 !important;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .cell-val.success-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
+  }
+
+  .cell-val.conflict {
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  .lcp-phase-box.scan {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .lcp-phase-box.finalize {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .lcp-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    25% {
+      transform: translateX(-4px);
+    }
+
+    75% {
+      transform: translateX(4px);
+    }
+  }
+</style>

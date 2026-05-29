@@ -1,3 +1,9 @@
+---
+title: Time Complexity Interview Questions & Cheat Sheet
+description: A comprehensive guide to time complexity analysis for DSA interviews, covering common questions, patterns, and quick reference tables.
+category: Complexity
+---
+
 # Time Complexity Interview Questions & Cheat Sheet
 
 A comprehensive guide to time complexity analysis for DSA interviews, covering common questions, patterns, and quick reference tables.
@@ -99,7 +105,7 @@ def example(arr):
 - Solving: k = log₂(n)
 
 **Follow-ups**:
-- "What about space complexity?" 
+- "What about space complexity?"
   - Iterative: O(1)
   - Recursive: O(log n) due to call stack
 - "When does it become O(n)?"

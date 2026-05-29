@@ -1,0 +1,281 @@
+---
+import { Code } from "astro:components";
+import { mlProblems } from "../../data/mlProblems";
+import { withBase } from "../../lib/url";
+import RecallRating from "../../components/RecallRating.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export function getStaticPaths() {
+	return mlProblems.map((problem) => ({
+		params: { slug: problem.slug },
+		props: { problem },
+	}));
+}
+
+const { problem } = Astro.props;
+---
+
+<Layout title={`${problem.title} | Mental Gym`}>
+	<nav class="breadcrumb">
+		<a href={withBase("/problems#ml-section")}>Problems</a>
+		<span class="sep">›</span>
+		<a href={withBase(`/problems#ml-${problem.category.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}>{problem.category}</a>
+		<span class="sep">›</span>
+		<span>{problem.title}</span>
+	</nav>
+
+	<section class="problem-header">
+		<p class="meta">{problem.id}</p>
+		<h1>{problem.title}</h1>
+		<div class="tags">
+			<span class={`badge ${problem.difficulty.toLowerCase()}`}>{problem.difficulty}</span>
+			<span class="tag">{problem.category}</span>
+			{problem.tags.map((tag: string) => <span class="tag">{tag}</span>)}
+			<span class="status">{problem.status}</span>
+		</div>
+		<p class="summary">{problem.summary}</p>
+	</section>
+
+	<section class="panel">
+		<h2 class="section-title">Prompt</h2>
+		<p class="body-copy">{problem.prompt}</p>
+	</section>
+
+	<section class="panel">
+		<h2 class="section-title">Why interviewers ask this</h2>
+		<p class="body-copy">{problem.whyItMatters}</p>
+	</section>
+
+	<section class="panel">
+		<h2 class="section-title">What a strong answer should include</h2>
+		<ul class="list">
+			{problem.expectations.map((item: string) => <li>{item}</li>)}
+		</ul>
+	</section>
+
+	<section class="panel">
+		<h2 class="section-title">Hints</h2>
+		<ul class="list">
+			{problem.hints.map((item: string) => <li>{item}</li>)}
+		</ul>
+	</section>
+
+	<section class="panel">
+		<h2 class="section-title">Common follow-ups</h2>
+		<ul class="list">
+			{problem.followUps.map((item: string) => <li>{item}</li>)}
+		</ul>
+	</section>
+
+	{problem.solution && (
+		<section class="solution-section">
+			<div class="solution-header">
+				<h2 class="section-title">Solution</h2>
+				<p class="blur-hint">Hover to reveal — gives you a moment to think first.</p>
+			</div>
+			<div class="code-panels">
+				<div class="code-wrapper">
+					<Code code={problem.solution.python} lang="python" theme={{ light: "github-light", dark: "github-dark" }} />
+				</div>
+			</div>
+		</section>
+	)}
+
+	<RecallRating
+		domain="ml"
+		slug={problem.slug}
+		title={problem.title}
+		difficulty={problem.difficulty}
+		group={problem.category}
+	/>
+</Layout>
+
+<style>
+	.breadcrumb {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.8rem;
+		color: var(--muted);
+		margin-bottom: 1.5rem;
+		flex-wrap: wrap;
+		font-family: Inter, system-ui, sans-serif;
+		letter-spacing: 0.03em;
+	}
+
+	.breadcrumb a {
+		color: var(--muted);
+	}
+
+	.breadcrumb a:hover {
+		color: var(--accent);
+	}
+
+	.sep {
+		opacity: 0.4;
+	}
+
+	.problem-header {
+		display: grid;
+		gap: 0.75rem;
+		margin-bottom: 2rem;
+	}
+
+	.meta {
+		margin: 0;
+		color: var(--muted);
+		font-size: 0.8rem;
+		font-family: Inter, system-ui, sans-serif;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: 2rem;
+		letter-spacing: 0.3px;
+		font-family: var(--font-serif);
+		font-weight: 600;
+	}
+
+	.summary {
+		margin: 0;
+		color: var(--muted);
+		line-height: 1.7;
+		font-size: 0.95rem;
+		max-width: 760px;
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.badge,
+	.tag,
+	.status {
+		font-size: 0.7rem;
+		padding: 0.2rem 0.6rem;
+		border-radius: 2px;
+		border: 1px solid var(--border);
+		font-family: Inter, system-ui, sans-serif;
+		letter-spacing: 0.04em;
+	}
+
+	.easy {
+		color: var(--status-easy);
+	}
+
+	.medium {
+		color: var(--status-medium);
+	}
+
+	.hard {
+		color: var(--status-hard);
+	}
+
+	.tag {
+		color: var(--muted);
+	}
+
+	.status {
+		color: var(--accent);
+	}
+
+	.panel {
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		padding: 1.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.section-title {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--muted);
+		font-weight: 600;
+		margin: 0 0 1rem;
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	.body-copy {
+		margin: 0;
+		line-height: 1.7;
+		color: var(--text);
+		font-size: 0.95rem;
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	.list {
+		margin: 0;
+		padding-left: 1.2rem;
+	}
+
+	.list li {
+		margin-bottom: 0.6rem;
+		line-height: 1.65;
+		color: var(--text);
+		font-size: 0.92rem;
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	.next-steps {
+		margin-bottom: 0;
+	}
+
+	.back-link {
+		display: inline-block;
+		margin-top: 1rem;
+		font-size: 0.85rem;
+	}
+
+	.solution-section {
+		margin-bottom: 1rem;
+	}
+
+	.solution-header {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.solution-header .section-title {
+		margin: 0;
+	}
+
+	.blur-hint {
+		margin: 0;
+		font-size: 0.78rem;
+		color: var(--muted);
+		font-style: italic;
+		font-family: Inter, system-ui, sans-serif;
+	}
+
+	.code-panels {
+		filter: blur(5px);
+		transition: filter 0.2s ease;
+	}
+
+	.solution-section:hover .code-panels {
+		filter: blur(0);
+	}
+
+	.code-wrapper :global(pre) {
+		margin: 0;
+		border-radius: 2px;
+		border: 1px solid var(--border);
+		padding: 1.25rem;
+		overflow-x: auto;
+		font-size: 0.88rem;
+		line-height: 1.6;
+	}
+
+	.code-wrapper :global(code) {
+		font-family: var(--font-mono);
+	}
+</style>

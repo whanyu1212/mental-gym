@@ -1,0 +1,324 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const strs = ["eat", "tea", "tan", "ate", "nat", "bat"];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    activeIdx: -1,
+    word: '',
+    key: '',
+    actionType: 'start',
+    groups: {},
+    exp: 'Goal: group all anagrams together. The key insight is that anagrams produce the same string when their characters are sorted.',
+    reason: 'Sorting the letters is a canonical transformation — two strings are anagrams if and only if they produce the same sorted key.',
+    invariant: 'Before processing: groups map is empty.',
+    formula: 'key = "".join(sorted(word))',
+    highlights: [
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'focus' },
+      { target: 'map-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'process-eat',
+    phase: 'insert',
+    activeIdx: 0,
+    word: 'eat',
+    key: 'aet',
+    actionType: 'new-group',
+    groups: { aet: ['eat'] },
+    exp: '"eat" → sort letters → "aet". Key "aet" is new, so create a fresh group.',
+    reason: 'The first occurrence of any key starts a new anagram class in the map.',
+    invariant: 'Each map key is the sorted form of at least one processed word.',
+    formula: '"eat" → sorted → "aet"',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'word-box', kind: 'write' },
+      { target: 'key-box', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:aet', kind: 'write' },
+    ],
+  },
+  {
+    id: 'process-tea',
+    phase: 'insert',
+    activeIdx: 1,
+    word: 'tea',
+    key: 'aet',
+    actionType: 'append-group',
+    groups: { aet: ['eat', 'tea'] },
+    exp: '"tea" → sort → "aet". Key "aet" already exists — append to that group.',
+    reason: 'Matching sorted keys proves the words share the same character multiset, making them anagrams.',
+    invariant: 'All words under the same key are anagrams of each other.',
+    formula: '"tea" → sorted → "aet"  (existing key)',
+    highlights: [
+      { target: 'cell:1', kind: 'write' },
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'match' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:aet', kind: 'match' },
+    ],
+  },
+  {
+    id: 'process-tan',
+    phase: 'insert',
+    activeIdx: 2,
+    word: 'tan',
+    key: 'ant',
+    actionType: 'new-group',
+    groups: { aet: ['eat', 'tea'], ant: ['tan'] },
+    exp: '"tan" → sort → "ant". Key "ant" is new — create another group.',
+    reason: 'A different sorted form means different letters, so this word belongs to a separate anagram class.',
+    invariant: 'Different keys guarantee the underlying letter sets are different.',
+    formula: '"tan" → sorted → "ant"',
+    highlights: [
+      { target: 'cell:2', kind: 'write' },
+      { target: 'word-box', kind: 'write' },
+      { target: 'key-box', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:ant', kind: 'write' },
+    ],
+  },
+  {
+    id: 'process-ate',
+    phase: 'insert',
+    activeIdx: 3,
+    word: 'ate',
+    key: 'aet',
+    actionType: 'append-group',
+    groups: { aet: ['eat', 'tea', 'ate'], ant: ['tan'] },
+    exp: '"ate" → sort → "aet". Key "aet" matches again — append to that group (now 3 words).',
+    reason: 'The same sorted key appears a third time, confirming all three words are mutual anagrams.',
+    invariant: 'Group size grows monotonically as more anagrams are discovered.',
+    formula: '"ate" → sorted → "aet"  (existing key)',
+    highlights: [
+      { target: 'cell:3', kind: 'write' },
+      { target: 'word-box', kind: 'focus' },
+      { target: 'key-box', kind: 'match' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:aet', kind: 'match' },
+    ],
+  },
+  {
+    id: 'result',
+    phase: 'done',
+    activeIdx: -1,
+    word: '',
+    key: '',
+    actionType: 'done',
+    groups: { aet: ['eat', 'tea', 'ate'], ant: ['tan', 'nat'], abt: ['bat'] },
+    exp: 'After processing all 6 words (same mechanic for "nat"→"ant" and "bat"→"abt"), return map.values(). Three anagram groups found.',
+    reason: 'The canonical key collapses every anagram into a single bucket, giving O(n · L log L) time where L is word length.',
+    invariant: 'Final map values are exactly the grouped anagram lists.',
+    formula: 'return list(groups.values())',
+    highlights: [
+      { target: 'map-box', kind: 'confirmed' },
+      { target: 'entry:aet', kind: 'confirmed' },
+      { target: 'entry:ant', kind: 'confirmed' },
+      { target: 'entry:abt', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<canon-viz>
+  <AlgorithmPlayer title='Canonical Key — strs=["eat","tea","tan","ate","nat","bat"]' steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box cv-highlight-box" data-teach-target="word-box">
+        <span class="stat-label">Current Word</span>
+        <span class="stat-val cv-word">—</span>
+      </div>
+      <div class="stat-box cv-highlight-box" data-teach-target="key-box">
+        <span class="stat-label">Sorted Key</span>
+        <span class="stat-val cv-key">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Input Array</p>
+      <div class="array-row">
+        {strs.map((s, i) => (
+          <div class="array-col">
+            <div class="array-cell cv-cell" data-idx={i} data-teach-target={`cell:${i}`}
+                 style="width: auto; padding: 0 0.6rem;">
+              <span class="cell-val">{s}</span>
+            </div>
+            <div class="cv-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden">i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Groups map (sorted key → words)</p>
+      <div class="cv-map" data-teach-target="map-box">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</canon-viz>
+
+<script>
+  class CanonViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.cv-cell'));
+      this.ptrs = Array.from(this.querySelectorAll('.cv-ptr-col'));
+      this.wordEl = this.querySelector('.cv-word');
+      this.keyEl = this.querySelector('.cv-key');
+      this.mapEl = this.querySelector('.cv-map');
+      this.mapBox = this.querySelector('[data-teach-target="map-box"]');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        // Stat boxes
+        if (this.wordEl) this.wordEl.textContent = step.word || '—';
+        if (this.keyEl) this.keyEl.textContent = step.key || '—';
+
+        // Array cells
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+          if (step.phase === 'done') {
+            valSpan.classList.add('visited');
+          } else if (i < step.activeIdx) {
+            valSpan.classList.add('visited');
+          } else if (i === step.activeIdx) {
+            valSpan.classList.add('active-eval');
+          }
+        });
+
+        // Pointer arrows
+        this.ptrs.forEach((col, i) => {
+          const ptr = col.querySelector('.ptr-up');
+          if (ptr) ptr.className = `ptr ptr-up ${i === step.activeIdx ? '' : 'hidden'}`;
+        });
+
+        // Groups map
+        if (this.mapEl) {
+          const keys = Object.keys(step.groups || {});
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span class='cv-map-empty'>Empty Map</span>";
+          } else {
+            this.mapEl.innerHTML = keys
+              .map((key) => {
+                const isActive = key === step.key;
+                const vals = step.groups[key];
+                const quotedVals = vals.map((v) => `"${v}"`).join(', ');
+                return `
+                  <div class="cv-map-entry ${isActive ? 'cv-active-entry' : ''}" data-teach-target="entry:${key}">
+                    <span class="cv-map-key">"${key}"</span>
+                    <span class="cv-map-sep">:</span>
+                    <span class="cv-map-vals">[${quotedVals}]</span>
+                  </div>
+                `;
+              })
+              .join('');
+          }
+        }
+
+        this.mapBox?.classList.toggle('success-box', step.phase === 'done');
+      });
+    }
+  }
+
+  if (!customElements.get('canon-viz')) {
+    customElements.define('canon-viz', CanonViz);
+  }
+</script>
+
+<style>
+  canon-viz { display: block; }
+
+  .cv-highlight-box {
+    border-color: rgba(201, 168, 76, 0.3);
+    background: var(--accent-dim, rgba(201, 168, 76, 0.06));
+  }
+  .cv-highlight-box .stat-val {
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .cell-val.visited { opacity: 0.35; }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim, rgba(201, 168, 76, 0.06));
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: opacity 0.15s;
+  }
+
+  .cv-map {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1rem;
+    background: var(--panel, var(--surface-strong));
+    min-height: 120px;
+  }
+
+  .cv-map-empty {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .cv-map-entry {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.45rem 0.6rem;
+    background: #151515;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .cv-map-entry.cv-active-entry {
+    background: var(--accent-dim, rgba(201, 168, 76, 0.06));
+    border-color: var(--accent);
+  }
+
+  .cv-map-key {
+    font-family: var(--font-mono);
+    min-width: 3rem;
+    color: var(--muted);
+  }
+
+  .cv-map-entry.cv-active-entry .cv-map-key {
+    color: var(--accent);
+  }
+
+  .cv-map-sep {
+    color: var(--muted);
+  }
+
+  .cv-map-vals {
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+</style>

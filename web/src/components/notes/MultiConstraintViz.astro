@@ -1,0 +1,384 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+// A 3-row × 9-col strip from a sudoku board (rows 0-2).
+// Cells shown: (0,0)=5, (0,1)=3, (0,5)=5(conflict!), (1,0)=6, others empty.
+const strip: string[][] = [
+  ['5', '3', '.', '.', '.', '5', '.', '.', '.'],
+  ['6', '.', '.', '.', '.', '.', '.', '.', '.'],
+  ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
+];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    activeR: -1,
+    activeC: -1,
+    valid: true,
+    conflict: '',
+    rowSet: [],
+    colSet: [],
+    boxSet: [],
+    exp: 'Three independent sets track uniqueness: one per row, one per column, one per 3×3 box. Any digit occupies all three simultaneously.',
+    reason: 'Sudoku validity requires uniqueness across three overlapping constraint groups — a single pass is enough if we maintain all three sets at once.',
+    invariant: 'Each set contains only digits seen in its constraint region so far.',
+    formula: 'row_sets, col_sets, box_sets = defaultdict(set) × 3',
+    highlights: [
+      { target: 'row-set-box', kind: 'focus' },
+      { target: 'col-set-box', kind: 'focus' },
+      { target: 'box-set-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'cell-0-0',
+    phase: 'scan',
+    activeR: 0,
+    activeC: 0,
+    valid: true,
+    conflict: '',
+    rowSet: ['5'],
+    colSet: ['5'],
+    boxSet: ['5'],
+    exp: "Cell (0,0) = '5'. Check: row[0] has no 5, col[0] has no 5, box[0,0] has no 5. All clear — insert '5' into all three sets.",
+    reason: 'A digit must be absent from the corresponding row, column, and box sets to be valid.',
+    invariant: 'After insertion, sets grow by one element with no duplicates introduced.',
+    formula: "5 ∉ row[0] ∧ col[0] ∧ box[0,0] → insert",
+    highlights: [
+      { target: 'cell-0-0', kind: 'write' },
+      { target: 'row-set-box', kind: 'write' },
+      { target: 'col-set-box', kind: 'write' },
+      { target: 'box-set-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'cell-0-1',
+    phase: 'scan',
+    activeR: 0,
+    activeC: 1,
+    valid: true,
+    conflict: '',
+    rowSet: ['5', '3'],
+    colSet: ['3'],
+    boxSet: ['5', '3'],
+    exp: "Cell (0,1) = '3'. Row[0] has {5}, col[1] is empty, box[0,0] has {5}. '3' is not in any — insert into all three sets.",
+    reason: 'Different digits never conflict; only a repeated digit in the same region is invalid.',
+    invariant: 'Row[0] now tracks {5,3}. Box[0,0] also tracks {5,3} because (0,1) belongs to the same top-left box.',
+    formula: "3 ∉ row[0] ∧ col[1] ∧ box[0,0] → insert",
+    highlights: [
+      { target: 'cell-0-1', kind: 'write' },
+      { target: 'row-set-box', kind: 'write' },
+      { target: 'col-set-box', kind: 'write' },
+      { target: 'box-set-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'cell-1-0',
+    phase: 'scan',
+    activeR: 1,
+    activeC: 0,
+    valid: true,
+    conflict: '',
+    rowSet: ['6'],
+    colSet: ['5', '6'],
+    boxSet: ['5', '3', '6'],
+    exp: "Cell (1,0) = '6'. Row[1] is empty, col[0] has {5}, box[0,0] has {5,3}. '6' absent in all — insert. Notice box[0,0] now covers cells from both row 0 and row 1.",
+    reason: 'Cells in the same 3×3 box share a box set regardless of which row or column they are in.',
+    invariant: 'box index = (⌊r/3⌋, ⌊c/3⌋) — cells (0,0), (0,1), (0,2), (1,0)…(2,2) all share box[0,0].',
+    formula: "6 ∉ row[1] ∧ col[0] ∧ box[0,0] → insert",
+    highlights: [
+      { target: 'cell-1-0', kind: 'write' },
+      { target: 'row-set-box', kind: 'write' },
+      { target: 'col-set-box', kind: 'write' },
+      { target: 'box-set-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'cell-0-5-conflict',
+    phase: 'conflict',
+    activeR: 0,
+    activeC: 5,
+    valid: false,
+    conflict: 'row',
+    rowSet: ['5', '3'],
+    colSet: ['5'],
+    boxSet: ['7'],
+    exp: "Cell (0,5) = '5'. Row[0] already contains {5, 3}. '5' is in row[0] → CONFLICT. Return False immediately.",
+    reason: 'One duplicate anywhere is enough to invalidate the board — no need to scan further.',
+    invariant: 'Any failed membership check short-circuits the entire validation.',
+    formula: "5 ∈ row[0] → invalid, return False",
+    highlights: [
+      { target: 'cell-0-5', kind: 'compare' },
+      { target: 'row-set-box', kind: 'match' },
+      { target: 'conflict-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<sudoku-viz>
+  <AlgorithmPlayer title="Multi-Constraint Validity — row/col/box sets" steps={steps}>
+    <div class="stats-row mc-meta-row">
+      <div class="stat-box mc-status-box" data-teach-target="conflict-box">
+        <span class="stat-label">Validity</span>
+        <span class="stat-val mc-status-val">Valid so far</span>
+      </div>
+      <div class="stat-box mc-phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val mc-phase-val">init</span>
+      </div>
+    </div>
+
+    <div class="anim-row mc-layout">
+      <div class="mc-grid-col">
+        <p class="anim-label">Board Strip (rows 0–2, cols 0–8)</p>
+        <div class="mc-strip-grid">
+          {strip.map((row, r) =>
+            row.map((cell, c) => (
+              <div
+                class="mc-cell"
+                data-r={r}
+                data-c={c}
+                data-teach-target={`cell-${r}-${c}`}
+              >
+                {cell !== '.' ? cell : ''}
+              </div>
+            ))
+          )}
+        </div>
+        <p class="mc-grid-note">Box [0,0] = cells (r0–r2, c0–c2). Box [0,1] = cells (r0–r2, c3–c5).</p>
+      </div>
+
+      <div class="mc-sets-col">
+        <div class="mc-set-group" data-teach-target="row-set-box">
+          <p class="anim-label">Row Set (current row)</p>
+          <div class="hashmap-row mc-row-set">
+            <span class="hashmap-empty">empty</span>
+          </div>
+        </div>
+        <div class="mc-set-group" data-teach-target="col-set-box">
+          <p class="anim-label">Col Set (current col)</p>
+          <div class="hashmap-row mc-col-set">
+            <span class="hashmap-empty">empty</span>
+          </div>
+        </div>
+        <div class="mc-set-group" data-teach-target="box-set-box">
+          <p class="anim-label">Box Set (3×3 region)</p>
+          <div class="hashmap-row mc-box-set">
+            <span class="hashmap-empty">empty</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</sudoku-viz>
+
+<script>
+  class SudokuViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.mc-cell'));
+      this.rowSetEl = this.querySelector('.mc-row-set');
+      this.colSetEl = this.querySelector('.mc-col-set');
+      this.boxSetEl = this.querySelector('.mc-box-set');
+      this.statusVal = this.querySelector('.mc-status-val');
+      this.phaseVal = this.querySelector('.mc-phase-val');
+      this.statusBox = this.querySelector('.mc-status-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        if (this.phaseVal) this.phaseVal.textContent = s.phase ?? '';
+        if (this.statusVal) {
+          this.statusVal.textContent = s.valid ? 'Valid so far' : 'Conflict!';
+        }
+
+        this.statusBox?.classList.remove('mc-ok', 'mc-bad');
+        this.statusBox?.classList.add(s.valid ? 'mc-ok' : 'mc-bad');
+
+        this.cells.forEach((cell) => {
+          const r = parseInt(cell.dataset.r ?? '0', 10);
+          const c = parseInt(cell.dataset.c ?? '0', 10);
+          cell.className = 'mc-cell';
+
+          if (r === s.activeR && c === s.activeC) {
+            cell.classList.add('mc-active');
+            if (!s.valid) cell.classList.add('mc-conflict');
+          } else if (s.activeR >= 0) {
+            if (r === s.activeR) cell.classList.add('mc-hl-row');
+            if (c === s.activeC) cell.classList.add('mc-hl-col');
+            const boxR = Math.floor(r / 3);
+            const boxC = Math.floor(c / 3);
+            const aBoxR = Math.floor(s.activeR / 3);
+            const aBoxC = Math.floor(s.activeC / 3);
+            if (boxR === aBoxR && boxC === aBoxC) cell.classList.add('mc-hl-box');
+          }
+        });
+
+        const buildSetHTML = (arr, isConflictType, conflictVal) => {
+          if (!arr || arr.length === 0) return "<span class='hashmap-empty'>empty</span>";
+          return arr
+            .map((v) => {
+              const clash = isConflictType && !s.valid && v === conflictVal;
+              return `<span class="hashmap-entry${clash ? ' mc-conflict-entry' : ''}">${v}</span>`;
+            })
+            .join('');
+        };
+
+        const cv = s.rowSet?.at(-1) ?? '';
+        if (this.rowSetEl)
+          this.rowSetEl.innerHTML = buildSetHTML(s.rowSet, s.conflict === 'row', cv);
+        if (this.colSetEl)
+          this.colSetEl.innerHTML = buildSetHTML(s.colSet, s.conflict === 'col', cv);
+        if (this.boxSetEl)
+          this.boxSetEl.innerHTML = buildSetHTML(s.boxSet, s.conflict === 'box', cv);
+      });
+    }
+  }
+
+  if (!customElements.get('sudoku-viz')) {
+    customElements.define('sudoku-viz', SudokuViz);
+  }
+</script>
+
+<style>
+  sudoku-viz { display: block; }
+
+  .mc-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .mc-status-box.mc-ok {
+    border-color: color-mix(in srgb, var(--status-easy) 50%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .mc-status-box.mc-ok .stat-val {
+    color: var(--status-easy);
+  }
+
+  .mc-status-box.mc-bad {
+    border-color: color-mix(in srgb, var(--status-hard) 55%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+  }
+
+  .mc-status-box.mc-bad .stat-val {
+    color: var(--status-hard);
+    font-weight: 700;
+  }
+
+  .mc-layout {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .mc-grid-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .mc-grid-note {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin: 0;
+    max-width: 20rem;
+  }
+
+  .mc-strip-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1.9rem);
+    grid-template-rows: repeat(3, 1.9rem);
+    border: 2px solid var(--border);
+    background: var(--bg);
+    gap: 1px;
+    width: fit-content;
+  }
+
+  .mc-cell {
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+
+  /* Right-border after every 3rd column (box divider) */
+  .mc-cell:nth-child(3n) {
+    border-right: 2px solid var(--border);
+  }
+
+  .mc-cell:nth-child(9n) {
+    border-right: none;
+  }
+
+  /* Bottom-border after row 1 (after cells 1–9) */
+  .mc-strip-grid > :nth-child(n + 10):nth-child(-n + 18) {
+    border-bottom: 2px solid var(--border);
+  }
+
+  .mc-cell.mc-hl-row {
+    background: color-mix(in srgb, var(--status-easy) 8%, transparent);
+  }
+
+  .mc-cell.mc-hl-col {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .mc-cell.mc-hl-box {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: var(--accent);
+  }
+
+  .mc-cell.mc-active {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+    box-shadow: 0 0 10px var(--accent);
+    z-index: 10;
+  }
+
+  .mc-cell.mc-conflict {
+    background: var(--status-hard);
+    color: var(--bg);
+    box-shadow: 0 0 10px var(--status-hard);
+    animation: mc-shake 0.4s ease-in-out;
+  }
+
+  @keyframes mc-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  .mc-sets-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex-grow: 1;
+    min-width: 12rem;
+  }
+
+  .mc-set-group {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--panel);
+  }
+
+  .mc-set-group .anim-label {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .mc-conflict-entry {
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 18%, transparent) !important;
+    animation: mc-shake 0.4s ease-in-out;
+  }
+</style>

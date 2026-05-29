@@ -1,0 +1,205 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [1, 1, 1, 2, 2, 3];
+const k = 2;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    active: -1,
+    count: {},
+    topK: [],
+    exp: 'Goal: find the k=2 most frequent elements in one pass using a frequency map.',
+    reason: 'A hash map lets us count occurrences in O(n) rather than sorting by frequency which costs O(n log n).',
+    invariant: 'Before scanning: the frequency map is empty.',
+    formula: 'freq[num] += 1',
+    highlights: [
+      { target: 'map-box', kind: 'focus' },
+      { target: 'k-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'count-all',
+    phase: 'count',
+    active: 5,
+    count: { '1': 3, '2': 2, '3': 1 },
+    topK: [],
+    exp: 'Scan the entire array once. For each element, increment its count in the map. Result: {1:3, 2:2, 3:1}.',
+    reason: 'This single O(n) pass gives us exact frequencies for every distinct value.',
+    invariant: 'After the pass, freq[num] equals the total occurrences of num in nums.',
+    formula: 'freq[num] = freq.get(num, 0) + 1',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'cell:1', kind: 'write' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'cell:3', kind: 'write' },
+      { target: 'cell:4', kind: 'write' },
+      { target: 'cell:5', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'identify-topk',
+    phase: 'select',
+    active: -1,
+    count: { '1': 3, '2': 2, '3': 1 },
+    topK: [],
+    exp: 'Now inspect the frequency map. We need the k=2 entries with the highest counts: 1 (count 3) and 2 (count 2).',
+    reason: 'Sorting the map by value descending, or using a min-heap / bucket sort, surfaces the top-k keys.',
+    invariant: 'The top-k elements are the ones whose counts rank in the largest k values.',
+    formula: 'sorted by count desc → take first k keys',
+    highlights: [
+      { target: 'entry:1', kind: 'compare' },
+      { target: 'entry:2', kind: 'compare' },
+      { target: 'entry:3', kind: 'discard' },
+      { target: 'map-box', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'result',
+    phase: 'done',
+    active: -1,
+    count: { '1': 3, '2': 2, '3': 1 },
+    topK: [1, 2],
+    exp: 'Return [1, 2]. Element 1 appeared 3 times and element 2 appeared 2 times — the two highest counts.',
+    reason: 'The pattern: count → rank → select. The map is only built once and queried once.',
+    invariant: 'Result contains exactly k elements, each with a frequency ≥ any element not in the result.',
+    formula: 'return topK  # [1, 2]',
+    highlights: [
+      { target: 'entry:1', kind: 'confirmed' },
+      { target: 'entry:2', kind: 'confirmed' },
+      { target: 'result-box', kind: 'confirmed' },
+      { target: 'map-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<freq-viz>
+  <AlgorithmPlayer title="Frequency Counting — nums=[1,1,1,2,2,3], k=2" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="k-box">
+        <span class="stat-label">k</span>
+        <span class="stat-val">{k}</span>
+      </div>
+      <div class="stat-box" data-teach-target="result-box">
+        <span class="stat-label">Top k</span>
+        <span class="stat-val fv-result">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-cell fv-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+            <span class="cell-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Frequency map</p>
+      <div class="hashmap-row fv-map" data-teach-target="map-box">
+        <span class="hashmap-empty">empty</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</freq-viz>
+
+<script>
+  class FreqViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.fv-cell'));
+      this.mapEl = this.querySelector('.fv-map');
+      this.resultEl = this.querySelector('.fv-result');
+      this.resultBox = this.querySelector('[data-teach-target="result-box"]');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        // Update array cells
+        const counted = Object.keys(step.count || {}).length > 0;
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell fv-cell';
+          if (step.phase === 'done' && step.topK) {
+            const val = parseInt(cell.querySelector('.cell-val').textContent, 10);
+            if (step.topK.includes(val)) cell.classList.add('found');
+            else cell.classList.add('visited');
+          } else if (counted) {
+            // once counting is done (select phase or later), keep all cells dimmed
+            cell.classList.add('visited');
+          } else if (step.phase === 'count' && i <= step.active) {
+            cell.classList.add('visited');
+          }
+        });
+
+        // Update frequency map entries
+        if (this.mapEl) {
+          const keys = Object.keys(step.count || {}).sort((a, b) => Number(a) - Number(b));
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = keys
+              .map((key) => {
+                const isTopK = step.topK && step.topK.includes(Number(key));
+                const isDiscard = step.phase === 'select' && !isTopK;
+                const cls = isTopK ? 'hashmap-entry fv-topk-entry' : isDiscard ? 'hashmap-entry fv-discard-entry' : 'hashmap-entry';
+                return `<span class="${cls}" data-teach-target="entry:${key}">${key} : ${step.count[key]}</span>`;
+              })
+              .join('');
+          }
+        }
+
+        // Update result display
+        if (this.resultEl) {
+          this.resultEl.textContent = step.topK && step.topK.length
+            ? `[${step.topK.join(', ')}]`
+            : '—';
+        }
+
+        this.resultBox?.classList.toggle('success-box', step.phase === 'done');
+      });
+    }
+  }
+
+  if (!customElements.get('freq-viz')) {
+    customElements.define('freq-viz', FreqViz);
+  }
+</script>
+
+<style>
+  freq-viz { display: block; }
+
+  .fv-cell.visited .cell-val { opacity: 0.35; }
+
+  .fv-cell.found .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .fv-topk-entry {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent) !important;
+  }
+
+  .fv-discard-entry {
+    opacity: 0.35;
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+</style>

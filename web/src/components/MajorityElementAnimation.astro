@@ -1,0 +1,340 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const nums = [2, 2, 1, 1, 1, 2, 2];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    i: -1,
+    candidate: null,
+    count: 0,
+    phase: 'start',
+    decision: 'Initialize candidate and vote count',
+    formula: 'If count == 0, pick new candidate',
+    exp: 'Start Boyer-Moore Voting with no candidate and count = 0.',
+    reason: 'The algorithm keeps a running “vote balance” for one candidate.',
+    invariant: [
+      'count tracks candidate votes minus non-candidate votes in the processed prefix.',
+      'When count drops to 0, previous votes are fully canceled out.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'candidate-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'pick-2',
+    i: 0,
+    candidate: 2,
+    count: 1,
+    phase: 'vote',
+    decision: 'count is 0 → set candidate to current value',
+    formula: 'candidate = 2, count = 1',
+    exp: 'At index 0, count is 0, so choose 2 as candidate and set count to 1.',
+    reason: 'A new candidate is chosen whenever previous votes are canceled.',
+    invariant: 'Candidate always comes from the processed part of the array.',
+    action: 'write',
+    highlights: [
+      { target: 'array-box', kind: 'focus' },
+      { target: 'cell:0', kind: 'write' },
+      { target: 'candidate-box', kind: 'write' },
+      { target: 'count-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'inc-2',
+    i: 1,
+    candidate: 2,
+    count: 2,
+    phase: 'vote',
+    decision: 'Current value matches candidate → increment count',
+    formula: '2 == candidate → count + 1',
+    exp: 'At index 1, value is 2, matching candidate 2, so count increases to 2.',
+    reason: 'Matching values strengthen the candidate’s vote balance.',
+    invariant: 'Matching candidate adds one net vote.',
+    action: 'confirm',
+    highlights: [
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'candidate-box', kind: 'focus' },
+      { target: 'count-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'dec-1-a',
+    i: 2,
+    candidate: 2,
+    count: 1,
+    phase: 'vote',
+    decision: 'Current value differs from candidate → decrement count',
+    formula: '1 != candidate → count - 1',
+    exp: 'At index 2, value is 1 (not 2), so count decreases to 1.',
+    reason: 'Non-candidate values cancel candidate votes one by one.',
+    invariant: 'Mismatching value removes one net vote.',
+    action: 'discard',
+    highlights: [
+      { target: 'cell:2', kind: 'discard' },
+      { target: 'count-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'dec-1-b',
+    i: 3,
+    candidate: 2,
+    count: 0,
+    phase: 'vote',
+    decision: 'Mismatch again → count becomes 0',
+    formula: '1 != candidate → count - 1 = 0',
+    exp: 'At index 3, another 1 cancels the remaining vote, so count reaches 0.',
+    reason: 'A zero count means current candidate has no net advantage left.',
+    invariant: 'count = 0 means the processed prefix is perfectly canceled.',
+    action: 'discard',
+    highlights: [
+      { target: 'cell:3', kind: 'discard' },
+      { target: 'count-box', kind: 'discard' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'pick-1',
+    i: 4,
+    candidate: 1,
+    count: 1,
+    phase: 'vote',
+    decision: 'count is 0 → set candidate to current value',
+    formula: 'candidate = 1, count = 1',
+    exp: 'At index 4, count is 0, so choose 1 as new candidate and reset count to 1.',
+    reason: 'After full cancellation, the next value starts a new vote race.',
+    invariant: 'Candidate can change only when count is 0.',
+    action: 'write',
+    highlights: [
+      { target: 'cell:4', kind: 'write' },
+      { target: 'candidate-box', kind: 'write' },
+      { target: 'count-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'dec-2',
+    i: 5,
+    candidate: 1,
+    count: 0,
+    phase: 'vote',
+    decision: 'Mismatch with candidate 1 → decrement to 0',
+    formula: '2 != candidate → count - 1 = 0',
+    exp: 'At index 5, value is 2, which cancels candidate 1 back to count 0.',
+    reason: 'Opposing values keep canceling until one candidate survives.',
+    invariant: 'Only net vote balance is stored, not full counts.',
+    action: 'discard',
+    highlights: [
+      { target: 'cell:5', kind: 'discard' },
+      { target: 'count-box', kind: 'discard' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'pick-2-final',
+    i: 6,
+    candidate: 2,
+    count: 1,
+    phase: 'vote',
+    decision: 'count is 0 → set candidate to current value',
+    formula: 'candidate = 2, count = 1',
+    exp: 'At index 6, count is 0 again, so select 2 as candidate and count becomes 1.',
+    reason: 'The final surviving candidate after all cancellations is the majority.',
+    invariant: 'Majority element cannot be fully canceled by all others combined.',
+    action: 'confirm',
+    highlights: [
+      { target: 'cell:6', kind: 'confirmed' },
+      { target: 'candidate-box', kind: 'confirmed' },
+      { target: 'count-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'done',
+    i: -1,
+    candidate: 2,
+    count: 1,
+    phase: 'done',
+    decision: 'Return candidate',
+    formula: 'majority = 2',
+    exp: 'Scan complete. The final candidate is 2, which is the majority element.',
+    reason: 'Because majority appears more than n/2 times, it always survives pairwise cancellation.',
+    invariant: 'Final candidate equals the majority element.',
+    action: 'confirm',
+    highlights: [
+      { target: 'candidate-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'formula-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<majority-element-visuals>
+  <AlgorithmPlayer title="nums = [2, 2, 1, 1, 1, 2, 2]" steps={steps}>
+    <div class="stats-row me-stats-row">
+      <div class="stat-box highlight" data-teach-target="candidate-box">
+        <span class="stat-label">Candidate</span>
+        <span class="stat-val me-candidate">-</span>
+      </div>
+      <div class="stat-box me-count-box" data-teach-target="count-box">
+        <span class="stat-label">Count (Votes)</span>
+        <span class="stat-val me-count">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val me-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val me-decision">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array (Boyer-Moore Voting)</p>
+      <div class="array-row me-array" data-teach-target="array-box">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell me-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row me-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden" data-teach-target={i === 0 ? "pointer:i" : undefined}>i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</majority-element-visuals>
+
+<script>
+  class MajorityElementVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".me-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".me-ptr-col"));
+      this.candEl = this.querySelector(".me-candidate");
+      this.countEl = this.querySelector(".me-count");
+      this.formulaEl = this.querySelector(".me-formula");
+      this.decisionEl = this.querySelector(".me-decision");
+      this.candidateBox = this.querySelector('[data-teach-target="candidate-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.candEl) this.candEl.textContent = step.candidate !== null ? step.candidate : "-";
+        if (this.countEl) this.countEl.textContent = String(step.count);
+        if (this.formulaEl) this.formulaEl.textContent = step.formula ?? "-";
+        if (this.decisionEl) this.decisionEl.textContent = step.decision ?? "-";
+
+        this.candidateBox?.classList.toggle("success-box", step.phase === "done");
+        this.decisionBox?.classList.toggle("success-box", step.phase === "done");
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i < step.i) valSpan.classList.add("visited");
+          if (i === step.i) {
+            if (step.phase === "vote" && step.count === 0) {
+              valSpan.classList.add("conflict");
+            } else if (step.phase === "vote" && step.count === 1) {
+              valSpan.classList.add("active-new");
+            } else {
+              valSpan.classList.add("active-eval");
+            }
+          } else if (step.i === -1 && e.detail.index > 0) {
+            valSpan.classList.add("visited");
+          }
+        });
+
+        this.ptrs.forEach((col, i) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (ptr) ptr.className = `ptr ptr-up ${i === step.i ? "" : "hidden"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('majority-element-visuals')) {
+    customElements.define('majority-element-visuals', MajorityElementVisuals);
+  }
+</script>
+
+<style>
+  majority-element-visuals {
+    display: block;
+  }
+
+  .me-stats-row {
+    margin-bottom: 2rem;
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .me-count-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 5%, transparent);
+  }
+
+  .me-count-box .stat-val {
+    color: var(--status-info);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-new {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.conflict {
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+</style>

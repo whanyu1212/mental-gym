@@ -1,0 +1,300 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [1, 2, 3, 4];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'init',
+    active: -1,
+    output: [1, 1, 1, 1],
+    prefixRunning: 1,
+    suffixRunning: 1,
+    exp: 'Initialize output array to all 1s. We will make two passes: first left-to-right (prefix), then right-to-left (suffix). No division needed.',
+    reason: 'Each output[i] will equal the product of everything to its left times everything to its right.',
+    invariant: 'output[i] = (product of nums[0..i-1]) * (product of nums[i+1..n-1])',
+    formula: 'result[i] = left_product[i] × right_product[i]',
+    highlights: [
+      { target: 'prefix-box', kind: 'focus' },
+      { target: 'suffix-box', kind: 'focus' },
+      { target: 'phase-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'prefix-0',
+    phase: 'prefix',
+    active: 0,
+    output: [1, 1, 1, 1],
+    prefixRunning: 1,
+    suffixRunning: 1,
+    exp: 'Prefix pass i=0: output[0] = running prefix = 1. Nothing is to the left of index 0. Then prefix *= nums[0] = 1, so prefix stays 1.',
+    reason: 'The left product of the first element is always 1 — there is nothing to its left.',
+    invariant: 'output[i] holds the product of all elements strictly to the left of i.',
+    formula: 'output[0] = 1 (empty left) → prefix = 1×1 = 1',
+    highlights: [
+      { target: 'nums:0', kind: 'compare' },
+      { target: 'out:0', kind: 'write' },
+      { target: 'prefix-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'prefix-1',
+    phase: 'prefix',
+    active: 1,
+    output: [1, 1, 1, 1],
+    prefixRunning: 1,
+    suffixRunning: 1,
+    exp: 'Prefix pass i=1: output[1] = running prefix = 1. Left of index 1 is [1], product = 1. Then prefix *= nums[1] = 2, so prefix becomes 2.',
+    reason: 'output[1] captures the running left product before consuming nums[1].',
+    invariant: 'output[i] holds the product of all elements strictly to the left of i.',
+    formula: 'output[1] = 1 → prefix = 1×2 = 2',
+    highlights: [
+      { target: 'nums:1', kind: 'compare' },
+      { target: 'out:1', kind: 'write' },
+      { target: 'prefix-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'prefix-2',
+    phase: 'prefix',
+    active: 2,
+    output: [1, 1, 2, 1],
+    prefixRunning: 2,
+    suffixRunning: 1,
+    exp: 'Prefix pass i=2: output[2] = running prefix = 2. Left of index 2 is [1,2], product = 2. Then prefix *= nums[2] = 3, so prefix becomes 6.',
+    reason: 'The accumulated left product is stamped into output[2] before moving on.',
+    invariant: 'output[i] holds the product of all elements strictly to the left of i.',
+    formula: 'output[2] = 2 → prefix = 2×3 = 6',
+    highlights: [
+      { target: 'nums:2', kind: 'compare' },
+      { target: 'out:2', kind: 'write' },
+      { target: 'prefix-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'prefix-3',
+    phase: 'prefix',
+    active: 3,
+    output: [1, 1, 2, 6],
+    prefixRunning: 6,
+    suffixRunning: 1,
+    exp: 'Prefix pass i=3: output[3] = running prefix = 6. Left of index 3 is [1,2,3], product = 6. Then prefix *= nums[3] = 4, so prefix becomes 24.',
+    reason: 'After this step all left products are stored. The prefix pass is complete.',
+    invariant: 'output now holds all left products: [1, 1, 2, 6].',
+    formula: 'output[3] = 6 → prefix = 6×4 = 24',
+    highlights: [
+      { target: 'nums:3', kind: 'compare' },
+      { target: 'out:3', kind: 'write' },
+      { target: 'prefix-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'suffix-pass',
+    phase: 'suffix',
+    active: -1,
+    output: [24, 12, 8, 6],
+    prefixRunning: 24,
+    suffixRunning: 24,
+    exp: 'Suffix pass (right to left): multiply each output[i] by the running right product. Running suffix starts at 1 and accumulates as we scan right-to-left. Result: [24, 12, 8, 6].',
+    reason: 'Each output[i] already holds the left product. Multiplying by the right product completes the answer without division.',
+    invariant: 'output[i] = left_product[i] × right_product[i] for all i.',
+    formula: 'output = [1×24, 1×12, 2×4, 6×1] = [24, 12, 8, 6]',
+    highlights: [
+      { target: 'out:0', kind: 'confirmed' },
+      { target: 'out:1', kind: 'confirmed' },
+      { target: 'out:2', kind: 'confirmed' },
+      { target: 'out:3', kind: 'confirmed' },
+      { target: 'suffix-box', kind: 'confirmed' },
+      { target: 'phase-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<prefix-suffix-viz>
+  <AlgorithmPlayer title="Product Except Self — prefix/suffix pass — nums=[1,2,3,4]" steps={steps}>
+    <div class="stats-row ps-meta-row">
+      <div class="stat-box ps-phase-box" data-teach-target="phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val ps-phase-val">init</span>
+      </div>
+      <div class="stat-box ps-prefix-box" data-teach-target="prefix-box">
+        <span class="stat-label">Running Prefix</span>
+        <span class="stat-val ps-prefix-val">1</span>
+      </div>
+      <div class="stat-box ps-suffix-box" data-teach-target="suffix-box">
+        <span class="stat-label">Running Suffix</span>
+        <span class="stat-val ps-suffix-val">1</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">nums (input)</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell ps-num-cell" data-idx={i} data-teach-target={`nums:${i}`}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">output (left × right products)</p>
+      <div class="array-row">
+        {nums.map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell ps-out-cell" data-idx={i} data-teach-target={`out:${i}`}>
+              <span class="cell-val ps-out-val">1</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</prefix-suffix-viz>
+
+<script>
+  class PrefixSuffixViz extends HTMLElement {
+    connectedCallback() {
+      this.phaseValEl = this.querySelector('.ps-phase-val');
+      this.prefixValEl = this.querySelector('.ps-prefix-val');
+      this.suffixValEl = this.querySelector('.ps-suffix-val');
+
+      this.numCells = Array.from(this.querySelectorAll('.ps-num-cell'));
+      this.outCells = Array.from(this.querySelectorAll('.ps-out-cell'));
+
+      this.phaseBox = this.querySelector('.ps-phase-box');
+      this.prefixBox = this.querySelector('.ps-prefix-box');
+      this.suffixBox = this.querySelector('.ps-suffix-box');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        if (this.phaseValEl) this.phaseValEl.textContent = step.phase ?? 'init';
+        if (this.prefixValEl) this.prefixValEl.textContent = String(step.prefixRunning ?? 1);
+        if (this.suffixValEl) this.suffixValEl.textContent = String(step.suffixRunning ?? 1);
+
+        // Update output cells
+        this.outCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.ps-out-val');
+          if (!valSpan) return;
+          const outputArr = step.output;
+          if (Array.isArray(outputArr)) {
+            valSpan.textContent = String(outputArr[i]);
+          }
+          // Visual state classes
+          valSpan.className = 'cell-val ps-out-val';
+          if (step.phase === 'suffix' && step.active === -1) {
+            valSpan.classList.add('ps-out-done');
+          } else if (step.phase === 'prefix' && i === step.active) {
+            valSpan.classList.add('ps-out-active');
+          } else if (step.phase === 'prefix' && i < step.active) {
+            valSpan.classList.add('ps-out-filled');
+          }
+        });
+
+        // Highlight active input cell
+        this.numCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+          if (step.phase === 'prefix' && i === step.active) {
+            valSpan.classList.add('ps-num-active');
+          } else if (step.phase === 'prefix' && i < step.active) {
+            valSpan.classList.add('ps-num-visited');
+          }
+        });
+
+        // Phase box color
+        this.phaseBox?.classList.remove('ps-phase-prefix', 'ps-phase-suffix', 'ps-phase-done');
+        if (step.phase === 'prefix') this.phaseBox?.classList.add('ps-phase-prefix');
+        if (step.phase === 'suffix') this.phaseBox?.classList.add('ps-phase-suffix');
+        if (step.phase === 'suffix' && step.active === -1) {
+          this.phaseBox?.classList.add('ps-phase-done');
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('prefix-suffix-viz')) {
+    customElements.define('prefix-suffix-viz', PrefixSuffixViz);
+  }
+</script>
+
+<style>
+  prefix-suffix-viz { display: block; }
+
+  .ps-meta-row {
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  /* Prefix box tint */
+  .ps-prefix-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+  }
+  .ps-prefix-box .stat-val {
+    color: var(--status-info);
+  }
+
+  /* Suffix box tint */
+  .ps-suffix-box {
+    border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 8%, transparent);
+  }
+  .ps-suffix-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  /* Phase box states */
+  .ps-phase-box.ps-phase-prefix {
+    border-color: color-mix(in srgb, var(--status-info) 50%, transparent);
+  }
+  .ps-phase-box.ps-phase-suffix {
+    border-color: color-mix(in srgb, var(--status-easy) 50%, transparent);
+  }
+  .ps-phase-box.ps-phase-done {
+    border-color: color-mix(in srgb, var(--status-easy) 65%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  /* Input cell states */
+  .cell-val.ps-num-active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.ps-num-visited {
+    opacity: 0.35;
+  }
+
+  /* Output cell states */
+  .ps-out-val {
+    color: var(--muted);
+  }
+  .cell-val.ps-out-active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.ps-out-filled {
+    color: var(--status-info);
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+  }
+  .cell-val.ps-out-done {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+</style>

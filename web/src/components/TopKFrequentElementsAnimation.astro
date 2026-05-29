@@ -1,0 +1,679 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const nums = [1, 1, 1, 2, 2, 3];
+const k = 2;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init-count',
+    phase: 'count',
+    i: -1,
+    currentKey: null,
+    currentFreq: null,
+    count: {},
+    buckets: [],
+    res: [],
+    formula: 'count[num] += 1',
+    exp: 'Phase 1: Count frequencies with a hash map.',
+    reason: 'We need exact frequencies before selecting the top-k elements.',
+    invariant: 'After scanning index i, map stores frequencies for nums[0..i].',
+    action: 'compare',
+    highlights: [
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'map-box', kind: 'focus' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'count-i0',
+    phase: 'count',
+    i: 0,
+    currentKey: '1',
+    currentFreq: 1,
+    count: { '1': 1 },
+    buckets: [],
+    res: [],
+    formula: "count[1] = 1",
+    exp: 'nums[0] = 1, so frequency of 1 becomes 1.',
+    reason: 'First occurrence creates the key with count 1.',
+    invariant: 'Counting phase only increases frequencies.',
+    action: 'write',
+    highlights: [
+      { target: 'nums-box', kind: 'focus' },
+      { target: 'cell:0', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:1', kind: 'write' },
+    ],
+  },
+  {
+    id: 'count-i1',
+    phase: 'count',
+    i: 1,
+    currentKey: '1',
+    currentFreq: 2,
+    count: { '1': 2 },
+    buckets: [],
+    res: [],
+    formula: "count[1] = 2",
+    exp: 'nums[1] = 1 again, so frequency of 1 becomes 2.',
+    reason: 'Repeated values increment an existing frequency.',
+    invariant: 'Map always reflects counts seen so far.',
+    action: 'write',
+    highlights: [
+      { target: 'cell:1', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:1', kind: 'write' },
+    ],
+  },
+  {
+    id: 'count-i2',
+    phase: 'count',
+    i: 2,
+    currentKey: '1',
+    currentFreq: 3,
+    count: { '1': 3 },
+    buckets: [],
+    res: [],
+    formula: "count[1] = 3",
+    exp: 'nums[2] = 1, so frequency of 1 reaches 3.',
+    reason: 'High-frequency elements will later appear in higher-frequency buckets.',
+    invariant: 'Frequency of each key equals its occurrence count in processed prefix.',
+    action: 'write',
+    highlights: [
+      { target: 'cell:2', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:1', kind: 'write' },
+    ],
+  },
+  {
+    id: 'count-i3',
+    phase: 'count',
+    i: 3,
+    currentKey: '2',
+    currentFreq: 1,
+    count: { '1': 3, '2': 1 },
+    buckets: [],
+    res: [],
+    formula: "count[2] = 1",
+    exp: 'nums[3] = 2, so create key 2 with frequency 1.',
+    reason: 'New values create new map entries.',
+    invariant: 'Every distinct number appears exactly once as a map key.',
+    action: 'write',
+    highlights: [
+      { target: 'cell:3', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:2', kind: 'write' },
+    ],
+  },
+  {
+    id: 'count-i4',
+    phase: 'count',
+    i: 4,
+    currentKey: '2',
+    currentFreq: 2,
+    count: { '1': 3, '2': 2 },
+    buckets: [],
+    res: [],
+    formula: "count[2] = 2",
+    exp: 'nums[4] = 2 again, so frequency of 2 becomes 2.',
+    reason: 'Repeated element updates existing key count.',
+    invariant: 'Map values are always non-negative integers.',
+    action: 'write',
+    highlights: [
+      { target: 'cell:4', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:2', kind: 'write' },
+    ],
+  },
+  {
+    id: 'count-i5',
+    phase: 'count',
+    i: 5,
+    currentKey: '3',
+    currentFreq: 1,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [],
+    res: [],
+    formula: "count[3] = 1",
+    exp: 'nums[5] = 3, so create key 3 with frequency 1. Counting is complete.',
+    reason: 'Now we know every element’s frequency.',
+    invariant: 'After final index, map is the full frequency table.',
+    action: 'write',
+    highlights: [
+      { target: 'cell:5', kind: 'write' },
+      { target: 'map-box', kind: 'write' },
+      { target: 'entry:3', kind: 'write' },
+    ],
+  },
+
+  {
+    id: 'init-buckets',
+    phase: 'bucket',
+    i: -1,
+    currentKey: null,
+    currentFreq: null,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], [], [], [], [], [], []],
+    res: [],
+    formula: 'bucket[freq] stores all nums with that frequency',
+    exp: 'Phase 2: Build buckets where index = frequency.',
+    reason: 'Bucket indices give direct access by frequency without sorting by value.',
+    invariant: 'Every number goes to exactly one bucket at its frequency index.',
+    action: 'compare',
+    highlights: [
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'bucket-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'bucket-3',
+    phase: 'bucket',
+    i: 0,
+    currentKey: '3',
+    currentFreq: 1,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], [], [], [], [], []],
+    res: [],
+    formula: 'freq(3) = 1 → bucket[1].push(3)',
+    exp: "Place 3 into bucket[1] because its frequency is 1.",
+    reason: 'Bucket position encodes frequency directly.',
+    invariant: 'Lower indices represent lower frequencies.',
+    action: 'write',
+    highlights: [
+      { target: 'map-box', kind: 'focus' },
+      { target: 'entry:3', kind: 'focus' },
+      { target: 'bucket:1', kind: 'write' },
+      { target: 'bucket-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'bucket-2',
+    phase: 'bucket',
+    i: 1,
+    currentKey: '2',
+    currentFreq: 2,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], [], [], [], []],
+    res: [],
+    formula: 'freq(2) = 2 → bucket[2].push(2)',
+    exp: "Place 2 into bucket[2] because its frequency is 2.",
+    reason: 'Higher frequency shifts the element to a higher index bucket.',
+    invariant: 'Bucket index always equals element frequency.',
+    action: 'write',
+    highlights: [
+      { target: 'entry:2', kind: 'focus' },
+      { target: 'bucket:2', kind: 'write' },
+      { target: 'bucket-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'bucket-1',
+    phase: 'bucket',
+    i: 2,
+    currentKey: '1',
+    currentFreq: 3,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: [],
+    formula: 'freq(1) = 3 → bucket[3].push(1)',
+    exp: "Place 1 into bucket[3] because its frequency is 3.",
+    reason: 'The most frequent elements land in highest non-empty buckets.',
+    invariant: 'All elements are distributed once bucket phase ends.',
+    action: 'write',
+    highlights: [
+      { target: 'entry:1', kind: 'focus' },
+      { target: 'bucket:3', kind: 'write' },
+      { target: 'bucket-box', kind: 'write' },
+    ],
+  },
+
+  {
+    id: 'start-gather',
+    phase: 'gather',
+    i: 6,
+    currentKey: null,
+    currentFreq: 6,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: [],
+    formula: 'scan buckets from high freq to low',
+    exp: 'Phase 3: Scan buckets from right to left to collect top-k frequent elements.',
+    reason: 'Right-to-left scan guarantees we pick highest frequencies first.',
+    invariant: 'Results are collected in non-increasing frequency order.',
+    action: 'compare',
+    highlights: [
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'bucket-pointer', kind: 'focus' },
+      { target: 'result-box', kind: 'focus' },
+      { target: 'bucket:6', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'gather-i5',
+    phase: 'gather',
+    i: 5,
+    currentKey: null,
+    currentFreq: 5,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: [],
+    formula: 'bucket[5] is empty',
+    exp: 'Bucket[5] is empty, so continue scanning left.',
+    reason: 'Only non-empty buckets contribute candidates.',
+    invariant: 'Empty buckets do not change results.',
+    action: 'compare',
+    highlights: [
+      { target: 'bucket-pointer', kind: 'focus' },
+      { target: 'bucket:5', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'gather-i4',
+    phase: 'gather',
+    i: 4,
+    currentKey: null,
+    currentFreq: 4,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: [],
+    formula: 'bucket[4] is empty',
+    exp: 'Bucket[4] is empty too, continue scanning.',
+    reason: 'We keep moving left until we find values.',
+    invariant: 'Pointer always moves from higher to lower frequency.',
+    action: 'compare',
+    highlights: [
+      { target: 'bucket-pointer', kind: 'focus' },
+      { target: 'bucket:4', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'gather-i3',
+    phase: 'gather',
+    i: 3,
+    currentKey: '1',
+    currentFreq: 3,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: ['1'],
+    formula: 'bucket[3] = [1] → append 1',
+    exp: "Bucket[3] contains 1, so append 1 to results. Need one more element for k=2.",
+    reason: 'First non-empty bucket from the right gives highest-frequency candidate.',
+    invariant: 'Result size grows only when non-empty bucket is processed.',
+    action: 'write',
+    highlights: [
+      { target: 'bucket:3', kind: 'write' },
+      { target: 'result-box', kind: 'write' },
+      { target: 'result:0', kind: 'write' },
+      { target: 'bucket-pointer', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'gather-i2',
+    phase: 'gather',
+    i: 2,
+    currentKey: '2',
+    currentFreq: 2,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: ['1', '2'],
+    formula: 'bucket[2] = [2] → append 2',
+    exp: "Bucket[2] contains 2, so append 2. We now have k=2 results.",
+    reason: 'Once result size reaches k, we can stop scanning.',
+    invariant: 'Collected results are the k most frequent elements.',
+    action: 'confirm',
+    highlights: [
+      { target: 'bucket:2', kind: 'confirmed' },
+      { target: 'result-box', kind: 'confirmed' },
+      { target: 'result:1', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'done',
+    i: -1,
+    currentKey: null,
+    currentFreq: null,
+    count: { '1': 3, '2': 2, '3': 1 },
+    buckets: [[], ['3'], ['2'], ['1'], [], [], []],
+    res: ['1', '2'],
+    formula: 'topK = [1, 2]',
+    exp: 'Done. The 2 most frequent elements are [1, 2].',
+    reason: 'They came from the highest non-empty frequency buckets first.',
+    invariant: 'Final result length equals k.',
+    action: 'confirm',
+    highlights: [
+      { target: 'result-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'phase-box', kind: 'confirmed' },
+    ],
+  },
+];
+
+const emptyBuckets = [[], [], [], [], [], [], []];
+---
+
+<top-k-frequent-visuals>
+  <AlgorithmPlayer title={`nums = [1, 1, 1, 2, 2, 3], k = ${k}`} steps={steps}>
+    <div class="stats-row tkf-stats-row">
+      <div class="stat-box" data-teach-target="phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val tkf-phase">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Formula</span>
+        <span class="stat-val tkf-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val tkf-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="result-box">
+        <span class="stat-label">Top k</span>
+        <span class="stat-val tkf-result-summary">[ ]</span>
+      </div>
+    </div>
+
+    <div class="anim-row tkf-grid-row">
+      <div class="tkf-left-panel">
+        <p class="anim-label">Input Array</p>
+        <div class="array-row tkf-nums" data-teach-target="nums-box">
+          {nums.map((n, i) => (
+            <div class="array-col">
+              <div class="array-cell tkf-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+                <span class="cell-val">{n}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p class="anim-label">Frequency Map</p>
+        <div class="hashmap-row tkf-map" data-teach-target="map-box"></div>
+      </div>
+
+      <div class="tkf-right-panel">
+        <p class="anim-label">Buckets (index = frequency)</p>
+        <div class="array-row tkf-buckets">
+          {emptyBuckets.map((_, i) => (
+            <div class="array-col tkf-bucket-col">
+              <div
+                class="array-cell tkf-bucket-cell"
+                data-idx={i}
+                data-teach-target={`bucket:${i}`}
+              ></div>
+              <span class="cell-idx tkf-bucket-idx">Idx {i}</span>
+              <div class="pointers-row tkf-bucket-ptr" data-idx={i}>
+                <span class="ptr ptr-up hidden" data-teach-target={i === 0 ? "bucket-pointer" : undefined}>↑</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p class="anim-label highlight-label">Top k={k} Results</p>
+        <div class="array-row tkf-results" data-teach-target="result-box"></div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</top-k-frequent-visuals>
+
+<script>
+  class TopKFrequentVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".tkf-cell"));
+      this.mapEl = this.querySelector(".tkf-map");
+      this.bucketCells = Array.from(this.querySelectorAll(".tkf-bucket-cell"));
+      this.bucketPtrs = Array.from(this.querySelectorAll(".tkf-bucket-ptr"));
+      this.resEl = this.querySelector(".tkf-results");
+      this.phaseEl = this.querySelector(".tkf-phase");
+      this.formulaEl = this.querySelector(".tkf-formula");
+      this.decisionEl = this.querySelector(".tkf-decision");
+      this.resSummaryEl = this.querySelector(".tkf-result-summary");
+      this.resultBox = this.querySelector('[data-teach-target="result-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.phaseEl) {
+          if (step.phase === 'count') this.phaseEl.textContent = 'Count frequencies';
+          else if (step.phase === 'bucket') this.phaseEl.textContent = 'Place into buckets';
+          else if (step.phase === 'gather') this.phaseEl.textContent = 'Gather from high freq';
+          else this.phaseEl.textContent = 'Done';
+        }
+
+        if (this.formulaEl) this.formulaEl.textContent = step.formula ?? '-';
+
+        if (this.decisionEl) {
+          if (step.phase === 'count') {
+            this.decisionEl.textContent = 'Update count map with current number';
+          } else if (step.phase === 'bucket') {
+            this.decisionEl.textContent = 'Place number into bucket[count]';
+          } else if (step.phase === 'gather') {
+            this.decisionEl.textContent = 'Scan buckets right-to-left for top frequencies';
+          } else {
+            this.decisionEl.textContent = 'Return collected top-k results';
+          }
+        }
+
+        if (this.resSummaryEl) {
+          const arr = step.res ?? [];
+          this.resSummaryEl.textContent = arr.length ? `[${arr.join(", ")}]` : '[ ]';
+        }
+
+        this.resultBox?.classList.toggle('success-box', step.phase === 'done');
+        this.decisionBox?.classList.toggle('success-box', step.phase === 'done');
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (step.phase === 'count') {
+            if (i < step.i) valSpan.classList.add("visited");
+            if (i === step.i) valSpan.classList.add("active-eval");
+          } else {
+            valSpan.classList.add("visited");
+          }
+        });
+
+        if (this.mapEl) {
+          const keys = Object.keys(step.count || {}).sort((a, b) => Number(a) - Number(b));
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = keys
+              .map((key) => {
+                const isHighlight = key === step.currentKey;
+                return `<span class="hashmap-entry ${isHighlight ? 'active-map-entry' : ''}" data-teach-target="entry:${key}">
+                  <span class="tkf-map-key">'${key}':</span>
+                  <span class="tkf-map-val">${step.count[key]}</span>
+                </span>`;
+              })
+              .join("");
+          }
+        }
+
+        this.bucketCells.forEach((cell, i) => {
+          const arr = step.buckets?.[i] ?? [];
+          if (arr.length === 0) {
+            cell.innerHTML = "";
+            cell.classList.remove("filled-bucket", "active-bucket");
+          } else {
+            cell.innerHTML = arr
+              .map(
+                (num) =>
+                  `<div class="tkf-bucket-chip">${num}</div>`
+              )
+              .join("");
+            cell.classList.add("filled-bucket");
+            cell.classList.remove("active-bucket");
+          }
+
+          if (
+            (step.phase === 'gather' && i === step.i) ||
+            (step.phase === 'bucket' && i === step.currentFreq)
+          ) {
+            cell.classList.add("active-bucket");
+          } else {
+            cell.classList.remove("active-bucket");
+          }
+        });
+
+        this.bucketPtrs.forEach((col, i) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (!ptr) return;
+          ptr.className = `ptr ptr-up ${step.phase === 'gather' && i === step.i ? "" : "hidden"}`;
+        });
+
+        if (this.resEl) {
+          const res = step.res ?? [];
+          if (!res.length) {
+            this.resEl.innerHTML =
+              "<span class='tkf-empty-result'>[ ]</span>";
+          } else {
+            this.resEl.innerHTML = res
+              .map(
+                (num, idx) => `
+                <div class="array-col" data-teach-target="result:${idx}">
+                  <div class="array-cell">
+                    <span class="cell-val success-val">${num}</span>
+                  </div>
+                </div>
+              `
+              )
+              .join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('top-k-frequent-visuals')) {
+    customElements.define('top-k-frequent-visuals', TopKFrequentVisuals);
+  }
+</script>
+
+<style>
+  top-k-frequent-visuals {
+    display: block;
+  }
+
+  .tkf-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .tkf-grid-row {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .tkf-left-panel,
+  .tkf-right-panel {
+    flex: 1;
+    min-width: 20rem;
+  }
+
+  .tkf-map {
+    min-height: 40px;
+  }
+
+  .tkf-buckets {
+    margin-bottom: 2rem;
+  }
+
+  .tkf-bucket-col {
+    align-items: center;
+  }
+
+  .tkf-bucket-cell {
+    min-height: 3rem;
+    min-width: 2.5rem;
+    justify-content: flex-end;
+    padding: 0.2rem;
+    background: var(--surface-strong);
+    border: 1px dashed var(--border);
+  }
+
+  .tkf-bucket-cell.filled-bucket {
+    border-color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 5%, transparent);
+  }
+
+  .tkf-bucket-cell.active-bucket {
+    border-color: var(--status-easy) !important;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tkf-bucket-idx {
+    margin-top: 0.2rem;
+  }
+
+  .tkf-bucket-chip {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    border: 1px solid var(--status-info);
+    border-radius: 2px;
+    padding: 0.1rem 0.3rem;
+    margin-top: 0.1rem;
+    color: var(--status-info);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    animation: pop-in 0.2s;
+  }
+
+  .highlight-label {
+    color: var(--status-easy) !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .active-map-entry {
+    border-color: var(--accent) !important;
+    background: var(--accent-dim) !important;
+    transform: translateY(-2px);
+  }
+
+  .tkf-map-key {
+    color: var(--muted);
+  }
+
+  .tkf-map-val {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .success-val {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 18%, transparent) !important;
+  }
+
+  .tkf-empty-result {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+</style>

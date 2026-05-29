@@ -1,0 +1,380 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    p: -1,
+    op: 'init',
+    key: null,
+    val: null,
+    hash: null,
+    map: [[], [], [], []],
+    exp: 'Initialize a HashMap with 4 buckets. Each bucket stores a list of key-value pairs to handle collisions.',
+    reason: 'Separate chaining keeps colliding keys in the same bucket instead of overwriting each other.',
+    invariant: 'Each key belongs to exactly one bucket determined by key % 4.',
+    action: 'derive',
+    highlights: [
+      { target: 'hashmap-buckets', kind: 'compare' },
+      { target: 'operation-panel', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'put-1',
+    p: 0,
+    op: 'put',
+    key: 1,
+    val: 1,
+    hash: 1,
+    map: [[], [{ k: 1, v: 1 }], [], []],
+    exp: 'put(1, 1): compute 1 % 4 = 1, then append the pair into bucket 1.',
+    reason: 'Bucket 1 is empty, so the new pair can be inserted directly.',
+    invariant: 'After hashing, we only inspect and modify the selected bucket.',
+    action: 'write',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:1', kind: 'write' },
+      { target: 'pair:1', kind: 'write' },
+    ],
+  },
+  {
+    id: 'put-2',
+    p: 1,
+    op: 'put',
+    key: 2,
+    val: 2,
+    hash: 2,
+    map: [[], [{ k: 1, v: 1 }], [{ k: 2, v: 2 }], []],
+    exp: 'put(2, 2): compute 2 % 4 = 2, then append [2, 2] into bucket 2.',
+    reason: 'This key hashes to a different bucket, so no collision handling is needed yet.',
+    invariant: 'Different hash outputs route operations to different buckets.',
+    action: 'write',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:2', kind: 'write' },
+      { target: 'pair:2', kind: 'write' },
+    ],
+  },
+  {
+    id: 'get-1',
+    p: 2,
+    op: 'get',
+    key: 1,
+    val: null,
+    hash: 1,
+    map: [[], [{ k: 1, v: 1 }], [{ k: 2, v: 2 }], []],
+    exp: 'get(1): hash to bucket 1 and scan its pairs until key 1 is found.',
+    reason: 'Lookup only needs to search within the bucket selected by the hash function.',
+    invariant: 'If the key exists, it must be inside its hashed bucket.',
+    action: 'confirm',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:1', kind: 'focus' },
+      { target: 'pair:1', kind: 'match' },
+    ],
+  },
+  {
+    id: 'get-3-miss',
+    p: 3,
+    op: 'get',
+    key: 3,
+    val: null,
+    hash: 3,
+    map: [[], [{ k: 1, v: 1 }], [{ k: 2, v: 2 }], []],
+    exp: 'get(3): hash to bucket 3. The bucket is empty, so the key is missing and we return -1.',
+    reason: 'An empty bucket proves there are no stored pairs with that hash.',
+    invariant: 'No search outside the hashed bucket is needed.',
+    action: 'confirm',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:3', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'update-2',
+    p: 4,
+    op: 'put',
+    key: 2,
+    val: 1,
+    hash: 2,
+    map: [[], [{ k: 1, v: 1 }], [{ k: 2, v: 1 }], []],
+    exp: 'put(2, 1): hash to bucket 2, find existing key 2, and update its value from 2 to 1.',
+    reason: 'HashMap put overwrites the value when the key already exists instead of appending a duplicate key.',
+    invariant: 'Each key appears at most once within the map.',
+    action: 'write',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:2', kind: 'focus' },
+      { target: 'pair:2', kind: 'write' },
+    ],
+  },
+  {
+    id: 'get-2-hit',
+    p: 5,
+    op: 'get',
+    key: 2,
+    val: null,
+    hash: 2,
+    map: [[], [{ k: 1, v: 1 }], [{ k: 2, v: 1 }], []],
+    exp: 'get(2): bucket 2 now stores the updated pair, so the returned value is 1.',
+    reason: 'The previous put replaced the value in place, and get reads that latest stored state.',
+    invariant: 'Get always returns the most recently written value for a key.',
+    action: 'confirm',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:2', kind: 'focus' },
+      { target: 'pair:2', kind: 'match' },
+    ],
+  },
+  {
+    id: 'remove-2',
+    p: 6,
+    op: 'remove',
+    key: 2,
+    val: null,
+    hash: 2,
+    map: [[], [{ k: 1, v: 1 }], [], []],
+    exp: 'remove(2): hash to bucket 2, locate key 2, and delete the entire pair from that bucket.',
+    reason: 'Removing a key only changes its own bucket; the rest of the table is unaffected.',
+    invariant: 'After removal, future lookups for that key should fail unless it is inserted again.',
+    action: 'discard',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:2', kind: 'discard' },
+      { target: 'pair:2', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'get-2-miss',
+    p: 7,
+    op: 'get',
+    key: 2,
+    val: null,
+    hash: 2,
+    map: [[], [{ k: 1, v: 1 }], [], []],
+    exp: 'get(2): bucket 2 is now empty, so the removed key is no longer present.',
+    reason: 'Once the pair is deleted, the bucket search finds nothing and returns -1.',
+    invariant: 'A removed key should no longer be retrievable.',
+    action: 'confirm',
+    highlights: [
+      { target: 'operation-panel', kind: 'focus' },
+      { target: 'hash-panel', kind: 'compare' },
+      { target: 'bucket:2', kind: 'confirmed' },
+    ],
+  },
+];
+
+const emptyBuckets = [[], [], [], []];
+---
+
+<design-hashmap-visuals>
+  <AlgorithmPlayer title="Design HashMap (Buckets = 4)" steps={steps}>
+    <div class="stats-row hm-stats">
+      <div class="stat-box" data-teach-target="operation-panel">
+        <span class="stat-label">Operation</span>
+        <span class="stat-val hm-op hm-op-val">-</span>
+      </div>
+      <div class="hm-arrow">→</div>
+      <div class="stat-box highlight" data-teach-target="hash-panel">
+        <span class="stat-label">Hash Function</span>
+        <span class="stat-val hm-hash hm-hash-val">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row hm-layout">
+      <p class="anim-label">Underlying Array of Lists (Chaining Pairs)</p>
+
+      <div class="array-row hm-buckets" data-teach-target="hashmap-buckets">
+        {emptyBuckets.map((_, i) => (
+          <div class="array-col hm-bucket-col">
+            <div
+              class="array-cell hm-bucket-cell"
+              data-idx={i}
+              data-teach-target={`bucket:${i}`}
+            >
+              <!-- Dynamic pairs -->
+            </div>
+            <span class="cell-idx hm-bucket-label">Bucket {i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</design-hashmap-visuals>
+
+<script>
+  class DesignHashMapVisuals extends HTMLElement {
+    connectedCallback() {
+      this.opEl = this.querySelector(".hm-op");
+      this.hashEl = this.querySelector(".hm-hash");
+      this.bucketCells = Array.from(this.querySelectorAll(".hm-bucket-cell"));
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.opEl) {
+          if (step.op === 'init') this.opEl.textContent = 'Init';
+          else if (step.op === 'put') this.opEl.textContent = `put(${step.key}, ${step.val})`;
+          else this.opEl.textContent = `${step.op}(${step.key})`;
+
+          if (step.op === 'put') this.opEl.style.color = 'var(--status-easy)';
+          else if (step.op === 'remove') this.opEl.style.color = 'var(--status-hard)';
+          else if (step.op === 'get') this.opEl.style.color = 'var(--status-info)';
+          else this.opEl.style.color = 'var(--text)';
+        }
+
+        if (this.hashEl) {
+          if (step.hash !== null) {
+            this.hashEl.textContent = `${step.key} % 4 = ${step.hash}`;
+          } else {
+            this.hashEl.textContent = "-";
+          }
+        }
+
+        this.bucketCells.forEach((cell, i) => {
+          const bucketPairs = step.map[i];
+
+          if (bucketPairs && bucketPairs.length > 0) {
+            cell.innerHTML = bucketPairs
+              .map(
+                (pair) => `
+                  <div class="hm-pair" data-teach-target="pair:${pair.k}">
+                    <span class="hm-pair-key">K:${pair.k}</span>
+                    <span class="hm-pair-sep">|</span>
+                    <span class="hm-pair-val">V:${pair.v}</span>
+                  </div>
+                `,
+              )
+              .join("");
+          } else {
+            cell.innerHTML = "";
+          }
+
+          if (step.hash === i) {
+            cell.classList.add("hm-bucket-active");
+          } else {
+            cell.classList.remove("hm-bucket-active");
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('design-hashmap-visuals')) {
+    customElements.define('design-hashmap-visuals', DesignHashMapVisuals);
+  }
+</script>
+
+<style>
+  design-hashmap-visuals {
+    display: block;
+  }
+
+  .hm-stats {
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+
+  .hm-op-val,
+  .hm-hash-val {
+    font-size: 1rem;
+  }
+
+  .hm-op-val {
+    color: var(--status-info);
+  }
+
+  .hm-hash-val {
+    font-family: var(--font-mono);
+  }
+
+  .hm-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--muted);
+    font-size: 1.5rem;
+  }
+
+  .hm-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hm-buckets {
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+
+  .hm-bucket-col {
+    align-items: center;
+    min-width: 5rem;
+  }
+
+  .hm-bucket-cell {
+    min-height: 4rem;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.5rem;
+    background: var(--surface-strong);
+    border: 2px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .hm-bucket-label {
+    margin-top: 0.5rem;
+    font-weight: bold;
+  }
+
+  .hm-pair {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.3rem 0.5rem;
+    margin-bottom: 0.4rem;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    animation: pop-in 0.2s;
+  }
+
+  .hm-pair:last-child {
+    margin-bottom: 0;
+  }
+
+  .hm-pair-key {
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .hm-pair-sep {
+    color: var(--muted);
+  }
+
+  .hm-pair-val {
+    color: var(--status-easy);
+  }
+
+  .hm-bucket-active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
+  }
+</style>

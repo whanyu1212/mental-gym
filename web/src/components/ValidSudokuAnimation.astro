@@ -1,0 +1,411 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const board = [
+  ['5', '3', '.', '.', '7', '.', '.', '.', '.'],
+  ['6', '.', '.', '1', '9', '5', '.', '.', '.'],
+  ['.', '9', '8', '.', '.', '.', '.', '6', '.'],
+  ['8', '.', '.', '.', '6', '.', '.', '.', '3'],
+  ['4', '.', '.', '8', '.', '3', '.', '.', '1'],
+  ['7', '.', '.', '.', '2', '.', '.', '.', '6'],
+  ['.', '6', '.', '.', '.', '.', '2', '8', '.'],
+  ['.', '.', '.', '4', '1', '9', '.', '.', '5'],
+  ['.', '.', '.', '.', '8', '.', '.', '7', '9'],
+];
+
+const steps = [
+  {
+    r: 0,
+    c: 0,
+    val: '5',
+    valid: true,
+    phase: 'scan',
+    action: 'write',
+    rowSet: ['5'],
+    colSet: ['5'],
+    boxSet: ['5'],
+    conflict: '',
+    exp: "Start at (0,0)='5'. Add to Row 0, Col 0, and Box 0 sets.",
+    reason: 'Each seen digit must be unique in its row, column, and 3x3 box.',
+    invariant: 'No duplicate exists in any tracked set so far.',
+    formula: 'key checks: row[r], col[c], box[Math.floor(r/3),Math.floor(c/3)]',
+    decision: "Insert '5' into all three sets.",
+    targets: ['board-box', 'row-set-box', 'col-set-box', 'box-set-box', 'cell-0-0'],
+  },
+  {
+    r: 0,
+    c: 1,
+    val: '3',
+    valid: true,
+    phase: 'scan',
+    action: 'write',
+    rowSet: ['5', '3'],
+    colSet: ['3'],
+    boxSet: ['5', '3'],
+    conflict: '',
+    exp: "(0,1)='3' is not present in row/col/box sets. Add it.",
+    reason: 'Unique value passes all three constraints.',
+    invariant: 'Sets remain duplicate-free.',
+    formula: "if val not in rowSet && colSet && boxSet -> insert",
+    decision: "Insert '3'.",
+    targets: ['cell-0-1', 'row-set-box', 'col-set-box', 'box-set-box'],
+  },
+  {
+    r: 0,
+    c: 2,
+    val: '.',
+    valid: true,
+    phase: 'scan',
+    action: 'discard',
+    rowSet: ['5', '3'],
+    colSet: [],
+    boxSet: ['5', '3'],
+    conflict: '',
+    exp: "(0,2) is empty '.', so skip.",
+    reason: 'Only filled digits participate in validity checks.',
+    invariant: 'Skipping empties does not affect set correctness.',
+    formula: "if cell === '.' -> continue",
+    decision: 'Move to next cell.',
+    targets: ['cell-0-2'],
+  },
+  {
+    r: 0,
+    c: 4,
+    val: '7',
+    valid: true,
+    phase: 'scan',
+    action: 'write',
+    rowSet: ['5', '3', '7'],
+    colSet: ['7'],
+    boxSet: ['7'],
+    conflict: '',
+    exp: "(0,4)='7' belongs to top-middle box. Add successfully.",
+    reason: 'No duplicate in row 0, column 4, or its 3x3 box.',
+    invariant: 'All processed non-empty cells remain valid.',
+    formula: 'box index = [0,1]',
+    decision: "Insert '7'.",
+    targets: ['cell-0-4', 'row-set-box', 'col-set-box', 'box-set-box'],
+  },
+  {
+    r: 1,
+    c: 0,
+    val: '6',
+    valid: true,
+    phase: 'scan',
+    action: 'write',
+    rowSet: ['6'],
+    colSet: ['5', '6'],
+    boxSet: ['5', '3', '6'],
+    conflict: '',
+    exp: "At (1,0)='6'. Add to row 1, col 0, and top-left box sets.",
+    reason: 'Still no repeated value in any constraint group.',
+    invariant: 'Top-left box set now tracks all seen digits there.',
+    formula: "row1 add '6', col0 add '6', box0 add '6'",
+    decision: "Insert '6'.",
+    targets: ['cell-1-0', 'row-set-box', 'col-set-box', 'box-set-box'],
+  },
+  {
+    r: 1,
+    c: 5,
+    val: '5',
+    valid: true,
+    phase: 'scan',
+    action: 'write',
+    rowSet: ['6', '1', '9', '5'],
+    colSet: ['5'],
+    boxSet: ['7', '1', '9', '5'],
+    conflict: '',
+    exp: "(1,5)='5' is valid for current row/col/box context.",
+    reason: 'No duplicates detected in this local check.',
+    invariant: 'Board remains valid up to this inspected point.',
+    formula: "candidate '5' not present before insertion",
+    decision: "Insert '5'.",
+    targets: ['cell-1-5', 'row-set-box', 'col-set-box', 'box-set-box'],
+  },
+  {
+    r: 2,
+    c: 2,
+    val: '8',
+    valid: true,
+    phase: 'scan',
+    action: 'write',
+    rowSet: ['9', '8'],
+    colSet: ['8'],
+    boxSet: ['5', '3', '6', '9', '8'],
+    conflict: '',
+    exp: "(2,2)='8' is currently valid in row/col/box.",
+    reason: 'This 8 is the first 8 observed in top-left box so far.',
+    invariant: 'Sets represent seen digits without repetition.',
+    formula: "insert '8' if absent in all sets",
+    decision: "Insert '8'.",
+    targets: ['cell-2-2', 'row-set-box', 'col-set-box', 'box-set-box'],
+  },
+  {
+    r: 2,
+    c: 2,
+    val: '8',
+    valid: false,
+    phase: 'conflict',
+    action: 'confirm',
+    rowSet: ['9', '8'],
+    colSet: ['8'],
+    boxSet: ['5', '3', '6', '9', '8'],
+    conflict: 'box',
+    exp: "If (0,2) were also '8', top-left 3x3 box would contain duplicate 8 -> invalid.",
+    reason: 'Sudoku rule forbids duplicate digits inside any 3x3 box.',
+    invariant: 'Any single duplicate immediately invalidates board.',
+    formula: "if val in boxSet -> invalid",
+    decision: 'Return invalid (demonstration conflict).',
+    targets: ['cell-2-2', 'box-set-box', 'status-box'],
+  },
+];
+---
+
+<valid-sudoku-visuals>
+  <AlgorithmPlayer title="9x9 Sudoku Board" steps={steps}>
+    <div class="stats-row vs-meta-row">
+      <div class="stat-box vs-mode-box">
+        <span class="stat-label">Mode</span>
+        <span class="stat-val vs-mode-val">scan</span>
+      </div>
+      <div class="stat-box vs-status-box" data-teach-target="status-box">
+        <span class="stat-label">Validity</span>
+        <span class="stat-val vs-status-val">Valid so far</span>
+      </div>
+    </div>
+
+    <div class="anim-row vs-layout">
+      <div class="board-col">
+        <p class="anim-label">Sudoku Board</p>
+        <div class="sudoku-grid vs-grid" data-teach-target="board-box">
+          {board.map((row, r) =>
+            row.map((cell, c) => (
+              <div class="sudoku-cell vs-cell" data-r={r} data-c={c} data-teach-target={`cell-${r}-${c}`}>
+                {cell !== '.' ? cell : ''}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div class="sets-col">
+        <div class="set-group" data-teach-target="row-set-box">
+          <p class="anim-label">Current Row Set</p>
+          <div class="hashmap-row vs-row-set"></div>
+        </div>
+        <div class="set-group" data-teach-target="col-set-box">
+          <p class="anim-label">Current Column Set</p>
+          <div class="hashmap-row vs-col-set"></div>
+        </div>
+        <div class="set-group highlight" data-teach-target="box-set-box">
+          <p class="anim-label">Current 3x3 Box Set</p>
+          <div class="hashmap-row vs-box-set"></div>
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</valid-sudoku-visuals>
+
+<script>
+  class ValidSudokuVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.vs-cell'));
+      this.rowSetEl = this.querySelector('.vs-row-set');
+      this.colSetEl = this.querySelector('.vs-col-set');
+      this.boxSetEl = this.querySelector('.vs-box-set');
+      this.modeVal = this.querySelector('.vs-mode-val');
+      this.statusVal = this.querySelector('.vs-status-val');
+      this.statusBox = this.querySelector('.vs-status-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        if (this.modeVal) this.modeVal.textContent = s.phase;
+        if (this.statusVal) {
+          this.statusVal.textContent = s.valid ? 'Valid so far' : 'Conflict detected';
+        }
+
+        this.statusBox?.classList.remove('ok', 'bad');
+        this.statusBox?.classList.add(s.valid ? 'ok' : 'bad');
+
+        this.cells.forEach((cell) => {
+          const r = parseInt(cell.dataset.r, 10);
+          const c = parseInt(cell.dataset.c, 10);
+
+          cell.className = 'sudoku-cell vs-cell';
+
+          if (r === s.r && c === s.c) {
+            cell.classList.add('active');
+            if (!s.valid) cell.classList.add('conflict');
+          } else if (r === s.r) {
+            cell.classList.add('hl-row');
+          } else if (c === s.c) {
+            cell.classList.add('hl-col');
+          }
+
+          const boxR = Math.floor(r / 3);
+          const boxC = Math.floor(c / 3);
+          const activeBoxR = Math.floor(s.r / 3);
+          const activeBoxC = Math.floor(s.c / 3);
+
+          if (boxR === activeBoxR && boxC === activeBoxC) {
+            cell.classList.add('hl-box');
+          }
+        });
+
+        const buildSetHTML = (arr, conflictType) => {
+          if (!arr || arr.length === 0) return "<span class='hashmap-empty'>empty</span>";
+          return arr
+            .map((num) => {
+              const isConflict = !s.valid && conflictType && num === s.val;
+              return `<span class='hashmap-entry ${isConflict ? 'conflict-entry' : ''}'>'${num}'</span>`;
+            })
+            .join('');
+        };
+
+        if (this.rowSetEl) this.rowSetEl.innerHTML = buildSetHTML(s.rowSet, s.conflict === 'row');
+        if (this.colSetEl) this.colSetEl.innerHTML = buildSetHTML(s.colSet, s.conflict === 'col');
+        if (this.boxSetEl) this.boxSetEl.innerHTML = buildSetHTML(s.boxSet, s.conflict === 'box');
+      });
+    }
+  }
+
+  if (!customElements.get('valid-sudoku-visuals')) {
+    customElements.define('valid-sudoku-visuals', ValidSudokuVisuals);
+  }
+</script>
+
+<style>
+  valid-sudoku-visuals {
+    display: block;
+  }
+
+  .vs-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .vs-status-box.ok {
+    border-color: color-mix(in srgb, var(--status-easy) 50%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .vs-status-box.ok .stat-val {
+    color: var(--status-easy);
+  }
+
+  .vs-status-box.bad {
+    border-color: color-mix(in srgb, var(--status-hard) 55%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+  }
+
+  .vs-status-box.bad .stat-val {
+    color: var(--status-hard);
+  }
+
+  .vs-layout {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1.8rem);
+    grid-template-rows: repeat(9, 1.8rem);
+    border: 2px solid #555;
+    background: #000;
+    gap: 1px;
+    width: fit-content;
+  }
+
+  .sudoku-cell {
+    background: #151515;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .sudoku-cell:nth-child(3n) {
+    border-right: 2px solid #555;
+  }
+
+  .sudoku-cell:nth-child(9n) {
+    border-right: none;
+  }
+
+  .sudoku-grid > :nth-child(n + 19):nth-child(-n + 27),
+  .sudoku-grid > :nth-child(n + 46):nth-child(-n + 54) {
+    border-bottom: 2px solid #555;
+  }
+
+  .sudoku-cell.hl-row {
+    background: color-mix(in srgb, var(--status-info) 10%, transparent);
+  }
+
+  .sudoku-cell.hl-col {
+    background: color-mix(in srgb, var(--status-info) 10%, transparent);
+  }
+
+  .sudoku-cell.hl-box {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+  }
+
+  .sudoku-cell.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+    box-shadow: 0 0 10px var(--accent);
+    z-index: 10;
+  }
+
+  .sudoku-cell.conflict {
+    background: var(--status-hard);
+    box-shadow: 0 0 10px var(--status-hard);
+    color: #000;
+  }
+
+  .sets-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .set-group {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--surface-base);
+  }
+
+  .set-group.highlight {
+    border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  .conflict-entry {
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    25% {
+      transform: translateX(-4px);
+    }
+
+    75% {
+      transform: translateX(4px);
+    }
+  }
+</style>

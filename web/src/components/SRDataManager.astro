@@ -1,0 +1,246 @@
+---
+---
+
+<sr-data-manager>
+  <div class="sr-manager">
+    <div class="sr-manager-row">
+      <span class="sr-summary"></span>
+      <div class="sr-actions">
+        <button class="sr-btn sr-export">Export</button>
+        <label class="sr-btn sr-import-label">
+          Import
+          <input type="file" accept=".json" class="sr-import-input" hidden />
+        </label>
+        <button class="sr-btn sr-reset">Reset</button>
+      </div>
+    </div>
+    <p class="sr-feedback"></p>
+  </div>
+
+  <!-- Reset confirmation dialog -->
+  <dialog class="sr-dialog">
+    <div class="sr-dialog-body">
+      <p class="sr-dialog-title">Reset all review progress?</p>
+      <p class="sr-dialog-text">This will permanently delete all spaced repetition data. This cannot be undone.</p>
+      <div class="sr-dialog-actions">
+        <button class="sr-btn sr-dialog-cancel">Cancel</button>
+        <button class="sr-btn sr-dialog-confirm">Reset</button>
+      </div>
+    </div>
+  </dialog>
+</sr-data-manager>
+
+<script>
+  import { getAllRecords, exportAll, importAll, resetDatabase } from "../scripts/sr-db";
+  import { todayISO } from "../scripts/sr-scheduler";
+
+  class SRDataManagerElement extends HTMLElement {
+    connectedCallback() {
+      const summaryEl = this.querySelector(".sr-summary") as HTMLElement;
+      const feedbackEl = this.querySelector(".sr-feedback") as HTMLElement;
+      const exportBtn = this.querySelector(".sr-export") as HTMLButtonElement;
+      const importInput = this.querySelector(".sr-import-input") as HTMLInputElement;
+      const resetBtn = this.querySelector(".sr-reset") as HTMLButtonElement;
+      const dialog = this.querySelector(".sr-dialog") as HTMLDialogElement;
+      const cancelBtn = this.querySelector(".sr-dialog-cancel") as HTMLButtonElement;
+      const confirmBtn = this.querySelector(".sr-dialog-confirm") as HTMLButtonElement;
+
+      const showFeedback = (msg: string) => {
+        feedbackEl.textContent = msg;
+        feedbackEl.classList.add("visible");
+        setTimeout(() => feedbackEl.classList.remove("visible"), 3000);
+      };
+
+      const updateSummary = async () => {
+        const records = await getAllRecords();
+        if (records.length === 0) {
+          summaryEl.textContent = "No review data yet. Rate a problem to start tracking.";
+          return;
+        }
+        const today = todayISO();
+        const due = records.filter((r) => r.dueDate <= today).length;
+        summaryEl.textContent = `${records.length} problems tracked${due > 0 ? ` · ${due} due` : ""}`;
+      };
+
+      updateSummary();
+
+      // Export
+      exportBtn.addEventListener("click", async () => {
+        const records = await getAllRecords();
+        if (records.length === 0) {
+          showFeedback("Nothing to export.");
+          return;
+        }
+        const json = exportAll(records);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `mental-gym-sr-${todayISO()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showFeedback(`Exported ${records.length} records.`);
+      });
+
+      // Import
+      importInput.addEventListener("change", async () => {
+        const file = importInput.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const count = await importAll(text);
+          showFeedback(`Imported ${count} records.`);
+          await updateSummary();
+        } catch (e: any) {
+          showFeedback(`Import failed: ${e.message}`);
+        }
+        importInput.value = "";
+      });
+
+      // Reset
+      resetBtn.addEventListener("click", () => {
+        dialog.showModal();
+      });
+
+      cancelBtn.addEventListener("click", () => {
+        dialog.close();
+      });
+
+      confirmBtn.addEventListener("click", async () => {
+        await resetDatabase();
+        dialog.close();
+        showFeedback("All review data cleared.");
+        await updateSummary();
+      });
+    }
+  }
+
+  if (!customElements.get("sr-data-manager")) {
+    customElements.define("sr-data-manager", SRDataManagerElement);
+  }
+</script>
+
+<style>
+  sr-data-manager {
+    display: block;
+  }
+
+  .sr-manager {
+    margin-bottom: 1.5rem;
+  }
+
+  .sr-manager-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .sr-summary {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+  }
+
+  .sr-actions {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .sr-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    font-family: Inter, sans-serif;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .sr-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .sr-import-label {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .sr-reset {
+    color: var(--status-hard);
+    border-color: color-mix(in srgb, var(--status-hard) 30%, transparent);
+  }
+  .sr-reset:hover {
+    color: var(--status-hard);
+    border-color: var(--status-hard);
+  }
+
+  .sr-feedback {
+    margin: 0.5rem 0 0;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+    opacity: 0;
+    transition: opacity 0.2s;
+    height: 1rem;
+  }
+  .sr-feedback.visible {
+    opacity: 1;
+  }
+
+  /* Reset dialog */
+  .sr-dialog {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 0;
+    max-width: 400px;
+    width: 90vw;
+    color: var(--text);
+  }
+
+  .sr-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .sr-dialog-body {
+    padding: 1.5rem;
+  }
+
+  .sr-dialog-title {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    font-family: var(--font-serif);
+    font-weight: 600;
+  }
+
+  .sr-dialog-text {
+    margin: 0 0 1.25rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+    line-height: 1.5;
+  }
+
+  .sr-dialog-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .sr-dialog-confirm {
+    color: var(--status-hard);
+    border-color: color-mix(in srgb, var(--status-hard) 40%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
+  }
+  .sr-dialog-confirm:hover {
+    color: #fff;
+    border-color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 30%, transparent);
+  }
+</style>

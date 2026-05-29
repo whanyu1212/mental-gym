@@ -1,0 +1,456 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const words = ['lint', 'code', 'love', 'you'];
+const encodedString = '4#lint4#code4#love3#you';
+
+const steps = [
+  {
+    phase: 'encode',
+    i: -1,
+    encStr: '',
+    decoded: [],
+    pointer: 0,
+    len: null,
+    action: 'write',
+    exp: "ENCODE: Store each string as length + '#' + content.",
+    reason: "Length prefix avoids ambiguity even when strings contain '#'.",
+    invariant: "Encoded stream is concatenation of self-delimiting chunks.",
+    formula: "chunk = len(s) + '#' + s",
+    decision: 'Start with empty payload.',
+    targets: ['phase-box', 'payload-box', 'rule-box'],
+  },
+  {
+    phase: 'encode',
+    i: 0,
+    encStr: '4#lint',
+    decoded: [],
+    pointer: 0,
+    len: 4,
+    activeStr: 'lint',
+    action: 'write',
+    exp: "Encode 'lint' -> append '4#lint'.",
+    reason: 'Length 4 tells decoder exactly how many characters to read.',
+    invariant: 'Every appended chunk is parseable independently.',
+    formula: "len('lint') = 4",
+    decision: "payload += '4#lint'",
+    targets: ['in-0', 'payload-box'],
+  },
+  {
+    phase: 'encode',
+    i: 1,
+    encStr: '4#lint4#code',
+    decoded: [],
+    pointer: 6,
+    len: 4,
+    activeStr: 'code',
+    action: 'write',
+    exp: "Encode 'code' -> append '4#code'.",
+    reason: 'Chunk boundaries are explicit via length + delimiter.',
+    invariant: 'Decoder can continue from exact next index.',
+    formula: "len('code') = 4",
+    decision: "payload += '4#code'",
+    targets: ['in-1', 'payload-box'],
+  },
+  {
+    phase: 'encode',
+    i: 2,
+    encStr: '4#lint4#code4#love',
+    decoded: [],
+    pointer: 12,
+    len: 4,
+    activeStr: 'love',
+    action: 'write',
+    exp: "Encode 'love' -> append '4#love'.",
+    reason: 'Same chunk format for every string.',
+    invariant: 'Encoding rule is uniform across all items.',
+    formula: "len('love') = 4",
+    decision: "payload += '4#love'",
+    targets: ['in-2', 'payload-box'],
+  },
+  {
+    phase: 'encode',
+    i: 3,
+    encStr: encodedString,
+    decoded: [],
+    pointer: 18,
+    len: 3,
+    activeStr: 'you',
+    action: 'write',
+    exp: "Encode 'you' -> append '3#you'. Encoding complete.",
+    reason: 'Final payload now contains all chunks back-to-back.',
+    invariant: 'Total payload remains fully decodable.',
+    formula: "len('you') = 3",
+    decision: "payload += '3#you'",
+    targets: ['in-3', 'payload-box'],
+  },
+
+  {
+    phase: 'decode',
+    i: -1,
+    pointer: 0,
+    len: null,
+    encStr: encodedString,
+    decoded: [],
+    action: 'compare',
+    exp: 'DECODE: Start pointer at index 0 and parse one chunk at a time.',
+    reason: "Read digits until '#', then read that many characters.",
+    invariant: 'Pointer always moves to next chunk start.',
+    formula: "while p < n: read len, then substring",
+    decision: 'Initialize decode pointer.',
+    targets: ['phase-box', 'payload-box', 'rule-box'],
+  },
+  {
+    phase: 'decode',
+    i: 0,
+    pointer: 0,
+    len: 4,
+    encStr: encodedString,
+    decoded: ['lint'],
+    activeStr: 'lint',
+    action: 'compare',
+    exp: "Read length 4, then read next 4 chars -> 'lint'.",
+    reason: 'Length tells exact slice width for this token.',
+    invariant: 'Decoded array preserves original order.',
+    formula: 'p=0 -> chunk 4#lint',
+    decision: "append 'lint'",
+    targets: ['payload-box', 'out-0'],
+  },
+  {
+    phase: 'decode',
+    i: 1,
+    pointer: 6,
+    len: 4,
+    encStr: encodedString,
+    decoded: ['lint', 'code'],
+    activeStr: 'code',
+    action: 'compare',
+    exp: "Read length 4, then read next 4 chars -> 'code'.",
+    reason: 'Pointer jumps exactly by len(length)+1+len.',
+    invariant: 'No scanning ambiguity across chunks.',
+    formula: 'p=6 -> chunk 4#code',
+    decision: "append 'code'",
+    targets: ['payload-box', 'out-1'],
+  },
+  {
+    phase: 'decode',
+    i: 2,
+    pointer: 12,
+    len: 4,
+    encStr: encodedString,
+    decoded: ['lint', 'code', 'love'],
+    activeStr: 'love',
+    action: 'compare',
+    exp: "Read length 4, then read next 4 chars -> 'love'.",
+    reason: 'Chunk parser repeats deterministically.',
+    invariant: 'Each parsed chunk adds one decoded string.',
+    formula: 'p=12 -> chunk 4#love',
+    decision: "append 'love'",
+    targets: ['payload-box', 'out-2'],
+  },
+  {
+    phase: 'decode',
+    i: 3,
+    pointer: 18,
+    len: 3,
+    encStr: encodedString,
+    decoded: ['lint', 'code', 'love', 'you'],
+    activeStr: 'you',
+    action: 'compare',
+    exp: "Read length 3, then read next 3 chars -> 'you'.",
+    reason: 'Final chunk consumed with same rule.',
+    invariant: 'Decoder never needs separators between chunks beyond #.',
+    formula: 'p=18 -> chunk 3#you',
+    decision: "append 'you'",
+    targets: ['payload-box', 'out-3'],
+  },
+  {
+    phase: 'done',
+    i: -1,
+    pointer: 23,
+    len: null,
+    encStr: encodedString,
+    decoded: ['lint', 'code', 'love', 'you'],
+    action: 'confirm',
+    exp: 'Decoding complete. Recovered original array exactly.',
+    reason: 'Length-prefixed framing is lossless and reversible.',
+    invariant: 'decode(encode(strs)) == strs',
+    formula: "['lint','code','love','you']",
+    decision: 'Return decoded list.',
+    targets: ['result-box', 'payload-box'],
+  },
+];
+---
+
+<encode-decode-visuals>
+  <AlgorithmPlayer title='strs = ["lint", "code", "love", "you"]' steps={steps}>
+    <div class="stats-row ed-meta-row">
+      <div class="stat-box ed-phase-box" data-teach-target="phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val ed-phase-val">encode</span>
+      </div>
+      <div class="stat-box ed-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">len#string framing</span>
+      </div>
+      <div class="stat-box ed-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val ed-result-val">In Progress</span>
+      </div>
+    </div>
+
+    <div class="anim-row ed-layout">
+      <div class="ed-col-input">
+        <p class="anim-label">Input Array</p>
+        <div class="array-row ed-input">
+          {words.map((w, i) => (
+            <div class="array-cell ed-in-cell" data-idx={i} data-teach-target={`in-${i}`}>
+              <span class="cell-val">"{w}"</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="ed-col-payload">
+        <p class="anim-label highlight-label">Encoded String Network Payload</p>
+        <div class="ed-encoded-box" data-teach-target="payload-box"></div>
+      </div>
+
+      <div class="ed-col-output">
+        <p class="anim-label ed-output-label">Decoded Array</p>
+        <div class="array-row ed-output">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</encode-decode-visuals>
+
+<script>
+  class EncodeDecodeVisuals extends HTMLElement {
+    connectedCallback() {
+      this.inCells = Array.from(this.querySelectorAll('.ed-in-cell'));
+      this.encBox = this.querySelector('.ed-encoded-box');
+      this.outContainer = this.querySelector('.ed-output');
+      this.phaseVal = this.querySelector('.ed-phase-val');
+      this.resultVal = this.querySelector('.ed-result-val');
+      this.phaseBox = this.querySelector('.ed-phase-box');
+      this.resultBox = this.querySelector('.ed-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        if (this.phaseVal) this.phaseVal.textContent = s.phase;
+        if (this.resultVal) {
+          this.resultVal.textContent = s.phase === 'done' ? 'Complete' : 'In Progress';
+        }
+
+        this.phaseBox?.classList.remove('phase-encode', 'phase-decode', 'phase-done');
+        if (s.phase === 'encode') this.phaseBox?.classList.add('phase-encode');
+        if (s.phase === 'decode') this.phaseBox?.classList.add('phase-decode');
+        if (s.phase === 'done') this.phaseBox?.classList.add('phase-done');
+
+        this.resultBox?.classList.remove('confirmed');
+        if (s.phase === 'done') this.resultBox?.classList.add('confirmed');
+
+        this.inCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+          if (s.phase === 'encode') {
+            if (i < s.i) valSpan.classList.add('visited');
+            if (i === s.i) valSpan.classList.add('active-eval');
+          } else {
+            valSpan.classList.add('visited');
+          }
+        });
+
+        if (this.encBox) {
+          if (!s.encStr) {
+            this.encBox.innerHTML =
+              "<span class='ed-empty'>Empty</span>";
+          } else if (s.phase === 'decode' && s.pointer !== undefined && s.len) {
+            const prefix = s.encStr.substring(0, s.pointer);
+            const lenDigits = String(s.len).length;
+            const chunkLen = lenDigits + 1 + s.len;
+            const activeChunk = s.encStr.substring(s.pointer, s.pointer + chunkLen);
+            const suffix = s.encStr.substring(s.pointer + chunkLen);
+
+            this.encBox.innerHTML = `
+              <span class="ed-faded">${prefix}</span>
+              <span class="ed-active-chunk">${activeChunk}</span>
+              <span class="ed-faded">${suffix}</span>
+            `;
+          } else {
+            this.encBox.innerHTML = `<span>${s.encStr}</span>`;
+          }
+        }
+
+        if (this.outContainer) {
+          if (!s.decoded || s.decoded.length === 0) {
+            this.outContainer.innerHTML =
+              "<div class='ed-empty-list'>Empty</div>";
+          } else {
+            this.outContainer.innerHTML = s.decoded
+              .map((w, i) => {
+                const isJustAdded = s.phase === 'decode' && i === s.i;
+                return `
+                  <div class="array-cell ${isJustAdded ? 'active-out' : ''}" data-teach-target="out-${i}">
+                    <span class="cell-val ed-out-val">"${w}"</span>
+                  </div>
+                `;
+              })
+              .join('');
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('encode-decode-visuals')) {
+    customElements.define('encode-decode-visuals', EncodeDecodeVisuals);
+  }
+</script>
+
+<style>
+  encode-decode-visuals {
+    display: block;
+  }
+
+  .ed-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .ed-layout {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+  }
+
+  .ed-col-input,
+  .ed-col-output {
+    flex: 1;
+    max-width: 200px;
+  }
+
+  .ed-col-payload {
+    flex: 2;
+  }
+
+  .ed-input,
+  .ed-output {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ed-in-cell,
+  .ed-output .array-cell {
+    width: auto;
+    padding: 0.5rem 1rem;
+  }
+
+  .highlight-label {
+    color: var(--accent) !important;
+  }
+
+  .ed-output-label {
+    color: var(--status-easy);
+  }
+
+  .ed-encoded-box {
+    background: var(--surface-strong);
+    border: 1px dashed var(--accent);
+    padding: 1.5rem;
+    border-radius: 4px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    word-break: break-all;
+  }
+
+  .ed-empty {
+    opacity: 0.3;
+    font-style: italic;
+    font-size: 0.9rem;
+  }
+
+  .ed-faded {
+    opacity: 0.45;
+  }
+
+  .ed-active-chunk {
+    background: color-mix(in srgb, var(--status-medium) 20%, transparent);
+    border-radius: 2px;
+    padding: 0.2rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .cell-val.active-eval {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateX(4px);
+  }
+
+  .ed-out-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .active-out .cell-val {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent) !important;
+    box-shadow: var(--shadow-sm);
+    transform: translateX(-4px);
+    animation: slide-left 0.3s ease-out;
+  }
+
+  .ed-empty-list {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .ed-phase-box.phase-encode {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .ed-phase-box.phase-decode {
+    border-color: color-mix(in srgb, var(--status-medium) 55%, transparent);
+  }
+
+  .ed-phase-box.phase-done {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .ed-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  @keyframes slide-left {
+    from {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateX(-4px);
+      opacity: 1;
+    }
+  }
+</style>

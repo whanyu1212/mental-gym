@@ -1,0 +1,469 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const nums = [1, 3, -1, -3, 5, 3, 6, 7];
+const k = 3;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'intro',
+    i: -1,
+    deque: [],
+    res: [],
+    window: [-1, -1],
+    exp: 'We maintain a monotonic decreasing deque of indices so the front always points to the current window maximum.',
+    reason: 'Indices are more useful than values because they let us detect when an element falls out of the window.',
+    invariant: [
+      'Deque values stay in decreasing order from front to back.',
+      'Deque front is always the maximum candidate for the current window.',
+    ],
+    action: 'derive',
+    highlights: [
+      { target: 'window-track', kind: 'compare' },
+      { target: 'deque-panel', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'append-0',
+    i: 0,
+    deque: [0],
+    res: [],
+    window: [0, 0],
+    exp: 'At i = 0, the deque is empty, so index 0 becomes the first candidate maximum.',
+    reason: 'With no previous candidates, index 0 is both the newest and the largest known value in the window.',
+    invariant: 'Deque still decreases from front to back because it has only one index.',
+    action: 'write',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'pointer:i', kind: 'focus' },
+      { target: 'deque-panel', kind: 'write' },
+    ],
+  },
+  {
+    id: 'pop-smaller-1',
+    i: 1,
+    deque: [1],
+    res: [],
+    window: [0, 1],
+    exp: 'At i = 1, value 3 removes index 0 because 1 can never become a maximum again while 3 is in the window.',
+    reason: 'Any smaller value behind a newer larger value is permanently dominated.',
+    invariant: 'Deque remains decreasing, so the strongest maximum candidate stays at the front.',
+    action: 'discard',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'cell:1', kind: 'focus' },
+      { target: 'cell:0', kind: 'discard' },
+      { target: 'pointer:i', kind: 'focus' },
+      { target: 'deque-panel', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'first-max',
+    i: 2,
+    deque: [1, 2],
+    res: [3],
+    window: [0, 2],
+    exp: 'At i = 2, value -1 is smaller than the deque back, so we append it. The first full window now has maximum 3.',
+    reason: 'Smaller values can stay in the deque because they may become useful after larger values leave.',
+    invariant: [
+      'Deque values are decreasing.',
+      'Once the window size reaches k, nums[deque[0]] is the answer for that window.',
+    ],
+    action: 'confirm',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'cell:2', kind: 'focus' },
+      { target: 'deque-panel', kind: 'write' },
+      { target: 'result-panel', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'shift-window',
+    i: 3,
+    deque: [1, 2, 3],
+    res: [3, 3],
+    window: [1, 3],
+    exp: 'At i = 3, value -3 is appended. Index 1 stays at the front because it is still inside the shifted window and still the maximum.',
+    reason: 'We only remove from the front when an index falls left of the current window boundary.',
+    invariant: 'Front index is valid for the current window and remains the max candidate.',
+    action: 'expand',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'cell:3', kind: 'focus' },
+      { target: 'deque-panel', kind: 'compare' },
+      { target: 'result-panel', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'pop-many',
+    i: 4,
+    deque: [4],
+    res: [3, 3, 5],
+    window: [2, 4],
+    exp: 'At i = 4, value 5 removes every smaller tail candidate: -3, -1, and even the previous max 3. Index 4 takes over.',
+    reason: 'A newer larger value dominates all smaller values behind it and will outlast them in future windows.',
+    invariant: 'After all dominated indices are removed, the deque is decreasing again with the best candidate in front.',
+    action: 'discard',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'cell:4', kind: 'focus' },
+      { target: 'cell:1', kind: 'discard' },
+      { target: 'cell:2', kind: 'discard' },
+      { target: 'cell:3', kind: 'discard' },
+      { target: 'deque-panel', kind: 'discard' },
+      { target: 'result-panel', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'append-5',
+    i: 5,
+    deque: [4, 5],
+    res: [3, 3, 5, 5],
+    window: [3, 5],
+    exp: 'At i = 5, value 3 is smaller than the front max 5, so we append it as a backup candidate.',
+    reason: '3 cannot beat 5 right now, but it may matter once 5 slides out later.',
+    invariant: 'Deque remains decreasing and front index 4 still gives the current maximum.',
+    action: 'write',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'cell:5', kind: 'focus' },
+      { target: 'deque-panel', kind: 'write' },
+      { target: 'result-panel', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'new-max-6',
+    i: 6,
+    deque: [6],
+    res: [3, 3, 5, 5, 6],
+    window: [4, 6],
+    exp: 'At i = 6, value 6 removes both trailing candidates 3 and 5. It becomes the new maximum for the current window.',
+    reason: 'Any smaller element behind 6 is dominated and can never be chosen while 6 remains in range.',
+    invariant: 'Deque front always points to the strongest remaining candidate maximum.',
+    action: 'discard',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'cell:6', kind: 'focus' },
+      { target: 'cell:4', kind: 'discard' },
+      { target: 'cell:5', kind: 'discard' },
+      { target: 'deque-panel', kind: 'discard' },
+      { target: 'result-panel', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'final-max',
+    i: 7,
+    deque: [7],
+    res: [3, 3, 5, 5, 6, 7],
+    window: [5, 7],
+    exp: 'At i = 7, value 7 removes 6 and becomes the final window maximum. The result list is complete: [3, 3, 5, 5, 6, 7].',
+    reason: 'The deque keeps only undominated candidates, so the front directly yields the answer at each full window.',
+    invariant: [
+      'Deque stays monotonic decreasing.',
+      'Each finished window contributes exactly one maximum from the deque front.',
+    ],
+    action: 'confirm',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'cell:7', kind: 'focus' },
+      { target: 'deque-panel', kind: 'confirmed' },
+      { target: 'result-panel', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<sliding-window-max-visuals>
+  <AlgorithmPlayer title={`nums = [1, 3, -1, -3, 5, 3, 6, 7], k = ${k}`} steps={steps}>
+    <div class="anim-row swm-layout">
+      <div class="swm-main">
+        <p class="anim-label">Array & Sliding Window (k=3)</p>
+        <div class="string-container" data-teach-target="window-track">
+          <div class="window-highlight swm-window" data-teach-target="window"></div>
+          <div class="array-row swm-chars" style="position: relative; z-index: 1;">
+            {nums.map((n, i) => (
+              <div class="array-col">
+                <div class="array-cell swm-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+                  <span class="cell-val">{n}</span>
+                  <span class="cell-idx">{i}</span>
+                </div>
+                <div class="pointers-row swm-ptr-col" data-idx={i}>
+                  <span
+                    class="ptr ptr-up hidden"
+                    data-teach-target={i === 0 ? "pointer:i" : undefined}
+                  >
+                    i
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p class="anim-label swm-results-label">Results Array</p>
+        <div class="array-row swm-res" data-teach-target="result-panel">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <div class="swm-side">
+        <p class="anim-label">Monotonic Deque (Stores Indices)</p>
+        <div class="deque-container swm-deque" data-teach-target="deque-panel">
+          <!-- Rendered via JS -->
+        </div>
+        <p class="anim-label swm-deque-note">Front is always max for current window</p>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</sliding-window-max-visuals>
+
+<script>
+  class SlidingWindowMaxVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".swm-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".swm-ptr-col"));
+      this.windowEl = this.querySelector(".swm-window");
+      this.dequeEl = this.querySelector(".swm-deque");
+      this.resEl = this.querySelector(".swm-res");
+      const nums = [1, 3, -1, -3, 5, 3, 6, 7];
+
+      let lastStep = null;
+
+      this.updateWindowHighlight = () => {
+        if (!lastStep || !this.windowEl || this.cells.length === 0) return;
+
+        const leftIndex = lastStep.window[0];
+        const rightIndex = lastStep.window[1];
+
+        if (leftIndex !== -1 && rightIndex !== -1) {
+          const arrayRow = this.querySelector(".swm-chars");
+          const leftCell = this.cells[leftIndex];
+          const rightCell = this.cells[rightIndex];
+
+          if (arrayRow && leftCell && rightCell) {
+            const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+            const width =
+              rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft + 8;
+            this.windowEl.style.left = `${left}px`;
+            this.windowEl.style.width = `${width}px`;
+            this.windowEl.style.opacity = "1";
+          }
+        } else {
+          this.windowEl.style.opacity = "0";
+        }
+      };
+
+      window.addEventListener("resize", this.updateWindowHighlight);
+      const arrayRow = this.querySelector(".swm-chars");
+      if (arrayRow) {
+        arrayRow.addEventListener("scroll", this.updateWindowHighlight);
+      }
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+        lastStep = step;
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i >= step.window[0] && i <= step.window[1]) {
+            valSpan.classList.add("in-window");
+          } else if (i < step.window[0]) {
+            valSpan.classList.add("visited");
+          }
+        });
+
+        this.ptrs.forEach((col, i) => {
+          const ptr = col.querySelector(".ptr-up");
+          if (!ptr) return;
+          ptr.className = `ptr ptr-up ${i === step.i ? "" : "hidden"}`;
+        });
+
+        this.updateWindowHighlight();
+
+        if (this.dequeEl) {
+          if (step.deque.length === 0) {
+            this.dequeEl.innerHTML =
+              "<span class='deque-empty'>Empty</span>";
+          } else {
+            this.dequeEl.innerHTML = step.deque
+              .map((idx, queuePos) => {
+                const val = nums[idx];
+                const isFront = queuePos === 0;
+                return `
+                  <div class="deque-item ${isFront ? "deque-front" : ""}">
+                    <span class="deque-meta">idx ${idx}:</span>
+                    <span class="deque-value">${val}</span>
+                  </div>
+                `;
+              })
+              .join("");
+          }
+        }
+
+        if (this.resEl) {
+          if (step.res.length === 0) {
+            this.resEl.innerHTML =
+              "<span class='results-empty'>[ ]</span>";
+          } else {
+            this.resEl.innerHTML = step.res
+              .map(
+                (n) => `
+                  <div class="array-col">
+                    <div class="array-cell">
+                      <span class="cell-val success-val" style="animation: pop-in 0.2s;">${n}</span>
+                    </div>
+                  </div>
+                `,
+              )
+              .join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('sliding-window-max-visuals')) {
+    customElements.define('sliding-window-max-visuals', SlidingWindowMaxVisuals);
+  }
+</script>
+
+<style>
+  sliding-window-max-visuals {
+    display: block;
+  }
+
+  .swm-layout {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .swm-main {
+    flex: 2;
+    min-width: 300px;
+  }
+
+  .swm-side {
+    flex: 1;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .string-container {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .window-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 2rem;
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+    border: 1px solid rgba(90, 130, 176, 0.3);
+    border-radius: 4px;
+    z-index: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .swm-results-label {
+    margin-top: 2rem;
+  }
+
+  .swm-deque-note {
+    font-size: 0.6rem;
+    opacity: 0.6;
+    text-transform: none;
+    margin-top: 0.5rem;
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .cell-val.in-window {
+    color: var(--status-info);
+    border-color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+
+  .deque-container {
+    width: 100%;
+    min-height: 150px;
+    border: 2px dashed var(--border);
+    background: var(--surface-strong);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .deque-item {
+    background: #151515;
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: slide-in 0.2s ease-out;
+  }
+
+  .deque-front {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .deque-meta {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-right: 0.5rem;
+  }
+
+  .deque-value {
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .deque-front .deque-value {
+    color: var(--accent);
+  }
+
+  .deque-empty,
+  .results-empty {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  .results-empty {
+    padding: 1rem;
+  }
+
+  .success-val {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent) !important;
+  }
+
+  @keyframes slide-in {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+</style>

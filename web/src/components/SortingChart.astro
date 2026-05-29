@@ -1,0 +1,127 @@
+---
+// Grouped bar chart: best / average / worst case for common sorting algorithms
+---
+
+<div class="chart-wrap">
+  <canvas id="sorting-chart"></canvas>
+</div>
+
+<script>
+  import {
+    Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend,
+  } from "chart.js";
+
+  Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+
+  // Encode complexities as numeric scores for visual comparison
+  // 1=O(1), 2=O(log n), 3=O(n), 4=O(n log n), 5=O(n²), 6=O(n³)
+  const complexityScore: Record<string, number> = {
+    "O(1)": 1, "O(log n)": 2, "O(n)": 3,
+    "O(n log n)": 4, "O(n²)": 5, "O(n³)": 6,
+  };
+  const scoreLabel = ["", "O(1)", "O(log n)", "O(n)", "O(n log n)", "O(n²)", "O(n³)"];
+
+  const algorithms = [
+    { name: "Insertion", best: "O(n)", avg: "O(n²)", worst: "O(n²)" },
+    { name: "Bubble",    best: "O(n)", avg: "O(n²)", worst: "O(n²)" },
+    { name: "Selection", best: "O(n²)", avg: "O(n²)", worst: "O(n²)" },
+    { name: "Merge",     best: "O(n log n)", avg: "O(n log n)", worst: "O(n log n)" },
+    { name: "Quick",     best: "O(n log n)", avg: "O(n log n)", worst: "O(n²)" },
+    { name: "Heap",      best: "O(n log n)", avg: "O(n log n)", worst: "O(n log n)" },
+    { name: "Tim",       best: "O(n)", avg: "O(n log n)", worst: "O(n log n)" },
+  ];
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const theme = {
+    text: rootStyles.getPropertyValue("--text").trim(),
+    muted: rootStyles.getPropertyValue("--muted").trim(),
+    border: rootStyles.getPropertyValue("--border").trim(),
+    panel: rootStyles.getPropertyValue("--panel").trim(),
+    easy: rootStyles.getPropertyValue("--status-easy").trim(),
+    medium: rootStyles.getPropertyValue("--status-medium").trim(),
+    hard: rootStyles.getPropertyValue("--status-hard").trim(),
+  };
+
+  const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
+  const ctx = (document.getElementById("sorting-chart") as HTMLCanvasElement).getContext("2d")!;
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: algorithms.map((a) => a.name),
+      datasets: [
+        {
+          label: "Best case",
+          data: algorithms.map((a) => complexityScore[a.best]),
+          backgroundColor: alpha(theme.easy, "88"),
+          borderColor: theme.easy,
+          borderWidth: 1,
+        },
+        {
+          label: "Average case",
+          data: algorithms.map((a) => complexityScore[a.avg]),
+          backgroundColor: alpha(theme.medium, "88"),
+          borderColor: theme.medium,
+          borderWidth: 1,
+        },
+        {
+          label: "Worst case",
+          data: algorithms.map((a) => complexityScore[a.worst]),
+          backgroundColor: alpha(theme.hard, "88"),
+          borderColor: theme.hard,
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          ticks: { color: theme.text },
+          grid: { color: theme.border },
+        },
+        y: {
+          min: 0,
+          max: 6,
+          ticks: {
+            color: theme.muted,
+            stepSize: 1,
+            callback: (v) => scoreLabel[Number(v)] ?? "",
+          },
+          grid: { color: theme.border },
+        },
+      },
+      plugins: {
+        legend: {
+          labels: { color: theme.text, boxWidth: 12, padding: 16 },
+        },
+        tooltip: {
+          backgroundColor: theme.panel,
+          borderColor: theme.border,
+          borderWidth: 1,
+          titleColor: theme.text,
+          bodyColor: theme.muted,
+          callbacks: {
+            label: (ctx) => {
+              const algo = algorithms[ctx.dataIndex];
+              const key = ctx.dataset.label?.toLowerCase().split(" ")[0] as "best" | "avg" | "worst";
+              const map: Record<string, keyof typeof algo> = { best: "best", average: "avg", worst: "worst" };
+              return ` ${ctx.dataset.label}: ${algo[map[key] ?? key]}`;
+            },
+          },
+        },
+      },
+    },
+  });
+</script>
+
+<style>
+  .chart-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+  canvas { max-height: 320px; }
+</style>

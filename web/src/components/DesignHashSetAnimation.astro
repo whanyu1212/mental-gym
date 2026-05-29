@@ -1,0 +1,362 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const buckets = 4;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    p: -1,
+    op: 'init',
+    key: null,
+    hash: null,
+    opResult: null,
+    map: [[], [], [], []],
+    formula: 'hash = key % buckets',
+    exp: 'Initialize HashSet with 4 buckets. Each bucket is a list (chaining) to handle collisions.',
+    reason: 'Hashing maps a key to a bucket index, while chaining stores values sharing the same index.',
+    invariant: [
+      'All values in bucket i satisfy value % 4 === i.',
+      'No bucket stores duplicate keys because HashSet enforces uniqueness.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'op-box', kind: 'focus' },
+      { target: 'hash-box', kind: 'focus' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'bucket-array', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'add-1',
+    p: 0,
+    op: 'add',
+    key: 1,
+    hash: 1,
+    opResult: true,
+    map: [[], [1], [], []],
+    formula: '1 % 4 = 1',
+    exp: "add(1): hash to bucket 1. Since 1 isn't present, insert it.",
+    reason: 'Add inserts only when the key is not already in its bucket.',
+    invariant: 'Insertion preserves uniqueness within a bucket.',
+    action: 'write',
+    highlights: [
+      { target: 'op-box', kind: 'write' },
+      { target: 'hash-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'write' },
+      { target: 'bucket:1', kind: 'write' },
+      { target: 'chip:1:0', kind: 'write' },
+    ],
+  },
+  {
+    id: 'add-2',
+    p: 1,
+    op: 'add',
+    key: 2,
+    hash: 2,
+    opResult: true,
+    map: [[], [1], [2], []],
+    formula: '2 % 4 = 2',
+    exp: "add(2): hash to bucket 2. 2 isn't present, so insert it.",
+    reason: 'Different hash indices place keys in different buckets.',
+    invariant: 'Each key belongs to exactly one bucket index computed by modulo.',
+    action: 'write',
+    highlights: [
+      { target: 'op-box', kind: 'write' },
+      { target: 'hash-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'write' },
+      { target: 'bucket:2', kind: 'write' },
+      { target: 'chip:2:0', kind: 'write' },
+    ],
+  },
+  {
+    id: 'add-1-again',
+    p: 2,
+    op: 'add',
+    key: 1,
+    hash: 1,
+    opResult: false,
+    map: [[], [1], [2], []],
+    formula: '1 % 4 = 1',
+    exp: "add(1): hash to bucket 1, but 1 already exists. Do nothing.",
+    reason: 'Sets keep unique elements, so duplicate insertion is ignored.',
+    invariant: 'Duplicate adds do not change structure state.',
+    action: 'discard',
+    highlights: [
+      { target: 'op-box', kind: 'focus' },
+      { target: 'hash-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'discard' },
+      { target: 'bucket:1', kind: 'focus' },
+      { target: 'chip:1:0', kind: 'match' },
+    ],
+  },
+  {
+    id: 'remove-2',
+    p: 3,
+    op: 'remove',
+    key: 2,
+    hash: 2,
+    opResult: true,
+    map: [[], [1], [], []],
+    formula: '2 % 4 = 2',
+    exp: "remove(2): hash to bucket 2. 2 exists, so remove it.",
+    reason: 'Remove only affects the target bucket; other buckets remain unchanged.',
+    invariant: 'After removal, the key is absent from its bucket.',
+    action: 'discard',
+    highlights: [
+      { target: 'op-box', kind: 'focus' },
+      { target: 'hash-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'discard' },
+      { target: 'bucket:2', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'contains-1',
+    p: 4,
+    op: 'contains',
+    key: 1,
+    hash: 1,
+    opResult: true,
+    map: [[], [1], [], []],
+    formula: '1 % 4 = 1',
+    exp: "contains(1): check bucket 1. 1 is present, so return true.",
+    reason: 'Contains performs membership lookup only in one hashed bucket.',
+    invariant: 'Lookup is localized to hash bucket, not full scan of all buckets.',
+    action: 'confirm',
+    highlights: [
+      { target: 'op-box', kind: 'focus' },
+      { target: 'hash-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'result-box', kind: 'confirmed' },
+      { target: 'bucket:1', kind: 'match' },
+      { target: 'chip:1:0', kind: 'match' },
+    ],
+  },
+  {
+    id: 'contains-3',
+    p: 5,
+    op: 'contains',
+    key: 3,
+    hash: 3,
+    opResult: false,
+    map: [[], [1], [], []],
+    formula: '3 % 4 = 3',
+    exp: "contains(3): check bucket 3. It's empty, so return false.",
+    reason: 'Empty target bucket implies key is absent.',
+    invariant: 'Contains result depends only on membership in the hashed bucket.',
+    action: 'compare',
+    highlights: [
+      { target: 'op-box', kind: 'focus' },
+      { target: 'hash-box', kind: 'derive' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'result-box', kind: 'focus' },
+      { target: 'bucket:3', kind: 'focus' },
+    ],
+  },
+];
+---
+
+<design-hashset-visuals>
+  <AlgorithmPlayer title="Design HashSet (Buckets = 4)" steps={steps}>
+    <div class="stats-row hs-stats-row">
+      <div class="stat-box" data-teach-target="op-box">
+        <span class="stat-label">Operation</span>
+        <span class="stat-val hs-op">-</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="hash-box">
+        <span class="stat-label">Hash Function</span>
+        <span class="stat-val hs-hash">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val hs-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="result-box">
+        <span class="stat-label">Return</span>
+        <span class="stat-val hs-result">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row hs-bucket-area">
+      <p class="anim-label">Underlying Array of Lists (Chaining)</p>
+      <div class="array-row hs-buckets" data-teach-target="bucket-array">
+        {[0, 1, 2, 3].map((i) => (
+          <div class="array-col hs-bucket-col">
+            <div
+              class="array-cell hs-bucket-cell"
+              data-idx={i}
+              data-teach-target={`bucket:${i}`}
+            ></div>
+            <span class="cell-idx hs-bucket-idx">Bucket {i}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</design-hashset-visuals>
+
+<script>
+  class DesignHashSetVisuals extends HTMLElement {
+    connectedCallback() {
+      this.opEl = this.querySelector(".hs-op");
+      this.hashEl = this.querySelector(".hs-hash");
+      this.decisionEl = this.querySelector(".hs-decision");
+      this.resultEl = this.querySelector(".hs-result");
+      this.bucketCells = Array.from(this.querySelectorAll(".hs-bucket-cell"));
+      this.resultBox = this.querySelector('[data-teach-target="result-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.opEl) {
+          this.opEl.textContent = step.op === 'init' ? 'init' : `${step.op}(${step.key})`;
+          if (step.op === 'add') this.opEl.style.color = 'var(--status-easy)';
+          else if (step.op === 'remove') this.opEl.style.color = 'var(--status-hard)';
+          else if (step.op === 'contains') this.opEl.style.color = 'var(--status-info)';
+          else this.opEl.style.color = 'var(--text)';
+        }
+
+        if (this.hashEl) {
+          this.hashEl.textContent =
+            step.hash !== null && step.hash !== undefined
+              ? `${step.key} % 4 = ${step.hash}`
+              : '-';
+        }
+
+        if (this.decisionEl) {
+          if (step.op === 'init') {
+            this.decisionEl.textContent = 'Create empty bucket array';
+          } else if (step.op === 'add') {
+            this.decisionEl.textContent = step.opResult
+              ? 'Not present → insert'
+              : 'Already present → ignore';
+          } else if (step.op === 'remove') {
+            this.decisionEl.textContent = step.opResult
+              ? 'Present → remove'
+              : 'Absent → no change';
+          } else if (step.op === 'contains') {
+            this.decisionEl.textContent = step.opResult
+              ? 'Found in bucket'
+              : 'Not found in bucket';
+          } else {
+            this.decisionEl.textContent = '-';
+          }
+        }
+
+        if (this.resultEl) {
+          if (step.op === 'contains') {
+            this.resultEl.textContent = step.opResult ? 'true' : 'false';
+          } else {
+            this.resultEl.textContent = 'void';
+          }
+        }
+
+        this.resultBox?.classList.toggle('success-box', step.op === 'contains' && step.opResult);
+        this.decisionBox?.classList.toggle('success-box', step.op === 'contains' && step.opResult);
+
+        this.bucketCells.forEach((cell, idx) => {
+          const arr = step.map[idx] ?? [];
+          if (arr.length > 0) {
+            cell.innerHTML = arr
+              .map(
+                (num, chipIdx) => `
+                  <div class="hs-chip" data-teach-target="chip:${idx}:${chipIdx}">
+                    ${num}
+                  </div>
+                `
+              )
+              .join("");
+          } else {
+            cell.innerHTML = "";
+          }
+
+          if (step.hash === idx) {
+            cell.classList.add("active-bucket");
+          } else {
+            cell.classList.remove("active-bucket");
+          }
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('design-hashset-visuals')) {
+    customElements.define('design-hashset-visuals', DesignHashSetVisuals);
+  }
+</script>
+
+<style>
+  design-hashset-visuals {
+    display: block;
+  }
+
+  .hs-stats-row {
+    margin-bottom: 2rem;
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .hs-bucket-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hs-buckets {
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+
+  .hs-bucket-col {
+    align-items: center;
+    min-width: 4rem;
+  }
+
+  .hs-bucket-cell {
+    min-height: 4rem;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.5rem;
+    background: var(--surface-strong);
+    border: 2px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .hs-bucket-cell.active-bucket {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--status-medium) 20%, transparent);
+  }
+
+  .hs-bucket-idx {
+    margin-top: 0.5rem;
+    font-weight: 700;
+  }
+
+  .hs-chip {
+    background: color-mix(in srgb, var(--status-medium) 20%, transparent);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 0.2rem 0.5rem;
+    margin-bottom: 0.3rem;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    animation: pop-in 0.2s;
+  }
+</style>

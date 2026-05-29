@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["hy"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -16,6 +17,7 @@ pre-commit = "^3.7.1"
 numpy = "^2.0.1"
 colorama = "^0.4.6"
 sortedcontainers = "^2.4.0"
+scikit-learn = ">=1.0"
 
 
 [tool.poetry.group.dev.dependencies]

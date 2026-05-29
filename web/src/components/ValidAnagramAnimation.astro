@@ -1,0 +1,589 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const s = "anagram".split("");
+const t = "nagaram".split("");
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initialize',
+    i: -1,
+    phase: 'init',
+    currentChar: null,
+    currentCount: null,
+    sCount: {},
+    formula: 'Build counts from s, then cancel with t',
+    exp: "Start by building a frequency map from 's'. If 't' is an anagram, every later decrement should cancel those counts back to zero.",
+    reason: 'Two strings are anagrams exactly when they contain the same characters with the same frequencies.',
+    invariant: [
+      "The map always represents remaining unmatched characters from 's'.",
+      "If every count ends at 0, then 's' and 't' are anagrams.",
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'map-box', kind: 'focus' },
+      { target: 'status-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'build-a-0',
+    i: 0,
+    phase: 's',
+    currentChar: 'a',
+    currentCount: 1,
+    sCount: { a: 1 },
+    formula: "count['a'] += 1 → 1",
+    exp: "Read s[0] = 'a' and add it to the frequency map.",
+    reason: "While scanning 's', every character contributes one unit to its count.",
+    invariant: "During the build phase, counts only increase.",
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:0', kind: 'write' },
+      { target: 'entry:a', kind: 'write' },
+    ],
+  },
+  {
+    id: 'build-n-1',
+    i: 1,
+    phase: 's',
+    currentChar: 'n',
+    currentCount: 1,
+    sCount: { a: 1, n: 1 },
+    formula: "count['n'] += 1 → 1",
+    exp: "Read s[1] = 'n' and add a new key for 'n'.",
+    reason: 'New characters create new entries in the map.',
+    invariant: "The map stores counts for every character seen so far in 's'.",
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:1', kind: 'write' },
+      { target: 'entry:n', kind: 'write' },
+    ],
+  },
+  {
+    id: 'build-a-2',
+    i: 2,
+    phase: 's',
+    currentChar: 'a',
+    currentCount: 2,
+    sCount: { a: 2, n: 1 },
+    formula: "count['a'] += 1 → 2",
+    exp: "Read another 'a', so increment the existing count for 'a'.",
+    reason: 'Repeated letters increase their stored frequency instead of creating new keys.',
+    invariant: 'Each key tracks how many times that letter appears in s.',
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:2', kind: 'write' },
+      { target: 'entry:a', kind: 'write' },
+    ],
+  },
+  {
+    id: 'build-g-3',
+    i: 3,
+    phase: 's',
+    currentChar: 'g',
+    currentCount: 1,
+    sCount: { a: 2, n: 1, g: 1 },
+    formula: "count['g'] += 1 → 1",
+    exp: "Read s[3] = 'g' and add it to the map.",
+    reason: 'Every first occurrence creates a new counted character bucket.',
+    invariant: 'The build phase is just counting characters from left to right.',
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:3', kind: 'write' },
+      { target: 'entry:g', kind: 'write' },
+    ],
+  },
+  {
+    id: 'build-r-4',
+    i: 4,
+    phase: 's',
+    currentChar: 'r',
+    currentCount: 1,
+    sCount: { a: 2, n: 1, g: 1, r: 1 },
+    formula: "count['r'] += 1 → 1",
+    exp: "Read s[4] = 'r' and add it to the map.",
+    reason: 'The map grows whenever a new character appears.',
+    invariant: "After processing index i, s[0..i] is fully reflected in the map.",
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:4', kind: 'write' },
+      { target: 'entry:r', kind: 'write' },
+    ],
+  },
+  {
+    id: 'build-a-5',
+    i: 5,
+    phase: 's',
+    currentChar: 'a',
+    currentCount: 3,
+    sCount: { a: 3, n: 1, g: 1, r: 1 },
+    formula: "count['a'] += 1 → 3",
+    exp: "Read s[5] = 'a' and increment 'a' again. Its total is now 3.",
+    reason: 'The count must capture exact multiplicity, not just presence.',
+    invariant: 'Frequency comparison is exact; every repeated letter matters.',
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:5', kind: 'write' },
+      { target: 'entry:a', kind: 'write' },
+    ],
+  },
+  {
+    id: 'build-m-6',
+    i: 6,
+    phase: 's',
+    currentChar: 'm',
+    currentCount: 1,
+    sCount: { a: 3, n: 1, g: 1, r: 1, m: 1 },
+    formula: "count['m'] += 1 → 1",
+    exp: "Read s[6] = 'm'. The build phase is complete: the map now stores the full character frequencies of 's'.",
+    reason: "Once we've counted every character in s, we can test t by canceling those counts.",
+    invariant: "At the end of the build phase, the map equals the exact frequency table of 's'.",
+    action: 'write',
+    highlights: [
+      { target: 's-box', kind: 'focus' },
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'map-box', kind: 'write' },
+      { target: 's:6', kind: 'write' },
+      { target: 'entry:m', kind: 'write' },
+    ],
+  },
+  {
+    id: 'start-cancel',
+    i: -1,
+    phase: 't-start',
+    currentChar: null,
+    currentCount: null,
+    sCount: { a: 3, n: 1, g: 1, r: 1, m: 1 },
+    formula: "Now subtract counts using 't'",
+    exp: "Now scan 't'. Each character in t should decrement the same count map. A perfect anagram will cancel everything back to zero.",
+    reason: "Using one shared map makes mismatch detection easy: leftover counts mean the strings don't match.",
+    invariant: 'During the cancel phase, valid anagrams push all counts toward zero.',
+    action: 'compare',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'phase-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'map-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'cancel-n-0',
+    i: 0,
+    phase: 't',
+    currentChar: 'n',
+    currentCount: 0,
+    sCount: { a: 3, n: 0, g: 1, r: 1, m: 1 },
+    formula: "count['n'] -= 1 → 0",
+    exp: "Read t[0] = 'n' and decrement its count. The count for 'n' reaches 0, meaning n is now perfectly matched.",
+    reason: "A zero count means the character's frequency in t has exactly canceled its frequency in s.",
+    invariant: 'Counts moving to zero are good: they represent matched characters.',
+    action: 'shrink',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'compare' },
+      { target: 't:0', kind: 'focus' },
+      { target: 'entry:n', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'cancel-a-1',
+    i: 1,
+    phase: 't',
+    currentChar: 'a',
+    currentCount: 2,
+    sCount: { a: 2, n: 0, g: 1, r: 1, m: 1 },
+    formula: "count['a'] -= 1 → 2",
+    exp: "Read t[1] = 'a' and decrement its count from 3 to 2.",
+    reason: "Repeated letters in t must cancel repeated letters in s one at a time.",
+    invariant: 'Counts represent unmatched copies still remaining from s.',
+    action: 'shrink',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'compare' },
+      { target: 't:1', kind: 'focus' },
+      { target: 'entry:a', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'cancel-g-2',
+    i: 2,
+    phase: 't',
+    currentChar: 'g',
+    currentCount: 0,
+    sCount: { a: 2, n: 0, g: 0, r: 1, m: 1 },
+    formula: "count['g'] -= 1 → 0",
+    exp: "Read t[2] = 'g' and cancel the only 'g' in the map.",
+    reason: 'Single-occurrence letters should fall from 1 to 0 when matched.',
+    invariant: 'Each decrement consumes one needed occurrence of that character.',
+    action: 'shrink',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'compare' },
+      { target: 't:2', kind: 'focus' },
+      { target: 'entry:g', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'cancel-a-3',
+    i: 3,
+    phase: 't',
+    currentChar: 'a',
+    currentCount: 1,
+    sCount: { a: 1, n: 0, g: 0, r: 1, m: 1 },
+    formula: "count['a'] -= 1 → 1",
+    exp: "Read another 'a' and decrement its count again. One unmatched 'a' still remains.",
+    reason: "Letters with higher multiplicity take multiple decrements to fully cancel.",
+    invariant: "A positive count means s still has unmatched copies left.",
+    action: 'shrink',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'compare' },
+      { target: 't:3', kind: 'focus' },
+      { target: 'entry:a', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'cancel-r-4',
+    i: 4,
+    phase: 't',
+    currentChar: 'r',
+    currentCount: 0,
+    sCount: { a: 1, n: 0, g: 0, r: 0, m: 1 },
+    formula: "count['r'] -= 1 → 0",
+    exp: "Read t[4] = 'r' and cancel its count to zero.",
+    reason: 'Matching letters erase the remaining needed frequency for that key.',
+    invariant: 'Zero means balanced for that character across both strings.',
+    action: 'shrink',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'compare' },
+      { target: 't:4', kind: 'focus' },
+      { target: 'entry:r', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'cancel-a-5',
+    i: 5,
+    phase: 't',
+    currentChar: 'a',
+    currentCount: 0,
+    sCount: { a: 0, n: 0, g: 0, r: 0, m: 1 },
+    formula: "count['a'] -= 1 → 0",
+    exp: "Read the last 'a' and finally cancel the count of 'a' to zero too.",
+    reason: "All three copies of 'a' in s are now matched by three copies in t.",
+    invariant: 'Exact multiplicities must line up for all repeated letters.',
+    action: 'shrink',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'compare' },
+      { target: 't:5', kind: 'focus' },
+      { target: 'entry:a', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'cancel-m-6',
+    i: 6,
+    phase: 't',
+    currentChar: 'm',
+    currentCount: 0,
+    sCount: { a: 0, n: 0, g: 0, r: 0, m: 0 },
+    formula: "count['m'] -= 1 → 0",
+    exp: "Read t[6] = 'm'. Now every tracked character count is zero.",
+    reason: "When the final remaining positive count disappears, the two strings are fully balanced.",
+    invariant: 'If every key reaches zero, no unmatched characters remain.',
+    action: 'confirm',
+    highlights: [
+      { target: 't-box', kind: 'focus' },
+      { target: 'map-box', kind: 'confirmed' },
+      { target: 't:6', kind: 'confirmed' },
+      { target: 'entry:m', kind: 'confirmed' },
+      { target: 'status-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'done',
+    i: -1,
+    phase: 'done',
+    currentChar: null,
+    currentCount: null,
+    sCount: { a: 0, n: 0, g: 0, r: 0, m: 0 },
+    formula: 'All counts = 0',
+    exp: "All counts are zero, so 't' is a valid anagram of 's'.",
+    reason: 'No leftover positive or negative counts means the two strings have exactly the same character multiset.',
+    invariant: 'Balanced counts imply an anagram.',
+    action: 'confirm',
+    highlights: [
+      { target: 'map-box', kind: 'confirmed' },
+      { target: 'status-box', kind: 'confirmed' },
+      { target: 'phase-box', kind: 'confirmed' },
+    ],
+  },
+];
+
+const allKeys = ['a', 'g', 'm', 'n', 'r'];
+---
+
+<valid-anagram-visuals>
+  <AlgorithmPlayer title='s = "anagram", t = "nagaram"' steps={steps}>
+    <div class="stats-row va-stats-row">
+      <div class="stat-box" data-teach-target="phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val va-phase">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Count Update</span>
+        <span class="stat-val va-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="status-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val va-status">checking</span>
+      </div>
+    </div>
+
+    <div class="anim-row va-main-row">
+      <div class="va-strings-panel">
+        <div class="va-string-box" data-teach-target="s-box">
+          <p class="anim-label">String s</p>
+          <div class="array-row va-s-row">
+            {s.map((char, i) => (
+              <div class="array-col">
+                <div class="array-cell va-s-cell" data-idx={i} data-teach-target={`s:${i}`}>
+                  <span class="cell-val">{char}</span>
+                  <span class="cell-idx">{i}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="va-string-box" data-teach-target="t-box">
+          <p class="anim-label">String t</p>
+          <div class="array-row va-t-row">
+            {t.map((char, i) => (
+              <div class="array-col">
+                <div class="array-cell va-t-cell" data-idx={i} data-teach-target={`t:${i}`}>
+                  <span class="cell-val">{char}</span>
+                  <span class="cell-idx">{i}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div class="va-map-panel">
+        <p class="anim-label">Frequency Map</p>
+        <div class="hashmap-col va-map" data-teach-target="map-box"></div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</valid-anagram-visuals>
+
+<script>
+  class ValidAnagramVisuals extends HTMLElement {
+    connectedCallback() {
+      this.sCells = Array.from(this.querySelectorAll(".va-s-cell"));
+      this.tCells = Array.from(this.querySelectorAll(".va-t-cell"));
+      this.mapEl = this.querySelector(".va-map");
+      this.phaseEl = this.querySelector(".va-phase");
+      this.formulaEl = this.querySelector(".va-formula");
+      this.statusEl = this.querySelector(".va-status");
+      this.statusBox = this.querySelector('[data-teach-target="status-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.phaseEl) {
+          if (step.phase === 's') {
+            this.phaseEl.textContent = 'Build counts from s';
+          } else if (step.phase === 't' || step.phase === 't-start') {
+            this.phaseEl.textContent = 'Cancel counts using t';
+          } else if (step.phase === 'done') {
+            this.phaseEl.textContent = 'Finished';
+          } else {
+            this.phaseEl.textContent = 'Initialize';
+          }
+        }
+
+        if (this.formulaEl) {
+          this.formulaEl.textContent = step.formula ?? '-';
+        }
+
+        if (this.statusEl) {
+          if (step.phase === 'done') {
+            this.statusEl.textContent = 'anagram confirmed';
+          } else if (step.phase === 't' || step.phase === 't-start') {
+            this.statusEl.textContent = 'counts should move toward zero';
+          } else if (step.phase === 's') {
+            this.statusEl.textContent = 'building count map';
+          } else {
+            this.statusEl.textContent = 'checking';
+          }
+        }
+
+        this.statusBox?.classList.toggle('success-box', step.phase === 'done');
+
+        this.sCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (step.phase === 's') {
+            if (i < step.i) valSpan.classList.add("visited");
+            if (i === step.i) valSpan.classList.add("active-add");
+          } else if (step.phase === 't-start' || step.phase === 't' || step.phase === 'done') {
+            valSpan.classList.add("visited");
+          }
+        });
+
+        this.tCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (step.phase === 't') {
+            if (i < step.i) valSpan.classList.add("visited");
+            if (i === step.i) valSpan.classList.add("active-sub");
+          } else if (step.phase === 'done') {
+            valSpan.classList.add("visited");
+          }
+        });
+
+        if (this.mapEl) {
+          if (Object.keys(step.sCount).length === 0) {
+            this.mapEl.innerHTML =
+              "<span class='hashmap-empty va-map-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = allKeys
+              .map((key) => {
+                const value = step.sCount[key];
+                if (value === undefined) return '';
+
+                const highlightClass =
+                  key === step.currentChar
+                    ? step.phase === 's'
+                      ? 'highlight-add'
+                      : step.phase === 't'
+                        ? 'highlight-sub'
+                        : ''
+                    : '';
+
+                const zeroClass = value === 0 ? 'zero-count' : '';
+                return `<div class='hashmap-entry ${highlightClass} ${zeroClass}' data-teach-target="entry:${key}">
+                  <span>'${key}'</span>
+                  <span class="va-count-val">${value}</span>
+                </div>`;
+              })
+              .join("");
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('valid-anagram-visuals')) {
+    customElements.define('valid-anagram-visuals', ValidAnagramVisuals);
+  }
+</script>
+
+<style>
+  valid-anagram-visuals {
+    display: block;
+  }
+
+  .va-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .va-main-row {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .va-strings-panel {
+    flex: 1;
+    min-width: 20rem;
+  }
+
+  .va-string-box {
+    margin-bottom: 2rem;
+  }
+
+  .va-map-panel {
+    width: 13rem;
+  }
+
+  .va-map {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .va-map-empty {
+    padding: 1rem;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-add {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-sub {
+    border-color: var(--status-medium);
+    color: #e0bc5c;
+    background: var(--accent-dim);
+    transform: translateY(4px);
+  }
+
+  .highlight-add {
+    border-color: var(--status-info) !important;
+    background: color-mix(in srgb, var(--status-info) 15%, transparent) !important;
+    color: var(--status-info) !important;
+  }
+
+  .highlight-sub {
+    border-color: var(--status-medium) !important;
+    background: var(--accent-dim) !important;
+    color: #e0bc5c !important;
+  }
+
+  .zero-count {
+    opacity: 0.55;
+  }
+
+  .va-count-val {
+    font-weight: 700;
+  }
+</style>

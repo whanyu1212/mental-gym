@@ -1,0 +1,157 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
+
+const allNotes = await getCollection("notes");
+
+// Group notes by category
+const categories = [...new Set(allNotes.map((note) => note.data.category))].sort();
+const notesByCategory = categories.map((category) => ({
+	name: category,
+	notes: allNotes
+		.filter((note) => note.data.category === category)
+		.sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99) || a.data.title.localeCompare(b.data.title)),
+}));
+---
+
+<Layout title="Notes | Mental Gym">
+	<section class="hero">
+		<h1>Notes</h1>
+		<p class="tagline">Theoretical concepts, algorithmic patterns, and language-specific tips.</p>
+	</section>
+
+	<div class="notes-container">
+		{notesByCategory.map((category) => (
+			<section class="category-section">
+				<h2 class="category-heading">{category.name}</h2>
+				<div class="notes-grid">
+					{category.notes.map((note) => (
+						<a href={withBase(`/notes/${note.id}/`)} class="note-card">
+							<div class="note-content">
+								<h3 class="note-title">{note.data.title}</h3>
+								{note.data.description && <p class="note-description">{note.data.description}</p>}
+							</div>
+							<div class="note-footer">
+								<span class="read-more">Read note</span>
+								<span class="arrow">→</span>
+							</div>
+						</a>
+					))}
+				</div>
+			</section>
+		))}
+	</div>
+</Layout>
+
+<style>
+	.hero {
+		text-align: center;
+		padding: 3.5rem 1rem 2.5rem;
+	}
+
+	.hero h1 {
+		font-size: 3.5rem;
+		margin: 0;
+		color: var(--accent);
+		font-family: var(--font-serif);
+	}
+
+	.tagline {
+		font-size: 1.1rem;
+		color: var(--muted);
+		margin-top: 0.5rem;
+		font-family: var(--font-serif);
+		font-style: italic;
+	}
+
+	.notes-container {
+		max-width: 1000px;
+		margin: 0 auto;
+		padding: 0 1.5rem 5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 3.5rem;
+	}
+
+	.category-heading {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.2em;
+		color: var(--accent);
+		margin-bottom: 1.5rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid var(--border);
+		font-family: var(--font-sans);
+		font-weight: 600;
+	}
+
+	.notes-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.note-card {
+		background: var(--panel);
+		border: 1px solid var(--border);
+		padding: 1.5rem;
+		border-radius: 4px;
+		text-decoration: none;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+	}
+
+	.note-card:hover {
+		transform: translateY(-3px);
+		border-color: var(--accent);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+	}
+
+	.note-title {
+		margin: 0 0 0.75rem;
+		font-size: 1.25rem;
+		color: var(--text);
+		font-family: var(--font-serif);
+		line-height: 1.3;
+	}
+
+	.note-description {
+		margin: 0;
+		font-size: 0.88rem;
+		color: var(--muted);
+		line-height: 1.6;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.note-footer {
+		margin-top: 1.5rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--accent);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.arrow {
+		transition: transform 0.2s;
+	}
+
+	.note-card:hover .arrow {
+		transform: translateX(4px);
+	}
+
+	@media (max-width: 640px) {
+		.notes-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

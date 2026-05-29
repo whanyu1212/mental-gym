@@ -1,0 +1,200 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    left: 0,
+    right: 3,
+    sum: null,
+    found: [],
+    exp: 'Array is sorted: [2, 7, 11, 15]. Place left at index 0, right at index 3. We converge inward — each step eliminates one element from consideration.',
+    reason: 'Sorting gives us a monotone property: moving left right increases the sum, moving right left decreases it.',
+    invariant: 'At every step, the answer (if it exists) lies within [left, right].',
+    formula: 'sum = nums[left] + nums[right]',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'cell:3', kind: 'write' },
+      { target: 'ptr-left', kind: 'write' },
+      { target: 'ptr-right', kind: 'write' },
+    ],
+  },
+  {
+    id: 'check-2-15',
+    phase: 'compare',
+    left: 0,
+    right: 3,
+    sum: 17,
+    found: [],
+    exp: 'sum = 2 + 15 = 17 > target 9. The sum is too large — move right inward to decrease it.',
+    reason: 'The array is sorted, so nums[right] is the largest remaining value. Shrinking right is the only way to reduce the sum.',
+    invariant: 'Moving right inward is safe: no pair involving nums[right] with any left ≤ right can equal the target.',
+    formula: '17 > 9 → right--',
+    highlights: [
+      { target: 'cell:0', kind: 'compare' },
+      { target: 'cell:3', kind: 'compare' },
+      { target: 'sum-box', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'check-2-11',
+    phase: 'compare',
+    left: 0,
+    right: 2,
+    sum: 13,
+    found: [],
+    exp: 'sum = 2 + 11 = 13 > target 9. Still too large — move right inward again.',
+    reason: 'Same reasoning: sum exceeds target, shrink right.',
+    invariant: '15 is permanently eliminated — any pair with 15 sums above target.',
+    formula: '13 > 9 → right--',
+    highlights: [
+      { target: 'cell:0', kind: 'compare' },
+      { target: 'cell:2', kind: 'compare' },
+      { target: 'sum-box', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'check-2-7',
+    phase: 'found',
+    left: 0,
+    right: 1,
+    sum: 9,
+    found: [0, 1],
+    exp: 'sum = 2 + 7 = 9 = target! Return [left+1, right+1] = [1, 2] (1-indexed).',
+    reason: 'Each step eliminated one element — total work is O(n), O(1) space.',
+    invariant: 'The converging property guarantees every valid pair is checked exactly once.',
+    formula: '2 + 7 = 9 = target ✓',
+    highlights: [
+      { target: 'cell:0', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'confirmed' },
+      { target: 'sum-box', kind: 'confirmed' },
+      { target: 'answer-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<oe-viz>
+  <AlgorithmPlayer title="Opposite-Ends Converging — nums=[2,7,11,15], target=9" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="sum-box">
+        <span class="stat-label">Sum</span>
+        <span class="stat-val oe-sum">—</span>
+      </div>
+      <div class="stat-box" data-teach-target="answer-box">
+        <span class="stat-label">Answer</span>
+        <span class="stat-val oe-answer">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-cell oe-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+            <span class="cell-val">{n}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+      <div class="ptr-row">
+        <div class="ptr-label oe-ptr-left" data-teach-target="ptr-left">L</div>
+        <div class="ptr-spacer"></div>
+        <div class="ptr-label oe-ptr-right" data-teach-target="ptr-right">R</div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</oe-viz>
+
+<script>
+  class OeViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.oe-cell'));
+      this.sumEl = this.querySelector('.oe-sum');
+      this.answerEl = this.querySelector('.oe-answer');
+      this.answerBox = this.querySelector('[data-teach-target="answer-box"]');
+      this.ptrLeft = this.querySelector('.oe-ptr-left');
+      this.ptrRight = this.querySelector('.oe-ptr-right');
+      this.ptrRow = this.querySelector('.ptr-row');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+        const cellCount = this.cells.length;
+        const cellWidth = 100 / cellCount;
+
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell oe-cell';
+          if (step.found?.includes(i)) cell.classList.add('found');
+          else if (i === step.left || i === step.right) cell.classList.add('active');
+          else if (i < step.left || i > step.right) cell.classList.add('visited');
+        });
+
+        if (this.ptrLeft && this.ptrRight) {
+          this.ptrLeft.style.left = `${step.left * cellWidth + cellWidth / 2}%`;
+          this.ptrRight.style.left = `${step.right * cellWidth + cellWidth / 2}%`;
+          this.ptrLeft.style.transform = 'translateX(-50%)';
+          this.ptrRight.style.transform = 'translateX(-50%)';
+        }
+
+        if (this.sumEl) {
+          this.sumEl.textContent = step.sum != null ? String(step.sum) : '—';
+        }
+        if (this.answerEl) {
+          this.answerEl.textContent = step.found?.length === 2
+            ? `[${step.found[0] + 1}, ${step.found[1] + 1}]`
+            : '—';
+        }
+        this.answerBox?.classList.toggle('success-box', step.phase === 'found');
+      });
+    }
+  }
+
+  if (!customElements.get('oe-viz')) {
+    customElements.define('oe-viz', OeViz);
+  }
+</script>
+
+<style>
+  oe-viz { display: block; }
+
+  .ptr-row {
+    position: relative;
+    height: 1.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .ptr-label {
+    position: absolute;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    transition: left 0.25s ease;
+  }
+
+  .oe-cell.visited .cell-val { opacity: 0.3; }
+
+  .oe-cell.active { transform: translateY(-4px); }
+  .oe-cell.active .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+  }
+
+  .oe-cell.found .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val { color: var(--status-easy) !important; }
+</style>

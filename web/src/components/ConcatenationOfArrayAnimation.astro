@@ -1,0 +1,234 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 2, 1];
+const n = nums.length;
+const ansTemplate = Array.from({ length: n * 2 }, () => null);
+
+const steps = [
+  {
+    i: -1,
+    ansState: [...ansTemplate],
+    action: 'write',
+    exp: 'Create ans with size 2n. Here n = 3, so ans size is 6.',
+    reason: 'We need to place nums twice in order.',
+    invariant: 'For each i, ans[i] and ans[i+n] should both equal nums[i].',
+    formula: 'ans[i] = nums[i], ans[i+n] = nums[i]',
+    decision: 'Initialize all ans slots as empty.',
+    targets: ['rule-box', 'ans-box', 'n-box'],
+  },
+  {
+    i: 0,
+    ansState: [1, null, null, 1, null, null],
+    action: 'write',
+    exp: 'i = 0: write nums[0] into ans[0] and ans[3].',
+    reason: 'Duplicate the same source value into first and second half.',
+    invariant: 'First i+1 source values are duplicated correctly.',
+    formula: 'ans[0] = nums[0], ans[0+3] = nums[0]',
+    decision: 'Write value 1 to indices 0 and 3.',
+    targets: ['num-0', 'ans-0', 'ans-3', 'ans-box'],
+  },
+  {
+    i: 1,
+    ansState: [1, 2, null, 1, 2, null],
+    action: 'write',
+    exp: 'i = 1: write nums[1] into ans[1] and ans[4].',
+    reason: 'Continue mirroring into offset position i+n.',
+    invariant: 'All processed indices preserve original order in both halves.',
+    formula: 'ans[1] = nums[1], ans[1+3] = nums[1]',
+    decision: 'Write value 2 to indices 1 and 4.',
+    targets: ['num-1', 'ans-1', 'ans-4', 'ans-box'],
+  },
+  {
+    i: 2,
+    ansState: [1, 2, 1, 1, 2, 1],
+    action: 'write',
+    exp: 'i = 2: write nums[2] into ans[2] and ans[5].',
+    reason: 'Final source value fills the last two remaining slots.',
+    invariant: 'After final write, ans is nums concatenated with nums.',
+    formula: 'ans[2] = nums[2], ans[2+3] = nums[2]',
+    decision: 'Write value 1 to indices 2 and 5.',
+    targets: ['num-2', 'ans-2', 'ans-5', 'ans-box'],
+  },
+  {
+    i: -1,
+    ansState: [1, 2, 1, 1, 2, 1],
+    action: 'confirm',
+    exp: 'Done! ans = [1, 2, 1, 1, 2, 1].',
+    reason: 'Every source index i was copied to i and i+n.',
+    invariant: 'Result length is 2n and preserves order in both halves.',
+    formula: 'ans = nums + nums',
+    decision: 'Return ans.',
+    targets: ['ans-box', 'result-box'],
+  },
+];
+---
+
+<concatenation-visuals>
+  <AlgorithmPlayer title="nums = [1, 2, 1]" steps={steps}>
+    <div class="stats-row ca-meta-row">
+      <div class="stat-box ca-n-box" data-teach-target="n-box">
+        <span class="stat-label">n</span>
+        <span class="stat-val">{n}</span>
+      </div>
+      <div class="stat-box ca-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">ans[i] = nums[i], ans[i+n] = nums[i]</span>
+      </div>
+      <div class="stat-box ca-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val ca-result-val">In Progress</span>
+      </div>
+    </div>
+
+    <div class="anim-row ca-input-row">
+      <p class="anim-label">Input: nums</p>
+      <div class="array-row">
+        {nums.map((num, i) => (
+          <div class="array-col">
+            <div class="array-cell ca-num-cell" data-idx={i} data-teach-target={`num-${i}`}>
+              <span class="cell-val">{num}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Output: ans (size 2n)</p>
+      <div class="array-row" data-teach-target="ans-box">
+        {ansTemplate.map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell ca-ans-cell" data-idx={i} data-teach-target={`ans-${i}`}>
+              <span class="cell-val empty-val"></span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</concatenation-visuals>
+
+<script>
+  class ConcatenationVisuals extends HTMLElement {
+    connectedCallback() {
+      this.numCells = Array.from(this.querySelectorAll('.ca-num-cell'));
+      this.ansCells = Array.from(this.querySelectorAll('.ca-ans-cell'));
+      this.resultVal = this.querySelector('.ca-result-val');
+      this.resultBox = this.querySelector('.ca-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        this.numCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+          if (i === s.i) valSpan.classList.add('active-read');
+          else if (s.i !== -1 && i < s.i) valSpan.classList.add('visited');
+        });
+
+        this.ansCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+
+          valSpan.className = 'cell-val';
+          const val = s.ansState[i];
+
+          if (val === null) {
+            valSpan.textContent = '';
+            valSpan.classList.add('empty-val');
+          } else {
+            valSpan.textContent = String(val);
+
+            if (s.i !== -1 && (i === s.i || i === s.i + 3)) {
+              valSpan.classList.add('active-write');
+            } else if (s.action === 'confirm') {
+              valSpan.classList.add('success-val');
+            }
+          }
+        });
+
+        if (this.resultVal) {
+          this.resultVal.textContent = s.action === 'confirm' ? 'Complete' : 'In Progress';
+        }
+
+        this.resultBox?.classList.remove('confirmed');
+        if (s.action === 'confirm') this.resultBox?.classList.add('confirmed');
+      });
+    }
+  }
+
+  if (!customElements.get('concatenation-visuals')) {
+    customElements.define('concatenation-visuals', ConcatenationVisuals);
+  }
+</script>
+
+<style>
+  concatenation-visuals {
+    display: block;
+  }
+
+  .ca-meta-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .ca-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .ca-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .ca-input-row {
+    margin-bottom: 3rem;
+  }
+
+  .empty-val {
+    background: transparent !important;
+    border-style: dashed !important;
+    border-color: #333 !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.4;
+  }
+
+  .cell-val.active-read {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-write {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    transform: translateY(-4px);
+    animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .cell-val.success-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: rgba(125, 171, 125, 0.05);
+  }
+
+  @keyframes pop-in {
+    from {
+      transform: scale(0.9) translateY(-4px);
+      opacity: 0;
+    }
+
+    to {
+      transform: scale(1) translateY(-4px);
+      opacity: 1;
+    }
+  }
+</style>

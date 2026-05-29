@@ -1,0 +1,522 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const words = ['hi', 'he#llo'];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'problem',
+    stepKind: 'problem',
+    encodedStr: '',
+    decodedWords: [],
+    pointer: -1,
+    activeWord: -1,
+    decodePhase: false,
+    exp: 'Naive join with "#" breaks on words that contain "#". "hi#he#llo".split("#") gives 3 fragments, not 2.',
+    reason: 'A plain delimiter cannot appear inside the data without corruption.',
+    invariant: 'We need a self-delimiting encoding that survives any character.',
+    formula: '"hi" + "#" + "he#llo" = "hi#he#llo" → split gives ["hi","he","llo"] ✗',
+    highlights: [
+      { target: 'word-0', kind: 'focus' },
+      { target: 'word-1', kind: 'focus' },
+      { target: 'problem-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'encode-hi',
+    phase: 'encode',
+    stepKind: 'encode',
+    encodedStr: '2#hi',
+    decodedWords: [],
+    pointer: -1,
+    activeWord: 0,
+    decodePhase: false,
+    exp: 'Encode "hi": length is 2, so prepend "2#". Chunk = "2#hi".',
+    reason: 'The length tells the decoder exactly how many bytes follow the "#".',
+    invariant: 'Every chunk is fully self-contained: len#content.',
+    formula: 'len("hi") = 2  →  chunk = "2#hi"',
+    highlights: [
+      { target: 'word-0', kind: 'write' },
+      { target: 'encoded-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'encode-he-llo',
+    phase: 'encode',
+    stepKind: 'encode',
+    encodedStr: '2#hi6#he#llo',
+    decodedWords: [],
+    pointer: -1,
+    activeWord: 1,
+    decodePhase: false,
+    exp: 'Encode "he#llo": length is 6 (the "#" counts!), so prepend "6#". Chunk = "6#he#llo".',
+    reason: 'The embedded "#" is harmless — the decoder reads a fixed character count, not a delimiter.',
+    invariant: 'Any byte sequence can be encoded safely; length is always accurate.',
+    formula: 'len("he#llo") = 6  →  chunk = "6#he#llo"',
+    highlights: [
+      { target: 'word-1', kind: 'write' },
+      { target: 'encoded-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'decode-hi',
+    phase: 'decode',
+    stepKind: 'decode',
+    encodedStr: '2#hi6#he#llo',
+    decodedWords: ['hi'],
+    pointer: 0,
+    activeWord: 0,
+    decodePhase: true,
+    exp: 'Decode: pointer = 0. Read digits until "#" → length = 2. Slice 2 chars starting after "#" → "hi". Advance pointer to 4.',
+    reason: 'Digits before "#" unambiguously encode the byte count to consume.',
+    invariant: 'Pointer always lands at the start of the next length prefix.',
+    formula: 'p=0: "2" → len=2, s[2:4]="hi", p→4',
+    highlights: [
+      { target: 'encoded-box', kind: 'compare' },
+      { target: 'decoded-0', kind: 'match' },
+      { target: 'pointer-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'decode-he-llo',
+    phase: 'decode',
+    stepKind: 'decode',
+    encodedStr: '2#hi6#he#llo',
+    decodedWords: ['hi', 'he#llo'],
+    pointer: 4,
+    activeWord: 1,
+    decodePhase: true,
+    exp: 'Decode: pointer = 4. Read digits until "#" → length = 6. Slice 6 chars → "he#llo". The "#" inside is consumed as data, not a delimiter.',
+    reason: 'Because we read by count, embedded delimiters are never interpreted as boundaries.',
+    invariant: 'decode(encode(strs)) === strs for any input.',
+    formula: 'p=4: "6" → len=6, s[6:12]="he#llo", p→12',
+    highlights: [
+      { target: 'encoded-box', kind: 'compare' },
+      { target: 'decoded-1', kind: 'match' },
+      { target: 'pointer-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'done',
+    stepKind: 'done',
+    encodedStr: '2#hi6#he#llo',
+    decodedWords: ['hi', 'he#llo'],
+    pointer: 12,
+    activeWord: -1,
+    decodePhase: true,
+    exp: 'Complete. Both words recovered exactly. O(n) encode and decode — one pass each.',
+    reason: 'Length-prefix framing is lossless, order-preserving, and handles any byte sequence.',
+    invariant: 'Total encoded length = Σ(len(s) + 1 + digits(len(s))) for each s.',
+    formula: 'decode(encode(["hi","he#llo"])) = ["hi","he#llo"] ✓',
+    highlights: [
+      { target: 'decoded-0', kind: 'confirmed' },
+      { target: 'decoded-1', kind: 'confirmed' },
+      { target: 'result-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<length-prefix-viz>
+  <AlgorithmPlayer title='words = ["hi", "he#llo"]  — length-prefix encoding' steps={steps}>
+
+    <!-- Top stat row -->
+    <div class="stats-row lp-meta-row">
+      <div class="stat-box lp-phase-box" data-teach-target="problem-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val lp-phase-val">problem</span>
+      </div>
+      <div class="stat-box lp-pointer-box" data-teach-target="pointer-box">
+        <span class="stat-label">Decode pointer</span>
+        <span class="stat-val lp-pointer-val">—</span>
+      </div>
+      <div class="stat-box lp-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val lp-status-val">In Progress</span>
+      </div>
+    </div>
+
+    <!-- Main layout -->
+    <div class="lp-layout">
+
+      <!-- Input words -->
+      <div class="lp-col">
+        <p class="anim-label">Input words</p>
+        <div class="lp-words-list">
+          {words.map((w, i) => (
+            <div class="lp-word-cell" data-teach-target={`word-${i}`} data-idx={i}>
+              <span class="lp-word-quote">"</span>
+              <span class="lp-word-text">{w}</span>
+              <span class="lp-word-quote">"</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Encoded string -->
+      <div class="lp-col lp-col-wide">
+        <p class="anim-label lp-accent-label">Encoded string</p>
+        <div class="lp-encoded-box" data-teach-target="encoded-box">
+          <span class="lp-empty-hint">empty</span>
+        </div>
+      </div>
+
+      <!-- Decoded output -->
+      <div class="lp-col">
+        <p class="anim-label lp-green-label">Decoded output</p>
+        <div class="lp-decoded-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+    </div>
+
+  </AlgorithmPlayer>
+</length-prefix-viz>
+
+<script>
+  class LengthPrefixViz extends HTMLElement {
+    connectedCallback() {
+      this.wordCells = Array.from(this.querySelectorAll('.lp-word-cell'));
+      this.encodedBox = this.querySelector('.lp-encoded-box');
+      this.decodedList = this.querySelector('.lp-decoded-list');
+      this.phaseVal = this.querySelector('.lp-phase-val');
+      this.pointerVal = this.querySelector('.lp-pointer-val');
+      this.statusVal = this.querySelector('.lp-status-val');
+      this.phaseBox = this.querySelector('.lp-phase-box');
+      this.pointerBox = this.querySelector('.lp-pointer-box');
+      this.resultBox = this.querySelector('.lp-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        // Phase label
+        if (this.phaseVal) this.phaseVal.textContent = s.phase ?? 'problem';
+
+        // Pointer display
+        if (this.pointerVal) {
+          this.pointerVal.textContent = (s.decodePhase && s.pointer >= 0) ? String(s.pointer) : '—';
+        }
+
+        // Status
+        if (this.statusVal) {
+          this.statusVal.textContent = s.stepKind === 'done' ? 'Complete' : 'In Progress';
+        }
+
+        // Phase box tint
+        if (this.phaseBox) {
+          this.phaseBox.className = 'stat-box lp-phase-box';
+          if (s.phase === 'encode') this.phaseBox.classList.add('lp-phase-encode');
+          else if (s.phase === 'decode') this.phaseBox.classList.add('lp-phase-decode');
+          else if (s.phase === 'done') this.phaseBox.classList.add('lp-phase-done');
+        }
+
+        // Result box tint
+        this.resultBox?.classList.toggle('lp-confirmed', s.stepKind === 'done');
+
+        // Pointer box tint
+        this.pointerBox?.classList.toggle('lp-pointer-active', s.decodePhase === true);
+
+        // Word cells
+        this.wordCells.forEach((cell) => {
+          const idx = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'lp-word-cell';
+          if (s.stepKind === 'encode') {
+            if (idx < s.activeWord) cell.classList.add('lp-word-done');
+            else if (idx === s.activeWord) cell.classList.add('lp-word-active');
+          } else if (s.stepKind === 'decode' || s.stepKind === 'done') {
+            cell.classList.add('lp-word-done');
+          }
+        });
+
+        // Encoded box
+        if (this.encodedBox) {
+          this._renderEncoded(s);
+        }
+
+        // Decoded output
+        if (this.decodedList) {
+          this._renderDecoded(s);
+        }
+      });
+    }
+
+    _renderEncoded(s) {
+      if (!s.encodedStr) {
+        this.encodedBox.innerHTML = "<span class='lp-empty-hint'>empty</span>";
+        return;
+      }
+
+      const str = s.encodedStr;
+
+      if (s.stepKind === 'decode' && s.pointer >= 0) {
+        // highlight the current chunk being decoded
+        const p = s.pointer;
+        const hashIdx = str.indexOf('#', p);
+        if (hashIdx === -1) {
+          this.encodedBox.innerHTML = `<span>${str}</span>`;
+          return;
+        }
+        const len = parseInt(str.substring(p, hashIdx), 10);
+        const chunkEnd = hashIdx + 1 + len;
+
+        const consumed = str.substring(0, p);
+        const lenPart = str.substring(p, hashIdx);
+        const hashChar = '#';
+        const dataPart = str.substring(hashIdx + 1, chunkEnd);
+        const rest = str.substring(chunkEnd);
+
+        this.encodedBox.innerHTML =
+          `<span class="lp-enc-faded">${consumed}</span>` +
+          `<span class="lp-enc-len">${lenPart}</span>` +
+          `<span class="lp-enc-sep">${hashChar}</span>` +
+          `<span class="lp-enc-data">${dataPart}</span>` +
+          `<span class="lp-enc-rest">${rest}</span>`;
+        return;
+      }
+
+      if (s.stepKind === 'encode' && s.activeWord >= 0) {
+        // highlight the most recently appended chunk
+        const chunks = this._parseChunks(str);
+        let html = '';
+        chunks.forEach((chunk, ci) => {
+          const lenPart = chunk.lenStr;
+          const dataPart = chunk.data;
+          if (ci < s.activeWord) {
+            html += `<span class="lp-enc-faded">${lenPart}#${dataPart}</span>`;
+          } else if (ci === s.activeWord) {
+            html += `<span class="lp-enc-len">${lenPart}</span>` +
+                    `<span class="lp-enc-sep">#</span>` +
+                    `<span class="lp-enc-data">${dataPart}</span>`;
+          }
+        });
+        this.encodedBox.innerHTML = html || `<span>${str}</span>`;
+        return;
+      }
+
+      if (s.stepKind === 'done') {
+        this.encodedBox.innerHTML = `<span class="lp-enc-confirmed">${str}</span>`;
+        return;
+      }
+
+      this.encodedBox.innerHTML = `<span>${str}</span>`;
+    }
+
+    _parseChunks(str) {
+      const chunks = [];
+      let i = 0;
+      while (i < str.length) {
+        const hashIdx = str.indexOf('#', i);
+        if (hashIdx === -1) break;
+        const lenStr = str.substring(i, hashIdx);
+        const len = parseInt(lenStr, 10);
+        if (isNaN(len)) break;
+        const data = str.substring(hashIdx + 1, hashIdx + 1 + len);
+        chunks.push({ lenStr, data });
+        i = hashIdx + 1 + len;
+      }
+      return chunks;
+    }
+
+    _renderDecoded(s) {
+      const words = s.decodedWords ?? [];
+      if (words.length === 0) {
+        this.decodedList.innerHTML = "<div class='lp-decoded-empty'>empty</div>";
+        return;
+      }
+
+      const isDone = s.stepKind === 'done';
+      this.decodedList.innerHTML = words
+        .map((w, i) => {
+          const isJustAdded = !isDone && i === s.activeWord;
+          const cls = isDone ? 'lp-decoded-cell lp-decoded-confirmed' : isJustAdded ? 'lp-decoded-cell lp-decoded-new' : 'lp-decoded-cell';
+          return `<div class="${cls}" data-teach-target="decoded-${i}"><span class="lp-word-quote">"</span>${w}<span class="lp-word-quote">"</span></div>`;
+        })
+        .join('');
+    }
+  }
+
+  if (!customElements.get('length-prefix-viz')) {
+    customElements.define('length-prefix-viz', LengthPrefixViz);
+  }
+</script>
+
+<style>
+  length-prefix-viz { display: block; }
+
+  /* Layout */
+  .lp-meta-row { margin-bottom: 1rem; }
+
+  .lp-layout {
+    display: flex;
+    gap: 2.5rem;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .lp-col { min-width: 120px; }
+  .lp-col-wide { flex: 2; min-width: 260px; }
+
+  /* Labels */
+  .lp-accent-label { color: var(--accent) !important; }
+  .lp-green-label { color: var(--status-easy) !important; }
+
+  /* Input word cells */
+  .lp-words-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .lp-word-cell {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--text);
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+
+  .lp-word-cell.lp-word-active {
+    border-color: var(--accent);
+    background: rgba(201, 168, 76, 0.08);
+    transform: translateX(4px);
+  }
+
+  .lp-word-cell.lp-word-active .lp-word-text { color: var(--accent); }
+
+  .lp-word-cell.lp-word-done {
+    opacity: 0.4;
+  }
+
+  .lp-word-quote { color: var(--muted); font-size: 0.9em; }
+
+  /* Encoded string box */
+  .lp-encoded-box {
+    background: var(--panel);
+    border: 1px dashed var(--accent);
+    border-radius: 4px;
+    padding: 1.25rem 1.5rem;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    letter-spacing: 1.5px;
+    word-break: break-all;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .lp-empty-hint {
+    opacity: 0.3;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .lp-enc-len {
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.12);
+    border-radius: 2px;
+    padding: 0 2px;
+    font-weight: 600;
+  }
+
+  .lp-enc-sep {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .lp-enc-data {
+    color: var(--text);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  .lp-enc-faded { opacity: 0.3; }
+
+  .lp-enc-rest { opacity: 0.5; }
+
+  .lp-enc-confirmed {
+    color: var(--status-easy);
+  }
+
+  /* Decoded list */
+  .lp-decoded-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 40px;
+  }
+
+  .lp-decoded-empty {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.4;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  .lp-decoded-cell {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--status-easy);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .lp-decoded-cell.lp-decoded-new {
+    border-color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+    animation: lp-slide-in 0.3s ease-out;
+  }
+
+  .lp-decoded-cell.lp-decoded-confirmed {
+    border-color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  /* Phase box tints */
+  .lp-phase-box.lp-phase-encode {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .lp-phase-box.lp-phase-decode {
+    border-color: color-mix(in srgb, var(--status-medium, #e09a4a) 55%, transparent);
+  }
+
+  .lp-phase-box.lp-phase-done {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .lp-result-box.lp-confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .lp-pointer-box.lp-pointer-active {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  @keyframes lp-slide-in {
+    from { transform: translateX(16px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+</style>

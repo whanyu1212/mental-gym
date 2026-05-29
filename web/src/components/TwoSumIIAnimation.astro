@@ -1,0 +1,296 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const nums = [2, 7, 11, 15];
+const target = 9;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initial-compare',
+    l: 0,
+    r: 3,
+    leftValue: 2,
+    rightValue: 15,
+    sum: 17,
+    relation: '>',
+    answer: null,
+    found: false,
+    exp: 'Start with the smallest value on the left and the largest value on the right. In a sorted array, this pair gives us a sum we can reason about immediately.',
+    reason: 'Sorted order tells us how the sum changes: moving L right increases it, moving R left decreases it.',
+    invariant: [
+      'Only the current pair (nums[L], nums[R]) matters at each step.',
+      'The sorted array tells us which side to move after every comparison.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'pair-box', kind: 'focus' },
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'char:0', kind: 'focus' },
+      { target: 'char:3', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-right-left',
+    l: 0,
+    r: 3,
+    leftValue: 2,
+    rightValue: 15,
+    sum: 17,
+    relation: '>',
+    answer: null,
+    found: false,
+    exp: '2 + 15 = 17, which is too large. To make the sum smaller, move the right pointer left.',
+    reason: 'Because the array is sorted, decreasing the right value is the only move that can reduce the current sum.',
+    invariant: 'When sum > target, every pair using this right value and any larger left value would also be too large.',
+    action: 'shrink',
+    highlights: [
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'char:3', kind: 'discard' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'still-too-large',
+    l: 0,
+    r: 2,
+    leftValue: 2,
+    rightValue: 11,
+    sum: 13,
+    relation: '>',
+    answer: null,
+    found: false,
+    exp: 'Now 2 + 11 = 13, which is still too large, so move the right pointer left again.',
+    reason: 'We keep shrinking from the right until the sum falls enough to reach the target.',
+    invariant: 'Every discarded right endpoint is safely ruled out by sorted order.',
+    action: 'shrink',
+    highlights: [
+      { target: 'pair-box', kind: 'focus' },
+      { target: 'sum-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'char:2', kind: 'focus' },
+      { target: 'char:3', kind: 'discard' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'match-found',
+    l: 0,
+    r: 1,
+    leftValue: 2,
+    rightValue: 7,
+    sum: 9,
+    relation: '=',
+    answer: [1, 2],
+    found: true,
+    exp: 'Now 2 + 7 = 9, which matches the target exactly. The current pair is the answer.',
+    reason: 'Equal sum means we found the unique valid pair for the problem.',
+    invariant: 'Once sum === target, the pointer search is complete.',
+    action: 'confirm',
+    highlights: [
+      { target: 'pair-box', kind: 'confirmed' },
+      { target: 'sum-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'answer-box', kind: 'confirmed' },
+      { target: 'char:0', kind: 'confirmed' },
+      { target: 'char:1', kind: 'confirmed' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'return-indices',
+    l: 0,
+    r: 1,
+    leftValue: 2,
+    rightValue: 7,
+    sum: 9,
+    relation: '=',
+    answer: [1, 2],
+    found: true,
+    exp: 'Return 1-based indices [L + 1, R + 1] = [1, 2], not the values themselves.',
+    reason: 'The problem wants positions in the sorted array, so we convert the pointer locations to 1-based indexing.',
+    invariant: 'The same located pair still produces the exact target sum.',
+    action: 'confirm',
+    highlights: [
+      { target: 'answer-box', kind: 'confirmed' },
+      { target: 'sum-box', kind: 'confirmed' },
+      { target: 'char:0', kind: 'confirmed' },
+      { target: 'char:1', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<two-sum-ii-visuals>
+  <AlgorithmPlayer title="nums = [2, 7, 11, 15], target = 9" steps={steps}>
+    <div class="stats-row ts-stats-row">
+      <div class="stat-box" data-teach-target="pair-box">
+        <span class="stat-label">Current Pair</span>
+        <span class="stat-val ts-pair">-</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="sum-box">
+        <span class="stat-label">L + R Sum</span>
+        <span class="stat-val ts-sum">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val ts-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="answer-box">
+        <span class="stat-label">Return Indices</span>
+        <span class="stat-val ts-answer">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Sorted Array & Pointers</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell ts-cell" data-idx={i} data-teach-target={`char:${i}`}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row ts-ptr-col" data-idx={i}>
+              <span class="ptr ptr-l hidden" data-teach-target={i === 0 ? "pointer:l" : undefined}>L</span>
+              <span class="ptr ptr-r hidden" data-teach-target={i === 0 ? "pointer:r" : undefined}>R</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</two-sum-ii-visuals>
+
+<script>
+  class TwoSumIIVisuals extends HTMLElement {
+    connectedCallback() {
+      this.sumEl = this.querySelector(".ts-sum");
+      this.pairEl = this.querySelector(".ts-pair");
+      this.decisionEl = this.querySelector(".ts-decision");
+      this.answerEl = this.querySelector(".ts-answer");
+      this.cells = Array.from(this.querySelectorAll(".ts-cell"));
+      this.ptrCols = Array.from(this.querySelectorAll(".ts-ptr-col"));
+      this.sumBox = this.querySelector('[data-teach-target="sum-box"]');
+      this.pairBox = this.querySelector('[data-teach-target="pair-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+      this.answerBox = this.querySelector('[data-teach-target="answer-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.sumEl) {
+          this.sumEl.textContent = step.sum !== null ? step.sum.toString() : "-";
+        }
+
+        if (this.pairEl) {
+          this.pairEl.textContent = `[${step.leftValue}, ${step.rightValue}]`;
+        }
+
+        if (this.decisionEl) {
+          if (step.relation === '>') {
+            this.decisionEl.textContent = 'Sum too large → move R left';
+          } else if (step.relation === '<') {
+            this.decisionEl.textContent = 'Sum too small → move L right';
+          } else {
+            this.decisionEl.textContent = 'Exact match found';
+          }
+        }
+
+        if (this.answerEl) {
+          this.answerEl.textContent = step.answer ? `[${step.answer[0]}, ${step.answer[1]}]` : '-';
+        }
+
+        this.sumBox?.classList.toggle("success-box", Boolean(step.found));
+        this.pairBox?.classList.toggle("success-box", Boolean(step.found));
+        this.decisionBox?.classList.toggle("success-box", Boolean(step.found));
+        this.answerBox?.classList.toggle("success-box", Boolean(step.answer));
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i < step.l || i > step.r) valSpan.classList.add("visited");
+          if (i === step.l || i === step.r) {
+            valSpan.classList.add("active-lr");
+            if (step.found) valSpan.classList.add("found-lr");
+          }
+        });
+
+        this.ptrCols.forEach((col, i) => {
+          const ptrL = col.querySelector(".ptr-l");
+          const ptrR = col.querySelector(".ptr-r");
+
+          if (ptrL) ptrL.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (ptrR) ptrR.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('two-sum-ii-visuals')) {
+    customElements.define('two-sum-ii-visuals', TwoSumIIVisuals);
+  }
+</script>
+
+<style>
+  two-sum-ii-visuals {
+    display: block;
+  }
+
+  .ts-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .cell-val.visited {
+    opacity: 0.35;
+  }
+
+  .cell-val.active-lr {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.found-lr {
+    border-color: var(--status-easy) !important;
+    color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent) !important;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--status-easy) 20%, transparent);
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
+</style>

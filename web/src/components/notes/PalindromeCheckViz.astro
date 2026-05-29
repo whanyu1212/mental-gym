@@ -1,0 +1,191 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const s = ['a', 'b', 'c', 'b', 'a'];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'start',
+    left: 0,
+    right: 4,
+    skipped: -1,
+    match: null,
+    exp: 'String "abcba". Place L at index 0, R at index 4. Compare characters inward — if L and R always match, it\'s a palindrome.',
+    reason: 'A palindrome reads the same forwards and backwards, so symmetric positions must be equal.',
+    invariant: 'All positions outside [L,R] have already been verified as matching.',
+    formula: 's[L] == s[R] → both advance inward',
+    highlights: [
+      { target: 'char:0', kind: 'write' },
+      { target: 'char:4', kind: 'write' },
+    ],
+  },
+  {
+    id: 'match-0-4',
+    phase: 'compare',
+    left: 1,
+    right: 3,
+    skipped: -1,
+    match: true,
+    exp: 's[0]="a" == s[4]="a" ✓. Both match — advance L to 1, R to 3.',
+    reason: 'Matching outer characters confirm the first layer of symmetry.',
+    invariant: 'Positions 0 and 4 verified.',
+    formula: '"a" == "a" ✓ → L=1, R=3',
+    highlights: [
+      { target: 'char:0', kind: 'confirmed' },
+      { target: 'char:4', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'match-1-3',
+    phase: 'compare',
+    left: 2,
+    right: 2,
+    skipped: -1,
+    match: true,
+    exp: 's[1]="b" == s[3]="b" ✓. Advance L to 2, R to 2. L == R — single center character, trivially a palindrome.',
+    reason: 'Odd-length palindromes have a center character that needs no partner.',
+    invariant: 'Positions 1 and 3 verified.',
+    formula: '"b" == "b" ✓ → L=R=2 (center)',
+    highlights: [
+      { target: 'char:1', kind: 'confirmed' },
+      { target: 'char:3', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'done',
+    phase: 'found',
+    left: 2,
+    right: 2,
+    skipped: -1,
+    match: true,
+    exp: 'L == R → loop exits. "abcba" is a valid palindrome. O(n) time, O(1) space.',
+    reason: 'When L ≥ R, every position has been verified.',
+    invariant: 'All symmetric pairs matched.',
+    formula: 'isPalindrome = True ✓',
+    highlights: [
+      { target: 'char:0', kind: 'confirmed' },
+      { target: 'char:1', kind: 'confirmed' },
+      { target: 'char:2', kind: 'confirmed' },
+      { target: 'char:3', kind: 'confirmed' },
+      { target: 'char:4', kind: 'confirmed' },
+      { target: 'result-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<pc-viz>
+  <AlgorithmPlayer title="Palindrome Check — s=&quot;abcba&quot;" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="result-box">
+        <span class="stat-label">Result</span>
+        <span class="stat-val pc-result">—</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">String</p>
+      <div class="array-row">
+        {s.map((ch, i) => (
+          <div class="array-cell pc-char" data-idx={i} data-teach-target={`char:${i}`}>
+            <span class="cell-val">{ch}</span>
+            <span class="cell-idx">{i}</span>
+          </div>
+        ))}
+      </div>
+      <div class="pc-ptr-row">
+        <span class="pc-ptr-label pc-l-label">L</span>
+        <span class="pc-ptr-label pc-r-label">R</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</pc-viz>
+
+<script>
+  class PcViz extends HTMLElement {
+    connectedCallback() {
+      this.chars = Array.from(this.querySelectorAll('.pc-char'));
+      this.resultEl = this.querySelector('.pc-result');
+      this.resultBox = this.querySelector('[data-teach-target="result-box"]');
+      this.lLabel = this.querySelector('.pc-l-label');
+      this.rLabel = this.querySelector('.pc-r-label');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+        const count = this.chars.length;
+        const cellWidth = 100 / count;
+
+        this.chars.forEach((ch) => {
+          const i = parseInt(ch.dataset.idx ?? '0', 10);
+          ch.className = 'array-cell pc-char';
+          if (step.phase === 'found') ch.classList.add('found');
+          else if (i === step.left || i === step.right) ch.classList.add('active');
+          else if (i < step.left || i > step.right) ch.classList.add('verified');
+        });
+
+        const setPtr = (el, idx) => {
+          if (!el || idx < 0) { if (el) el.style.visibility = 'hidden'; return; }
+          el.style.visibility = 'visible';
+          el.style.left = `${idx * cellWidth + cellWidth / 2}%`;
+          el.style.transform = 'translateX(-50%)';
+        };
+        setPtr(this.lLabel, step.left);
+        setPtr(this.rLabel, step.right);
+
+        if (this.resultEl) {
+          this.resultEl.textContent = step.phase === 'found' ? 'True' : '—';
+        }
+        this.resultBox?.classList.toggle('success-box', step.phase === 'found');
+      });
+    }
+  }
+
+  if (!customElements.get('pc-viz')) {
+    customElements.define('pc-viz', PcViz);
+  }
+</script>
+
+<style>
+  pc-viz { display: block; }
+
+  .pc-ptr-row {
+    position: relative;
+    height: 1.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .pc-ptr-label {
+    position: absolute;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    transition: left 0.25s ease;
+  }
+
+  .pc-char.verified .cell-val {
+    opacity: 0.45;
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+  }
+
+  .pc-char.active { transform: translateY(-4px); }
+  .pc-char.active .cell-val {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+  }
+
+  .pc-char.found .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+  .stat-box.success-box .stat-val { color: var(--status-easy) !important; }
+</style>

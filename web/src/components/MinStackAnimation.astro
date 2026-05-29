@@ -1,0 +1,373 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const steps = [
+  {
+    op: 'init',
+    val: null,
+    stack: [],
+    minStack: [],
+    top: null,
+    min: null,
+    action: 'write',
+    exp: 'Initialize both stacks as empty.',
+    reason: 'Main stack stores all values; min stack stores historical minima.',
+    invariant: 'Top of minStack is always the minimum of main stack.',
+    formula: 'push(x): if minStack empty or x <= minTop, push x to minStack',
+    decision: 'Start with stack = [], minStack = [].',
+    targets: ['main-box', 'min-box', 'rule-box'],
+  },
+  {
+    op: 'push',
+    val: -2,
+    stack: [-2],
+    minStack: [-2],
+    top: -2,
+    min: -2,
+    action: 'write',
+    exp: 'push(-2): push to main stack and also to min stack (it is the first value).',
+    reason: 'First value is automatically the minimum.',
+    invariant: 'minStack tracks every new minimum candidate.',
+    formula: '-2 <= empty -> push to minStack',
+    decision: 'main=[-2], min=[-2].',
+    targets: ['main-box', 'min-box', 'op-box'],
+  },
+  {
+    op: 'push',
+    val: 0,
+    stack: [-2, 0],
+    minStack: [-2],
+    top: 0,
+    min: -2,
+    action: 'compare',
+    exp: 'push(0): push to main stack; min stack unchanged because 0 > -2.',
+    reason: 'Only values <= current minimum are pushed to minStack.',
+    invariant: 'Current minimum stays at minStack top.',
+    formula: '0 > minTop(-2) -> do not push to minStack',
+    decision: 'main=[-2,0], min=[-2].',
+    targets: ['main-box', 'min-box', 'op-box'],
+  },
+  {
+    op: 'push',
+    val: -3,
+    stack: [-2, 0, -3],
+    minStack: [-2, -3],
+    top: -3,
+    min: -3,
+    action: 'write',
+    exp: 'push(-3): push to main stack and min stack because -3 <= -2.',
+    reason: 'A new smaller value becomes the new minimum.',
+    invariant: 'minStack top equals global minimum at all times.',
+    formula: '-3 <= minTop(-2) -> push to minStack',
+    decision: 'main=[-2,0,-3], min=[-2,-3].',
+    targets: ['main-box', 'min-box', 'op-box', 'min-read-box'],
+  },
+  {
+    op: 'getMin',
+    val: null,
+    stack: [-2, 0, -3],
+    minStack: [-2, -3],
+    top: -3,
+    min: -3,
+    out: -3,
+    action: 'confirm',
+    exp: 'getMin() returns top of min stack: -3.',
+    reason: 'Minimum retrieval is O(1) from minStack top.',
+    invariant: 'minStack top is always current minimum.',
+    formula: 'getMin() = minStack[top]',
+    decision: 'Output -3.',
+    targets: ['min-box', 'out-box', 'min-read-box'],
+  },
+  {
+    op: 'pop',
+    val: -3,
+    stack: [-2, 0],
+    minStack: [-2],
+    top: 0,
+    min: -2,
+    action: 'discard',
+    exp: 'pop(): popped -3 from main stack, so also pop -3 from min stack.',
+    reason: 'When popped value equals minTop, minimum history must roll back.',
+    invariant: 'Both stacks stay synchronized on minimum transitions.',
+    formula: 'if popped == minTop -> minStack.pop()',
+    decision: 'main=[-2,0], min=[-2].',
+    targets: ['main-box', 'min-box', 'op-box'],
+  },
+  {
+    op: 'top',
+    val: null,
+    stack: [-2, 0],
+    minStack: [-2],
+    top: 0,
+    min: -2,
+    out: 0,
+    action: 'confirm',
+    exp: 'top() returns top of main stack: 0.',
+    reason: 'Top value is direct read from main stack end.',
+    invariant: 'top() does not modify either stack.',
+    formula: 'top() = stack[top]',
+    decision: 'Output 0.',
+    targets: ['main-box', 'out-box'],
+  },
+  {
+    op: 'getMin',
+    val: null,
+    stack: [-2, 0],
+    minStack: [-2],
+    top: 0,
+    min: -2,
+    out: -2,
+    action: 'confirm',
+    exp: 'getMin() now returns -2.',
+    reason: 'After removing -3, previous minimum resurfaces.',
+    invariant: 'Minimum history is preserved in minStack.',
+    formula: 'getMin() = -2',
+    decision: 'Output -2.',
+    targets: ['min-box', 'out-box', 'min-read-box'],
+  },
+];
+---
+
+<min-stack-visuals>
+  <AlgorithmPlayer title="Min Stack Operations" steps={steps}>
+    <div class="stats-row ms-meta-row">
+      <div class="stat-box ms-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">push x to minStack iff x ≤ current min</span>
+      </div>
+      <div class="stat-box ms-op-box" data-teach-target="op-box">
+        <span class="stat-label">Operation</span>
+        <span class="stat-val ms-op">init</span>
+      </div>
+      <div class="stat-box ms-min-read-box" data-teach-target="min-read-box">
+        <span class="stat-label">Current Min</span>
+        <span class="stat-val ms-min-read">-</span>
+      </div>
+      <div class="stat-box ms-out-box" data-teach-target="out-box">
+        <span class="stat-label">Output</span>
+        <span class="stat-val ms-out">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row ms-layout">
+      <div class="ms-col">
+        <p class="anim-label">Main Stack</p>
+        <div class="stack-container ms-main" data-teach-target="main-box"></div>
+        <div class="stack-base"></div>
+      </div>
+
+      <div class="ms-col">
+        <p class="anim-label highlight-label">Min Stack</p>
+        <div class="stack-container ms-min highlight-container" data-teach-target="min-box"></div>
+        <div class="stack-base highlight-base"></div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</min-stack-visuals>
+
+<script>
+  class MinStackVisuals extends HTMLElement {
+    connectedCallback() {
+      this.mainStackEl = this.querySelector('.ms-main');
+      this.minStackEl = this.querySelector('.ms-min');
+      this.opEl = this.querySelector('.ms-op');
+      this.minReadEl = this.querySelector('.ms-min-read');
+      this.outEl = this.querySelector('.ms-out');
+      this.opBox = this.querySelector('.ms-op-box');
+      this.minReadBox = this.querySelector('.ms-min-read-box');
+      this.outBox = this.querySelector('.ms-out-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        const renderStack = (container, arr, isMinStack) => {
+          if (!container) return;
+
+          if (!arr || arr.length === 0) {
+            container.innerHTML = `<span class="stack-empty">Empty</span>`;
+            return;
+          }
+
+          const stackItems = arr.map((val, idx) => {
+            const isTop = idx === arr.length - 1;
+            const topClass = isTop
+              ? isMinStack
+                ? 'stack-top-min'
+                : 'stack-top-main'
+              : '';
+            return `<div class="stack-item ${topClass}">${val}</div>`;
+          });
+
+          container.innerHTML = stackItems.reverse().join('');
+        };
+
+        renderStack(this.mainStackEl, s.stack, false);
+        renderStack(this.minStackEl, s.minStack, true);
+
+        if (this.opEl) this.opEl.textContent = s.op ?? '-';
+        if (this.minReadEl) this.minReadEl.textContent = s.min ?? '-';
+        if (this.outEl) this.outEl.textContent = s.out ?? '-';
+
+        this.opBox?.classList.remove('pulse');
+        this.minReadBox?.classList.remove('pulse');
+        this.outBox?.classList.remove('pulse', 'confirmed');
+
+        if (s.action === 'write' || s.action === 'compare' || s.action === 'discard') {
+          this.opBox?.classList.add('pulse');
+        }
+        if (s.op === 'getMin') {
+          this.minReadBox?.classList.add('pulse');
+        }
+        if (s.action === 'confirm' && s.out !== undefined) {
+          this.outBox?.classList.add('confirmed');
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('min-stack-visuals')) {
+    customElements.define('min-stack-visuals', MinStackVisuals);
+  }
+</script>
+
+<style>
+  min-stack-visuals {
+    display: block;
+  }
+
+  .ms-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .ms-layout {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    min-height: 250px;
+  }
+
+  .ms-col {
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ms-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .ms-op-box .stat-val {
+    color: var(--accent);
+  }
+
+  .ms-min-read-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  .ms-out-box .stat-val {
+    color: var(--status-info);
+  }
+
+  .highlight-label {
+    color: var(--status-easy) !important;
+  }
+
+  .stat-box.pulse {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .stat-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 55%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .stack-container {
+    width: 120px;
+    height: 180px;
+    border-left: 2px solid var(--border);
+    border-right: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    background: var(--surface-strong);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.5rem;
+    gap: 0.25rem;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .highlight-container {
+    border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 5%, transparent);
+  }
+
+  .stack-base {
+    width: 140px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 2px;
+    transition: background 0.3s;
+  }
+
+  .highlight-base {
+    background: color-mix(in srgb, var(--status-easy) 60%, transparent);
+  }
+
+  .stack-item {
+    width: 100%;
+    height: 2rem;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--text);
+    animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  .stack-top-main {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stack-top-min {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stack-empty {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes pop-in {
+    from {
+      transform: scale(0.9) translateY(-10px);
+      opacity: 0;
+    }
+
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+</style>

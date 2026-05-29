@@ -1,0 +1,521 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const heights = [1, 8, 6, 2, 5, 4, 8, 3, 7];
+const maxH = Math.max(...heights);
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initial-container',
+    l: 0,
+    r: 8,
+    leftHeight: 1,
+    rightHeight: 7,
+    limitingHeight: 1,
+    width: 8,
+    area: 8,
+    maxArea: 8,
+    move: 'start',
+    formula: 'min(1, 7) × 8 = 8',
+    exp: 'Start with the widest possible container: the first and last bars. The area uses the shorter wall, so the area is 1 × 8 = 8.',
+    reason: 'Two pointers begin at maximum width. From there, we try to improve the area while width shrinks.',
+    invariant: [
+      'Area = min(height[L], height[R]) × (R - L).',
+      'The shorter wall is the bottleneck for the current container.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'max-area', kind: 'write' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'water-overlay', kind: 'compare' },
+      { target: 'bar:0', kind: 'focus' },
+      { target: 'bar:8', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-left-to-1',
+    l: 1,
+    r: 8,
+    leftHeight: 8,
+    rightHeight: 7,
+    limitingHeight: 7,
+    width: 7,
+    area: 49,
+    maxArea: 49,
+    move: 'left',
+    formula: 'min(8, 7) × 7 = 49',
+    exp: 'The left wall was shorter, so move L right to search for a taller left boundary. Now the container spans heights 8 and 7, giving area 49.',
+    reason: 'Moving the taller wall cannot help when the shorter wall still limits the water level.',
+    invariant: 'Always move the shorter side, because only that can possibly increase the limiting height.',
+    action: 'expand',
+    highlights: [
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'max-area', kind: 'confirmed' },
+      { target: 'water-overlay', kind: 'confirmed' },
+      { target: 'bar:1', kind: 'focus' },
+      { target: 'bar:8', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-right-to-7',
+    l: 1,
+    r: 7,
+    leftHeight: 8,
+    rightHeight: 3,
+    limitingHeight: 3,
+    width: 6,
+    area: 18,
+    maxArea: 49,
+    move: 'right',
+    formula: 'min(8, 3) × 6 = 18',
+    exp: 'Now the right wall is shorter, so move R left. The new container is narrower and capped by height 3, so the area drops to 18.',
+    reason: 'Once the right wall is the bottleneck, the only promising move is to replace it with a potentially taller right wall.',
+    invariant: 'A smaller width can still win later, but only if the limiting height improves enough.',
+    action: 'shrink',
+    highlights: [
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'max-area', kind: 'focus' },
+      { target: 'water-overlay', kind: 'compare' },
+      { target: 'bar:1', kind: 'focus' },
+      { target: 'bar:7', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-right-to-6',
+    l: 1,
+    r: 6,
+    leftHeight: 8,
+    rightHeight: 8,
+    limitingHeight: 8,
+    width: 5,
+    area: 40,
+    maxArea: 49,
+    move: 'right',
+    formula: 'min(8, 8) × 5 = 40',
+    exp: 'Move R left again. Even though both walls are now tall, the reduced width gives area 40, which is still below the best 49.',
+    reason: 'Equal heights let us move either side; the key fact is that width keeps shrinking, so we need a big limiting height to compensate.',
+    invariant: 'The best area found so far is preserved even when later containers are worse.',
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'max-area', kind: 'focus' },
+      { target: 'water-overlay', kind: 'compare' },
+      { target: 'bar:1', kind: 'focus' },
+      { target: 'bar:6', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-left-to-2',
+    l: 2,
+    r: 6,
+    leftHeight: 6,
+    rightHeight: 8,
+    limitingHeight: 6,
+    width: 4,
+    area: 24,
+    maxArea: 49,
+    move: 'left',
+    formula: 'min(6, 8) × 4 = 24',
+    exp: 'With equal tall walls previously, moving L is fine too. Now the left wall is 6, width is 4, and the area is 24.',
+    reason: 'Once width decreases, any new contender must gain enough height to offset that loss.',
+    invariant: 'Each step discards one boundary permanently; the search space shrinks without missing the optimum.',
+    action: 'shrink',
+    highlights: [
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'bar:2', kind: 'focus' },
+      { target: 'bar:6', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-left-to-3',
+    l: 3,
+    r: 6,
+    leftHeight: 2,
+    rightHeight: 8,
+    limitingHeight: 2,
+    width: 3,
+    area: 6,
+    maxArea: 49,
+    move: 'left',
+    formula: 'min(2, 8) × 3 = 6',
+    exp: 'The left wall drops to 2, so the area collapses to 6. This confirms how strongly the shorter wall controls the container.',
+    reason: 'A very short limiting wall ruins the area even if the other wall stays tall.',
+    invariant: 'The shorter side alone determines the current water height.',
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'bar:3', kind: 'focus' },
+      { target: 'bar:6', kind: 'focus' },
+      { target: 'water-overlay', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'move-left-to-4',
+    l: 4,
+    r: 6,
+    leftHeight: 5,
+    rightHeight: 8,
+    limitingHeight: 5,
+    width: 2,
+    area: 10,
+    maxArea: 49,
+    move: 'left',
+    formula: 'min(5, 8) × 2 = 10',
+    exp: 'Move L right again. The limiting height recovers to 5, but the width is only 2, so the area is still just 10.',
+    reason: 'Late in the process, narrow width makes it very hard to beat an early strong candidate like area 49.',
+    invariant: 'Best-so-far remains unchanged unless the new area is strictly larger.',
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'max-area', kind: 'focus' },
+      { target: 'bar:4', kind: 'focus' },
+      { target: 'bar:6', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'move-left-to-5',
+    l: 5,
+    r: 6,
+    leftHeight: 4,
+    rightHeight: 8,
+    limitingHeight: 4,
+    width: 1,
+    area: 4,
+    maxArea: 49,
+    move: 'left',
+    formula: 'min(4, 8) × 1 = 4',
+    exp: 'Now only one unit of width remains. No matter how tall the walls are, the container is too narrow to beat the maximum.',
+    reason: 'As width approaches zero, the search is effectively exhausted.',
+    invariant: 'When pointers get close, remaining candidates have very limited upside.',
+    action: 'shrink',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'current-area', kind: 'compare' },
+      { target: 'bar:5', kind: 'focus' },
+      { target: 'bar:6', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'done',
+    l: 6,
+    r: 6,
+    leftHeight: 8,
+    rightHeight: 8,
+    limitingHeight: 0,
+    width: 0,
+    area: 0,
+    maxArea: 49,
+    move: 'done',
+    formula: 'Search complete',
+    exp: 'L meets R, so the scan is complete. The best container seen during the search had area 49.',
+    reason: 'Every candidate pair has been ruled out by the two-pointer logic without brute force checking all pairs.',
+    invariant: 'The recorded max area is the final answer.',
+    action: 'confirm',
+    highlights: [
+      { target: 'max-area', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'formula-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<container-water-visuals>
+  <AlgorithmPlayer title="heights = [1, 8, 6, 2, 5, 4, 8, 3, 7]" steps={steps}>
+    <div class="stats-row cw-stats-row">
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Area Formula</span>
+        <span class="stat-val cw-formula">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="current-area">
+        <span class="stat-label">Current Area</span>
+        <span class="stat-val cw-current-area">0</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="max-area">
+        <span class="stat-label">Max Area</span>
+        <span class="stat-val cw-max-area">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Pointer Move</span>
+        <span class="stat-val cw-decision">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Bar Chart (Two Pointers)</p>
+      <div class="chart-container">
+        <div class="water-overlay cw-water-overlay" data-teach-target="water-overlay"></div>
+        <div class="bars-row">
+          {heights.map((height, idx) => (
+            <div class="bar-col">
+              <div class="bar-wrapper">
+                <div
+                  class="solid-block cw-block"
+                  data-idx={idx}
+                  data-teach-target={`bar:${idx}`}
+                  style={`height: ${(height / maxH) * 100}%`}
+                ></div>
+              </div>
+              <span class="bar-idx">{height}</span>
+              <div class="pointer-container cw-ptr-col" data-idx={idx}>
+                <span class="ptr ptr-l hidden" data-teach-target={idx === 0 ? 'pointer:l' : undefined}>L</span>
+                <span class="ptr ptr-r hidden" data-teach-target={idx === 0 ? 'pointer:r' : undefined}>R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</container-water-visuals>
+
+<script>
+  class ContainerWaterVisuals extends HTMLElement {
+    connectedCallback() {
+      this.currentAreaEl = this.querySelector(".cw-current-area");
+      this.maxAreaEl = this.querySelector(".cw-max-area");
+      this.formulaEl = this.querySelector(".cw-formula");
+      this.decisionEl = this.querySelector(".cw-decision");
+      this.waterOverlay = this.querySelector(".cw-water-overlay");
+      this.blocks = Array.from(this.querySelectorAll(".cw-block"));
+      this.ptrs = Array.from(this.querySelectorAll(".cw-ptr-col"));
+      this.currentAreaBox = this.querySelector('[data-teach-target="current-area"]');
+      this.maxAreaBox = this.querySelector('[data-teach-target="max-area"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+      this.formulaBox = this.querySelector('[data-teach-target="formula-box"]');
+
+      let lastStep = null;
+
+      this._updateHighlight = () => {
+        if (!lastStep || !this.waterOverlay) return;
+        const step = lastStep;
+
+        if (step.l < step.r && this.blocks.length > 0) {
+          const leftBlock = this.blocks[step.l];
+          const rightBlock = this.blocks[step.r];
+
+          if (leftBlock && rightBlock) {
+            const leftParent = leftBlock.closest('.bar-col');
+            const rightParent = rightBlock.closest('.bar-col');
+
+            if (leftParent && rightParent) {
+              const left = leftParent.offsetLeft + leftParent.offsetWidth / 2;
+              const width = rightParent.offsetLeft + rightParent.offsetWidth / 2 - left;
+              const percentHeight = (step.limitingHeight / maxH) * 100;
+
+              this.waterOverlay.style.left = `${left}px`;
+              this.waterOverlay.style.width = `${width}px`;
+              this.waterOverlay.style.height = `${percentHeight}%`;
+              this.waterOverlay.style.opacity = "1";
+              this.waterOverlay.classList.toggle("best-overlay", step.area === step.maxArea && step.area > 0);
+            }
+          }
+        } else {
+          this.waterOverlay.style.opacity = "0";
+        }
+      };
+
+      window.addEventListener('resize', this._updateHighlight);
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+        lastStep = step;
+
+        if (this.currentAreaEl) this.currentAreaEl.textContent = String(step.area);
+        if (this.maxAreaEl) this.maxAreaEl.textContent = String(step.maxArea);
+        if (this.formulaEl) this.formulaEl.textContent = step.formula ?? '-';
+
+        if (this.decisionEl) {
+          if (step.move === 'left') {
+            this.decisionEl.textContent = 'Move L right (left wall is shorter)';
+          } else if (step.move === 'right') {
+            this.decisionEl.textContent = 'Move R left (right wall is shorter)';
+          } else if (step.move === 'done') {
+            this.decisionEl.textContent = 'Pointers met — stop';
+          } else {
+            this.decisionEl.textContent = 'Evaluate the widest container first';
+          }
+        }
+
+        this.currentAreaBox?.classList.toggle('success-box', step.area === step.maxArea && step.area > 0);
+        this.maxAreaBox?.classList.toggle('success-box', step.move === 'done');
+        this.decisionBox?.classList.toggle('success-box', step.move === 'done');
+        this.formulaBox?.classList.toggle('success-box', step.move === 'done');
+
+        this.blocks.forEach((block, idx) => {
+          block.classList.remove("active-block", "faded-block");
+          if (idx === step.l || idx === step.r) {
+            block.classList.add("active-block");
+          } else if (idx < step.l || idx > step.r) {
+            block.classList.add("faded-block");
+          }
+        });
+
+        this.ptrs.forEach((col, idx) => {
+          const lPtr = col.querySelector(".ptr-l");
+          const rPtr = col.querySelector(".ptr-r");
+
+          if (lPtr) lPtr.className = `ptr ptr-l ${idx === step.l ? "" : "hidden"}`;
+          if (rPtr) rPtr.className = `ptr ptr-r ${idx === step.r ? "" : "hidden"}`;
+        });
+
+        requestAnimationFrame(() => this._updateHighlight());
+      });
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('resize', this._updateHighlight);
+    }
+  }
+
+  if (!customElements.get('container-water-visuals')) {
+    customElements.define('container-water-visuals', ContainerWaterVisuals);
+  }
+</script>
+
+<style>
+  container-water-visuals {
+    display: block;
+  }
+
+  .cw-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.highlight {
+    border-color: rgba(90, 130, 176, 0.4);
+    background: rgba(90, 130, 176, 0.05);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--status-info);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .chart-container {
+    position: relative;
+    padding: 1rem 0 0;
+    border-bottom: 1px solid var(--border);
+    height: 180px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .water-overlay {
+    position: absolute;
+    bottom: 0;
+    background: rgba(90, 130, 176, 0.3);
+    border: 1px solid rgba(90, 130, 176, 0.6);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .water-overlay.best-overlay {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-easy) 45%, transparent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--status-easy) 20%, transparent);
+  }
+
+  .bars-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 2;
+  }
+
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 2rem;
+    justify-content: flex-end;
+  }
+
+  .bar-wrapper {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .solid-block {
+    width: 60%;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    transition: background 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s;
+  }
+
+  .solid-block.active-block {
+    background: var(--status-medium);
+    border-color: #e0bc5c;
+    box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+    transform: translateY(-4px);
+  }
+
+  .solid-block.faded-block {
+    opacity: 0.35;
+  }
+
+  .bar-idx {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  .pointer-container {
+    height: 1.2rem;
+    margin-top: 0.2rem;
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
+</style>

@@ -1,0 +1,147 @@
+---
+// Server-rendered shell; Chart.js runs client-side
+---
+
+<div class="chart-wrap">
+	<canvas id="complexity-chart"></canvas>
+	<div class="chart-legend" id="chart-legend"></div>
+</div>
+
+<script>
+	import { Chart, LineController, LineElement, PointElement, LinearScale, LogarithmicScale, CategoryScale, Tooltip, Legend } from "chart.js";
+
+	Chart.register(LineController, LineElement, PointElement, LinearScale, LogarithmicScale, CategoryScale, Tooltip, Legend);
+
+	const N = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+
+	const clamp = (v: number) => Math.min(v, 2e9);
+
+	const rootStyles = getComputedStyle(document.documentElement);
+	const theme = {
+		text: rootStyles.getPropertyValue("--text").trim(),
+		muted: rootStyles.getPropertyValue("--muted").trim(),
+		border: rootStyles.getPropertyValue("--border").trim(),
+		panel: rootStyles.getPropertyValue("--panel").trim(),
+		easy: rootStyles.getPropertyValue("--status-easy").trim(),
+		medium: rootStyles.getPropertyValue("--status-medium").trim(),
+		hard: rootStyles.getPropertyValue("--status-hard").trim(),
+		info: rootStyles.getPropertyValue("--status-info").trim(),
+	};
+
+	const curves = [
+		{ label: "O(1)",       color: theme.easy, fn: ()     => 1 },
+		{ label: "O(log n)",   color: theme.info, fn: (n: number) => Math.log2(n) },
+		{ label: "O(n)",       color: theme.medium, fn: (n: number) => n },
+		{ label: "O(n log n)", color: theme.accent ?? theme.medium, fn: (n: number) => n * Math.log2(n) },
+		{ label: "O(n²)",      color: "#c07040", fn: (n: number) => n * n },
+		{ label: "O(2ⁿ)",      color: theme.hard, fn: (n: number) => clamp(Math.pow(2, n)) },
+		{ label: "O(n!)",      color: "#8a3a3a", fn: (n: number) => clamp([1,1,2,6,24,120,720,5040,40320,362880,3628800][N.indexOf(n)] ?? 2e9) },
+	];
+
+	const datasets = curves.map((c) => ({
+		label: c.label,
+		data: N.map(c.fn),
+		borderColor: c.color,
+		backgroundColor: `${c.color}22`,
+		borderWidth: 2,
+		pointRadius: 3,
+		pointHoverRadius: 6,
+		tension: 0.3,
+	}));
+
+	const ctx = (document.getElementById("complexity-chart") as HTMLCanvasElement).getContext("2d")!;
+
+	new Chart(ctx, {
+		type: "line",
+		data: { labels: N.map(String), datasets },
+		options: {
+			responsive: true,
+			interaction: { mode: "index", intersect: false },
+			scales: {
+				x: {
+					title: { display: true, text: "n (input size)", color: theme.text },
+					ticks: { color: theme.text },
+					grid: { color: theme.border },
+				},
+				y: {
+					type: "logarithmic",
+					title: { display: true, text: "Operations (log scale)", color: theme.text },
+					ticks: {
+						color: theme.text,
+						callback: (v) => {
+							const val = Number(v);
+							if (val >= 1e9) return "1B+";
+							if (val >= 1e6) return (val / 1e6).toFixed(0) + "M";
+							if (val >= 1e3) return (val / 1e3).toFixed(0) + "K";
+							return val.toFixed(0);
+						},
+					},
+					grid: { color: theme.border },
+				},
+			},
+			plugins: {
+				legend: { display: false },
+				tooltip: {
+					backgroundColor: theme.panel,
+					borderColor: theme.border,
+					borderWidth: 1,
+					titleColor: theme.text,
+					bodyColor: theme.muted,
+					callbacks: {
+						label: (ctx) => {
+							const v = ctx.raw as number;
+							const display = v >= 2e9 ? "∞ (intractable)" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "K" : v.toFixed(1);
+							return ` ${ctx.dataset.label}: ${display}`;
+						},
+					},
+				},
+			},
+		},
+	});
+
+	// Build custom legend
+	const legend = document.getElementById("chart-legend")!;
+	curves.forEach((c) => {
+		const item = document.createElement("div");
+		item.className = "legend-item";
+		item.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span><span class="legend-label">${c.label}</span>`;
+		legend.appendChild(item);
+	});
+</script>
+
+<style>
+	.chart-wrap {
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		padding: 1.5rem;
+		margin: 1.5rem 0;
+	}
+
+	canvas {
+		max-height: 380px;
+	}
+
+	.chart-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem 1.25rem;
+		margin-top: 1.25rem;
+		justify-content: center;
+	}
+
+	.legend-item {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.82rem;
+		color: var(--muted);
+	}
+
+	.legend-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		display: inline-block;
+	}
+</style>

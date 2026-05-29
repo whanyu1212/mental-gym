@@ -1,0 +1,576 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const h = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1];
+const maxH = 3;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initial-state',
+    l: 0,
+    r: 11,
+    maxL: 0,
+    maxR: 1,
+    totalWater: 0,
+    trappedAt: 0,
+    processedSide: 'start',
+    currentIndex: null,
+    formula: 'Need both sides to bound water',
+    wArr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    exp: 'Start with pointers at both ends. We track the best wall seen from the left and the best wall seen from the right.',
+    reason: 'Water at any position depends on the smaller of the best left boundary and best right boundary.',
+    invariant: [
+      'Trapped water at an index is determined by the smaller boundary.',
+      'If maxL < maxR, the left side can be decided immediately; otherwise the right side can.',
+    ],
+    action: 'compare',
+    highlights: [
+      { target: 'max-left-box', kind: 'focus' },
+      { target: 'max-right-box', kind: 'focus' },
+      { target: 'total-water-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'bar:0', kind: 'focus' },
+      { target: 'bar:11', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'process-left-1',
+    l: 1,
+    r: 11,
+    maxL: 1,
+    maxR: 1,
+    totalWater: 0,
+    trappedAt: 0,
+    processedSide: 'left',
+    currentIndex: 1,
+    formula: 'water[1] = maxL - h[1] = 1 - 1 = 0',
+    wArr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    exp: 'Because maxL < maxR initially, process the left side. Move L to index 1, update maxL to 1, and trap no water there.',
+    reason: 'When the left boundary is smaller, the right side is guaranteed tall enough, so the left position is fully determined.',
+    invariant: 'Processing one side finalizes the water for that index forever.',
+    action: 'write',
+    highlights: [
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'max-left-box', kind: 'write' },
+      { target: 'current-index-box', kind: 'focus' },
+      { target: 'bar:1', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'process-right-10',
+    l: 1,
+    r: 10,
+    maxL: 1,
+    maxR: 2,
+    totalWater: 0,
+    trappedAt: 0,
+    processedSide: 'right',
+    currentIndex: 10,
+    formula: 'water[10] = maxR - h[10] = 2 - 2 = 0',
+    wArr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    exp: 'Now maxL is not smaller, so process the right side. Move R to index 10, update maxR to 2, and trap no water.',
+    reason: 'When maxR is the smaller-or-equal boundary, the right side is the side we can resolve safely.',
+    invariant: 'The smaller boundary decides which side is ready to compute.',
+    action: 'write',
+    highlights: [
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'max-right-box', kind: 'write' },
+      { target: 'current-index-box', kind: 'focus' },
+      { target: 'bar:10', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'trap-at-2',
+    l: 2,
+    r: 10,
+    maxL: 1,
+    maxR: 2,
+    totalWater: 1,
+    trappedAt: 1,
+    processedSide: 'left',
+    currentIndex: 2,
+    formula: 'water[2] = maxL - h[2] = 1 - 0 = 1',
+    wArr: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    exp: 'Since maxL < maxR, process index 2 from the left. Height 0 sits below maxL = 1, so it traps 1 unit of water.',
+    reason: 'The left boundary of 1 is the limiting wall here, and the right side is tall enough not to matter.',
+    invariant: 'Any dip below the active smaller boundary traps exactly the difference.',
+    action: 'confirm',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'total-water-box', kind: 'confirmed' },
+      { target: 'water:2', kind: 'confirmed' },
+      { target: 'bar:2', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'process-left-3',
+    l: 3,
+    r: 10,
+    maxL: 2,
+    maxR: 2,
+    totalWater: 1,
+    trappedAt: 0,
+    processedSide: 'left',
+    currentIndex: 3,
+    formula: 'water[3] = maxL - h[3] = 2 - 2 = 0',
+    wArr: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    exp: 'Move left again to index 3. This bar reaches height 2, so maxL becomes 2 and no new water is trapped.',
+    reason: 'A taller bar strengthens the boundary for later positions instead of storing water itself.',
+    invariant: 'Boundary maxima only stay the same or increase.',
+    action: 'write',
+    highlights: [
+      { target: 'max-left-box', kind: 'write' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'bar:3', kind: 'focus' },
+      { target: 'current-index-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'trap-at-9',
+    l: 3,
+    r: 9,
+    maxL: 2,
+    maxR: 2,
+    totalWater: 2,
+    trappedAt: 1,
+    processedSide: 'right',
+    currentIndex: 9,
+    formula: 'water[9] = maxR - h[9] = 2 - 1 = 1',
+    wArr: [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    exp: 'Process the right side at index 9. Its height is 1 under maxR = 2, so it traps 1 unit, raising the total to 2.',
+    reason: 'On the right side, the smaller boundary is maxR, so that alone determines the trapped water there.',
+    invariant: 'Once an index is processed, its water amount never changes later.',
+    action: 'confirm',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'total-water-box', kind: 'confirmed' },
+      { target: 'water:9', kind: 'confirmed' },
+      { target: 'bar:9', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'process-right-8',
+    l: 3,
+    r: 8,
+    maxL: 2,
+    maxR: 2,
+    totalWater: 2,
+    trappedAt: 0,
+    processedSide: 'right',
+    currentIndex: 8,
+    formula: 'water[8] = maxR - h[8] = 2 - 2 = 0',
+    wArr: [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    exp: 'Move R to index 8. Because the bar height equals maxR, it traps no water.',
+    reason: 'A bar that reaches the active boundary becomes wall, not water.',
+    invariant: 'Zero trapped water happens whenever the current bar meets or exceeds the active max.',
+    action: 'compare',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'max-right-box', kind: 'focus' },
+      { target: 'bar:8', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'process-right-7',
+    l: 3,
+    r: 7,
+    maxL: 2,
+    maxR: 3,
+    totalWater: 2,
+    trappedAt: 0,
+    processedSide: 'right',
+    currentIndex: 7,
+    formula: 'water[7] = maxR - h[7] = 3 - 3 = 0',
+    wArr: [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    exp: 'Move R to index 7. This tall bar raises maxR from 2 to 3, improving the boundary for future right-to-left processing.',
+    reason: 'A taller wall increases future trapping potential behind it.',
+    invariant: 'Updating maxR can only help later right-side indices.',
+    action: 'write',
+    highlights: [
+      { target: 'max-right-box', kind: 'write' },
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'bar:7', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'trap-at-4',
+    l: 4,
+    r: 7,
+    maxL: 2,
+    maxR: 3,
+    totalWater: 3,
+    trappedAt: 1,
+    processedSide: 'left',
+    currentIndex: 4,
+    formula: 'water[4] = maxL - h[4] = 2 - 1 = 1',
+    wArr: [0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+    exp: 'Back on the left side, index 4 has height 1 under maxL = 2, so it traps 1 more unit. Total water becomes 3.',
+    reason: 'Since maxL < maxR, the left side is still the limiting side we can resolve now.',
+    invariant: 'The running total always equals the sum of all finalized water columns so far.',
+    action: 'confirm',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'total-water-box', kind: 'confirmed' },
+      { target: 'water:4', kind: 'confirmed' },
+      { target: 'bar:4', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'trap-at-5',
+    l: 5,
+    r: 7,
+    maxL: 2,
+    maxR: 3,
+    totalWater: 5,
+    trappedAt: 2,
+    processedSide: 'left',
+    currentIndex: 5,
+    formula: 'water[5] = maxL - h[5] = 2 - 0 = 2',
+    wArr: [0, 0, 1, 0, 1, 2, 0, 0, 0, 1, 0, 0],
+    exp: 'Index 5 is the deepest dip on the left side so far. With height 0 below maxL = 2, it traps 2 units, raising the total to 5.',
+    reason: 'Deep valleys under a stable boundary contribute the most water.',
+    invariant: 'Water added at one index depends only on the active boundary and that bar’s height.',
+    action: 'confirm',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'total-water-box', kind: 'confirmed' },
+      { target: 'water:5', kind: 'confirmed' },
+      { target: 'bar:5', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'trap-at-6',
+    l: 6,
+    r: 7,
+    maxL: 2,
+    maxR: 3,
+    totalWater: 6,
+    trappedAt: 1,
+    processedSide: 'left',
+    currentIndex: 6,
+    formula: 'water[6] = maxL - h[6] = 2 - 1 = 1',
+    wArr: [0, 0, 1, 0, 1, 2, 1, 0, 0, 1, 0, 0],
+    exp: 'Move left to index 6. Its height 1 sits one unit below maxL = 2, so total trapped water becomes 6.',
+    reason: 'Even small dips accumulate when bounded by a taller wall on the active side.',
+    invariant: 'The total is monotonically non-decreasing as we finalize more indices.',
+    action: 'confirm',
+    highlights: [
+      { target: 'formula-box', kind: 'derive' },
+      { target: 'total-water-box', kind: 'confirmed' },
+      { target: 'water:6', kind: 'confirmed' },
+      { target: 'bar:6', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'finish',
+    l: 7,
+    r: 7,
+    maxL: 3,
+    maxR: 3,
+    totalWater: 6,
+    trappedAt: 0,
+    processedSide: 'done',
+    currentIndex: 7,
+    formula: 'Finished: total trapped water = 6',
+    wArr: [0, 0, 1, 0, 1, 2, 1, 0, 0, 1, 0, 0],
+    exp: 'L meets R at index 7, so the scan is complete. The total trapped water is 6.',
+    reason: 'Every index has now been resolved from one side or the other using the smaller-boundary rule.',
+    invariant: 'The accumulated total is the final answer.',
+    action: 'confirm',
+    highlights: [
+      { target: 'total-water-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'formula-box', kind: 'confirmed' },
+      { target: 'max-left-box', kind: 'confirmed' },
+      { target: 'max-right-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<trap-water-visuals>
+  <AlgorithmPlayer title="heights = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]" steps={steps}>
+    <div class="stats-row tw-stats-row">
+      <div class="stat-box" data-teach-target="max-left-box">
+        <span class="stat-label">Max Left</span>
+        <span class="stat-val tw-maxl">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="max-right-box">
+        <span class="stat-label">Max Right</span>
+        <span class="stat-val tw-maxr">1</span>
+      </div>
+      <div class="stat-box" data-teach-target="current-index-box">
+        <span class="stat-label">Processing Index</span>
+        <span class="stat-val tw-index">-</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="total-water-box">
+        <span class="stat-label">Total Water</span>
+        <span class="stat-val tw-water">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val tw-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="formula-box">
+        <span class="stat-label">Water Formula</span>
+        <span class="stat-val tw-formula">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Elevation Map (Two Pointers)</p>
+      <div class="chart-container">
+        <div class="bars-row">
+          {h.map((height, idx) => (
+            <div class="bar-col">
+              <div class="bar-wrapper">
+                <div
+                  class="water-block tw-water-block"
+                  data-idx={idx}
+                  data-teach-target={`water:${idx}`}
+                  style={`height: 0%; bottom: ${(height / maxH) * 100}%;`}
+                ></div>
+                <div
+                  class="solid-block tw-solid-block"
+                  data-idx={idx}
+                  data-teach-target={`bar:${idx}`}
+                  style={`height: ${(height / maxH) * 100}%`}
+                ></div>
+              </div>
+              <span class="bar-idx">{height}</span>
+              <div class="pointer-container tw-ptr-col" data-idx={idx}>
+                <span class="ptr ptr-l hidden" data-teach-target={idx === 0 ? 'pointer:l' : undefined}>L</span>
+                <span class="ptr ptr-r hidden" data-teach-target={idx === 0 ? 'pointer:r' : undefined}>R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</trap-water-visuals>
+
+<script>
+  class TrapWaterVisuals extends HTMLElement {
+    connectedCallback() {
+      this.maxlEl = this.querySelector(".tw-maxl");
+      this.maxrEl = this.querySelector(".tw-maxr");
+      this.indexEl = this.querySelector(".tw-index");
+      this.waterEl = this.querySelector(".tw-water");
+      this.decisionEl = this.querySelector(".tw-decision");
+      this.formulaEl = this.querySelector(".tw-formula");
+      this.waterBlocks = Array.from(this.querySelectorAll(".tw-water-block"));
+      this.solidBlocks = Array.from(this.querySelectorAll(".tw-solid-block"));
+      this.ptrs = Array.from(this.querySelectorAll(".tw-ptr-col"));
+      this.maxLeftBox = this.querySelector('[data-teach-target="max-left-box"]');
+      this.maxRightBox = this.querySelector('[data-teach-target="max-right-box"]');
+      this.totalWaterBox = this.querySelector('[data-teach-target="total-water-box"]');
+      this.decisionBox = this.querySelector('[data-teach-target="decision-box"]');
+      this.formulaBox = this.querySelector('[data-teach-target="formula-box"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.maxlEl) this.maxlEl.textContent = String(step.maxL);
+        if (this.maxrEl) this.maxrEl.textContent = String(step.maxR);
+        if (this.indexEl) {
+          this.indexEl.textContent =
+            step.currentIndex === null || step.currentIndex === undefined
+              ? '-'
+              : String(step.currentIndex);
+        }
+        if (this.waterEl) this.waterEl.textContent = String(step.totalWater);
+        if (this.formulaEl) this.formulaEl.textContent = step.formula ?? '-';
+
+        if (this.decisionEl) {
+          if (step.processedSide === 'left') {
+            this.decisionEl.textContent = 'maxL < maxR → process left';
+          } else if (step.processedSide === 'right') {
+            this.decisionEl.textContent = 'maxL ≥ maxR → process right';
+          } else if (step.processedSide === 'done') {
+            this.decisionEl.textContent = 'Pointers met — finished';
+          } else {
+            this.decisionEl.textContent = 'Compare boundaries first';
+          }
+        }
+
+        this.totalWaterBox?.classList.toggle('success-box', step.processedSide === 'done');
+        this.decisionBox?.classList.toggle('success-box', step.processedSide === 'done');
+        this.formulaBox?.classList.toggle('success-box', step.processedSide === 'done');
+        this.maxLeftBox?.classList.toggle('success-box', step.processedSide === 'done');
+        this.maxRightBox?.classList.toggle('success-box', step.processedSide === 'done');
+
+        this.ptrs.forEach((col, idx) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${idx === step.l ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${idx === step.r ? "" : "hidden"}`;
+        });
+
+        this.solidBlocks.forEach((block, idx) => {
+          block.classList.remove('active-block', 'processed-block');
+          if (idx === step.l || idx === step.r) {
+            block.classList.add('active-block');
+          } else if (idx < step.l || idx > step.r) {
+            block.classList.add('processed-block');
+          }
+        });
+
+        this.waterBlocks.forEach((block, idx) => {
+          const waterUnits = step.wArr[idx];
+          const percent = (waterUnits / maxH) * 100;
+          block.style.height = `${percent}%`;
+          block.style.opacity = waterUnits > 0 ? "1" : "0";
+          block.classList.toggle(
+            'fresh-water',
+            step.currentIndex === idx && step.trappedAt > 0
+          );
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('trap-water-visuals')) {
+    customElements.define('trap-water-visuals', TrapWaterVisuals);
+  }
+</script>
+
+<style>
+  trap-water-visuals {
+    display: block;
+  }
+
+  .tw-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 5%, transparent);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--status-info);
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .chart-container {
+    position: relative;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+    height: 150px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .bars-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 2rem;
+    justify-content: flex-end;
+  }
+
+  .bar-wrapper {
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+
+  .solid-block {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #333;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    transition: opacity 0.25s, transform 0.25s, border-color 0.25s, background 0.25s;
+  }
+
+  .solid-block.active-block {
+    background: color-mix(in srgb, var(--status-medium) 75%, #2a2a2a);
+    border-color: color-mix(in srgb, var(--status-medium) 90%, #333);
+    transform: translateY(-4px);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--status-medium) 25%, transparent);
+  }
+
+  .solid-block.processed-block {
+    opacity: 0.42;
+  }
+
+  .water-block {
+    position: absolute;
+    width: 100%;
+    background: color-mix(in srgb, var(--status-info) 60%, transparent);
+    border: 1px solid var(--status-info);
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s,
+      box-shadow 0.25s, background 0.25s;
+    z-index: 2;
+  }
+
+  .water-block.fresh-water {
+    background: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    border-color: var(--status-easy);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--status-easy) 25%, transparent);
+  }
+
+  .bar-idx {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    font-family: var(--font-mono);
+  }
+
+  .pointer-container {
+    height: 1rem;
+    margin-top: 0.2rem;
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-hard) 20%, transparent);
+    color: var(--status-hard);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
+</style>

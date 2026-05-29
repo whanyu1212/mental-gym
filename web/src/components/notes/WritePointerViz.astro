@@ -1,0 +1,272 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const initialNums = [3, 2, 2, 3, 4, 3];
+const val = 3;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'init',
+    array: [3, 2, 2, 3, 4, 3],
+    write: 0,
+    read: 0,
+    kept: 0,
+    exp: 'Two pointers: read scans every element; write only advances when a value is kept. The write pointer marks where the next kept value goes.',
+    reason: 'Separating scan (read) from placement (write) lets us do this in-place in one pass.',
+    invariant: 'All elements before write pointer are values ≠ val, in original order.',
+    formula: 'if nums[read] ≠ val → nums[write] = nums[read]; write++',
+    highlights: [
+      { target: 'ptr-write', kind: 'write' },
+      { target: 'ptr-read', kind: 'focus' },
+      { target: 'kept-box', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'read-0-skip',
+    phase: 'skip',
+    array: [3, 2, 2, 3, 4, 3],
+    write: 0,
+    read: 0,
+    kept: 0,
+    exp: 'read=0, nums[0]=3 equals val=3 → skip. Write stays at 0, read advances to 1.',
+    reason: 'We never copy a value we want to remove.',
+    invariant: 'write=0: nothing has been kept yet.',
+    formula: 'nums[0] = 3 = val → skip; read++',
+    highlights: [
+      { target: 'cell:0', kind: 'discard' },
+      { target: 'ptr-read', kind: 'compare' },
+      { target: 'ptr-write', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'read-1-keep',
+    phase: 'keep',
+    array: [2, 2, 2, 3, 4, 3],
+    write: 1,
+    read: 2,
+    kept: 1,
+    exp: 'read=1, nums[1]=2 ≠ val → write nums[write]=2, write=1, read=2.',
+    reason: 'A value worth keeping is placed at the write position, then write advances.',
+    invariant: 'nums[0]=2: one element is confirmed kept.',
+    formula: 'nums[0] = nums[1] = 2; write++ → 1',
+    highlights: [
+      { target: 'cell:1', kind: 'compare' },
+      { target: 'cell:0', kind: 'write' },
+      { target: 'ptr-write', kind: 'write' },
+      { target: 'kept-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'read-2-keep',
+    phase: 'keep',
+    array: [2, 2, 2, 3, 4, 3],
+    write: 2,
+    read: 3,
+    kept: 2,
+    exp: 'read=2, nums[2]=2 ≠ val → write nums[write]=2, write=2, read=3.',
+    reason: 'Another keeper: placed at write, both pointers advance.',
+    invariant: 'nums[0..1] = [2,2]: two elements confirmed kept.',
+    formula: 'nums[1] = nums[2] = 2; write++ → 2',
+    highlights: [
+      { target: 'cell:2', kind: 'compare' },
+      { target: 'cell:1', kind: 'write' },
+      { target: 'ptr-write', kind: 'write' },
+      { target: 'kept-box', kind: 'write' },
+    ],
+  },
+  {
+    id: 'read-3-skip',
+    phase: 'skip',
+    array: [2, 2, 2, 3, 4, 3],
+    write: 2,
+    read: 3,
+    kept: 2,
+    exp: 'read=3, nums[3]=3 equals val → skip. Write stays at 2, read advances to 4.',
+    reason: 'Another 3 encountered — skip without touching write.',
+    invariant: 'write=2: still only two elements kept.',
+    formula: 'nums[3] = 3 = val → skip; read++',
+    highlights: [
+      { target: 'cell:3', kind: 'discard' },
+      { target: 'ptr-read', kind: 'compare' },
+      { target: 'ptr-write', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'read-4-keep-done',
+    phase: 'done',
+    array: [2, 2, 4, 3, 4, 3],
+    write: 3,
+    read: 5,
+    kept: 3,
+    exp: 'read=4, nums[4]=4 ≠ val → write nums[write]=4, write=3. Result: first 3 elements = [2, 2, 4].',
+    reason: 'write is the count of kept elements; return it as the new length.',
+    invariant: 'nums[0..write-1] = [2,2,4] contains only non-val elements.',
+    formula: 'nums[2] = nums[4] = 4; write++ → 3 (return write)',
+    highlights: [
+      { target: 'cell:4', kind: 'compare' },
+      { target: 'cell:2', kind: 'write' },
+      { target: 'ptr-write', kind: 'confirmed' },
+      { target: 'kept-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<write-ptr-viz>
+  <AlgorithmPlayer title="Remove Element — nums=[3,2,2,3,4,3], val=3" steps={steps}>
+    <div class="stats-row">
+      <div class="stat-box" data-teach-target="kept-box">
+        <span class="stat-label">Kept (write)</span>
+        <span class="stat-val wp-kept">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">val to remove</span>
+        <span class="stat-val">{val}</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array</p>
+      <div class="array-wrap">
+        <div class="array-row">
+          {initialNums.map((n, i) => (
+            <div class="array-cell wp-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+              <span class="cell-val wp-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          ))}
+        </div>
+        <div class="pointer-row">
+          {initialNums.map((_, i) => (
+            <div class="ptr-slot" data-ptr-idx={i}>
+              <span class="ptr-label write-lbl" data-write-idx={i} style="display:none">↑ w</span>
+              <span class="ptr-label read-lbl" data-read-idx={i} style="display:none">↑ r</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Pointer indicators</p>
+      <div class="ptr-indicators">
+        <span class="ptr-badge" data-teach-target="ptr-write">write</span>
+        <span class="ptr-badge" data-teach-target="ptr-read">read</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</write-ptr-viz>
+
+<script>
+  class WritePtrViz extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.wp-cell'));
+      this.keptEl = this.querySelector('.wp-kept');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        // Update cell values from step's array state
+        if (step.array) {
+          this.cells.forEach((cell) => {
+            const i = parseInt(cell.dataset.idx ?? '0', 10);
+            const valEl = cell.querySelector('.wp-val');
+            if (valEl) valEl.textContent = step.array[i];
+          });
+        }
+
+        // Update cell states
+        this.cells.forEach((cell) => {
+          const i = parseInt(cell.dataset.idx ?? '0', 10);
+          cell.className = 'array-cell wp-cell';
+          if (i < step.write) cell.classList.add('kept');
+          else if (i === step.read && step.phase === 'skip') cell.classList.add('skipped');
+        });
+
+        // Update kept count
+        if (this.keptEl) this.keptEl.textContent = step.kept ?? 0;
+
+        // Move pointer labels
+        this.querySelectorAll('.write-lbl').forEach((el) => {
+          el.style.display = 'none';
+        });
+        this.querySelectorAll('.read-lbl').forEach((el) => {
+          el.style.display = 'none';
+        });
+
+        const writePtr = this.querySelector(`[data-write-idx="${step.write}"]`);
+        const readPtr = this.querySelector(`[data-read-idx="${step.read}"]`);
+        if (writePtr) writePtr.style.display = 'inline';
+        if (readPtr) readPtr.style.display = 'inline';
+      });
+    }
+  }
+
+  if (!customElements.get('write-ptr-viz')) {
+    customElements.define('write-ptr-viz', WritePtrViz);
+  }
+</script>
+
+<style>
+  write-ptr-viz { display: block; }
+
+  .array-wrap { display: flex; flex-direction: column; gap: 0; }
+
+  .pointer-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .ptr-slot {
+    width: 48px;
+    min-width: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    min-height: 20px;
+  }
+
+  .ptr-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .write-lbl { color: var(--accent); }
+  .read-lbl { color: var(--status-hard); }
+
+  .ptr-indicators {
+    display: flex;
+    gap: 12px;
+  }
+
+  .ptr-badge {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  /* kept cells */
+  .wp-cell.kept .cell-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  /* skipped cells */
+  .wp-cell.skipped .cell-val {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+    opacity: 0.6;
+  }
+</style>

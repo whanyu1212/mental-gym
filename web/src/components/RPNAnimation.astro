@@ -1,0 +1,359 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const tokens = ['2', '1', '+', '3', '*'];
+
+const steps = [
+  {
+    i: -1,
+    stack: [],
+    action: 'write',
+    exp: 'Initialize with an empty stack.',
+    reason: 'Reverse Polish Notation evaluates left to right using a stack.',
+    invariant: 'Before each token, stack stores evaluated partial results.',
+    formula: 'number -> push, operator -> pop b then a, compute a op b, push result',
+    decision: 'Start with stack = [].',
+    targets: ['stack-box', 'rule-box'],
+  },
+  {
+    i: 0,
+    token: '2',
+    stack: [2],
+    action: 'write',
+    exp: "Token '2' is a number, so push it.",
+    reason: 'Numbers are operands and go directly onto the stack.',
+    invariant: 'Stack order preserves operand order for future operators.',
+    formula: 'push(2)',
+    decision: 'Stack becomes [2].',
+    targets: ['token-0', 'stack-box'],
+  },
+  {
+    i: 1,
+    token: '1',
+    stack: [2, 1],
+    action: 'write',
+    exp: "Token '1' is a number, so push it.",
+    reason: 'Continue collecting operands until an operator appears.',
+    invariant: 'Top of stack is the most recent operand.',
+    formula: 'push(1)',
+    decision: 'Stack becomes [2, 1].',
+    targets: ['token-1', 'stack-box'],
+  },
+  {
+    i: 2,
+    token: '+',
+    a: 2,
+    b: 1,
+    result: 3,
+    stack: [3],
+    action: 'compare',
+    exp: "Token '+' is an operator. Pop 1 and 2, compute 2 + 1 = 3, push 3.",
+    reason: 'Operators consume two most recent operands from stack top.',
+    invariant: 'For binary operators, evaluation order is a op b where b is popped first.',
+    formula: 'a=2, b=1 => a+b=3',
+    decision: 'Replace top two values with 3.',
+    targets: ['token-2', 'stack-box', 'calc-box'],
+  },
+  {
+    i: 3,
+    token: '3',
+    stack: [3, 3],
+    action: 'write',
+    exp: "Token '3' is a number, so push it.",
+    reason: 'Operand appears after intermediate result, still pushed normally.',
+    invariant: 'Each push adds one unresolved value.',
+    formula: 'push(3)',
+    decision: 'Stack becomes [3, 3].',
+    targets: ['token-3', 'stack-box'],
+  },
+  {
+    i: 4,
+    token: '*',
+    a: 3,
+    b: 3,
+    result: 9,
+    stack: [9],
+    action: 'compare',
+    exp: "Token '*' is an operator. Pop 3 and 3, compute 3 * 3 = 9, push 9.",
+    reason: 'Apply operator to the top two values and reduce the stack.',
+    invariant: 'Each operator reduces stack size by one net element.',
+    formula: 'a=3, b=3 => a*b=9',
+    decision: 'Replace top two values with 9.',
+    targets: ['token-4', 'stack-box', 'calc-box'],
+  },
+  {
+    i: 4,
+    token: '*',
+    stack: [9],
+    result: 9,
+    action: 'confirm',
+    exp: 'Evaluation complete. The single remaining value is the answer: 9.',
+    reason: 'A valid RPN expression ends with exactly one value on stack.',
+    invariant: 'Final stack length must be 1.',
+    formula: 'answer = stack[top] = 9',
+    decision: 'Return 9.',
+    targets: ['stack-box', 'result-box'],
+  },
+];
+---
+
+<rpn-visuals>
+  <AlgorithmPlayer title='tokens = ["2", "1", "+", "3", "*"]' steps={steps}>
+    <div class="stats-row rpn-meta-row">
+      <div class="stat-box rpn-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">number: push | operator: pop2 → eval → push</span>
+      </div>
+      <div class="stat-box rpn-calc-box" data-teach-target="calc-box">
+        <span class="stat-label">Current Eval</span>
+        <span class="stat-val rpn-calc">-</span>
+      </div>
+      <div class="stat-box rpn-result-box" data-teach-target="result-box">
+        <span class="stat-label">Final Result</span>
+        <span class="stat-val rpn-result">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row rpn-grid">
+      <div class="rpn-col">
+        <p class="anim-label">Tokens Array</p>
+        <div class="array-row">
+          {tokens.map((t, idx) => (
+            <div class="array-col">
+              <div class="array-cell rpn-cell" data-idx={idx} data-teach-target={`token-${idx}`}>
+                <span class="cell-val">{t}</span>
+              </div>
+              <div class="pointers-row rpn-ptr-col" data-idx={idx}>
+                <span class="ptr ptr-up hidden">↑</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="rpn-col stack-col">
+        <p class="anim-label">Stack</p>
+        <div class="stack-container rpn-stack" data-teach-target="stack-box"></div>
+        <div class="stack-base"></div>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</rpn-visuals>
+
+<script>
+  class RPNVisuals extends HTMLElement {
+    connectedCallback() {
+      this.stackEl = this.querySelector('.rpn-stack');
+      this.cells = Array.from(this.querySelectorAll('.rpn-cell'));
+      this.ptrs = Array.from(this.querySelectorAll('.rpn-ptr-col'));
+      this.calcEl = this.querySelector('.rpn-calc');
+      this.resultEl = this.querySelector('.rpn-result');
+      this.calcBox = this.querySelector('.rpn-calc-box');
+      this.resultBox = this.querySelector('.rpn-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        this.cells.forEach((cell, idx) => {
+          cell.className = 'array-cell rpn-cell';
+          if (idx < s.i) cell.classList.add('visited');
+          if (idx === s.i) {
+            if (s.action === 'compare') cell.classList.add('active-op');
+            else cell.classList.add('active-num');
+          }
+        });
+
+        this.ptrs.forEach((col, idx) => {
+          const ptr = col.querySelector('.ptr-up');
+          if (ptr) ptr.className = `ptr ptr-up ${idx === s.i ? '' : 'hidden'}`;
+        });
+
+        if (this.stackEl) {
+          if (!s.stack || s.stack.length === 0) {
+            this.stackEl.innerHTML = "<span class='stack-empty'>Empty</span>";
+          } else {
+            const reversed = [...s.stack].reverse();
+            this.stackEl.innerHTML = reversed
+              .map((num, idx) => {
+                const isTop = idx === 0;
+                return `<div class='stack-item ${isTop ? 'stack-top' : ''}'>${num}</div>`;
+              })
+              .join('');
+          }
+        }
+
+        if (this.calcBox) this.calcBox.classList.remove('pulse', 'confirmed');
+        if (this.resultBox) this.resultBox.classList.remove('pulse', 'confirmed');
+
+        if (this.calcEl) {
+          if (s.action === 'compare' && s.a !== undefined && s.b !== undefined) {
+            this.calcEl.textContent = `${s.a} ${s.token} ${s.b} = ${s.result}`;
+            this.calcBox?.classList.add('pulse');
+          } else {
+            this.calcEl.textContent = '-';
+          }
+        }
+
+        if (this.resultEl) {
+          if (s.action === 'confirm' && s.result !== undefined) {
+            this.resultEl.textContent = String(s.result);
+            this.resultBox?.classList.add('confirmed');
+          } else {
+            this.resultEl.textContent = '-';
+          }
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('rpn-visuals')) {
+    customElements.define('rpn-visuals', RPNVisuals);
+  }
+</script>
+
+<style>
+  rpn-visuals {
+    display: block;
+  }
+
+  .rpn-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .rpn-grid {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    min-height: 200px;
+  }
+
+  .rpn-col {
+    flex: 1;
+    max-width: 400px;
+  }
+
+  .stack-col {
+    width: 120px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .rpn-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .rpn-calc-box .stat-val {
+    color: var(--accent);
+  }
+
+  .rpn-result-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  .stat-box.pulse {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .stat-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 55%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .array-cell.visited {
+    opacity: 0.4;
+  }
+
+  .array-cell.active-num {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 12%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .array-cell.active-op {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: opacity 0.2s;
+  }
+
+  .stack-container {
+    width: 100px;
+    height: 150px;
+    border-left: 2px solid var(--border);
+    border-right: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.5rem;
+    gap: 0.25rem;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stack-base {
+    width: 120px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 2px;
+  }
+
+  .stack-item {
+    width: 100%;
+    height: 2rem;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--text);
+    animation: drop-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .stack-top {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 168, 76, 0.1);
+    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2);
+  }
+
+  .stack-empty {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes drop-in {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+</style>

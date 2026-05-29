@@ -1,0 +1,402 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const nums = [1, 2, 3, 4];
+
+const steps = [
+  {
+    phase: 'init',
+    p: -1,
+    prefix: [1, 1, 1, 1],
+    output: [1, 1, 1, 1],
+    prefixRunning: 1,
+    suffixRunning: 1,
+    action: 'write',
+    exp: 'Initialize output with 1s. We will do a prefix pass and then a suffix pass.',
+    reason: 'Each answer is product of left side and right side values.',
+    invariant: 'output[i] = prefixProduct(i) * suffixProduct(i)',
+    formula: 'result[i] = (∏ left) * (∏ right)',
+    decision: 'Start left and right running products at 1.',
+    targets: ['phase-box', 'prefix-run-box', 'suffix-run-box', 'output-box'],
+  },
+
+  {
+    phase: 'prefix',
+    p: 0,
+    prefix: [1, 1, 1, 1],
+    output: [1, 1, 1, 1],
+    prefixRunning: 1,
+    suffixRunning: 1,
+    action: 'write',
+    exp: 'Prefix pass: write left product for index 0.',
+    reason: 'There are no elements to the left of index 0, so left product is 1.',
+    invariant: 'prefix[i] stores product of nums[0..i-1].',
+    formula: 'prefix[0] = 1',
+    decision: 'Set prefix[0] = 1.',
+    targets: ['num-0', 'prefix-0', 'phase-box'],
+  },
+  {
+    phase: 'prefix',
+    p: 1,
+    prefix: [1, 1, 1, 1],
+    output: [1, 1, 1, 1],
+    prefixRunning: 1,
+    suffixRunning: 1,
+    action: 'write',
+    exp: 'Prefix pass: write left product for index 1.',
+    reason: 'Left of index 1 is [1], product is 1.',
+    invariant: 'prefix running product multiplies current number after write.',
+    formula: 'prefix[1] = 1',
+    decision: 'Set prefix[1] = 1.',
+    targets: ['num-1', 'prefix-1', 'phase-box'],
+  },
+  {
+    phase: 'prefix',
+    p: 2,
+    prefix: [1, 1, 2, 1],
+    output: [1, 1, 1, 1],
+    prefixRunning: 2,
+    suffixRunning: 1,
+    action: 'write',
+    exp: 'Prefix pass: write left product for index 2.',
+    reason: 'Left of index 2 is [1,2], product is 2.',
+    invariant: 'prefix values accumulate products from left to right.',
+    formula: 'prefix[2] = 1*2 = 2',
+    decision: 'Set prefix[2] = 2.',
+    targets: ['num-2', 'prefix-2', 'phase-box'],
+  },
+  {
+    phase: 'prefix',
+    p: 3,
+    prefix: [1, 1, 2, 6],
+    output: [1, 1, 1, 1],
+    prefixRunning: 6,
+    suffixRunning: 1,
+    action: 'write',
+    exp: 'Prefix pass: write left product for index 3.',
+    reason: 'Left of index 3 is [1,2,3], product is 6.',
+    invariant: 'After final prefix step, all left products are ready.',
+    formula: 'prefix[3] = 1*2*3 = 6',
+    decision: 'Set prefix[3] = 6.',
+    targets: ['num-3', 'prefix-3', 'phase-box'],
+  },
+
+  {
+    phase: 'suffix',
+    p: 3,
+    prefix: [1, 1, 2, 6],
+    output: [1, 1, 2, 6],
+    prefixRunning: 6,
+    suffixRunning: 1,
+    action: 'compare',
+    exp: 'Suffix pass: output[3] = prefix[3] * suffixRunning = 6 * 1.',
+    reason: 'No elements to the right of index 3, right product is 1.',
+    invariant: 'output[i] finalized when right product at i is known.',
+    formula: 'output[3] = 6*1 = 6',
+    decision: 'Set output[3] = 6.',
+    targets: ['num-3', 'out-3', 'phase-box', 'output-box'],
+  },
+  {
+    phase: 'suffix',
+    p: 2,
+    prefix: [1, 1, 2, 6],
+    output: [1, 1, 8, 6],
+    prefixRunning: 6,
+    suffixRunning: 4,
+    action: 'compare',
+    exp: 'Suffix pass: output[2] = prefix[2] * suffixRunning = 2 * 4.',
+    reason: 'Right side of index 2 is [4], product is 4.',
+    invariant: 'suffixRunning tracks product of elements to the right.',
+    formula: 'output[2] = 2*4 = 8',
+    decision: 'Set output[2] = 8.',
+    targets: ['num-2', 'out-2', 'phase-box', 'output-box'],
+  },
+  {
+    phase: 'suffix',
+    p: 1,
+    prefix: [1, 1, 2, 6],
+    output: [1, 12, 8, 6],
+    prefixRunning: 6,
+    suffixRunning: 12,
+    action: 'compare',
+    exp: 'Suffix pass: output[1] = prefix[1] * suffixRunning = 1 * 12.',
+    reason: 'Right side of index 1 is [3,4], product is 12.',
+    invariant: 'Each step combines precomputed left and dynamic right products.',
+    formula: 'output[1] = 1*12 = 12',
+    decision: 'Set output[1] = 12.',
+    targets: ['num-1', 'out-1', 'phase-box', 'output-box'],
+  },
+  {
+    phase: 'suffix',
+    p: 0,
+    prefix: [1, 1, 2, 6],
+    output: [24, 12, 8, 6],
+    prefixRunning: 6,
+    suffixRunning: 24,
+    action: 'compare',
+    exp: 'Suffix pass: output[0] = prefix[0] * suffixRunning = 1 * 24.',
+    reason: 'Right side of index 0 is [2,3,4], product is 24.',
+    invariant: 'All output positions are finalized by end of suffix pass.',
+    formula: 'output[0] = 1*24 = 24',
+    decision: 'Set output[0] = 24.',
+    targets: ['num-0', 'out-0', 'phase-box', 'output-box'],
+  },
+
+  {
+    phase: 'done',
+    p: -1,
+    prefix: [1, 1, 2, 6],
+    output: [24, 12, 8, 6],
+    prefixRunning: 6,
+    suffixRunning: 24,
+    action: 'confirm',
+    exp: 'Done! Final output is [24, 12, 8, 6].',
+    reason: 'Each index now has product of all numbers except itself.',
+    invariant: 'No division used; time O(n), extra space O(1) excluding output.',
+    formula: 'result = [24,12,8,6]',
+    decision: 'Return output.',
+    targets: ['output-box', 'result-box'],
+  },
+];
+---
+
+<product-except-self-visuals>
+  <AlgorithmPlayer title="nums = [1, 2, 3, 4]" steps={steps}>
+    <div class="stats-row po-meta-row">
+      <div class="stat-box po-phase-box" data-teach-target="phase-box">
+        <span class="stat-label">Phase</span>
+        <span class="stat-val po-phase-val">init</span>
+      </div>
+      <div class="stat-box po-prefix-box" data-teach-target="prefix-run-box">
+        <span class="stat-label">Prefix Running</span>
+        <span class="stat-val po-prefix-val">1</span>
+      </div>
+      <div class="stat-box po-suffix-box" data-teach-target="suffix-run-box">
+        <span class="stat-label">Suffix Running</span>
+        <span class="stat-val po-suffix-val">1</span>
+      </div>
+      <div class="stat-box po-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val po-result-val">In Progress</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">nums</p>
+      <div class="array-row po-nums">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell po-num-cell" data-idx={i} data-teach-target={`num-${i}`}>
+              <span class="cell-val">{n}</span>
+            </div>
+            <div class="pointers-row po-ptr-col" data-idx={i}>
+              <span class="ptr ptr-up hidden">i</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Prefix Array (Left-to-Right)</p>
+      <div class="array-row po-prefix">
+        {nums.map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell po-prefix-cell" data-idx={i} data-teach-target={`prefix-${i}`}>
+              <span class="cell-val prefix-val">1</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Output Array (Prefix * Suffix)</p>
+      <div class="array-row po-output" data-teach-target="output-box">
+        {nums.map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell po-out-cell" data-idx={i} data-teach-target={`out-${i}`}>
+              <span class="cell-val out-val">1</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</product-except-self-visuals>
+
+<script>
+  class ProductExceptSelfVisuals extends HTMLElement {
+    connectedCallback() {
+      this.phaseValEl = this.querySelector('.po-phase-val');
+      this.prefixValEl = this.querySelector('.po-prefix-val');
+      this.suffixValEl = this.querySelector('.po-suffix-val');
+      this.resultValEl = this.querySelector('.po-result-val');
+
+      this.numCells = Array.from(this.querySelectorAll('.po-num-cell'));
+      this.prefixCells = Array.from(this.querySelectorAll('.po-prefix-cell'));
+      this.outCells = Array.from(this.querySelectorAll('.po-out-cell'));
+      this.ptrs = Array.from(this.querySelectorAll('.po-ptr-col'));
+
+      this.phaseBox = this.querySelector('.po-phase-box');
+      this.resultBox = this.querySelector('.po-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        if (this.phaseValEl) this.phaseValEl.textContent = s.phase;
+        if (this.prefixValEl) this.prefixValEl.textContent = String(s.prefixRunning);
+        if (this.suffixValEl) this.suffixValEl.textContent = String(s.suffixRunning);
+
+        const isPrefixPass = s.phase === 'prefix';
+        const isSuffixPass = s.phase === 'suffix';
+
+        this.ptrs.forEach((col, i) => {
+          const ptr = col.querySelector('.ptr-up');
+          if (!ptr) return;
+          ptr.className = `ptr ptr-up ${i === s.p ? '' : 'hidden'}`;
+          if (isPrefixPass) ptr.classList.add('prefix-ptr');
+          else if (isSuffixPass) ptr.classList.add('suffix-ptr');
+          else ptr.classList.add('idle-ptr');
+        });
+
+        this.numCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+          if (i === s.p) valSpan.classList.add('active-num');
+        });
+
+        this.prefixCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.textContent = String(s.prefix[i]);
+          valSpan.className = 'cell-val prefix-val';
+          if (isPrefixPass && i === s.p) valSpan.classList.add('active-prefix');
+        });
+
+        this.outCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.textContent = String(s.output[i]);
+          valSpan.className = 'cell-val out-val';
+          if (isSuffixPass && i === s.p) valSpan.classList.add('active-out');
+        });
+
+        this.phaseBox?.classList.remove('prefix-phase', 'suffix-phase', 'done-phase');
+        if (s.phase === 'prefix') this.phaseBox?.classList.add('prefix-phase');
+        if (s.phase === 'suffix') this.phaseBox?.classList.add('suffix-phase');
+        if (s.phase === 'done') this.phaseBox?.classList.add('done-phase');
+
+        this.resultBox?.classList.remove('confirmed');
+        if (this.resultValEl) {
+          this.resultValEl.textContent = s.phase === 'done' ? 'Complete' : 'In Progress';
+        }
+        if (s.action === 'confirm') this.resultBox?.classList.add('confirmed');
+      });
+    }
+  }
+
+  if (!customElements.get('product-except-self-visuals')) {
+    customElements.define('product-except-self-visuals', ProductExceptSelfVisuals);
+  }
+</script>
+
+<style>
+  product-except-self-visuals {
+    display: block;
+  }
+
+  .po-meta-row {
+    margin-bottom: 2rem;
+  }
+
+  .po-prefix-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 10%, transparent);
+  }
+
+  .po-suffix-box {
+    border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .po-prefix-val {
+    color: var(--status-info);
+  }
+
+  .po-suffix-val {
+    color: var(--status-easy);
+  }
+
+  .po-result-val {
+    color: var(--accent);
+  }
+
+  .po-phase-box.prefix-phase {
+    border-color: color-mix(in srgb, var(--status-info) 50%, transparent);
+  }
+
+  .po-phase-box.suffix-phase {
+    border-color: color-mix(in srgb, var(--status-easy) 50%, transparent);
+  }
+
+  .po-phase-box.done-phase {
+    border-color: color-mix(in srgb, var(--status-easy) 65%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .po-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 65%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .cell-val.active-num {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .prefix-val {
+    color: var(--status-info);
+    border-color: var(--status-info);
+  }
+
+  .cell-val.active-prefix {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .out-val {
+    color: var(--status-easy);
+    border-color: var(--status-easy);
+  }
+
+  .cell-val.active-out {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .ptr-up {
+    font-weight: 700;
+    font-size: 1.2rem;
+    transition: opacity 0.2s, color 0.2s;
+  }
+
+  .ptr-up.prefix-ptr {
+    color: var(--status-info);
+  }
+
+  .ptr-up.suffix-ptr {
+    color: var(--status-easy);
+  }
+
+  .ptr-up.idle-ptr {
+    color: var(--accent);
+  }
+</style>

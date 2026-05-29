@@ -168,11 +168,19 @@ cython_debug/
 *.txt
 
 src/codewars/node_modules/
-docs/node_modules/
 notebooks/
 
-docs/.vitepress/dist
-docs/.vitepress/cache
+# Astro
+web/dist/
+web/.astro/
+web/node_modules/
+!web/src/lib/
+
+# LeetCode API cache
+scripts/leetcode_cache.json
+
+# Strategy / personal notes
+STRATEGY.md
 
 src/codewars/artifacts/
 src/codewars/ignition/
@@ -186,3 +194,5 @@ target/
 Cargo.lock
 **/*.rs.bk
 *.pdb
+*_PLAN.md
+.remotion/

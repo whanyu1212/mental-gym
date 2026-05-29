@@ -1,0 +1,386 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const initialArray = [2, 0, 2, 1, 1, 0];
+
+const steps = [
+  {
+    array: [2, 0, 2, 1, 1, 0],
+    low: 0,
+    mid: 0,
+    high: 5,
+    activeMid: false,
+    phase: 'init',
+    action: 'write',
+    exp: 'Initialize pointers low=0, mid=0, high=5.',
+    reason: 'Three-way partition keeps 0s left, 1s middle, 2s right in one pass.',
+    invariant: '[0..low) are 0s, [low..mid) are 1s, (high..end] are 2s.',
+    formula: 'while mid <= high',
+    decision: 'Start scanning from mid.',
+    targets: ['array-box', 'low-box', 'mid-box', 'high-box', 'invariant-box'],
+  },
+
+  {
+    array: [2, 0, 2, 1, 1, 0],
+    low: 0,
+    mid: 0,
+    high: 5,
+    activeMid: true,
+    phase: 'eval',
+    action: 'compare',
+    exp: 'Evaluate nums[mid]=2 (Blue).',
+    reason: '2 belongs to right partition.',
+    invariant: 'Unknown zone is [mid..high].',
+    formula: 'if nums[mid] == 2 -> swap(mid, high), high--',
+    decision: 'Swap mid with high; do not move mid yet.',
+    targets: ['cell-0', 'cell-5', 'mid-box', 'high-box'],
+  },
+  {
+    array: [0, 0, 2, 1, 1, 2],
+    low: 0,
+    mid: 0,
+    high: 4,
+    activeMid: false,
+    phase: 'write',
+    action: 'write',
+    exp: 'After swap, 2 is placed at right end. high moves left.',
+    reason: 'Element moved into mid is unclassified, so re-check mid.',
+    invariant: 'Right side beyond high is all 2s.',
+    formula: 'high = high - 1',
+    decision: 'Keep mid at 0.',
+    targets: ['cell-5', 'high-box'],
+  },
+
+  {
+    array: [0, 0, 2, 1, 1, 2],
+    low: 0,
+    mid: 0,
+    high: 4,
+    activeMid: true,
+    phase: 'eval',
+    action: 'compare',
+    exp: 'Evaluate nums[mid]=0 (Red).',
+    reason: '0 belongs to left partition.',
+    invariant: 'Left side before low is all 0s.',
+    formula: 'if nums[mid] == 0 -> swap(low, mid), low++, mid++',
+    decision: 'Swap low and mid, then advance both.',
+    targets: ['cell-0', 'low-box', 'mid-box'],
+  },
+  {
+    array: [0, 0, 2, 1, 1, 2],
+    low: 1,
+    mid: 1,
+    high: 4,
+    activeMid: false,
+    phase: 'write',
+    action: 'expand',
+    exp: '0-0 swap leaves values unchanged; pointers still advance.',
+    reason: 'Even no-op swaps maintain partition boundaries.',
+    invariant: '[0..1) are confirmed 0s.',
+    formula: 'low++, mid++',
+    decision: 'Continue scanning at mid=1.',
+    targets: ['low-box', 'mid-box'],
+  },
+
+  {
+    array: [0, 0, 2, 1, 1, 2],
+    low: 1,
+    mid: 1,
+    high: 4,
+    activeMid: true,
+    phase: 'eval',
+    action: 'compare',
+    exp: 'Evaluate nums[mid]=0 again.',
+    reason: 'Another 0 must join left partition.',
+    invariant: 'Unknown zone shrinks as pointers move.',
+    formula: 'swap(low, mid), low++, mid++',
+    decision: 'Place 0 into left region.',
+    targets: ['cell-1', 'low-box', 'mid-box'],
+  },
+  {
+    array: [0, 0, 2, 1, 1, 2],
+    low: 2,
+    mid: 2,
+    high: 4,
+    activeMid: false,
+    phase: 'write',
+    action: 'expand',
+    exp: 'Pointers advanced: low=2, mid=2.',
+    reason: 'Second 0 is now fixed in left partition.',
+    invariant: '[0..2) are 0s.',
+    formula: 'low=2, mid=2',
+    decision: 'Evaluate next unknown at index 2.',
+    targets: ['low-box', 'mid-box'],
+  },
+
+  {
+    array: [0, 0, 2, 1, 1, 2],
+    low: 2,
+    mid: 2,
+    high: 4,
+    activeMid: true,
+    phase: 'eval',
+    action: 'compare',
+    exp: 'Evaluate nums[mid]=2.',
+    reason: '2 should move to right partition.',
+    invariant: '(high..end] remains all 2s after operation.',
+    formula: 'swap(mid, high), high--',
+    decision: 'Swap index 2 and 4.',
+    targets: ['cell-2', 'cell-4', 'mid-box', 'high-box'],
+  },
+  {
+    array: [0, 0, 1, 1, 2, 2],
+    low: 2,
+    mid: 2,
+    high: 3,
+    activeMid: false,
+    phase: 'write',
+    action: 'write',
+    exp: 'After swap, 2 is fixed on right; mid stays to re-evaluate incoming value.',
+    reason: 'Swapped-in value at mid is unknown.',
+    invariant: '(3..end] are 2s.',
+    formula: 'high = 3',
+    decision: 'Re-check mid=2.',
+    targets: ['cell-4', 'high-box'],
+  },
+
+  {
+    array: [0, 0, 1, 1, 2, 2],
+    low: 2,
+    mid: 2,
+    high: 3,
+    activeMid: true,
+    phase: 'eval',
+    action: 'compare',
+    exp: 'Evaluate nums[mid]=1 (White).',
+    reason: '1 already belongs in middle partition.',
+    invariant: '[low..mid] can grow as 1s.',
+    formula: 'if nums[mid] == 1 -> mid++',
+    decision: 'Advance mid only.',
+    targets: ['cell-2', 'mid-box'],
+  },
+  {
+    array: [0, 0, 1, 1, 2, 2],
+    low: 2,
+    mid: 3,
+    high: 3,
+    activeMid: true,
+    phase: 'eval',
+    action: 'compare',
+    exp: 'Evaluate nums[mid]=1 again.',
+    reason: 'Still middle-region value.',
+    invariant: 'All elements before mid are partitioned correctly.',
+    formula: 'mid++',
+    decision: 'Advance mid to 4.',
+    targets: ['cell-3', 'mid-box'],
+  },
+
+  {
+    array: [0, 0, 1, 1, 2, 2],
+    low: 2,
+    mid: 4,
+    high: 3,
+    activeMid: false,
+    phase: 'done',
+    action: 'confirm',
+    exp: 'Stop: mid > high. Array is sorted: [0,0,1,1,2,2].',
+    reason: 'Unknown region is empty.',
+    invariant: 'Entire array now satisfies 0s, then 1s, then 2s.',
+    formula: 'loop ends when mid > high',
+    decision: 'Return sorted array.',
+    targets: ['array-box', 'result-box'],
+  },
+];
+---
+
+<sort-colors-visuals>
+  <AlgorithmPlayer title="Dutch National Flag (3-way partition)" steps={steps}>
+    <div class="stats-row sc-meta-row">
+      <div class="stat-box sc-invariant-box" data-teach-target="invariant-box">
+        <span class="stat-label">Invariant</span>
+        <span class="stat-val">[0..L)=0, [L..M)=1, (H..n-1]=2</span>
+      </div>
+      <div class="stat-box sc-low-box" data-teach-target="low-box">
+        <span class="stat-label">low (L)</span>
+        <span class="stat-val sc-low-val">0</span>
+      </div>
+      <div class="stat-box sc-mid-box" data-teach-target="mid-box">
+        <span class="stat-label">mid (M)</span>
+        <span class="stat-val sc-mid-val">0</span>
+      </div>
+      <div class="stat-box sc-high-box" data-teach-target="high-box">
+        <span class="stat-label">high (H)</span>
+        <span class="stat-val sc-high-val">5</span>
+      </div>
+      <div class="stat-box sc-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val sc-status-val">In Progress</span>
+      </div>
+    </div>
+
+    <div class="anim-row" data-teach-target="array-box">
+      <p class="anim-label">Array & Pointers</p>
+      <div class="array-row">
+        {initialArray.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell sc-cell" data-idx={i} data-teach-target={`cell-${i}`}>
+              <span class="cell-val val-unknown">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row sc-ptr-col" data-idx={i}>
+              <span class="ptr ptr-l hidden">L</span>
+              <span class="ptr ptr-m hidden">M</span>
+              <span class="ptr ptr-h hidden">H</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row legend-row">
+      <div class="legend-item"><span class="legend-color val-0"></span> 0 (Red)</div>
+      <div class="legend-item"><span class="legend-color val-1"></span> 1 (White)</div>
+      <div class="legend-item"><span class="legend-color val-2"></span> 2 (Blue)</div>
+    </div>
+  </AlgorithmPlayer>
+</sort-colors-visuals>
+
+<script>
+  class SortColorsVisuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll('.sc-cell'));
+      this.ptrCols = Array.from(this.querySelectorAll('.sc-ptr-col'));
+      this.lowVal = this.querySelector('.sc-low-val');
+      this.midVal = this.querySelector('.sc-mid-val');
+      this.highVal = this.querySelector('.sc-high-val');
+      this.statusVal = this.querySelector('.sc-status-val');
+      this.resultBox = this.querySelector('.sc-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        if (this.lowVal) this.lowVal.textContent = String(s.low);
+        if (this.midVal) this.midVal.textContent = String(s.mid);
+        if (this.highVal) this.highVal.textContent = String(s.high);
+        if (this.statusVal) {
+          this.statusVal.textContent = s.phase === 'done' ? 'Complete' : 'In Progress';
+        }
+
+        this.resultBox?.classList.remove('confirmed');
+        if (s.phase === 'done') this.resultBox?.classList.add('confirmed');
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          const val = s.array[i];
+          if (!valSpan) return;
+
+          valSpan.textContent = String(val);
+          valSpan.className = `cell-val val-${val}`;
+
+          if (s.activeMid && i === s.mid) valSpan.classList.add('active-eval');
+        });
+
+        this.ptrCols.forEach((col, i) => {
+          const l = col.querySelector('.ptr-l');
+          const m = col.querySelector('.ptr-m');
+          const h = col.querySelector('.ptr-h');
+
+          if (l) l.className = `ptr ptr-l ${i === s.low ? '' : 'hidden'}`;
+          if (m) m.className = `ptr ptr-m ${i === s.mid ? '' : 'hidden'}`;
+          if (h) h.className = `ptr ptr-h ${i === s.high ? '' : 'hidden'}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('sort-colors-visuals')) {
+    customElements.define('sort-colors-visuals', SortColorsVisuals);
+  }
+</script>
+
+<style>
+  sort-colors-visuals {
+    display: block;
+  }
+
+  .sc-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .sc-invariant-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .sc-result-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 60%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  /* Dutch National Flag Colors */
+  .val-0 {
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+  }
+
+  .val-1 {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #888;
+    color: #ddd;
+  }
+
+  .val-2 {
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    border-color: var(--status-info);
+    color: var(--status-info);
+  }
+
+  .val-unknown {
+    background: var(--surface-base);
+    border-color: var(--border);
+  }
+
+  .active-eval {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--accent);
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-hard) 20%, transparent);
+    color: var(--status-hard);
+  }
+
+  .ptr-m {
+    background: color-mix(in srgb, var(--status-medium) 20%, transparent);
+    color: var(--status-medium);
+  }
+
+  .ptr-h {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .legend-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: Inter, sans-serif;
+  }
+
+  .legend-color {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 2px;
+    border: 1px solid;
+  }
+</style>

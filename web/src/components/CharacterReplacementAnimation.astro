@@ -1,0 +1,337 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const s = "ABAB";
+const k = 2;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'start-a',
+    l: 0,
+    r: 0,
+    char: 'A',
+    count: { A: 1 },
+    maxF: 1,
+    valid: true,
+    exp: "Start with window 'A'. maxF = 1, so replacements needed = 1 - 1 = 0.",
+    reason: 'The most frequent character already matches the full window, so no replacement is needed.',
+    invariant: [
+      'A window is valid when windowLength - maxF <= k.',
+      'maxF tracks the highest frequency of any character seen inside the current window.',
+    ],
+    action: 'expand',
+    highlights: [
+      { target: 'window-track', kind: 'compare' },
+      { target: 'char:0', kind: 'write' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'freq-panel', kind: 'write' },
+      { target: 'maxf-box', kind: 'confirmed' },
+    ],
+  },
+  {
+    id: 'grow-ab',
+    l: 0,
+    r: 1,
+    char: 'B',
+    count: { A: 1, B: 1 },
+    maxF: 1,
+    valid: true,
+    exp: "Expand to 'AB'. maxF stays 1, so replacements needed = 2 - 1 = 1, still within k = 2.",
+    reason: 'We can keep growing while the number of non-majority characters stays small enough to replace.',
+    invariant: 'If replacementsNeeded <= k, the whole window can be converted to one repeated letter.',
+    action: 'expand',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:1', kind: 'write' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'freq-panel', kind: 'write' },
+      { target: 'replacement-box', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'grow-aba',
+    l: 0,
+    r: 2,
+    char: 'A',
+    count: { A: 2, B: 1 },
+    maxF: 2,
+    valid: true,
+    exp: "Expand to 'ABA'. 'A' becomes the most frequent letter, so maxF = 2 and replacements needed = 3 - 2 = 1.",
+    reason: 'A stronger majority character makes the window cheaper to fix with replacements.',
+    invariant: 'Larger maxF means fewer replacements are needed for the current window size.',
+    action: 'expand',
+    highlights: [
+      { target: 'window', kind: 'compare' },
+      { target: 'char:2', kind: 'write' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'freq-panel', kind: 'write' },
+      { target: 'maxf-box', kind: 'confirmed' },
+      { target: 'replacement-box', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'grow-abab',
+    l: 0,
+    r: 3,
+    char: 'B',
+    count: { A: 2, B: 2 },
+    maxF: 2,
+    valid: true,
+    exp: "Expand to 'ABAB'. maxF remains 2, so replacements needed = 4 - 2 = 2, exactly equal to k. The full window is valid.",
+    reason: 'Even though the window has mixed letters, changing two of them is enough to make all four match.',
+    invariant: [
+      'A window remains valid as long as replacementsNeeded does not exceed k.',
+      'This valid window of length 4 is now the best answer.',
+    ],
+    action: 'confirm',
+    highlights: [
+      { target: 'window', kind: 'confirmed' },
+      { target: 'char:3', kind: 'write' },
+      { target: 'pointer:r', kind: 'focus' },
+      { target: 'freq-panel', kind: 'match' },
+      { target: 'maxf-box', kind: 'confirmed' },
+      { target: 'replacement-box', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<character-replacement-visuals>
+  <AlgorithmPlayer title={`s = "ABAB", k = ${k}`} steps={steps}>
+    <div class="stats-row cr-stats">
+      <div class="stat-box" data-teach-target="length-box">
+        <span class="stat-label">Window Length</span>
+        <span class="stat-val cr-len">0</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="maxf-box">
+        <span class="stat-label">Max Freq (maxF)</span>
+        <span class="stat-val cr-maxf">0</span>
+      </div>
+      <div class="stat-box cr-replacement-box" data-teach-target="replacement-box">
+        <span class="stat-label">Replacements Needed</span>
+        <span class="stat-val cr-replacements">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">String (Sliding Window)</p>
+      <div class="string-container" data-teach-target="window-track">
+        <div class="window-highlight cr-window" data-teach-target="window"></div>
+        <div class="array-row cr-chars" style="position: relative; z-index: 1;">
+          {s.split("").map((char, i) => (
+            <div class="array-col">
+              <div class="array-cell cr-cell" data-idx={i} data-teach-target={`char:${i}`}>
+                <span class="cell-val">{char}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+              <div class="pointers-row cr-ptr-col" data-idx={i}>
+                <span class="ptr ptr-l hidden" data-teach-target={i === 0 ? "pointer:l" : undefined}>L</span>
+                <span class="ptr ptr-r hidden" data-teach-target={i === 0 ? "pointer:r" : undefined}>R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-row cr-map-row">
+      <p class="anim-label">Character Frequencies</p>
+      <div class="hashmap-row cr-map" data-teach-target="freq-panel"></div>
+    </div>
+  </AlgorithmPlayer>
+</character-replacement-visuals>
+
+<script>
+  class CharacterReplacementVisuals extends HTMLElement {
+    connectedCallback() {
+      this.lenEl = this.querySelector(".cr-len");
+      this.maxfEl = this.querySelector(".cr-maxf");
+      this.replacementsEl = this.querySelector(".cr-replacements");
+
+      this.windowEl = this.querySelector(".cr-window");
+      this.cells = Array.from(this.querySelectorAll(".cr-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".cr-ptr-col"));
+      this.mapEl = this.querySelector(".cr-map");
+
+      let lastStep = null;
+
+      this.updateHighlight = () => {
+        if (!lastStep || !this.windowEl) return;
+
+        if (lastStep.l <= lastStep.r && this.cells.length > 0) {
+          const arrayRow = this.querySelector(".cr-chars");
+          const leftCell = this.cells[lastStep.l];
+          const rightCell = this.cells[lastStep.r];
+
+          if (arrayRow && leftCell && rightCell) {
+            const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+            const width =
+              rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft + 8;
+            this.windowEl.style.left = `${left}px`;
+            this.windowEl.style.width = `${width}px`;
+            this.windowEl.style.opacity = "1";
+            this.windowEl.classList.toggle("conflict-window", !lastStep.valid);
+          }
+        } else {
+          this.windowEl.style.opacity = "0";
+        }
+      };
+
+      window.addEventListener("resize", this.updateHighlight);
+      const arrayRow = this.querySelector(".cr-chars");
+      if (arrayRow) {
+        arrayRow.addEventListener("scroll", this.updateHighlight);
+      }
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+        lastStep = step;
+
+        const currentLen = step.r - step.l + 1;
+        const replacements = currentLen - step.maxF;
+
+        if (this.lenEl) this.lenEl.textContent = currentLen.toString();
+        if (this.maxfEl) this.maxfEl.textContent = step.maxF.toString();
+        if (this.replacementsEl) {
+          this.replacementsEl.textContent = replacements.toString();
+          if (!step.valid) {
+            this.replacementsEl.parentElement?.classList.add("conflict-box");
+          } else {
+            this.replacementsEl.parentElement?.classList.remove("conflict-box");
+          }
+        }
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i >= step.l && i <= step.r) {
+            valSpan.classList.add("in-window");
+          }
+        });
+
+        this.ptrs.forEach((col, i) => {
+          const lPtr = col.querySelector(".ptr-l");
+          const rPtr = col.querySelector(".ptr-r");
+
+          if (lPtr) lPtr.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (rPtr) rPtr.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
+        });
+
+        this.updateHighlight();
+
+        if (this.mapEl) {
+          const keys = Object.keys(step.count).sort();
+          if (keys.length === 0) {
+            this.mapEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.mapEl.innerHTML = keys
+              .map((key) => {
+                const isMaxF = step.count[key] === step.maxF;
+                return `<span class='hashmap-entry ${isMaxF ? 'highlight-entry' : ''}'>'${key}' : ${step.count[key]}</span>`;
+              })
+              .join("");
+          }
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this.updateHighlight) {
+        window.removeEventListener("resize", this.updateHighlight);
+        const arrayRow = this.querySelector(".cr-chars");
+        if (arrayRow) {
+          arrayRow.removeEventListener("scroll", this.updateHighlight);
+        }
+      }
+    }
+  }
+
+  if (!customElements.get('character-replacement-visuals')) {
+    customElements.define('character-replacement-visuals', CharacterReplacementVisuals);
+  }
+</script>
+
+<style>
+  character-replacement-visuals {
+    display: block;
+  }
+
+  .cr-stats {
+    margin-bottom: 2rem;
+  }
+
+  .stat-box.highlight {
+    border-color: color-mix(in srgb, var(--status-medium) 40%, transparent);
+    background: var(--accent-dim);
+  }
+
+  .stat-box.highlight .stat-val {
+    color: var(--accent);
+  }
+
+  .cr-replacement-box {
+    border-color: color-mix(in srgb, var(--status-hard) 40%, transparent);
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
+  }
+
+  .cr-replacement-box .stat-val {
+    color: var(--status-hard);
+  }
+
+  .conflict-box {
+    border-color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+  }
+
+  .string-container {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .window-highlight {
+    position: absolute;
+    top: 0;
+    bottom: 2rem;
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--status-info) 30%, transparent);
+    border-radius: 4px;
+    z-index: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .window-highlight.conflict-window {
+    background: color-mix(in srgb, var(--status-hard) 10%, transparent);
+    border-color: color-mix(in srgb, var(--status-hard) 40%, transparent);
+  }
+
+  .cr-map-row {
+    margin-top: 2rem;
+  }
+
+  .cell-val.in-window {
+    color: var(--status-info);
+    border-color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
+
+  .highlight-entry {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: var(--accent-dim) !important;
+    box-shadow: var(--shadow-sm);
+  }
+</style>

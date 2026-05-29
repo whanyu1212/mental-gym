@@ -1,0 +1,391 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+const list1 = [1, 2, 4];
+const list2 = [1, 3, 4];
+
+const steps = [
+  {
+    i1: 0,
+    i2: 0,
+    merged: [],
+    action: 'write',
+    exp: 'Create a dummy head and use two pointers, one per list.',
+    reason: 'At each step, append the smaller head to keep output sorted.',
+    invariant: 'Merged list remains sorted after every append.',
+    formula: 'append min(list1[i1], list2[i2])',
+    decision: 'Initialize p1=0, p2=0.',
+    targets: ['l1-0', 'l2-0', 'merged-box', 'rule-box'],
+  },
+  {
+    i1: 1,
+    i2: 0,
+    chosen: 'l1',
+    merged: [1],
+    action: 'compare',
+    exp: 'l1 (1) <= l2 (1), so append l1 value and move i1.',
+    reason: 'Tie can pick either; choosing l1 keeps correctness.',
+    invariant: 'Appended value is smallest available head.',
+    formula: '1 <= 1 -> take l1',
+    decision: 'append 1 from list1, i1++',
+    targets: ['l1-0', 'l2-0', 'merged-box', 'compare-box'],
+  },
+  {
+    i1: 1,
+    i2: 1,
+    chosen: 'l2',
+    merged: [1, 1],
+    action: 'compare',
+    exp: 'l2 (1) < l1 (2), so append l2 value and move i2.',
+    reason: 'Take the smaller current head to preserve order.',
+    invariant: 'Merged prefix is sorted.',
+    formula: '1 < 2 -> take l2',
+    decision: 'append 1 from list2, i2++',
+    targets: ['l1-1', 'l2-0', 'merged-box', 'compare-box'],
+  },
+  {
+    i1: 2,
+    i2: 1,
+    chosen: 'l1',
+    merged: [1, 1, 2],
+    action: 'compare',
+    exp: 'l1 (2) <= l2 (3), so append l1 value and move i1.',
+    reason: '2 is the smaller head.',
+    invariant: 'Both unconsumed suffixes remain sorted.',
+    formula: '2 <= 3 -> take l1',
+    decision: 'append 2 from list1, i1++',
+    targets: ['l1-1', 'l2-1', 'merged-box', 'compare-box'],
+  },
+  {
+    i1: 2,
+    i2: 2,
+    chosen: 'l2',
+    merged: [1, 1, 2, 3],
+    action: 'compare',
+    exp: 'l2 (3) < l1 (4), so append l2 value and move i2.',
+    reason: '3 is the smaller head.',
+    invariant: 'Merged remains sorted after append.',
+    formula: '3 < 4 -> take l2',
+    decision: 'append 3 from list2, i2++',
+    targets: ['l1-2', 'l2-1', 'merged-box', 'compare-box'],
+  },
+  {
+    i1: 3,
+    i2: 2,
+    chosen: 'l1',
+    merged: [1, 1, 2, 3, 4],
+    action: 'compare',
+    exp: 'l1 (4) <= l2 (4), so append l1 value and move i1.',
+    reason: 'Tie handled by selecting l1.',
+    invariant: 'Merged prefix still sorted.',
+    formula: '4 <= 4 -> take l1',
+    decision: 'append 4 from list1, i1++',
+    targets: ['l1-2', 'l2-2', 'merged-box', 'compare-box'],
+  },
+  {
+    i1: 3,
+    i2: 3,
+    chosen: 'l2',
+    merged: [1, 1, 2, 3, 4, 4],
+    action: 'confirm',
+    exp: 'List1 is exhausted, append remaining list2 value. Done.',
+    reason: 'When one list ends, the other suffix is already sorted.',
+    invariant: 'Appending remaining suffix keeps global order.',
+    formula: 'if i1 == n1 -> append list2[i2:]',
+    decision: 'final merged list is complete.',
+    targets: ['merged-box', 'result-box'],
+  },
+];
+---
+
+<merge-sorted-lists-visuals>
+  <AlgorithmPlayer title="list1 = [1, 2, 4], list2 = [1, 3, 4]" steps={steps}>
+    <div class="stats-row msl-meta-row">
+      <div class="stat-box msl-rule-box" data-teach-target="rule-box">
+        <span class="stat-label">Rule</span>
+        <span class="stat-val">append smaller head, then move that pointer</span>
+      </div>
+      <div class="stat-box msl-compare-box" data-teach-target="compare-box">
+        <span class="stat-label">Compare</span>
+        <span class="stat-val msl-compare">-</span>
+      </div>
+      <div class="stat-box msl-result-box" data-teach-target="result-box">
+        <span class="stat-label">Status</span>
+        <span class="stat-val msl-status">In Progress</span>
+      </div>
+    </div>
+
+    <div class="anim-row msl-layout">
+      <div>
+        <p class="anim-label msl-l1-label">List 1</p>
+        <div class="array-row">
+          {list1.map((n, i) => (
+            <div class="array-col msl-inline-col">
+              <div class="array-cell msl-l1-cell" data-idx={i} data-teach-target={`l1-${i}`}>
+                <span class="cell-val msl-l1-val">{n}</span>
+              </div>
+              {i < list1.length - 1 && <span class="msl-arrow msl-l1-arrow">→</span>}
+            </div>
+          ))}
+        </div>
+        <div class="pointers-row msl-l1-ptrs">
+          {list1.map((_, i) => (
+            <span class={`ptr ptr-up msl-l1-ptr msl-l1-ptr-${i} hidden`}>↑</span>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p class="anim-label msl-l2-label">List 2</p>
+        <div class="array-row">
+          {list2.map((n, i) => (
+            <div class="array-col msl-inline-col">
+              <div class="array-cell msl-l2-cell" data-idx={i} data-teach-target={`l2-${i}`}>
+                <span class="cell-val msl-l2-val">{n}</span>
+              </div>
+              {i < list2.length - 1 && <span class="msl-arrow msl-l2-arrow">→</span>}
+            </div>
+          ))}
+        </div>
+        <div class="pointers-row msl-l2-ptrs">
+          {list2.map((_, i) => (
+            <span class={`ptr ptr-up msl-l2-ptr msl-l2-ptr-${i} hidden`}>↑</span>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label highlight-label">Merged List (Output)</p>
+      <div class="array-row msl-merged-row" data-teach-target="merged-box"></div>
+    </div>
+  </AlgorithmPlayer>
+</merge-sorted-lists-visuals>
+
+<script>
+  class MergeSortedListsVisuals extends HTMLElement {
+    connectedCallback() {
+      this.l1Cells = Array.from(this.querySelectorAll('.msl-l1-cell'));
+      this.l2Cells = Array.from(this.querySelectorAll('.msl-l2-cell'));
+      this.l1Ptrs = Array.from(this.querySelectorAll('.msl-l1-ptr'));
+      this.l2Ptrs = Array.from(this.querySelectorAll('.msl-l2-ptr'));
+      this.mergedRow = this.querySelector('.msl-merged-row');
+      this.compareEl = this.querySelector('.msl-compare');
+      this.statusEl = this.querySelector('.msl-status');
+      this.compareBox = this.querySelector('.msl-compare-box');
+      this.resultBox = this.querySelector('.msl-result-box');
+
+      this.addEventListener('step-change', (e) => {
+        const s = e.detail.step;
+
+        this.l1Cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.classList.remove('active', 'visited');
+          if (i < s.i1) valSpan.classList.add('visited');
+          if (i === s.i1) valSpan.classList.add('active');
+        });
+
+        this.l2Cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.classList.remove('active', 'visited');
+          if (i < s.i2) valSpan.classList.add('visited');
+          if (i === s.i2) valSpan.classList.add('active');
+        });
+
+        this.l1Ptrs.forEach((ptr, i) => {
+          ptr.classList.toggle('hidden', i !== s.i1 || s.i1 >= this.l1Ptrs.length);
+        });
+
+        this.l2Ptrs.forEach((ptr, i) => {
+          ptr.classList.toggle('hidden', i !== s.i2 || s.i2 >= this.l2Ptrs.length);
+        });
+
+        if (this.mergedRow) {
+          if (!s.merged || s.merged.length === 0) {
+            this.mergedRow.innerHTML =
+              `<span class="msl-empty">Empty</span>`;
+          } else {
+            this.mergedRow.innerHTML = s.merged
+              .map((n, i) => {
+                const isJustAdded = i === s.merged.length - 1;
+                return `
+                  <div class="array-col msl-inline-col">
+                    <div class="array-cell">
+                      <span class="cell-val msl-merged-val ${isJustAdded ? 'just-added' : ''}">${n}</span>
+                    </div>
+                    ${i < s.merged.length - 1 ? `<span class="msl-arrow msl-merged-arrow">→</span>` : ''}
+                  </div>
+                `;
+              })
+              .join('');
+          }
+        }
+
+        this.compareBox?.classList.remove('pulse');
+        this.resultBox?.classList.remove('confirmed');
+
+        if (this.compareEl) {
+          const left = s.i1 < list1.length ? list1[s.i1] : '∅';
+          const right = s.i2 < list2.length ? list2[s.i2] : '∅';
+          this.compareEl.textContent = `${left} vs ${right}`;
+          if (s.action === 'compare') this.compareBox?.classList.add('pulse');
+        }
+
+        if (this.statusEl) {
+          this.statusEl.textContent = s.action === 'confirm' ? 'Complete' : 'In Progress';
+          if (s.action === 'confirm') this.resultBox?.classList.add('confirmed');
+        }
+      });
+    }
+  }
+
+  if (!customElements.get('merge-sorted-lists-visuals')) {
+    customElements.define('merge-sorted-lists-visuals', MergeSortedListsVisuals);
+  }
+</script>
+
+<style>
+  merge-sorted-lists-visuals {
+    display: block;
+  }
+
+  .msl-meta-row {
+    margin-bottom: 1rem;
+  }
+
+  .msl-layout {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .msl-rule-box .stat-val {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .msl-compare-box .stat-val {
+    color: var(--accent);
+  }
+
+  .msl-result-box .stat-val {
+    color: var(--status-easy);
+  }
+
+  .stat-box.pulse {
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  .stat-box.confirmed {
+    border-color: color-mix(in srgb, var(--status-easy) 55%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+  }
+
+  .msl-l1-label {
+    color: var(--status-info);
+  }
+
+  .msl-l2-label {
+    color: var(--status-medium);
+  }
+
+  .msl-inline-col {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .msl-arrow {
+    margin: 0 0.2rem;
+  }
+
+  .msl-l1-arrow {
+    color: var(--status-info);
+  }
+
+  .msl-l2-arrow {
+    color: var(--status-medium);
+  }
+
+  .msl-merged-arrow {
+    color: var(--status-easy);
+  }
+
+  .msl-l1-val {
+    border-color: var(--status-info);
+  }
+
+  .msl-l2-val {
+    border-color: var(--status-medium);
+  }
+
+  .cell-val.visited {
+    opacity: 0.3;
+  }
+
+  .msl-l1-val.active {
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+  }
+
+  .msl-l2-val.active {
+    background: color-mix(in srgb, var(--status-medium) 15%, transparent);
+  }
+
+  .msl-l1-ptrs,
+  .msl-l2-ptrs {
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+    height: 1.5rem;
+    gap: 1rem;
+  }
+
+  .msl-l1-ptr {
+    color: var(--status-info);
+    font-size: 1.2rem;
+  }
+
+  .msl-l2-ptr {
+    color: var(--status-medium);
+    font-size: 1.2rem;
+  }
+
+  .highlight-label {
+    color: var(--status-easy) !important;
+  }
+
+  .msl-merged-row {
+    min-height: 4rem;
+  }
+
+  .msl-merged-val {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
+  }
+
+  .msl-merged-val.just-added {
+    animation: pop-in 0.2s;
+  }
+
+  .msl-empty {
+    color: var(--muted);
+    font-style: italic;
+    opacity: 0.5;
+  }
+
+  @keyframes pop-in {
+    from {
+      transform: scale(0.95);
+      opacity: 0.2;
+    }
+
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+</style>
