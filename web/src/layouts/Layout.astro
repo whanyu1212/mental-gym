@@ -1,11 +1,13 @@
 ---
+import { withBase, stripBase } from "../lib/url";
+
 interface Props {
 	title?: string;
 	math?: boolean;
 }
 
 const { title = "Mental Gym", math = false } = Astro.props;
-const pathname = Astro.url.pathname;
+const pathname = stripBase(Astro.url.pathname);
 ---
 
 <!doctype html>
@@ -13,8 +15,8 @@ const pathname = Astro.url.pathname;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+		<link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
+		<link rel="apple-touch-icon" href={withBase("/apple-touch-icon.svg")} />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<script is:inline>
@@ -33,12 +35,12 @@ const pathname = Astro.url.pathname;
 	<body>
 		<header class="site-header">
 			<div class="container">
-				<a class="brand" href="/">Mental Gym</a>
+				<a class="brand" href={withBase("/")}>Mental Gym</a>
 				<nav>
-					<a href="/problems" class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") ? "active" : ""}
+					<a href={withBase("/problems")} class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") ? "active" : ""}
 						>Problems</a
 					>
-					<a href="/notes" class={pathname.startsWith("/notes") ? "active" : ""}
+					<a href={withBase("/notes")} class={pathname.startsWith("/notes") ? "active" : ""}
 						>Notes</a
 					>
 					<button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">

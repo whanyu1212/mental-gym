@@ -1,6 +1,7 @@
 ---
 import { Code } from "astro:components";
 import { problems } from "../../data/problems";
+import { withBase } from "../../lib/url";
 import TwoSumAnimation from "../../components/TwoSumAnimation.astro";
 import SortColorsAnimation from "../../components/SortColorsAnimation.astro";
 import LongestSubstringAnimation from "../../components/LongestSubstringAnimation.astro";
@@ -84,9 +85,9 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 <Layout title={`${problem.title} | Mental Gym`}>
 	<nav class="breadcrumb">
-		<a href="/problems">Problems</a>
+		<a href={withBase("/problems")}>Problems</a>
 		<span class="sep">›</span>
-		<a href={`/problems#algo-${problem.group.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
+		<a href={withBase(`/problems#algo-${problem.group.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}
 			>{problem.group}</a
 		>
 		<span class="sep">›</span>

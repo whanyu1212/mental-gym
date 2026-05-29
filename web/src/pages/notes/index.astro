@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
 
 const allNotes = await getCollection("notes");
 
@@ -26,7 +27,7 @@ const notesByCategory = categories.map((category) => ({
 				<h2 class="category-heading">{category.name}</h2>
 				<div class="notes-grid">
 					{category.notes.map((note) => (
-						<a href={`/notes/${note.id}/`} class="note-card">
+						<a href={withBase(`/notes/${note.id}/`)} class="note-card">
 							<div class="note-content">
 								<h3 class="note-title">{note.data.title}</h3>
 								{note.data.description && <p class="note-description">{note.data.description}</p>}

@@ -4,6 +4,7 @@ import { mlProblems } from "../../data/mlProblems";
 import DueForReview from "../../components/DueForReview.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
 import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
 
 // Algorithms
 const ALGO_GROUP_ORDER = ["Arrays & Hashing", "Two Pointers", "Sliding Window", "Stack"];
@@ -67,7 +68,7 @@ const mlByCategory = Object.fromEntries(
 								<tr>
 									<td class="col-id muted">{problem.id}</td>
 									<td class="col-title">
-										<a href={`/algorithms/${problem.slug}/`}>{problem.title}</a>
+										<a href={withBase(`/algorithms/${problem.slug}/`)}>{problem.title}</a>
 									</td>
 									<td class="col-diff">
 										<span class={`badge ${problem.difficulty.toLowerCase()}`}>
@@ -127,7 +128,7 @@ const mlByCategory = Object.fromEntries(
 									<td class="col-id muted">{problem.id}</td>
 									<td class="col-title">
 										<div class="problem-copy">
-											<a class="problem-name" href={`/machine-learning/${problem.slug}/`}>
+											<a class="problem-name" href={withBase(`/machine-learning/${problem.slug}/`)}>
 												{problem.title}
 											</a>
 											<span class="problem-summary">{problem.summary}</span>

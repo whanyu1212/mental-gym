@@ -1,5 +1,6 @@
 ---
 import type { Problem } from "../data/problems";
+import { withBase } from "../lib/url";
 
 interface Props {
 	problem: Problem;
@@ -16,7 +17,7 @@ const { problem } = Astro.props;
 		</span>
 	</div>
 	<h2>
-		<a href={`/problems/${problem.slug}/`}>{problem.title}</a>
+		<a href={withBase(`/problems/${problem.slug}/`)}>{problem.title}</a>
 	</h2>
 	<p class="statement">{problem.statement}</p>
 	<div class="topics">

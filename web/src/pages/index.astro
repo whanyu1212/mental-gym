@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import { mlProblems } from "../data/mlProblems";
 import { problems } from "../data/problems";
 import Layout from "../layouts/Layout.astro";
+import { withBase } from "../lib/url";
 
 const notes = await getCollection("notes");
 
@@ -59,7 +60,7 @@ const mlCategoryCounts = Object.fromEntries(
 	</section>
 
 	<section class="domains">
-		<a class="domain-card" href="/problems?tab=algorithms">
+		<a class="domain-card" href={withBase("/problems?tab=algorithms")}>
 			<div class="domain-accent"></div>
 			<div class="domain-body">
 				<p class="domain-label">01</p>
@@ -72,7 +73,7 @@ const mlCategoryCounts = Object.fromEntries(
 			</div>
 		</a>
 
-		<a class="domain-card" href="/problems?tab=ml">
+		<a class="domain-card" href={withBase("/problems?tab=ml")}>
 			<div class="domain-accent ml"></div>
 			<div class="domain-body">
 				<p class="domain-label">02</p>
@@ -85,7 +86,7 @@ const mlCategoryCounts = Object.fromEntries(
 			</div>
 		</a>
 
-		<a class="domain-card domain-card--muted" href="/problems?tab=system-design">
+		<a class="domain-card domain-card--muted" href={withBase("/problems?tab=system-design")}>
 			<div class="domain-accent sd"></div>
 			<div class="domain-body">
 				<p class="domain-label">03</p>
@@ -104,7 +105,7 @@ const mlCategoryCounts = Object.fromEntries(
 			<h3 class="col-heading">Algorithm Topics</h3>
 			<div class="topic-list">
 				{groups.map((group, i) => (
-					<a class="topic-row" href={`/problems#algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`}>
+					<a class="topic-row" href={withBase(`/problems#algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}>
 						<span class="topic-num">{String(i + 1).padStart(2, "0")}</span>
 						<span class="topic-name">{group}</span>
 						<span class="topic-count">{groupCounts[group]}</span>
@@ -117,7 +118,7 @@ const mlCategoryCounts = Object.fromEntries(
 			<h3 class="col-heading">ML Categories</h3>
 			<div class="topic-list">
 				{mlCategories.map((category, i) => (
-					<a class="topic-row" href={`/problems#ml-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}>
+					<a class="topic-row" href={withBase(`/problems#ml-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}>
 						<span class="topic-num">{String(i + 1).padStart(2, "0")}</span>
 						<span class="topic-name">{category}</span>
 						<span class="topic-count">{mlCategoryCounts[category]}</span>
@@ -131,7 +132,7 @@ const mlCategoryCounts = Object.fromEntries(
 		<section class="notes">
 			<div class="section-header">
 				<h3 class="col-heading">Featured Notes</h3>
-				<a href="/notes" class="view-all-link">
+				<a href={withBase("/notes")} class="view-all-link">
 					<span>View all notes</span>
 					<span class="view-all-arrow">→</span>
 				</a>
@@ -139,7 +140,7 @@ const mlCategoryCounts = Object.fromEntries(
 			<ol class="notes-list">
 				{notes.slice(0, 3).map((note, i) => (
 					<li class="note-entry">
-						<a href={`/notes/${note.id}/`} class="note-link">
+						<a href={withBase(`/notes/${note.id}/`)} class="note-link">
 							<span class="note-index">{String(i + 1).padStart(2, "0")}</span>
 							<span class="note-body">
 								<span class="note-title">{note.data.title}</span>

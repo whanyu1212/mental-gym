@@ -1,6 +1,7 @@
 ---
 import { Code } from "astro:components";
 import { mlProblems } from "../../data/mlProblems";
+import { withBase } from "../../lib/url";
 import RecallRating from "../../components/RecallRating.astro";
 import Layout from "../../layouts/Layout.astro";
 
@@ -16,9 +17,9 @@ const { problem } = Astro.props;
 
 <Layout title={`${problem.title} | Mental Gym`}>
 	<nav class="breadcrumb">
-		<a href="/problems#ml-section">Problems</a>
+		<a href={withBase("/problems#ml-section")}>Problems</a>
 		<span class="sep">›</span>
-		<a href={`/problems#ml-${problem.category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}>{problem.category}</a>
+		<a href={withBase(`/problems#ml-${problem.category.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}>{problem.category}</a>
 		<span class="sep">›</span>
 		<span>{problem.title}</span>
 	</nav>
