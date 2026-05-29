@@ -96,7 +96,7 @@ const { Content } = await render(note);
 	}
 
 	.note :global(h3) {
-		font-size: 0.72rem;
+		font-size: var(--text-eyebrow);
 		margin: 1.75rem 0 0.5rem;
 		color: var(--accent);
 		font-family: var(--font-sans);
@@ -110,7 +110,7 @@ const { Content } = await render(note);
 		margin: 0 0 1rem;
 		color: var(--text);
 		font-family: var(--font-sans);
-		font-size: 0.95rem;
+		font-size: 1rem;
 	}
 
 	.note :global(ul),
@@ -118,7 +118,7 @@ const { Content } = await render(note);
 		padding-left: 1.5rem;
 		margin: 0 0 1rem;
 		font-family: var(--font-sans);
-		font-size: 0.95rem;
+		font-size: 1rem;
 	}
 
 	.note :global(li) {

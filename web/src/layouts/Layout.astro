@@ -85,6 +85,9 @@ const pathname = Astro.url.pathname;
 		--font-serif: "Cormorant Garamond", Georgia, serif;
 		--font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
 		--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+		/* Smallest uppercase kicker labels (stat labels, section/column headings, meta) */
+		--text-eyebrow: 0.72rem;
 	}
 
 	:root,
@@ -124,11 +127,11 @@ const pathname = Astro.url.pathname;
 		--surface-base: #efe7d8;
 		--surface-strong: #e5dbc9;
 		--text: #201d17;
-		--muted: #6f6657;
+		--muted: #5c5446;
 		--border: #d8cfbd;
-		--link: #a6852d;
-		--accent: #a6852d;
-		--accent-dim: rgba(166, 133, 45, 0.11);
+		--link: #8a6d1f;
+		--accent: #8a6d1f;
+		--accent-dim: rgba(138, 109, 31, 0.11);
 		--header-bg: rgba(253, 251, 246, 0.88);
 		--bg-gradient: radial-gradient(ellipse at top, #f1e7d4 0%, var(--bg) 70%);
 		--status-easy: #2e7d32;
@@ -151,7 +154,7 @@ const pathname = Astro.url.pathname;
 	}
 
 	html {
-		font-size: 106.25%;
+		font-size: 112.5%;
 	}
 
 	html,
@@ -222,7 +225,7 @@ const pathname = Astro.url.pathname;
 
 	nav a {
 		color: var(--muted);
-		font-size: 0.72rem;
+		font-size: var(--text-eyebrow);
 		font-family: var(--font-sans);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
