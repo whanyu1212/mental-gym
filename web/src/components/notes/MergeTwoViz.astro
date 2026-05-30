@@ -186,13 +186,13 @@ const steps: TeachingStep[] = [
 <style>
   mt-viz { display: block; }
 
-  .mt-a1-cell.slot .cell-val { opacity: 0.35; font-style: italic; }
+  .mt-a1-cell.slot .cell-val { opacity: var(--dim-soft); font-style: italic; }
 
   .mt-a1-cell.p1-ptr .cell-val,
   .mt-a2-cell.p2-ptr .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
     transform: translateY(-4px);
   }
 
@@ -204,5 +204,5 @@ const steps: TeachingStep[] = [
   }
 
   .mt-a1-cell.done .cell-val,
-  .mt-a2-cell.done .cell-val { opacity: 0.3; }
+  .mt-a2-cell.done .cell-val { opacity: var(--dim-hard); }
 </style>

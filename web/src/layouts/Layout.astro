@@ -1,5 +1,7 @@
 ---
 import { withBase, stripBase } from "../lib/url";
+import "../styles/tokens.css";
+import "../styles/prose.css";
 
 interface Props {
 	title?: string;
@@ -83,14 +85,9 @@ const pathname = stripBase(Astro.url.pathname);
 </html>
 
 <style>
-	:root {
-		--font-serif: "Cormorant Garamond", Georgia, serif;
-		--font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
-		--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-		/* Smallest uppercase kicker labels (stat labels, section/column headings, meta) */
-		--text-eyebrow: 0.72rem;
-	}
+	/* Structural tokens (type families, scale, radius, spacing, accent channels)
+	   live in src/styles/tokens.css, imported above. This block holds only the
+	   per-theme palette — the values that flip between dark and light. */
 
 	:root,
 	[data-theme="dark"] {
@@ -102,13 +99,15 @@ const pathname = stripBase(Astro.url.pathname);
 		--text: #f0ead6;
 		--muted: #8a8070;
 		--border: #2a2520;
-		--link: #c9a84c;
-		--accent: #c9a84c;
-		--accent-dim: rgba(201, 168, 76, 0.15);
+		--accent-rgb: 201 168 76; /* brand gold — drives --accent + all --accent-* channels */
+		--easy-rgb: 125 171 125;  /* status green — drives --easy-* channels */
+		--link: rgb(var(--accent-rgb));
+		--accent: rgb(var(--accent-rgb));
+		--accent-dim: var(--accent-soft);
 		--header-bg: rgba(14, 14, 14, 0.85);
 		--bg-gradient: radial-gradient(ellipse at top, #1a1710 0%, var(--bg) 60%);
-		--status-easy: #7dab7d;
-		--status-medium: #c9a84c;
+		--status-easy: rgb(var(--easy-rgb));
+		--status-medium: var(--accent);
 		--status-hard: #b05a5a;
 		--status-info: #5a82b0;
 		--glass-surface: rgba(22, 22, 22, 0.68);
@@ -131,12 +130,14 @@ const pathname = stripBase(Astro.url.pathname);
 		--text: #201d17;
 		--muted: #5c5446;
 		--border: #d8cfbd;
-		--link: #8a6d1f;
-		--accent: #8a6d1f;
-		--accent-dim: rgba(138, 109, 31, 0.11);
+		--accent-rgb: 138 109 31; /* brand gold (light) */
+		--easy-rgb: 46 125 50;    /* status green (light) */
+		--link: rgb(var(--accent-rgb));
+		--accent: rgb(var(--accent-rgb));
+		--accent-dim: var(--accent-soft);
 		--header-bg: rgba(253, 251, 246, 0.88);
 		--bg-gradient: radial-gradient(ellipse at top, #f1e7d4 0%, var(--bg) 70%);
-		--status-easy: #2e7d32;
+		--status-easy: rgb(var(--easy-rgb));
 		--status-medium: #b26a00;
 		--status-hard: #b23b3b;
 		--status-info: #2f6fa6;

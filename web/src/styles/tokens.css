@@ -1,0 +1,83 @@
+/* ============================================================================
+   Design tokens — the single source of truth for the visual system.
+   Imported once in Layout.astro. Theme-specific values live under the
+   [data-theme="*"] blocks in Layout.astro; this file holds the structural
+   scale (space, radius, type) and the accent channels derived from them.
+   ============================================================================ */
+
+:root {
+  /* --- Type families ----------------------------------------------------- */
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* --- Type scale -------------------------------------------------------- */
+  /* A modular-ish ramp. Page heroes use --fs-hero; prose body uses --fs-base. */
+  --fs-eyebrow: 0.72rem; /* uppercase kicker labels (stat labels, meta, section headings) */
+  --fs-fine: 0.8rem;     /* breadcrumbs, captions, fine print */
+  --fs-sm: 0.875rem;     /* secondary copy, code in prose */
+  --fs-base: 1rem;       /* canonical prose body */
+  --fs-lg: 1.125rem;     /* lead paragraphs */
+  --fs-h3: 1.05rem;      /* prose h3 (rendered uppercase, so kept small) */
+  --fs-h2: 1.5rem;       /* prose h2 / section heads */
+  --fs-h1: 2.1rem;       /* page title (problem pages) */
+  --fs-hero: 2.6rem;     /* note hero h1 */
+
+  /* Backwards-compatible alias for the original eyebrow token. */
+  --text-eyebrow: var(--fs-eyebrow);
+
+  /* --- Line heights ------------------------------------------------------ */
+  --lh-tight: 1.25;  /* headings */
+  --lh-snug: 1.5;    /* code blocks, dense lists */
+  --lh-normal: 1.65; /* default UI copy */
+  --lh-prose: 1.8;   /* canonical reading measure for body prose */
+
+  /* --- Spacing scale (4px base) ------------------------------------------ */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3.5rem;
+
+  /* --- Radius scale ------------------------------------------------------ */
+  /* Collapses the prior 2px / 6px / 8px / 10px / 12px sprawl into a ladder. */
+  --radius-xs: 4px;   /* chips, badges, inline code, small cells */
+  --radius-sm: 8px;   /* buttons, teaching sub-panels */
+  --radius-md: 12px;  /* content panels, problem statement, code blocks */
+  --radius-lg: 16px;  /* hero / feature surfaces */
+  --radius-pill: 999px;
+
+  /* --- Reading measure --------------------------------------------------- */
+  --measure: 68ch; /* max line length for comfortable prose */
+
+  /* --- Motion ------------------------------------------------------------ */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 0.15s;
+  --dur-mid: 0.25s;
+
+  /* --- Dimming opacity (was 0.3 / 0.35 / 0.45 ad hoc) -------------------- */
+  --dim-soft: 0.45; /* de-emphasized but legible (discarded teaching cells) */
+  --dim-hard: 0.3;  /* visited / consumed values */
+}
+
+/* ----------------------------------------------------------------------------
+   Accent channels.
+   Each theme block in Layout.astro defines --accent-rgb as space-separated
+   sRGB channels (e.g. "201 168 76"). These derived tokens then expose the
+   accent at fixed alphas so call sites never hardcode rgba(...) again.
+   Usage:  background: var(--accent-soft);   color: var(--accent);
+           border: 1px solid rgb(var(--accent-rgb) / 40%);  // freeform alpha
+   ---------------------------------------------------------------------------- */
+:root {
+  --accent-glow: rgb(var(--accent-rgb) / 8%);   /* faint cell fill behind active values */
+  --accent-soft: rgb(var(--accent-rgb) / 12%);  /* default tint (inline code, dim chips) */
+  --accent-veil: rgb(var(--accent-rgb) / 20%);  /* stronger tint (write state) */
+  --accent-ring: rgb(var(--accent-rgb) / 45%);  /* focus/glow rings */
+
+  /* Status channels — same pattern, for green "found/match" surfaces. */
+  --easy-glow: rgb(var(--easy-rgb) / 10%);
+  --easy-soft: rgb(var(--easy-rgb) / 15%);
+}

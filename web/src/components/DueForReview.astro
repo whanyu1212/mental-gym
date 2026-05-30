@@ -81,7 +81,7 @@
     margin-bottom: 2rem;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 1.25rem;
   }
 
@@ -99,16 +99,16 @@
     letter-spacing: 0.12em;
     color: var(--accent);
     font-weight: 600;
-    font-family: Inter, system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .due-count {
     font-size: 0.65rem;
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans);
     color: var(--status-hard);
     background: color-mix(in srgb, var(--status-hard) 15%, transparent);
     border: 1px solid color-mix(in srgb, var(--status-hard) 30%, transparent);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 0.1rem 0.45rem;
     font-weight: 600;
   }
@@ -123,7 +123,7 @@
     padding: 0.75rem 1rem;
     background: var(--surface-base);
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     text-decoration: none;
     transition: border-color 0.15s, background 0.15s;
   }
@@ -143,16 +143,16 @@
 
   .due-cards :global(.due-card-title) {
     font-size: 0.88rem;
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans);
     color: var(--text);
     font-weight: 500;
   }
 
   .due-cards :global(.due-card-status) {
     font-size: 0.65rem;
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans);
     padding: 0.15rem 0.5rem;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     white-space: nowrap;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -177,15 +177,15 @@
   .due-cards :global(.due-card-group) {
     font-size: 0.7rem;
     color: var(--muted);
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .due-cards :global(.due-card-diff) {
     font-size: 0.65rem;
     padding: 0.1rem 0.4rem;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     border: 1px solid var(--border);
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans);
   }
 
   .due-cards :global(.easy) { color: var(--status-easy); }

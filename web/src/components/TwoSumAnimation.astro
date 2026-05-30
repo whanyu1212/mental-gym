@@ -302,13 +302,13 @@ const steps: TeachingStep[] = [
   }
 
   .ts-cell.visited .cell-val {
-    opacity: 0.35;
+    opacity: var(--dim-soft);
   }
 
   .ts-cell.active .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
   }
 
   .ts-cell.active {
@@ -316,9 +316,9 @@ const steps: TeachingStep[] = [
   }
 
   .ts-cell.found .cell-val {
-    border-color: #7dab7d;
-    color: #7dab7d;
-    background: rgba(125, 171, 125, 0.1);
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: var(--easy-glow);
   }
 
   .matched-entry {

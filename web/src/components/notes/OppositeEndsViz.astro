@@ -177,13 +177,13 @@ const steps: TeachingStep[] = [
     transition: left 0.25s ease;
   }
 
-  .oe-cell.visited .cell-val { opacity: 0.3; }
+  .oe-cell.visited .cell-val { opacity: var(--dim-hard); }
 
   .oe-cell.active { transform: translateY(-4px); }
   .oe-cell.active .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
   }
 
   .oe-cell.found .cell-val {

@@ -108,7 +108,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	<section class="problem-statement">
 		<h2 class="section-title">Problem</h2>
-		<div class="description" set:html={problem.description} />
+		<div class="prose" set:html={problem.description} />
 	</section>
 
 	<section class="content-switcher">
@@ -518,7 +518,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		color: var(--muted);
 		margin-bottom: 1.5rem;
 		flex-wrap: wrap;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.03em;
 	}
 
@@ -544,7 +544,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		margin: 0;
 		color: var(--muted);
 		font-size: 0.8rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 	}
@@ -566,17 +566,34 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.badge,
 	.tag {
-		font-size: 0.7rem;
-		padding: 0.2rem 0.6rem;
-		border-radius: 2px;
+		font-size: var(--fs-eyebrow);
+		padding: 0.2rem 0.7rem;
+		border-radius: var(--radius-pill);
 		border: 1px solid var(--border);
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.04em;
 	}
 
-	.easy { color: var(--status-easy); }
-	.medium { color: var(--status-medium); }
-	.hard { color: var(--status-hard); }
+	.badge {
+		font-weight: 600;
+		text-transform: uppercase;
+		font-size: 0.66rem;
+	}
+	.badge.easy {
+		color: var(--status-easy);
+		border-color: color-mix(in srgb, var(--status-easy) 45%, transparent);
+		background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+	}
+	.badge.medium {
+		color: var(--status-medium);
+		border-color: color-mix(in srgb, var(--status-medium) 45%, transparent);
+		background: var(--accent-soft);
+	}
+	.badge.hard {
+		color: var(--status-hard);
+		border-color: color-mix(in srgb, var(--status-hard) 45%, transparent);
+		background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+	}
 
 	.tag {
 		color: var(--muted);
@@ -586,85 +603,28 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		font-size: 0.78rem;
 		color: var(--muted);
 		margin-left: 0.25rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.section-title {
-		font-size: 0.7rem;
+		font-size: var(--fs-eyebrow);
 		text-transform: uppercase;
 		letter-spacing: 0.12em;
 		color: var(--muted);
 		font-weight: 600;
 		margin: 0 0 1rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.problem-statement {
 		background: var(--glass-surface);
 		border: 1px solid var(--glass-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: 1.5rem;
 		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
 		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
 		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 		margin-bottom: 2rem;
-	}
-
-	/* Style the raw LeetCode HTML */
-	.description :global(p) {
-		margin: 0 0 0.75rem;
-		line-height: 1.65;
-		color: var(--text);
-		font-family: Inter, system-ui, sans-serif;
-		font-size: 0.93rem;
-	}
-
-	.description :global(pre) {
-		background: var(--surface-strong);
-		border: 1px solid var(--border);
-		border-radius: 2px;
-		padding: 0.85rem 1rem;
-		overflow-x: auto;
-		font-size: 0.85rem;
-		line-height: 1.5;
-		margin: 0.75rem 0;
-	}
-
-	.description :global(code) {
-		font-family: var(--font-mono);
-		font-weight: 500;
-		font-size: 0.88em;
-		background: var(--accent-dim);
-		padding: 0.1em 0.35em;
-		border-radius: 2px;
-	}
-
-	.description :global(pre code) {
-		background: none;
-		padding: 0;
-		font-size: inherit;
-	}
-
-	.description :global(ul),
-	.description :global(ol) {
-		padding-left: 1.5rem;
-		margin: 0.5rem 0;
-		font-family: Inter, system-ui, sans-serif;
-		font-size: 0.93rem;
-	}
-
-	.description :global(li) {
-		margin-bottom: 0.3rem;
-		line-height: 1.6;
-	}
-
-	.description :global(strong) {
-		color: var(--text);
-		font-weight: 600;
-	}
-
-	.description :global(.example) {
-		color: var(--accent);
 	}
 
 	.solutions {
@@ -687,7 +647,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		font-size: 0.78rem;
 		color: var(--muted);
 		font-style: italic;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.code-panels {
@@ -709,7 +669,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		padding: 4px;
 		margin-bottom: 1.25rem;
 		background: rgba(0, 0, 0, 0.2);
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		backdrop-filter: blur(24px) saturate(180%);
 		-webkit-backdrop-filter: blur(24px) saturate(180%);
 		/* Inner shadow for depth, outer subtle bottom edge to catch light */
@@ -726,10 +686,10 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		border: none;
 		color: var(--muted);
 		padding: 0.4rem 1.25rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		cursor: pointer;
 		font-size: 0.8rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		font-weight: 500;
 		letter-spacing: 0.02em;
 		transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -745,7 +705,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 	.lang-icon {
 		width: 0.48rem;
 		height: 0.48rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		display: inline-block;
 		flex-shrink: 0;
 		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22) inset;
@@ -818,7 +778,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.code-panel :global(pre) {
 		margin: 0;
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		border: 1px solid color-mix(in srgb, var(--glass-border-strong) 88%, transparent);
 		padding: 1.25rem;
 		overflow-x: auto;

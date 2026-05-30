@@ -226,7 +226,7 @@ const mlByCategory = Object.fromEntries(
 		color: var(--muted);
 		padding: 0.5rem 1rem;
 		font-size: 0.9rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		cursor: pointer;
 		border-radius: 4px;
 		transition: background 0.2s, color 0.2s;
@@ -269,7 +269,7 @@ const mlByCategory = Object.fromEntries(
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
 		font-weight: 600;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.problem-table {
@@ -287,14 +287,14 @@ const mlByCategory = Object.fromEntries(
 	th {
 		text-align: left;
 		padding: 0.6rem 0.9rem;
-		font-size: 0.7rem;
+		font-size: var(--fs-eyebrow);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: var(--muted);
 		background: color-mix(in srgb, var(--glass-surface-strong) 94%, transparent);
 		border-bottom: 1px solid color-mix(in srgb, var(--glass-border-strong) 90%, transparent);
 		box-shadow: inset 0 1px 0 var(--glass-highlight-strong);
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	td {
@@ -302,7 +302,7 @@ const mlByCategory = Object.fromEntries(
 		border-bottom: 1px solid var(--border);
 		font-size: 0.88rem;
 		vertical-align: top;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	#algo-section td {
@@ -341,9 +341,9 @@ const mlByCategory = Object.fromEntries(
 	.badge {
 		font-size: 0.72rem;
 		padding: 0.2rem 0.55rem;
-		border-radius: 2px;
+		border-radius: var(--radius-xs);
 		border: 1px solid var(--border);
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		white-space: nowrap;
 	}
 
@@ -359,14 +359,14 @@ const mlByCategory = Object.fromEntries(
 
 	.tag {
 		display: inline-block;
-		font-size: 0.7rem;
+		font-size: var(--fs-eyebrow);
 		padding: 0.15rem 0.45rem;
-		border-radius: 2px;
+		border-radius: var(--radius-xs);
 		border: 1px solid var(--border);
 		color: var(--muted);
 		margin-right: 0.25rem;
 		margin-bottom: 0.25rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		white-space: nowrap;
 	}
 
@@ -374,17 +374,17 @@ const mlByCategory = Object.fromEntries(
 		display: inline-block;
 		font-size: 0.72rem;
 		padding: 0.2rem 0.55rem;
-		border-radius: 2px;
+		border-radius: var(--radius-xs);
 		border: 1px solid var(--border);
 		color: var(--accent);
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.coming-soon {
 		padding: 4rem 2rem;
 		text-align: center;
 		border: 1px solid var(--border);
-		border-radius: 2px;
+		border-radius: var(--radius-xs);
 		background: var(--panel);
 	}
 
@@ -400,7 +400,7 @@ const mlByCategory = Object.fromEntries(
 		margin: 0;
 		color: var(--muted);
 		font-size: 0.88rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		max-width: 480px;
 		margin: 0 auto;
 		line-height: 1.6;

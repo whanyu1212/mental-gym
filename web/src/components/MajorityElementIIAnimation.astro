@@ -529,12 +529,12 @@ const steps = [
   .me2-phase-badge {
     display: inline-block;
     font-size: 0.7rem;
-    font-family: Inter, sans-serif;
+    font-family: var(--font-sans);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 0.25rem 0.75rem;
     border: 1px solid color-mix(in srgb, var(--status-medium) 30%, transparent);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     color: var(--accent);
     background: var(--accent-dim);
     transition: all 0.3s ease;
@@ -586,7 +586,7 @@ const steps = [
   }
 
   .cell-val.visited {
-    opacity: 0.45;
+    opacity: var(--dim-soft);
   }
 
   .cell-val.active-match {

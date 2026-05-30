@@ -238,20 +238,20 @@ const steps: TeachingStep[] = [
   canon-viz { display: block; }
 
   .cv-highlight-box {
-    border-color: rgba(201, 168, 76, 0.3);
-    background: var(--accent-dim, rgba(201, 168, 76, 0.06));
+    border-color: rgb(var(--accent-rgb) / 30%);
+    background: var(--accent-dim, rgb(var(--accent-rgb) / 6%));
   }
   .cv-highlight-box .stat-val {
     color: var(--accent);
     font-family: var(--font-mono);
   }
 
-  .cell-val.visited { opacity: 0.35; }
+  .cell-val.visited { opacity: var(--dim-soft); }
 
   .cell-val.active-eval {
     border-color: var(--accent);
     color: var(--accent);
-    background: var(--accent-dim, rgba(201, 168, 76, 0.06));
+    background: var(--accent-dim, rgb(var(--accent-rgb) / 6%));
     transform: translateY(-4px);
   }
 
@@ -267,7 +267,7 @@ const steps: TeachingStep[] = [
     flex-direction: column;
     gap: 0.5rem;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 1rem;
     background: var(--panel, var(--surface-strong));
     min-height: 120px;
@@ -286,12 +286,12 @@ const steps: TeachingStep[] = [
     padding: 0.45rem 0.6rem;
     background: #151515;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     transition: border-color 0.15s, background 0.15s;
   }
 
   .cv-map-entry.cv-active-entry {
-    background: var(--accent-dim, rgba(201, 168, 76, 0.06));
+    background: var(--accent-dim, rgb(var(--accent-rgb) / 6%));
     border-color: var(--accent);
   }
 

@@ -310,7 +310,7 @@ const steps = [
     width: 120px;
     height: 4px;
     background: var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     margin-top: 2px;
   }
 
@@ -323,7 +323,7 @@ const steps = [
     justify-content: center;
     background: #1a1a1a;
     border: 1px solid #333;
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     font-family: var(--font-mono);
     font-size: 1rem;
     color: var(--text);
@@ -333,8 +333,8 @@ const steps = [
   .stack-top {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.1);
-    box-shadow: 0 0 8px rgba(201, 168, 76, 0.2);
+    background: rgb(var(--accent-rgb) / 10%);
+    box-shadow: 0 0 8px var(--accent-veil);
   }
 
   .stack-empty {

@@ -99,7 +99,7 @@ const { problem } = Astro.props;
 		color: var(--muted);
 		margin-bottom: 1.5rem;
 		flex-wrap: wrap;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.03em;
 	}
 
@@ -125,7 +125,7 @@ const { problem } = Astro.props;
 		margin: 0;
 		color: var(--muted);
 		font-size: 0.8rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 	}
@@ -156,24 +156,33 @@ const { problem } = Astro.props;
 	.badge,
 	.tag,
 	.status {
-		font-size: 0.7rem;
-		padding: 0.2rem 0.6rem;
-		border-radius: 2px;
+		font-size: var(--fs-eyebrow);
+		padding: 0.2rem 0.7rem;
+		border-radius: var(--radius-pill);
 		border: 1px solid var(--border);
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.04em;
 	}
 
-	.easy {
+	.badge {
+		font-weight: 600;
+		text-transform: uppercase;
+		font-size: 0.66rem;
+	}
+	.badge.easy {
 		color: var(--status-easy);
+		border-color: color-mix(in srgb, var(--status-easy) 45%, transparent);
+		background: color-mix(in srgb, var(--status-easy) 12%, transparent);
 	}
-
-	.medium {
+	.badge.medium {
 		color: var(--status-medium);
+		border-color: color-mix(in srgb, var(--status-medium) 45%, transparent);
+		background: var(--accent-soft);
 	}
-
-	.hard {
+	.badge.hard {
 		color: var(--status-hard);
+		border-color: color-mix(in srgb, var(--status-hard) 45%, transparent);
+		background: color-mix(in srgb, var(--status-hard) 12%, transparent);
 	}
 
 	.tag {
@@ -185,42 +194,47 @@ const { problem } = Astro.props;
 	}
 
 	.panel {
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: 2px;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
 		padding: 1.5rem;
 		margin-bottom: 1rem;
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 	}
 
 	.section-title {
-		font-size: 0.7rem;
+		font-size: var(--fs-eyebrow);
 		text-transform: uppercase;
 		letter-spacing: 0.12em;
 		color: var(--muted);
 		font-weight: 600;
 		margin: 0 0 1rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.body-copy {
 		margin: 0;
-		line-height: 1.7;
+		line-height: var(--lh-prose);
 		color: var(--text);
-		font-size: 0.95rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-size: var(--fs-base);
+		font-family: var(--font-sans);
+		max-width: var(--measure);
 	}
 
 	.list {
 		margin: 0;
-		padding-left: 1.2rem;
+		padding-left: var(--space-5);
 	}
 
 	.list li {
-		margin-bottom: 0.6rem;
-		line-height: 1.65;
+		margin-bottom: var(--space-2);
+		line-height: var(--lh-prose);
 		color: var(--text);
-		font-size: 0.92rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-size: var(--fs-base);
+		font-family: var(--font-sans);
+		max-width: var(--measure);
 	}
 
 	.next-steps {
@@ -253,7 +267,7 @@ const { problem } = Astro.props;
 		font-size: 0.78rem;
 		color: var(--muted);
 		font-style: italic;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.code-panels {
@@ -267,7 +281,7 @@ const { problem } = Astro.props;
 
 	.code-wrapper :global(pre) {
 		margin: 0;
-		border-radius: 2px;
+		border-radius: var(--radius-md);
 		border: 1px solid var(--border);
 		padding: 1.25rem;
 		overflow-x: auto;

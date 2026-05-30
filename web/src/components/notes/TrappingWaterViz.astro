@@ -236,12 +236,12 @@ const steps: TeachingStep[] = [
     color: var(--muted);
   }
 
-  .tw-col.visited { opacity: 0.35; }
+  .tw-col.visited { opacity: var(--dim-soft); }
 
   .tw-col.active .tw-bar {
-    background: rgba(201, 168, 76, 0.2);
+    background: var(--accent-veil);
     border-color: var(--accent);
-    box-shadow: 0 0 6px rgba(201, 168, 76, 0.3);
+    box-shadow: 0 0 6px rgb(var(--accent-rgb) / 30%);
   }
 
   .stat-box.success-box {

@@ -376,24 +376,24 @@ const steps = [
   }
 
   .ed-empty {
-    opacity: 0.3;
+    opacity: var(--dim-hard);
     font-style: italic;
     font-size: 0.9rem;
   }
 
   .ed-faded {
-    opacity: 0.45;
+    opacity: var(--dim-soft);
   }
 
   .ed-active-chunk {
     background: color-mix(in srgb, var(--status-medium) 20%, transparent);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 0.2rem;
     box-shadow: var(--shadow-sm);
   }
 
   .cell-val.visited {
-    opacity: 0.3;
+    opacity: var(--dim-hard);
   }
 
   .cell-val.active-eval {

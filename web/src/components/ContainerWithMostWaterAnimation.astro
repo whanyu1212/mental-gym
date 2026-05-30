@@ -486,12 +486,12 @@ const steps: TeachingStep[] = [
   .solid-block.active-block {
     background: var(--status-medium);
     border-color: #e0bc5c;
-    box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+    box-shadow: 0 0 10px rgb(var(--accent-rgb) / 30%);
     transform: translateY(-4px);
   }
 
   .solid-block.faded-block {
-    opacity: 0.35;
+    opacity: var(--dim-soft);
   }
 
   .bar-idx {

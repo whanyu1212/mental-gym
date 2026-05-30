@@ -389,7 +389,7 @@ const steps: TeachingStep[] = [
 
   .lp-word-cell.lp-word-active {
     border-color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
     transform: translateX(4px);
   }
 
@@ -420,7 +420,7 @@ const steps: TeachingStep[] = [
   }
 
   .lp-empty-hint {
-    opacity: 0.3;
+    opacity: var(--dim-hard);
     font-style: italic;
     font-size: 0.85rem;
     color: var(--muted);
@@ -428,8 +428,8 @@ const steps: TeachingStep[] = [
 
   .lp-enc-len {
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.12);
-    border-radius: 2px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-xs);
     padding: 0 2px;
     font-weight: 600;
   }
@@ -442,11 +442,11 @@ const steps: TeachingStep[] = [
   .lp-enc-data {
     color: var(--text);
     background: color-mix(in srgb, var(--status-easy) 10%, transparent);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 0 2px;
   }
 
-  .lp-enc-faded { opacity: 0.3; }
+  .lp-enc-faded { opacity: var(--dim-hard); }
 
   .lp-enc-rest { opacity: 0.5; }
 
