@@ -9,7 +9,7 @@ class Solution:
         # and we need to use enumerate to keep track of the index of the
         # element in the list
 
-        for i, element in nums:
+        for i, element in enumerate(nums):
             difference = target - element
             if difference in difference_seen:
                 return [difference_seen[difference], i]

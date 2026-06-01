@@ -1,0 +1,1407 @@
+// Hand-authored teaching guides for algorithm problems.
+//
+// Keyed by the SAME slug as web/src/data/problems.ts (which is auto-generated).
+// scripts/validate_algorithm_guides.py enforces that every problem slug has a
+// guide here and that each guide carries all required fields + 3 test kinds.
+//
+// Teaching content lives HERE, never in problems.ts — keep the generated file
+// purely the LeetCode statement + reference solutions.
+
+/** A single worked example used to pressure-test understanding. */
+export interface TestCase {
+	/**
+	 * canonical — the textbook example that shows the happy path.
+	 * boundary  — an edge of the input space (empty, single element, max size, all-equal…).
+	 * trap      — an input crafted to break a naive/intuitive-but-wrong approach.
+	 */
+	kind: "canonical" | "boundary" | "trap";
+	/** Input shown to the reader, formatted however reads clearest (e.g. "nums = [3,3], target = 6"). */
+	input: string;
+	/** Expected output for that input (e.g. "[0,1]"). */
+	expected: string;
+	/** Why this case matters — especially what it catches for `trap`/`boundary`. */
+	note: string;
+}
+
+/** Uniform complexity annotation so every problem reports it the same way. */
+export interface Complexity {
+	/** Big-O time, e.g. "O(n)". */
+	time: string;
+	/** Big-O auxiliary space, e.g. "O(n)" or "O(1)". */
+	space: string;
+	/** Optional clarification (e.g. "O(1) ignoring the output array"). */
+	note?: string;
+}
+
+export interface AlgorithmGuide {
+	/** Must equal the object's key — the validator double-checks this. */
+	slug: string;
+	/** The named technique, e.g. "Prefix sum + hashmap". HOW we categorize the problem. */
+	pattern: string;
+	/** Cues in the prompt that should trigger this pattern. HOW to recognize it. */
+	recognitionSignals: string[];
+	/** Plain-language restatement of the problem, stripped of LeetCode phrasing. */
+	dissection: string;
+	/** WHY the approach works — the core idea, in prose. */
+	intuition: string;
+	/** The loop/structural invariant that stays true each step. */
+	invariant: string;
+	/** Ordered steps to build the solution. */
+	approachSteps: string[];
+	/** Uniform time/space annotation. */
+	complexity: Complexity;
+	/** The traps — common mistakes, off-by-ones, wrong assumptions. */
+	pitfalls: string[];
+	/** Must include >=3 cases covering all three kinds. WHAT to test for. */
+	testCases: TestCase[];
+	/** Interview follow-up questions worth rehearsing. */
+	followUps: string[];
+	/** `note.id` slugs of related notes (filenames in ../notes), for cross-linking. */
+	relatedNotes: string[];
+}
+
+export type AlgorithmGuides = Record<string, AlgorithmGuide>;
+
+export const guides = {
+	"1-two-sum": {
+		slug: "1-two-sum",
+		pattern: "Hashmap complement lookup",
+		recognitionSignals: [
+			"find two elements that satisfy a target relationship",
+			"return indices, not values",
+			"brute-force pair scan is O(n²) and the prompt hints at beating it",
+		],
+		dissection:
+			"Walk the array once. For each value, the partner you need is target − value. If you have already seen that partner, you have your answer; otherwise remember the current value so a later element can find it.",
+		intuition:
+			"A hashmap turns 'has the partner appeared?' from an O(n) scan into an O(1) lookup. You store value → index as you go, so the first time a complement matches you can return both indices immediately.",
+		invariant:
+			"At the start of iteration i, the map holds every value before index i mapped to its index, and none of those pairs summed to target.",
+		approachSteps: [
+			"Create an empty map seen: value → index.",
+			"For each (i, value), compute complement = target − value.",
+			"If complement is in seen, return [seen[complement], i].",
+			"Otherwise store seen[value] = i and continue.",
+		],
+		complexity: { time: "O(n)", space: "O(n)", note: "One pass; the map holds at most n entries." },
+		pitfalls: [
+			"Storing the value as the key but needing the index back — map value→index, not index→value.",
+			"Using the same element twice: check the complement BEFORE inserting the current value.",
+			"Returning values instead of indices.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [2,7,11,15], target = 9", expected: "[0,1]", note: "Partner found later in the array." },
+			{ kind: "boundary", input: "nums = [3,3], target = 6", expected: "[0,1]", note: "Two equal values — the check-before-insert order is what makes this work." },
+			{ kind: "trap", input: "nums = [3,2,4], target = 6", expected: "[1,2]", note: "3+3 is tempting but reuses one element; the real pair is 2+4." },
+		],
+		followUps: [
+			"What if the array is sorted? (two-pointer, O(1) extra space — see #167)",
+			"What if multiple valid pairs exist and you must return all of them?",
+		],
+		relatedNotes: ["arrays_and_hashing", "python-big-o-cheatsheet"],
+	},
+
+	"217-contains-duplicate": {
+		slug: "217-contains-duplicate",
+		pattern: "Set membership / dedup by size",
+		recognitionSignals: [
+			"'are there any duplicates' — a yes/no existence question",
+			"order does not matter",
+			"only presence, not position or count, is asked",
+		],
+		dissection:
+			"Decide whether any value repeats. You do not need where or how many — just whether the count of distinct values is smaller than the array length.",
+		intuition:
+			"A set discards duplicates by construction, so if building a set shrinks the length at all, a duplicate existed. len(nums) != len(set(nums)) answers the question in one expression.",
+		invariant:
+			"A set of seen values contains exactly the distinct elements encountered so far; its size equals the count of unique values.",
+		approachSteps: [
+			"Build a set from nums.",
+			"Compare its length to len(nums).",
+			"They differ iff at least one duplicate exists.",
+		],
+		complexity: { time: "O(n)", space: "O(n)", note: "Set construction is linear; early-exit streaming is also possible." },
+		pitfalls: [
+			"Sorting first (O(n log n)) when a set gives O(n).",
+			"Assuming the input is non-empty — an empty array has no duplicates.",
+			"For a streaming/early-exit variant, forgetting to return True the moment a repeat is seen.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,2,3,1]", expected: "true", note: "1 repeats." },
+			{ kind: "boundary", input: "nums = [1,2,3,4]", expected: "false", note: "All distinct — set size equals length." },
+			{ kind: "trap", input: "nums = []", expected: "false", note: "Empty input must not be reported as having duplicates." },
+		],
+		followUps: [
+			"Solve with O(1) extra space (sort in place, then scan adjacent pairs).",
+			"Contains Duplicate II/III: duplicates within an index or value window.",
+		],
+		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode"],
+	},
+
+	"347-top-k-frequent-elements": {
+		slug: "347-top-k-frequent-elements",
+		pattern: "Frequency map + sort (bucket sort as the optimal follow-up)",
+		recognitionSignals: [
+			"'k most frequent' — ranking by count",
+			"answer size is bounded by k, not n",
+			"counts are the sort key, not the values themselves",
+		],
+		dissection:
+			"Count how often each value appears, then return the k values with the highest counts. The shown solution pairs each count with its value, sorts descending, and takes the first k.",
+		intuition:
+			"Once you have a frequency map, the problem is just 'top k by count.' Sorting count→value pairs is the most direct expression; bucket sort by frequency removes the log factor since counts are bounded by n.",
+		invariant:
+			"After counting, the map holds value → exact frequency; after sorting, pairs are ordered by non-increasing count.",
+		approachSteps: [
+			"Build counter: value → frequency.",
+			"Materialize [count, value] pairs.",
+			"Sort pairs in descending order.",
+			"Take values from the first k pairs.",
+		],
+		complexity: {
+			time: "O(n log n)",
+			space: "O(n)",
+			note: "The shown sort-based solution is O(n log n); bucket sort achieves O(n).",
+		},
+		pitfalls: [
+			"Sorting the values instead of by frequency.",
+			"Breaking ties incorrectly when several values share the boundary frequency — any valid set of k is accepted, but you must still stop at exactly k.",
+			"Assuming k ≤ number of distinct values without reading constraints.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,1,1,2,2,3], k = 2", expected: "[1,2]", note: "Counts 3,2,1 → top two are 1 and 2." },
+			{ kind: "boundary", input: "nums = [1], k = 1", expected: "[1]", note: "Single element, k equals the distinct count." },
+			{ kind: "trap", input: "nums = [3,0,1,0], k = 1", expected: "[0]", note: "0 has the highest count (2); a naive 'first seen' or value-sort would miss it." },
+		],
+		followUps: [
+			"Achieve O(n) with bucket sort indexed by frequency.",
+			"Use a size-k heap to get O(n log k) when k ≪ n.",
+		],
+		relatedNotes: ["arrays_and_hashing", "python-big-o-cheatsheet"],
+	},
+
+	"128-longest-consecutive-sequence": {
+		slug: "128-longest-consecutive-sequence",
+		pattern: "Hashset + sequence-start detection",
+		recognitionSignals: [
+			"'longest consecutive run' but order in the array is irrelevant",
+			"O(n) demanded, so sorting (O(n log n)) is disqualified",
+			"membership tests dominate the work",
+		],
+		dissection:
+			"Find the length of the longest run of consecutive integers, treating the array as an unordered bag. Put everything in a set, then only start counting from values that begin a run (no predecessor present).",
+		intuition:
+			"If num−1 is also in the set, num is in the middle of some run and counting from it would be wasted work. By only expanding from run-starts, each element is visited at most twice total, giving O(n).",
+		invariant:
+			"A walk is launched only from a value with no predecessor in the set; that walk extends as long as successive +1 values are present.",
+		approachSteps: [
+			"Insert all numbers into a set (dedups automatically).",
+			"For each value, skip it unless value−1 is absent (i.e. it starts a run).",
+			"From a run-start, increment length while value+length is in the set.",
+			"Track the maximum run length seen.",
+		],
+		complexity: { time: "O(n)", space: "O(n)", note: "Each element is the inner-loop target at most once across all runs." },
+		pitfalls: [
+			"Not deduping — duplicates would otherwise inflate or re-walk runs (the set handles this).",
+			"Walking from every element instead of only run-starts, degrading to O(n²).",
+			"Off-by-one in the while condition (value+length vs value+length−1).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [2,20,4,10,3,4,5]", expected: "4", note: "Run 2,3,4,5 has length 4 despite a duplicate 4." },
+			{ kind: "boundary", input: "nums = []", expected: "0", note: "No elements → length 0." },
+			{ kind: "trap", input: "nums = [0,3,2,5,4,6,1,1]", expected: "7", note: "Duplicate 1 and scrambled order; the run 0..6 is length 7." },
+		],
+		followUps: [
+			"Reconstruct the actual sequence, not just its length.",
+			"Why is this O(n) and not O(n²)? Justify with the run-start argument.",
+		],
+		relatedNotes: ["arrays_and_hashing", "time-complexity"],
+	},
+
+	"242-valid-anagram": {
+		slug: "242-valid-anagram",
+		pattern: "Frequency-count comparison",
+		recognitionSignals: [
+			"'anagram' / 'rearrangement' of characters",
+			"same multiset of characters, order irrelevant",
+			"comparison of two strings' contents",
+		],
+		dissection:
+			"Two strings are anagrams iff each character occurs the same number of times in both. Count characters in each and compare the two count maps.",
+		intuition:
+			"Anagram ≡ identical character multisets. A dict of counts captures the multiset exactly, and dict equality compares them in one step — no sorting needed.",
+		invariant:
+			"After scanning a string, its count map holds the exact frequency of every character seen so far.",
+		approachSteps: [
+			"If lengths differ, return False immediately (cheap reject).",
+			"Build a frequency dict for s and another for t.",
+			"Return whether the two dicts are equal.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "Space is O(1) for a fixed alphabet (26 letters); O(k) for k distinct chars in general." },
+		pitfalls: [
+			"Skipping the length check, then mis-handling differing lengths.",
+			"Comparing sorted strings (O(n log n)) when counts give O(n).",
+			"Unicode: 'fixed 26-letter array' breaks if inputs aren't lowercase a–z.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's = "anagram", t = "nagaram"', expected: "true", note: "Same letters, same counts." },
+			{ kind: "boundary", input: 's = "", t = ""', expected: "true", note: "Two empty strings are trivially anagrams." },
+			{ kind: "trap", input: 's = "rat", t = "car"', expected: "false", note: "Same length, overlapping letters, but counts differ." },
+		],
+		followUps: [
+			"Unicode inputs — can you still claim O(1) space?",
+			"Group many strings by anagram class (see #49).",
+		],
+		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode"],
+	},
+
+	"49-group-anagrams": {
+		slug: "49-group-anagrams",
+		pattern: "Canonical key bucketing",
+		recognitionSignals: [
+			"'group' items that are equivalent under some transformation",
+			"anagrams share an invariant (their letter counts)",
+			"output is a partition into equivalence classes",
+		],
+		dissection:
+			"Cluster strings that are anagrams of each other. Give each string a canonical key that is identical for anagrams — a 26-length letter-count tuple — and bucket strings under that key.",
+		intuition:
+			"If two strings have the same canonical key, they belong together. A count tuple is an O(word) key (vs O(word log word) for a sorted-string key), and a defaultdict(list) collects buckets without existence checks.",
+		invariant:
+			"Each map key is a unique letter-count signature; its bucket holds exactly the strings whose letters match that signature.",
+		approachSteps: [
+			"Create result = defaultdict(list).",
+			"For each string, build a 26-slot count array via ord(c) − ord('a').",
+			"Use tuple(count) as the dict key and append the string to that bucket.",
+			"Return the list of buckets.",
+		],
+		complexity: { time: "O(n·k)", space: "O(n·k)", note: "n strings of length up to k; count-key avoids the log factor a sorted key would add." },
+		pitfalls: [
+			"Using a list as a dict key (unhashable) — convert to a tuple.",
+			"Sorted-string keys work but cost O(k log k) per string.",
+			"Forgetting that the empty string is its own valid group.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 'strs = ["eat","tea","tan","ate","nat","bat"]', expected: '[["bat"],["nat","tan"],["ate","eat","tea"]]', note: "Three anagram classes (order of groups is free)." },
+			{ kind: "boundary", input: 'strs = [""]', expected: '[[""]]', note: "Single empty string → one group." },
+			{ kind: "trap", input: 'strs = ["a"]', expected: '[["a"]]', note: "Single char must not be split or dropped." },
+		],
+		followUps: [
+			"Compare count-tuple keys vs sorted-string keys — when does each win?",
+			"Stream a huge list: can you bound memory?",
+		],
+		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode"],
+	},
+
+	"238-product-of-array-except-self": {
+		slug: "238-product-of-array-except-self",
+		pattern: "Prefix × suffix products",
+		recognitionSignals: [
+			"'product/sum of all except self'",
+			"division is forbidden (or zeros make it unsafe)",
+			"each output depends on everything to the left and right",
+		],
+		dissection:
+			"For each index, output the product of every other element. Compute running products from the left, then multiply in running products from the right — no division.",
+		intuition:
+			"answer[i] = (product of everything left of i) × (product of everything right of i). Two passes — left-to-right filling prefixes, right-to-left folding in suffixes — give O(n) time and O(1) extra space (the output array doesn't count).",
+		invariant:
+			"After pass 1, result[i] holds the product of all elements strictly left of i. After pass 2, it also includes all elements strictly right of i.",
+		approachSteps: [
+			"Initialize result = [1]·n.",
+			"Left pass: result[i] = prefix; prefix *= nums[i].",
+			"Right pass: result[i] *= postfix; postfix *= nums[i].",
+			"Return result.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "Excludes the output array; no division used." },
+		pitfalls: [
+			"Initializing result to 0 — it must be 1 (multiplicative identity).",
+			"Using division — breaks on any zero and is often disallowed.",
+			"Mishandling zeros: one zero ⇒ only its index is nonzero; two+ zeros ⇒ all zero.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,2,4,6]", expected: "[48,24,12,8]", note: "Standard prefix×suffix." },
+			{ kind: "boundary", input: "nums = [5,2]", expected: "[2,5]", note: "Two elements — each is just the other." },
+			{ kind: "trap", input: "nums = [1,0,3,4]", expected: "[0,12,0,0]", note: "A single zero: only the zero's own index gets the product of the rest." },
+		],
+		followUps: [
+			"Handle two or more zeros — verify the all-zero result.",
+			"If division were allowed, what edge case still bites you?",
+		],
+		relatedNotes: ["arrays_and_hashing", "prefix_sum_pattern"],
+	},
+
+	"271-encode-and-decode-strings": {
+		slug: "271-encode-and-decode-strings",
+		pattern: "Length-prefixed serialization",
+		recognitionSignals: [
+			"serialize a list of strings into one string and back",
+			"any delimiter could legally appear inside the payload",
+			"must be unambiguous regardless of contents",
+		],
+		dissection:
+			"Join a list of strings into a single string so it can be split back exactly. Prefix each string with its length and a sentinel (len + '#' + s); on decode, read the length, then take exactly that many characters.",
+		intuition:
+			"A bare delimiter fails because the delimiter can occur inside a string. Encoding the *length* makes decoding deterministic: you never scan for a separator inside the payload — you read the count and jump.",
+		invariant:
+			"During decode, the cursor always sits at the first digit of a length header; after reading 'len#', the next len characters are exactly one original string.",
+		approachSteps: [
+			"Encode: for each s, append str(len(s)) + '#' + s.",
+			"Decode: read digits until '#' to get the length.",
+			"Slice the next 'length' characters as one string.",
+			"Advance the cursor and repeat until the end.",
+		],
+		complexity: { time: "O(total chars)", space: "O(total chars)", note: "Both encode and decode are linear in the combined string length." },
+		pitfalls: [
+			"Using a plain delimiter (e.g. ',') that can appear in the data — ambiguous.",
+			"Reading the length as a single character instead of all digits (breaks for len ≥ 10).",
+			"Off-by-one around the '#': the payload starts after it.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 'encode(["neet","code"])', expected: '"4#neet4#code"', note: "Length headers make boundaries explicit." },
+			{ kind: "boundary", input: 'encode([""])', expected: '"0#"', note: "Empty string encodes as a zero-length header." },
+			{ kind: "trap", input: 'roundtrip(["co#de","x"])', expected: '["co#de","x"]', note: "'#' inside the payload must NOT be treated as a delimiter — length-prefix handles it." },
+		],
+		followUps: [
+			"Multi-digit lengths — confirm decode reads the full number.",
+			"How would you serialize a nested structure (lists of lists)?",
+		],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"1929-concatenation-of-array": {
+		slug: "1929-concatenation-of-array",
+		pattern: "Index-offset array construction",
+		recognitionSignals: [
+			"build ans of length 2n where ans[i] == ans[i+n] == nums[i]",
+			"deliberately simple — tests clean index arithmetic",
+			"no algorithmic trick required",
+		],
+		dissection:
+			"Produce nums concatenated with itself. Preallocate a 2n array and write each value into both position i and position i+n in one pass.",
+		intuition:
+			"You can either append twice or, more explicitly, place nums[i] at index i and i+n. Preallocating avoids repeated resizing and makes the offset relationship obvious.",
+		invariant:
+			"After processing index i, slots i and i+n both equal nums[i].",
+		approachSteps: [
+			"Allocate ans of length 2·len(nums).",
+			"For each i, set ans[i] = nums[i] and ans[i + n] = nums[i].",
+			"Return ans.",
+		],
+		complexity: { time: "O(n)", space: "O(n)", note: "Output is size 2n; single pass." },
+		pitfalls: [
+			"Off-by-one in the second index (i + n, not i + n − 1).",
+			"Mutating nums in place instead of building a new array.",
+			"Overcomplicating what is essentially nums + nums.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,2,1]", expected: "[1,2,1,1,2,1]", note: "Each value mirrored n positions later." },
+			{ kind: "boundary", input: "nums = [7]", expected: "[7,7]", note: "Single element doubles." },
+			{ kind: "trap", input: "nums = [1,3,2,1]", expected: "[1,3,2,1,1,3,2,1]", note: "Repeated values must each appear twice in order — no dedup." },
+		],
+		followUps: ["Do it as a one-liner (nums + nums) and discuss readability vs explicitness."],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"169-majority-element": {
+		slug: "169-majority-element",
+		pattern: "Frequency tracking (Boyer-Moore as the O(1)-space follow-up)",
+		recognitionSignals: [
+			"an element appears more than ⌊n/2⌋ times — guaranteed to exist",
+			"return the single dominant value",
+			"hint toward O(1) extra space",
+		],
+		dissection:
+			"Find the value that occupies more than half the array. The shown solution counts occurrences and tracks the running max-count value; Boyer-Moore voting does it in O(1) space.",
+		intuition:
+			"A strict majority (> n/2) survives any pairwise cancellation of distinct values — that's the basis of Boyer-Moore. The shown count-and-track version is simpler: keep the value whose running count is highest.",
+		invariant:
+			"res always holds the value with the highest count seen so far; max_count is that count.",
+		approachSteps: [
+			"Maintain count_dict and (res, max_count).",
+			"For each num, increment its count.",
+			"If its count exceeds max_count, update res and max_count.",
+			"Return res.",
+		],
+		complexity: { time: "O(n)", space: "O(n)", note: "Boyer-Moore voting reduces space to O(1)." },
+		pitfalls: [
+			"Assuming the input could have no majority — the problem guarantees one exists.",
+			"With Boyer-Moore, forgetting the cancellation logic (count hits 0 ⇒ adopt new candidate).",
+			"Returning the count instead of the element.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [2,2,1,1,1,2,2]", expected: "2", note: "2 appears 4 of 7 times." },
+			{ kind: "boundary", input: "nums = [3]", expected: "3", note: "Single element is trivially the majority." },
+			{ kind: "trap", input: "nums = [1,2,1,2,1]", expected: "1", note: "Near-even split; 1 has 3 of 5 — Boyer-Moore must not be fooled by interleaving." },
+		],
+		followUps: [
+			"Implement Boyer-Moore voting for O(1) space.",
+			"Generalize to elements appearing > n/3 times (see #229).",
+		],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"229-majority-element-ii": {
+		slug: "229-majority-element-ii",
+		pattern: "Boyer-Moore voting, generalized to ⌊n/3⌋",
+		recognitionSignals: [
+			"elements appearing more than ⌊n/3⌋ times",
+			"there can be at most two such elements",
+			"O(1)-space follow-up after the obvious hashmap count",
+		],
+		dissection:
+			"Return all values occurring more than n/3 times. At most two can qualify. The hashmap solution counts then filters; Boyer-Moore tracks two candidates and verifies them.",
+		intuition:
+			"Since more than n/3 means at most two winners, generalized Boyer-Moore keeps two (candidate, count) slots, cancelling in groups of three distinct values. A final verification pass is mandatory — the voting only proposes candidates.",
+		invariant:
+			"At any point the two slots hold the current best two candidates; a value matching neither either claims an empty slot or decrements both counts.",
+		approachSteps: [
+			"Phase 1: track (c1,count1),(c2,count2); match → increment, empty slot → adopt, else decrement both.",
+			"Phase 2: recount c1 and c2 over the array.",
+			"Return those whose true count exceeds ⌊n/3⌋.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "Two candidate slots; the hashmap variant is O(n) space." },
+		pitfalls: [
+			"Skipping the verification pass — candidates aren't guaranteed to qualify.",
+			"Using `elif` ordering wrong so a value increments a count AND adopts a slot.",
+			"Returning duplicates when c1 == c2 (guard the slots).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,1,1,2,2,2,3]", expected: "[1,2]", note: "Both 1 and 2 exceed 7/3 ≈ 2." },
+			{ kind: "boundary", input: "nums = [1,2]", expected: "[1,2]", note: "Tiny array: both exceed 2/3 ≈ 0." },
+			{ kind: "trap", input: "nums = [1,2,3]", expected: "[]", note: "No value exceeds 3/3 = 1 — verification pass must reject all candidates." },
+		],
+		followUps: [
+			"Why is the cap exactly two candidates for n/3? Generalize to n/k.",
+			"Prove the verification pass is necessary with a counterexample.",
+		],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"14-longest-common-prefix": {
+		slug: "14-longest-common-prefix",
+		pattern: "Vertical (column-wise) scanning",
+		recognitionSignals: [
+			"common prefix shared by ALL strings",
+			"answer length is bounded by the shortest string",
+			"character-by-character agreement across the set",
+		],
+		dissection:
+			"Find the longest prefix common to every string. Scan column by column: at each character position, if all strings agree, keep that character; the first disagreement ends the prefix.",
+		intuition:
+			"zip(*strs) gives you each column as a tuple of characters. If set(column) has size 1, every string shares that character; the moment it has more than one distinct char, the common prefix is complete. zip also stops automatically at the shortest string.",
+		invariant:
+			"output holds a prefix that every string shares; each accepted column added exactly one universally-agreed character.",
+		approachSteps: [
+			"Iterate columns via zip(*strs).",
+			"For each column tuple, compute set(tuple).",
+			"If the set has one element, append it to output; else break.",
+			"Return output.",
+		],
+		complexity: { time: "O(S)", space: "O(1)", note: "S = total characters; zip stops at the shortest string, output excluded from space." },
+		pitfalls: [
+			"Empty input list — zip yields nothing, output stays '' (verify this is desired).",
+			"An empty string in the list forces an immediate empty prefix (shortest = 0).",
+			"Indexing past the shortest string if you scan by index instead of zip.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 'strs = ["flower","flow","flight"]', expected: '"fl"', note: "Columns f,l agree; third column o/o/i disagrees." },
+			{ kind: "boundary", input: 'strs = ["a"]', expected: '"a"', note: "Single string — the whole string is the prefix." },
+			{ kind: "trap", input: 'strs = ["dog","racecar","car"]', expected: '""', note: "First column already disagrees → empty prefix, not a crash." },
+		],
+		followUps: [
+			"Binary-search the prefix length for O(S log m).",
+			"Divide and conquer across the string list.",
+		],
+		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode"],
+	},
+
+	"36-valid-sudoku": {
+		slug: "36-valid-sudoku",
+		pattern: "Set-per-constraint validation",
+		recognitionSignals: [
+			"validate a grid against row/column/box rules",
+			"checking existing entries, NOT solving",
+			"the 3×3 box index is the (r//3, c//3) trick",
+		],
+		dissection:
+			"Decide whether the filled cells violate Sudoku rules. Keep a set of seen digits per row, per column, and per 3×3 box; a digit is invalid if it already appears in any of its three constraints.",
+		intuition:
+			"Each filled digit must be unique within three groups simultaneously. Three dictionaries of sets — keyed by row, column, and (r//3, c//3) box — let you check and record membership in O(1) per cell, one pass over the grid.",
+		invariant:
+			"After visiting a cell, each set contains exactly the digits placed so far in that row / column / box, all of which were unique on insertion.",
+		approachSteps: [
+			"Create rowset, colset, squareset as defaultdict(set).",
+			"For each cell, skip '.'.",
+			"If the digit is already in rowset[r], colset[c], or squareset[(r//3, c//3)], return False.",
+			"Otherwise add it to all three sets; return True at the end.",
+		],
+		complexity: { time: "O(1)", space: "O(1)", note: "Fixed 9×9 grid — constant work and storage (or O(n²) framed by board side n)." },
+		pitfalls: [
+			"Trying to SOLVE the board instead of validating it.",
+			"Wrong box key — it's (r//3, c//3), not (r%3, c%3).",
+			"Counting '.' as a digit, or adding before checking.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "a valid partially-filled board", expected: "true", note: "No row/column/box repeats." },
+			{ kind: "boundary", input: "a fully empty board (all '.')", expected: "true", note: "No filled cells ⇒ no violations." },
+			{ kind: "trap", input: "board with two 8s in the same 3×3 box but different row & column", expected: "false", note: "Passes row and column checks; only the box set catches it." },
+		],
+		followUps: [
+			"Validate in a single set with composite keys like ('r',i,d).",
+			"Extend toward an actual solver (backtracking).",
+		],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"75-sort-colors": {
+		slug: "75-sort-colors",
+		pattern: "Dutch National Flag (three-pointer partition)",
+		recognitionSignals: [
+			"only three distinct values (0,1,2)",
+			"sort in place, ideally one pass, O(1) space",
+			"partition into three contiguous regions",
+		],
+		dissection:
+			"Sort an array of 0s, 1s, and 2s in place. The optimal approach uses three pointers to partition the array into [0s | 1s | unprocessed | 2s], shrinking the unknown region to nothing.",
+		intuition:
+			"With only three values you don't need comparison sorting. low/mid/high pointers maintain three sorted regions; mid scans forward, swapping 0s to the front and 2s to the back, so one pass fully sorts. (A heap sort also works but is O(n log n) and not single-pass.)",
+		invariant:
+			"nums[0..low-1] are all 0, nums[low..mid-1] are all 1, nums[mid..high] are unprocessed, nums[high+1..] are all 2.",
+		approachSteps: [
+			"Set low = mid = 0, high = n−1.",
+			"While mid ≤ high: if nums[mid]==0 swap with low, advance both; if ==1 advance mid; if ==2 swap with high and decrement high (do NOT advance mid).",
+			"Stop when mid passes high.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "Single in-place pass; the shown heapify variant is O(n log n)." },
+		pitfalls: [
+			"Advancing mid after a swap-with-high — the swapped-in value is unprocessed and must be re-examined.",
+			"A two-pass counting sort works but isn't the single-pass answer interviewers want.",
+			"Forgetting the array is modified in place (no return value).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [2,0,2,1,1,0]", expected: "[0,0,1,1,2,2]", note: "Mixed values partition cleanly." },
+			{ kind: "boundary", input: "nums = [0]", expected: "[0]", note: "Single element — already sorted." },
+			{ kind: "trap", input: "nums = [2,0,1]", expected: "[0,1,2]", note: "After swapping the leading 2 to the back, mid must NOT advance or the 0 swapped in is skipped." },
+		],
+		followUps: [
+			"Why must mid stay put after a high-swap but advance after a low-swap?",
+			"Generalize to k colors (counting sort).",
+		],
+		relatedNotes: ["arrays_and_hashing", "two_pointers"],
+	},
+
+	"560-subarray-sum-equals-k": {
+		slug: "560-subarray-sum-equals-k",
+		pattern: "Prefix sum + hashmap of counts",
+		recognitionSignals: [
+			"count/with contiguous subarrays summing to k",
+			"negative numbers allowed (so sliding window fails)",
+			"O(n) expected despite O(n²) subarray pairs",
+		],
+		dissection:
+			"Count contiguous subarrays whose sum equals k. A subarray (i, j] sums to k iff prefix[j] − prefix[i] = k, i.e. prefix[i] = prefix[j] − k. Track how many times each prefix sum has occurred.",
+		intuition:
+			"Running prefix sums turn 'subarray sum = k' into 'have I seen prefix_sum − k before?'. A hashmap of prefix-sum → frequency answers that in O(1), and seeding {0:1} accounts for subarrays starting at index 0. Negatives are fine because we never assume monotonic growth (which is why sliding window can't be used).",
+		invariant:
+			"prefix_count holds, for every prefix sum encountered before the current index, how many times it occurred; count accumulates valid subarrays ending at or before the current index.",
+		approachSteps: [
+			"Initialize prefix_count = {0: 1}, prefix_sum = 0, count = 0.",
+			"For each num: prefix_sum += num.",
+			"count += prefix_count.get(prefix_sum − k, 0).",
+			"Increment prefix_count[prefix_sum]; return count.",
+		],
+		complexity: { time: "O(n)", space: "O(n)", note: "One pass; map holds up to n distinct prefix sums." },
+		pitfalls: [
+			"Forgetting the {0:1} seed — misses subarrays that start at index 0.",
+			"Reaching for a sliding window — it's invalid with negative numbers.",
+			"Updating the map BEFORE querying it (would count length-0 subarrays).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,1,1], k = 2", expected: "2", note: "[1,1] at indices 0–1 and 1–2." },
+			{ kind: "boundary", input: "nums = [1], k = 0", expected: "0", note: "No subarray sums to 0." },
+			{ kind: "trap", input: "nums = [1,-1,1,-1], k = 0", expected: "4", note: "Negatives create multiple zero-sum subarrays; a window approach would undercount." },
+		],
+		followUps: [
+			"Why does the {0:1} initialization matter — show the subarray it captures.",
+			"Adapt to count subarrays with a given XOR (see #1310).",
+		],
+		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
+	},
+
+	"1310-xor-queries-of-a-subarray": {
+		slug: "1310-xor-queries-of-a-subarray",
+		pattern: "Prefix XOR (self-inverse prefix sums)",
+		recognitionSignals: [
+			"many range queries over a static array",
+			"the operation is XOR (associative AND self-inverse)",
+			"per-query O(1) after preprocessing",
+		],
+		dissection:
+			"Answer many 'XOR of arr[l..r]' queries. Build a prefix-XOR array where prefix[i] = arr[0]^…^arr[i−1]; then XOR(l..r) = prefix[r+1] ^ prefix[l].",
+		intuition:
+			"XOR is its own inverse (a^a = 0), so the shared prefix cancels: prefix[r+1] ^ prefix[l] leaves exactly arr[l]^…^arr[r]. One linear preprocessing pass makes every query O(1) — the same trick as prefix sums, with XOR as the group operation.",
+		invariant:
+			"prefix[i] equals the XOR of the first i elements; prefix[0] = 0 is the XOR identity.",
+		approachSteps: [
+			"Allocate prefix of length n+1 with prefix[0] = 0.",
+			"For i in 0..n−1: prefix[i+1] = prefix[i] ^ arr[i].",
+			"For each [l, r]: answer = prefix[r+1] ^ prefix[l].",
+		],
+		complexity: { time: "O(n + q)", space: "O(n)", note: "n-element preprocessing, O(1) per query, q queries." },
+		pitfalls: [
+			"Index alignment: range [l,r] maps to prefix[r+1] ^ prefix[l], not prefix[r] ^ prefix[l].",
+			"Forgetting prefix[0] = 0 (the XOR identity) — breaks queries with l = 0.",
+			"Recomputing each query in O(r−l) instead of using the prefix array.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "arr = [1,3,4,8], queries = [[0,1],[1,2],[0,3],[3,3]]", expected: "[2,7,14,8]", note: "Each query resolves via prefix XOR." },
+			{ kind: "boundary", input: "arr = [4,8], queries = [[0,0],[1,1]]", expected: "[4,8]", note: "Single-element ranges return the element itself." },
+			{ kind: "trap", input: "arr = [0,0,0], queries = [[0,2]]", expected: "[0]", note: "All-zero range; confirms the identity/cancellation logic." },
+		],
+		followUps: [
+			"Why does the +1 offset appear in prefix[r+1] ^ prefix[l]?",
+			"Which other operations support this prefix trick (sum, product) and which don't (max)?",
+		],
+		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
+	},
+
+	"304-range-sum-query-2d-immutable": {
+		slug: "304-range-sum-query-2d-immutable",
+		pattern: "2D prefix sum (summed-area table)",
+		recognitionSignals: [
+			"repeated rectangle-sum queries on a static matrix",
+			"sumRegion must be O(1)",
+			"inclusion–exclusion over a 2D grid",
+		],
+		dissection:
+			"Precompute a prefix matrix P where P[i][j] is the sum of the rectangle from (0,0) to (i,j). Any sub-rectangle sum is then four lookups via inclusion–exclusion.",
+		intuition:
+			"P[i][j] = M[i][j] + P[i−1][j] + P[i][j−1] − P[i−1][j−1] (the overlap is subtracted once). A region sum becomes P[r2][c2] − P[r1−1][c2] − P[r2][c1−1] + P[r1−1][c1−1] — constant time regardless of rectangle size.",
+		invariant:
+			"P[i][j] always equals the total of all cells in the rectangle with corners (0,0) and (i,j).",
+		approachSteps: [
+			"Build P with the inclusion–exclusion recurrence, guarding i=0 / j=0 edges.",
+			"For sumRegion, fetch full = P[r2][c2].",
+			"Subtract the strip above (P[r1−1][c2]) and the strip left (P[r2][c1−1]).",
+			"Add back the doubly-removed corner (P[r1−1][c1−1]).",
+		],
+		complexity: { time: "O(1)", space: "O(m·n)", note: "Construction is O(m·n) once; each query is O(1)." },
+		pitfalls: [
+			"Boundary terms when row1 or col1 is 0 — treat out-of-range prefixes as 0.",
+			"Sign errors in inclusion–exclusion (the corner is ADDED back).",
+			"Recomputing the prefix matrix per query instead of once in the constructor.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "sumRegion(2,1,4,3) on the 5×5 sample", expected: "8", note: "Interior rectangle via four prefix lookups." },
+			{ kind: "boundary", input: "sumRegion(0,0,0,0)", expected: "matrix[0][0]", note: "Top-left single cell — no boundary prefixes exist." },
+			{ kind: "trap", input: "sumRegion(1,1,2,2) on the sample", expected: "11", note: "Off-by-one in the −1 boundary terms gives a wrong sum here." },
+		],
+		followUps: [
+			"What changes if the matrix becomes mutable (update + query)? (2D BIT / Fenwick).",
+			"Derive the inclusion–exclusion formula from a picture.",
+		],
+		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
+	},
+
+	"705-design-hashset": {
+		slug: "705-design-hashset",
+		pattern: "Separate chaining (buckets of lists)",
+		recognitionSignals: [
+			"implement a hash set from scratch",
+			"O(1) average add / remove / contains",
+			"collisions must be handled explicitly",
+		],
+		dissection:
+			"Build a set supporting add, remove, contains without a language built-in. Hash each key to a bucket index (key % key_space); each bucket is a list, and membership is a linear scan within that bucket.",
+		intuition:
+			"Separate chaining absorbs collisions: keys sharing an index live in the same bucket list. With a large key_space, buckets stay short, so operations are O(1) on average. The classic bug is initializing buckets with [[]]*n (shared reference) instead of a comprehension.",
+		invariant:
+			"Each bucket contains at most one copy of any key; a key is present iff it appears in the bucket at index key % key_space.",
+		approachSteps: [
+			"Initialize hash_table = [[] for _ in range(key_space)] (NOT [[]]*key_space).",
+			"add: hash to a bucket; append only if not already present.",
+			"remove: hash to a bucket; remove if present.",
+			"contains: hash to a bucket; return membership.",
+		],
+		complexity: { time: "O(1)", space: "O(n + key_space)", note: "Average O(1) per op assuming a good hash and load factor; worst case O(n) if all collide." },
+		pitfalls: [
+			"[[]]*n creates n references to ONE list — every 'bucket' is the same list.",
+			"Adding duplicates because you skipped the membership check.",
+			"Removing a missing key without guarding (raises ValueError on list.remove).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "add(1), add(2), contains(1)", expected: "true", note: "Basic insert + lookup." },
+			{ kind: "boundary", input: "contains(3) on an empty set", expected: "false", note: "Lookup of an absent key returns false, not an error." },
+			{ kind: "trap", input: "add(2), add(2), remove(2), contains(2)", expected: "false", note: "Duplicate add must not create two entries; one remove must fully delete." },
+		],
+		followUps: [
+			"Resize/rehash when the load factor grows — how and when?",
+			"Trade-offs: separate chaining vs open addressing.",
+		],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"706-design-hashmap": {
+		slug: "706-design-hashmap",
+		pattern: "Separate chaining with key→value pairs",
+		recognitionSignals: [
+			"implement a key-value map from scratch",
+			"get on a missing key returns −1",
+			"put must update an existing key, not duplicate it",
+		],
+		dissection:
+			"Like Design HashSet, but each bucket stores (key, value) pairs. put updates in place if the key exists else appends; get scans the bucket and returns the value or −1; remove deletes the matching pair.",
+		intuition:
+			"The only difference from a hash set is that buckets hold pairs and put must search-then-update. Without the in-place update, repeated puts on the same key would shadow or duplicate it — the iterate-and-replace step is the crux.",
+		invariant:
+			"Each bucket holds at most one pair per key; get(key) returns that pair's value, or −1 when no pair matches.",
+		approachSteps: [
+			"Initialize buckets = [[] for _ in range(key_space)].",
+			"put: scan the bucket; if key found, replace the pair; else append (key, value).",
+			"get: scan the bucket; return the value if found, else −1.",
+			"remove: scan and delete the matching pair.",
+		],
+		complexity: { time: "O(1)", space: "O(n + key_space)", note: "Average O(1) per op; degrades to O(bucket length) under heavy collision." },
+		pitfalls: [
+			"put appending a second pair for an existing key instead of updating it.",
+			"get returning None/0 instead of the specified −1 for missing keys.",
+			"[[]]*n shared-reference bug (same as the hash set).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "put(1,1), put(2,2), get(1)", expected: "1", note: "Insert then retrieve." },
+			{ kind: "boundary", input: "get(3) with key 3 absent", expected: "-1", note: "Missing key returns the sentinel −1." },
+			{ kind: "trap", input: "put(2,2), put(2,1), get(2)", expected: "1", note: "Second put must UPDATE, not add a duplicate — get returns the new value." },
+		],
+		followUps: [
+			"Add load-factor-based resizing.",
+			"How would you support arbitrary (non-integer) keys?",
+		],
+		relatedNotes: ["arrays_and_hashing"],
+	},
+
+	"912-sort-an-array": {
+		slug: "912-sort-an-array",
+		pattern: "Counting sort (linear, bounded integer range)",
+		recognitionSignals: [
+			"sort integers within a known, bounded value range",
+			"built-in sort is 'too easy' — they want an algorithm",
+			"values are integers, not arbitrary comparables",
+		],
+		dissection:
+			"Sort an integer array. The shown solution uses counting sort: tally each value's frequency into an array indexed by (value − min), then rebuild the array in order.",
+		intuition:
+			"When values lie in a bounded range, you can skip comparisons entirely: count occurrences, then emit values in index order. Shifting by min_val handles negatives. This is O(n + range), beating O(n log n) when the range is small relative to n.",
+		invariant:
+			"count_arr[i] holds the number of times (i + min_val) appears; emitting values in increasing i yields sorted output.",
+		approachSteps: [
+			"Find min_val and max_val; size = max−min+1.",
+			"Tally count_arr[num − min_val] for each num.",
+			"Walk count_arr; write each value (i + min_val) count_arr[i] times via a write pointer.",
+			"Return the rebuilt array.",
+		],
+		complexity: { time: "O(n + k)", space: "O(k)", note: "k = value range; counting sort wins when k = O(n), loses when the range is huge." },
+		pitfalls: [
+			"Forgetting the min_val shift — negative values would index out of bounds.",
+			"Applying counting sort when the range is enormous (e.g. full int range) — use merge/heap sort instead.",
+			"Empty input: guard before calling min()/max().",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [5,2,3,1]", expected: "[1,2,3,5]", note: "Small dense range — counting sort shines." },
+			{ kind: "boundary", input: "nums = [1]", expected: "[1]", note: "Single element returns unchanged." },
+			{ kind: "trap", input: "nums = [-1,2,-3,4]", expected: "[-3,-1,2,4]", note: "Negatives require the (num − min_val) shift or indices go negative." },
+		],
+		followUps: [
+			"When is the value range too large for counting sort? Switch to merge or heap sort.",
+			"Implement an O(n log n) merge sort for the unbounded-range case.",
+		],
+		relatedNotes: ["arrays_and_hashing", "time-complexity"],
+	},
+	"167-two-sum-ii-input-array-is-sorted": {
+		slug: "167-two-sum-ii-input-array-is-sorted",
+		pattern: "Converging two pointers on a sorted array",
+		recognitionSignals: [
+			"the array is already sorted",
+			"find a pair that hits a target sum",
+			"the prompt asks for O(1) extra space, ruling out the hashmap from #1",
+		],
+		dissection:
+			"Because the array is sorted, the sum of the leftmost and rightmost elements brackets the whole range of possible pair sums. If that sum is too big, the only way to shrink it is to pull the right pointer in; if it is too small, advance the left pointer. Each comparison eliminates one element from consideration forever.",
+		intuition:
+			"Sorting gives the sum a monotonic 'steering wheel': moving left rightward only ever increases the sum, moving right leftward only ever decreases it. So you never have to backtrack — one linear sweep converges on the answer (or proves none exists).",
+		invariant:
+			"At every step, the answer pair (if it exists) lies within the window [L, R]. We only discard an endpoint once its sum direction proves it cannot be part of any valid pair.",
+		approachSteps: [
+			"Set L = 0, R = len(numbers) − 1.",
+			"While L < R, compute total = numbers[L] + numbers[R].",
+			"If total == target, return the 1-indexed pair [L + 1, R + 1].",
+			"If total < target, increment L (need a bigger number).",
+			"If total > target, decrement R (need a smaller number).",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "Pointers move inward at most n times total; no extra storage.",
+		},
+		pitfalls: [
+			"Returning 0-indexed positions — this problem uses 1-indexing, so add 1 to each.",
+			"Reaching for a hashmap out of habit; that costs O(n) space the sorted input lets you avoid.",
+			"Moving the wrong pointer: too-small sum means advance L, too-big means retreat R.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "numbers = [2,7,11,15], target = 9", expected: "[1,2]", note: "Pair is at the two ends — pointers meet immediately." },
+			{ kind: "boundary", input: "numbers = [2,3,4], target = 6", expected: "[1,3]", note: "Smallest and largest form the pair; window spans the whole array." },
+			{ kind: "trap", input: "numbers = [-1,0], target = -1", expected: "[1,2]", note: "Negatives still obey the monotonic-sum logic; signs are not special." },
+		],
+		followUps: [
+			"What if the array is NOT sorted? (hashmap complement lookup — see #1)",
+			"How would you return all pairs summing to target, not just one?",
+		],
+		relatedNotes: ["two_pointers", "arrays_and_hashing", "space-complexity"],
+	},
+	"11-container-with-most-water": {
+		slug: "11-container-with-most-water",
+		pattern: "Converging two pointers, greedy width-vs-height trade",
+		recognitionSignals: [
+			"maximize an area or quantity defined by a pair of indices",
+			"value depends on both the distance between indices and a min/max of their values",
+			"brute force is O(n²) over all pairs and the prompt wants better",
+		],
+		dissection:
+			"Area = width × min(height[L], height[R]). Start at maximum width (the two ends). The limiting factor is the shorter wall — water spills over it regardless of how tall the other wall is. So the only move that could possibly help is to abandon the shorter wall and hope for a taller one inward.",
+		intuition:
+			"You begin with the widest possible container, so every inward step sacrifices width. The gamble only pays off if you trade away the wall that was capping you — the shorter one. Moving the taller wall can never help: width drops AND the height stays capped by the (still shorter) other wall.",
+		invariant:
+			"The maximum-area container using any pair still inside [L, R] has not yet been excluded. Discarding the shorter wall is safe because no wider pairing with it remains that could beat the area we just recorded.",
+		approachSteps: [
+			"Set L = 0, R = len(height) − 1, max_area = 0.",
+			"While L < R, compute current_area = (R − L) × min(height[L], height[R]).",
+			"Update max_area = max(max_area, current_area).",
+			"Move the pointer at the shorter wall inward (if height[L] < height[R], L += 1, else R -= 1).",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "Each pointer moves inward at most n steps; constant extra space.",
+		},
+		pitfalls: [
+			"Moving the taller wall — it can never increase the area, so it wastes the move.",
+			"Multiplying the heights instead of taking min() — water is bounded by the shorter wall.",
+			"Off-by-one on width: it is (R − L), the index gap, not (R − L + 1).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "height = [1,8,6,2,5,4,8,3,7]", expected: "49", note: "Best pair is index 1 and 8 (heights 8 and 7, width 7)." },
+			{ kind: "boundary", input: "height = [1,1]", expected: "1", note: "Only one container possible: width 1, height 1." },
+			{ kind: "trap", input: "height = [1,8,100,1]", expected: "8", note: "The huge 100 wall is wasted — it is capped by the shorter partner; widest viable pair wins." },
+		],
+		followUps: [
+			"How does this differ from Trapping Rain Water (#42), which sums water across ALL bars?",
+			"Can you prove moving the taller wall is never optimal? (exchange argument)",
+		],
+		relatedNotes: ["two_pointers", "space-complexity"],
+	},
+	"15-3sum": {
+		slug: "15-3sum",
+		pattern: "Sort + fixed anchor + converging two pointers",
+		recognitionSignals: [
+			"find triplets (or k-tuples) that sum to a target",
+			"the result must contain no duplicate combinations",
+			"order of output does not matter, so sorting is free to use",
+		],
+		dissection:
+			"Sort first. Fix each value a as the smallest of the triplet; the remaining problem 'find b + c = −a in the suffix' is exactly Two Sum II on a sorted slice. Sorting also makes duplicates adjacent, so skipping repeats becomes a cheap neighbor comparison.",
+		intuition:
+			"Sorting turns an O(n³) triple loop into n runs of an O(n) two-pointer sweep. The sorted order does double duty: it powers the two-pointer convergence AND it lets you dodge duplicate triplets by skipping equal neighbors instead of using a set.",
+		invariant:
+			"For the current anchor a at index i, every triplet with a smaller first element has already been fully enumerated, and no duplicate of a has been used as an anchor before.",
+		approachSteps: [
+			"Sort nums ascending.",
+			"For each (i, a): if a > 0, break (no positive anchor can sum to 0); if i > 0 and a == nums[i−1], skip this duplicate anchor.",
+			"Set left = i + 1, r = len(nums) − 1.",
+			"While left < r: let s = a + nums[left] + nums[r]. If s > 0 decrement r; if s < 0 increment left.",
+			"If s == 0, record [a, nums[left], nums[r]], advance both pointers, then skip left past any duplicates (while nums[left] == nums[left−1]).",
+		],
+		complexity: {
+			time: "O(n²)",
+			space: "O(1) or O(n)",
+			note: "Outer loop × inner two-pointer sweep = O(n²); sort is O(n log n). Extra space depends on the sort implementation.",
+		},
+		pitfalls: [
+			"Forgetting to skip duplicate anchors (i > 0 and a == nums[i−1]) — yields repeated triplets.",
+			"Forgetting to skip duplicate left values after recording a hit — same triplet emitted twice.",
+			"Not breaking when a > 0: once the smallest of three sorted numbers is positive, no sum of zero is possible.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [-1,0,1,2,-1,-4]", expected: "[[-1,-1,2],[-1,0,1]]", note: "Two distinct triplets; the duplicate -1 must not double-count." },
+			{ kind: "boundary", input: "nums = [0,0,0]", expected: "[[0,0,0]]", note: "All zeros — exactly one triplet despite three identical values." },
+			{ kind: "trap", input: "nums = [-2,0,0,2,2]", expected: "[[-2,0,2]]", note: "Repeated 0s and 2s tempt multiple outputs; the dedup skips collapse them to one." },
+		],
+		followUps: [
+			"Generalize to 4Sum or kSum — what is the recursion and its complexity?",
+			"3Sum Closest: return the triplet sum nearest target instead of exactly target.",
+		],
+		relatedNotes: ["two_pointers", "arrays_and_hashing", "time-complexity"],
+	},
+	"42-trapping-rain-water": {
+		slug: "42-trapping-rain-water",
+		pattern: "Converging two pointers tracking running side maxima",
+		recognitionSignals: [
+			"water/volume trapped between bars of varying height",
+			"each position's contribution depends on the max to its left AND right",
+			"a naive solution recomputes side maxima repeatedly (O(n²)) or stores them (O(n) space)",
+		],
+		dissection:
+			"Water above column i equals min(max_left, max_right) − height[i]. The shown solution walks two pointers inward; whichever side currently has the SHORTER wall is the side whose water level is already fully determined, because the opposite side guarantees a wall at least as tall. So you can safely settle that column and step inward.",
+		intuition:
+			"You don't need both global maxima at once — you only need to know which side is the binding constraint. The shorter wall is the bottleneck, so the water on that side is capped by its own running max. That insight removes the O(n) prefix/suffix arrays entirely, giving O(1) space.",
+		invariant:
+			"max_left is the tallest bar in [0, L] and max_right the tallest in [R, n−1]. Whenever height[L] < height[R], every column at L is bounded by max_left (a taller wall is guaranteed on the right), so its trapped water is final.",
+		approachSteps: [
+			"Guard: if n <= 2, return 0 (need a wall on both sides).",
+			"Set l = 0, r = n − 1, max_left = max_right = 0, total = 0.",
+			"While l < r: if height[l] < height[r], process the left side, else the right.",
+			"Left side: if height[l] >= max_left, raise max_left; else add max_left − height[l] to total. Then l += 1.",
+			"Right side mirrors it with max_right and r -= 1.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "Single inward pass, two running maxima — no prefix/suffix arrays (the O(n)-space approach is also shown in the file for contrast).",
+		},
+		pitfalls: [
+			"Comparing height[l] to height[r] but then updating the WRONG side's max — the bottleneck side is the one you process.",
+			"Forgetting the n <= 2 guard; fewer than 3 bars can trap nothing.",
+			"Adding negative water: only add when the current bar is below its running max (the >= branch raises the wall instead).",
+		],
+		testCases: [
+			{ kind: "canonical", input: "height = [0,1,0,2,1,0,1,3,2,1,2,1]", expected: "6", note: "Classic skyline; the textbook answer." },
+			{ kind: "boundary", input: "height = [4,2,0,3,2,5]", expected: "9", note: "Deep central basin filled by the tall outer walls (4 and 5)." },
+			{ kind: "trap", input: "height = [3,2,1]", expected: "0", note: "Monotonic slope traps nothing — no right wall ever rises above the left." },
+		],
+		followUps: [
+			"Compare the three approaches in the file: brute force O(n²), prefix/suffix O(n) space, two-pointer O(1) space.",
+			"Trapping Rain Water II (2D grid) — why does the heap/BFS approach replace two pointers?",
+		],
+		relatedNotes: ["two_pointers", "prefix_sum_pattern", "space-complexity"],
+	},
+	"125-valid-palindrome": {
+		slug: "125-valid-palindrome",
+		pattern: "Converging two pointers with in-place filtering",
+		recognitionSignals: [
+			"check a palindrome while ignoring non-alphanumeric characters and case",
+			"the prompt nudges toward O(1) extra space (no building a cleaned copy)",
+			"comparison is symmetric from both ends",
+		],
+		dissection:
+			"Walk one pointer from each end toward the middle. Skip any character that is not alphanumeric, then compare the two surviving characters case-insensitively. A mismatch fails immediately; surviving until the pointers cross proves a palindrome. No cleaned string is ever materialized.",
+		intuition:
+			"The naive route builds a filtered lowercase copy and reverses it — clean but O(n) space. The two-pointer version filters lazily, skipping junk in place, so you spend O(1) extra space. The file even keeps the naive version commented out to mark exactly that space trade-off.",
+		invariant:
+			"Everything outside the window [L, R] has already been confirmed to mirror correctly. Each step either skips a non-alphanumeric character or verifies one matched alphanumeric pair.",
+		approachSteps: [
+			"Set l = 0, r = len(s) − 1.",
+			"While l < r: advance l past any non-alphanumeric char (l < r and not s[l].isalnum()).",
+			"Retreat r past any non-alphanumeric char (l < r and not s[r].isalnum()).",
+			"If s[l].lower() != s[r].lower(), return False.",
+			"Otherwise step inward: l += 1, r -= 1. If the loop completes, return True.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "Each character is visited at most once; no cleaned copy is allocated.",
+		},
+		pitfalls: [
+			"Forgetting the inner l < r guard while skipping — an all-punctuation string can run a pointer past the other.",
+			"Comparing without .lower() — 'A' and 'a' should match.",
+			"Building a filtered string anyway; that works but forfeits the O(1)-space win this problem rewards.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's = "A man, a plan, a canal: Panama"', expected: "true", note: "Punctuation and spaces are skipped; the letters mirror." },
+			{ kind: "boundary", input: 's = " "', expected: "true", note: "After filtering, the string is empty — vacuously a palindrome." },
+			{ kind: "trap", input: 's = "0P"', expected: "false", note: "'0' and 'P' are both alphanumeric but differ — case folding does NOT make digits and letters equal." },
+		],
+		followUps: [
+			"Valid Palindrome II: allow deleting at most one character — how does the two-pointer logic branch?",
+			"Why does the in-place filter beat the build-and-reverse approach on space but not time?",
+		],
+		relatedNotes: ["two_pointers", "space-complexity", "python_builtins_for_leetcode"],
+	},
+	"3-longest-substring-without-repeating-characters": {
+		slug: "3-longest-substring-without-repeating-characters",
+		pattern: "Variable-size sliding window with a seen-set",
+		recognitionSignals: [
+			"longest/length of a substring (contiguous) under a constraint",
+			"the constraint is 'no repeated characters' inside the window",
+			"a brute-force check of every substring is O(n²) or worse",
+		],
+		dissection:
+			"Grow the window by advancing the right edge one character at a time. The moment the new character duplicates one already inside, shrink from the left until the duplicate is gone. The window always holds a set of distinct characters, and its largest width over the scan is the answer.",
+		intuition:
+			"Each character enters the window exactly once and leaves at most once, so the two edges sweep forward without backtracking — that's what makes it O(n) instead of O(n²). The set answers 'is this character already in the window?' in O(1), which is the engine of the whole approach.",
+		invariant:
+			"At the end of each iteration, the window s[left..r] contains only distinct characters, and result holds the length of the longest distinct-character window seen so far.",
+		approachSteps: [
+			"Create an empty char_set, left = 0, result = 0.",
+			"For each right index r: while s[r] is already in char_set, remove s[left] and increment left.",
+			"Add s[r] to char_set (now the window is duplicate-free again).",
+			"Update result = max(result, r − left + 1).",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(min(n, charset))",
+			note: "Each character is added and removed at most once; the set holds at most one window's worth of distinct chars.",
+		},
+		pitfalls: [
+			"Computing the width as (r − left) instead of (r − left + 1) — off by one.",
+			"Removing only the duplicate character instead of sliding left forward past it; you must evict from the left edge in order.",
+			"Resetting the whole window on a duplicate — that throws away valid progress and breaks O(n).",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's = "abcabcbb"', expected: "3", note: "'abc' is the longest distinct run before a repeat forces a shrink." },
+			{ kind: "boundary", input: 's = ""', expected: "0", note: "Empty string — the loop never runs, result stays 0." },
+			{ kind: "trap", input: 's = "abba"', expected: "2", note: "When the second 'a' arrives, left must jump PAST the first 'a' (index 0→2), not just remove one 'b'." },
+		],
+		followUps: [
+			"Longest Substring with At Most K Distinct Characters — how does the shrink condition change?",
+			"Could you swap the set for a last-seen-index map to jump left in one step instead of looping?",
+		],
+		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
+	},
+	"121-best-time-to-buy-and-sell-stock": {
+		slug: "121-best-time-to-buy-and-sell-stock",
+		pattern: "Single-pass min-tracking (a 'window' that only ever advances its buy point)",
+		recognitionSignals: [
+			"maximize profit/difference where you must buy before you sell",
+			"only one transaction is allowed",
+			"a nested compare-every-pair loop is O(n²) and clearly improvable",
+		],
+		dissection:
+			"Keep a left pointer at the cheapest buy price seen so far and a right pointer scanning forward. If the current price beats the buy price, record the profit; if it undercuts the buy price, you have found a better day to buy, so jump left up to right. The best profit over the whole scan is the answer.",
+		intuition:
+			"Unlike a contracting window, left never slides one step at a time — it teleports to a new low whenever the price drops below the current buy. So you are really tracking 'the lowest price so far' and asking, at each day, 'what if I sold today?'. One pass, no backtracking.",
+		invariant:
+			"prices[left] is the minimum price in prices[0..r], and max_profit is the best (sell − buy) achievable with the buy occurring at or after that minimum and the sell at or before index r.",
+		approachSteps: [
+			"Set left = 0, r = 1, max_profit = 0.",
+			"While r < len(prices): if prices[left] < prices[r], update max_profit = max(max_profit, prices[r] − prices[left]).",
+			"Else (prices[r] <= prices[left]) set left = r — a cheaper buy day.",
+			"Increment r and continue. Return max_profit.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "One forward scan; only two indices and a running max are stored.",
+		},
+		pitfalls: [
+			"Allowing the sell before the buy — left must always stay <= r, which the 'jump left to r' rule preserves.",
+			"Returning a negative profit on a falling market; initialize max_profit to 0 (no transaction is allowed).",
+			"Mistaking this for a max-minus-min over the whole array — the min must occur BEFORE the max.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "prices = [7,1,5,3,6,4]", expected: "5", note: "Buy at 1 (day 1), sell at 6 (day 4)." },
+			{ kind: "boundary", input: "prices = [5]", expected: "0", note: "One day — no sell day exists, so profit is 0." },
+			{ kind: "trap", input: "prices = [7,6,4,3,1]", expected: "0", note: "Strictly falling — every potential sell is below its buy, so the answer is 0, not a negative number." },
+		],
+		followUps: [
+			"Best Time to Buy and Sell Stock II: unlimited transactions — what greedy rule applies?",
+			"With a transaction fee or a cooldown, why does this become a DP problem?",
+		],
+		relatedNotes: ["arrays_and_hashing", "space-complexity", "time-complexity"],
+	},
+	"424-longest-repeating-character-replacement": {
+		slug: "424-longest-repeating-character-replacement",
+		pattern: "Variable-size sliding window with a frequency map and most-frequent count",
+		recognitionSignals: [
+			"longest substring achievable after at most k changes/replacements",
+			"the window is valid when (its length − count of its most frequent char) <= k",
+			"you are counting characters inside a contiguous range",
+		],
+		dissection:
+			"Inside any window, the cheapest way to make all characters equal is to keep the most frequent one and replace the rest. That costs (window_length − max_frequency) replacements. While that cost stays within k the window is valid; when it exceeds k, slide the left edge in by one to restore the budget.",
+		intuition:
+			"The window only ever needs to grow to beat its record, so once max_f reflects a large window we never need to lower it — a stale max_f can only make the validity test stricter, never wrongly accept a window. That's why the code never decrements max_f when shrinking, and the answer stays correct.",
+		invariant:
+			"char_count holds the frequency of every character in the current window s[left..r], and res is the longest window for which (length − most-frequent-count) never exceeded k.",
+		approachSteps: [
+			"Init char_count = {}, left = 0, max_f = 0, res = 0.",
+			"For each r: increment char_count[s[r]] and update max_f = max(max_f, char_count[s[r]]).",
+			"If (r − left + 1) − max_f > k, the window costs too many replacements: decrement char_count[s[left]] and increment left.",
+			"Update res = max(res, r − left + 1).",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(charset)",
+			note: "Single pass; the frequency map holds at most 26 entries for uppercase letters.",
+		},
+		pitfalls: [
+			"Decrementing max_f when shrinking — unnecessary and slows it down; a stale max_f never inflates the answer.",
+			"Using an if instead of while for the shrink: since the window grows by one each step and shrinks by at most one, a single if suffices here — but understand why.",
+			"Forgetting that the replacement cost is (length − max_f), not (length − k).",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's = "AABABBA", k = 1', expected: "4", note: "Window 'AABA'→'ABBA' reaches length 4 with one replacement." },
+			{ kind: "boundary", input: 's = "AAAA", k = 2', expected: "4", note: "Already all equal — zero replacements needed, whole string qualifies." },
+			{ kind: "trap", input: 's = "ABBB", k = 1', expected: "4", note: "Keep the three B's and replace the one A — cost 1 <= k, so the full length wins; do not stop early at the A." },
+		],
+		followUps: [
+			"Why is a single 'if' enough to shrink here, whereas other windows need a 'while'?",
+			"Max Consecutive Ones III is the same template on a binary array — can you map k flips to k replacements?",
+		],
+		relatedNotes: ["arrays_and_hashing", "time-complexity", "python_builtins_for_leetcode"],
+	},
+	"150-evaluate-reverse-polish-notation": {
+		slug: "150-evaluate-reverse-polish-notation",
+		pattern: "Stack-based postfix expression evaluation",
+		recognitionSignals: [
+			"tokens are in Reverse Polish / postfix notation",
+			"operators apply to the most recently seen operands",
+			"you need a LIFO structure to hold pending operands",
+		],
+		dissection:
+			"Scan tokens left to right. Push every number onto a stack. When an operator appears, pop the top two values — the second pop is the left operand, the first pop is the right — apply the operation, and push the result back. After the scan the stack holds exactly the final value.",
+		intuition:
+			"Postfix notation is the stack's native language: an operator always acts on the two most-recent results, which are exactly what sits on top of the stack. No parentheses or precedence rules are needed — the ordering already encodes them.",
+		invariant:
+			"After processing each token, the stack contains the evaluated results of every complete sub-expression seen so far, in order, with the most recent on top.",
+		approachSteps: [
+			"Create an empty stack.",
+			"For each token: if it is one of + − * /, pop operand2 then operand1.",
+			"Apply the operator (operand1 op operand2) and push the result.",
+			"For division, truncate toward zero with int(operand1 / operand2).",
+			"For a number token, push int(token). At the end, pop and return the single remaining value.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(n)",
+			note: "Each token is pushed/popped once; the stack holds at most O(n) operands.",
+		},
+		pitfalls: [
+			"Reversing operand order: the FIRST pop is the right operand. For − and /, operand1 − operand2 (not the reverse).",
+			"Integer division must truncate toward zero — int(a / b), not Python's a // b which floors toward negative infinity.",
+			"Treating negative-number tokens like '-3' as operators; only the bare symbols +−*/ are operators.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 'tokens = ["2","1","+","3","*"]', expected: "9", note: "((2 + 1) * 3) = 9 — the README example." },
+			{ kind: "boundary", input: 'tokens = ["5"]', expected: "5", note: "A single operand evaluates to itself; no operator ever runs." },
+			{ kind: "trap", input: 'tokens = ["6","-13","/"]', expected: "0", note: "6 / -13 = -0.46…; truncating toward zero gives 0, whereas floor division would give -1." },
+		],
+		followUps: [
+			"Convert infix to postfix (the shunting-yard algorithm) — why is the stack central there too?",
+			"Basic Calculator (#224): how do parentheses and precedence reintroduce a second stack?",
+		],
+		relatedNotes: ["python_builtins_for_leetcode", "time-complexity"],
+	},
+	"155-min-stack": {
+		slug: "155-min-stack",
+		pattern: "Auxiliary stack mirroring the running minimum",
+		recognitionSignals: [
+			"a stack that must also report its minimum element",
+			"every operation — push, pop, top, getMin — must be O(1)",
+			"a naive getMin would scan the whole stack (O(n))",
+		],
+		dissection:
+			"Keep two stacks in lockstep. The main stack behaves normally. The min-stack pushes, alongside each value, the minimum of that value and the previous min-stack top. So min_stack[-1] is always the minimum of everything currently in the main stack, and a pop removes from both.",
+		intuition:
+			"Instead of recomputing the minimum on demand, you cache it at every level. Because each min-stack entry remembers 'the smallest value at or below this point', popping the top instantly reveals the new minimum — no rescanning. You trade O(n) extra space for O(1) on every operation.",
+		invariant:
+			"len(min_stack) == len(stack) at all times, and min_stack[-1] equals min(stack) for the current contents (or is undefined only when both are empty).",
+		approachSteps: [
+			"Initialize self.stack = [] and self.minStack = [].",
+			"push(val): append val to stack; append min(val, minStack[-1] if minStack else val) to minStack.",
+			"pop(): pop from both stack and minStack to keep them aligned.",
+			"top(): return stack[-1]. getMin(): return minStack[-1].",
+		],
+		complexity: {
+			time: "O(1)",
+			space: "O(n)",
+			note: "Every operation is constant time; the parallel min-stack doubles storage to O(n).",
+		},
+		pitfalls: [
+			"Forgetting to pop the min-stack in pop() — the two stacks desynchronize and getMin lies.",
+			"On the first push, minStack is empty: guard with (minStack[-1] if minStack else val).",
+			"Storing only when a new minimum appears (a valid space optimization) but then not handling equal-minimum pops correctly.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "push(-2), push(0), push(-3), getMin()", expected: "-3", note: "Min-stack top tracks the smallest, -3." },
+			{ kind: "boundary", input: "push(5), getMin(), pop(), push(5)", expected: "5 then 5", note: "Single element: getMin equals top; re-pushing the same value still reports it." },
+			{ kind: "trap", input: "push(-2),push(0),push(-3),pop(),getMin()", expected: "-2", note: "After popping -3, the min must revert to -2 — only possible because each level cached its own min." },
+		],
+		followUps: [
+			"Can you do it with ONE stack by storing (value, min-so-far) tuples? Or by encoding deltas?",
+			"Design a Max Stack — what changes, and what new ambiguity (popMax) appears?",
+		],
+		relatedNotes: ["python_builtins_for_leetcode", "space-complexity", "time-complexity"],
+	},
+	"22-generate-parentheses": {
+		slug: "22-generate-parentheses",
+		pattern: "Backtracking with a stack as the path buffer",
+		recognitionSignals: [
+			"generate ALL valid combinations/permutations, not just count them",
+			"each choice is constrained by what has been chosen so far",
+			"the result set grows combinatorially — you must prune invalid branches early",
+		],
+		dissection:
+			"Build the string one bracket at a time using a recursion that tracks how many '(' and ')' have been placed. You may add '(' while openN < n, and add ')' only while closedN < openN (otherwise the string becomes invalid). When both counts reach n, the buffer is a complete valid string — record it.",
+		intuition:
+			"The two counters encode all the validity you need: never open more than n, and never close more than you have opened. By enforcing those rules at the moment of choice, every leaf of the recursion is guaranteed valid — there's no generate-then-filter waste. The stack is just the current partial string you push to and pop from as you explore.",
+		invariant:
+			"At every recursive call, the buffer is a valid prefix of some well-formed parenthesis string: 0 <= closedN <= openN <= n.",
+		approachSteps: [
+			"Maintain stack (the current characters) and res (completed strings).",
+			"backtrack(openN, closedN): if openN == closedN == n, join the stack and append to res, then return.",
+			"If openN < n: push '(', recurse with openN + 1, then pop (undo).",
+			"If closedN < openN: push ')', recurse with closedN + 1, then pop (undo).",
+			"Start with backtrack(0, 0); return res.",
+		],
+		complexity: {
+			time: "O(4^n / √n)",
+			space: "O(n)",
+			note: "The count of valid strings is the nth Catalan number; recursion depth and buffer are O(n) (excluding the output).",
+		},
+		pitfalls: [
+			"Allowing ')' when closedN >= openN — produces invalid strings like '())'.",
+			"Forgetting to pop after recursing (the stack.pop() that undoes the choice) — branches leak state into each other.",
+			"Stopping at openN == n instead of openN == closedN == n; you must also place all the closers.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "n = 3", expected: '["((()))","(()())","(())()","()(())","()()()"]', note: "5 = Catalan(3); every string is balanced." },
+			{ kind: "boundary", input: "n = 1", expected: '["()"]', note: "Exactly one way to balance a single pair." },
+			{ kind: "trap", input: "n = 0", expected: '[""]', note: "Zero pairs yields one result — the empty string — not an empty list." },
+		],
+		followUps: [
+			"Why is the number of results the Catalan number? Can you derive the recurrence?",
+			"How would you adapt this to generate valid combinations for k different bracket types?",
+		],
+		relatedNotes: ["time-complexity", "space-complexity"],
+	},
+	"21-merge-two-sorted-lists": {
+		slug: "21-merge-two-sorted-lists",
+		pattern: "Dummy-head linked-list merge with two pointers",
+		recognitionSignals: [
+			"merge two already-sorted linked lists into one sorted list",
+			"you must splice existing nodes, not copy values",
+			"handling the head node specially is awkward — a sentinel simplifies it",
+		],
+		dissection:
+			"Create a dummy node whose .next will point at the true head. Walk both lists with a current pointer; at each step attach the smaller front node to current.next and advance that list. When one list runs out, the other (already sorted) tail is attached implicitly via the last link. Return dummy.next.",
+		intuition:
+			"The dummy head removes every 'is this the first node?' special case — current always has somewhere to hang the next node. Because both inputs are sorted, comparing only their fronts is enough to pick the global next-smallest, so one linear pass merges them.",
+		invariant:
+			"The chain from dummy.next up to current is a sorted, fully merged prefix of all nodes consumed so far, and current.next is free to receive the next-smallest remaining node.",
+		approachSteps: [
+			"Create dummy = ListNode(); current = dummy.",
+			"While both list1 and list2 are non-null: if list1.val < list2.val, link list1 and advance list1; else link list2 and advance list2.",
+			"Advance current to the node just linked.",
+			"After the loop, link the remaining non-null list (the leftover sorted tail).",
+			"Return dummy.next.",
+		],
+		complexity: {
+			time: "O(n + m)",
+			space: "O(1)",
+			note: "Each node is visited once; only pointers are rewired — no new nodes allocated.",
+		},
+		pitfalls: [
+			"Returning dummy instead of dummy.next — dummy is a placeholder, not real data.",
+			"Forgetting to attach the leftover tail after one list empties; the shown loop relies on the final link still pointing into the non-empty list.",
+			"Using <= vs < changes stability but not correctness; be deliberate if the problem cares about node identity.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "list1 = [1,2,4], list2 = [1,3,4]", expected: "[1,1,2,3,4,4]", note: "Interleaves; equal fronts (the two 1s) both flow through." },
+			{ kind: "boundary", input: "list1 = [], list2 = []", expected: "[]", note: "Both empty — loop never runs, dummy.next is null." },
+			{ kind: "trap", input: "list1 = [], list2 = [0]", expected: "[0]", note: "One empty list: the leftover-tail attach is what carries [0] through." },
+		],
+		followUps: [
+			"Merge k Sorted Lists (#23): why does a heap or divide-and-conquer beat repeated pairwise merges?",
+			"Could you merge recursively instead? What is the call-stack space cost?",
+		],
+		relatedNotes: ["time-complexity", "space-complexity"],
+	},
+	"567-permutation-in-string": {
+		slug: "567-permutation-in-string",
+		pattern: "Fixed-size sliding window with frequency-map comparison",
+		recognitionSignals: [
+			"does s2 contain a permutation (anagram) of s1 as a contiguous substring",
+			"a permutation has the SAME character counts — order is irrelevant",
+			"the window length is fixed at len(s1)",
+		],
+		dissection:
+			"A permutation of s1 is any window of length len(s1) whose character frequencies match s1's exactly. Slide a window of that fixed width across s2: add the entering character, and once the window reaches the target width, compare frequency maps; if they match, a permutation exists. Otherwise drop the leftmost character and slide on.",
+		intuition:
+			"Anagrams are equal as multisets, so the question reduces to 'does any fixed-width window have the same letter counts as s1?'. Keeping a rolling frequency map means each slide is a couple of map updates rather than recounting the window from scratch.",
+		invariant:
+			"window_counts holds the exact character frequencies of the current window of s2, whose width is at most len(s1); once the width equals len(s1) it is compared against s1_counts.",
+		approachSteps: [
+			"If len(s1) > len(s2), return False early.",
+			"Build s1_counts from s1; init window_counts = {}, L = 0.",
+			"For each R: add s2[R] to window_counts.",
+			"When R − L + 1 == len(s1): if window_counts == s1_counts return True; else decrement s2[L] (deleting the key if it hits 0) and advance L.",
+			"If the scan finishes with no match, return False.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "n = len(s2). Dict equality compares at most 26 keys, a constant; window-count map is bounded by the alphabet.",
+		},
+		pitfalls: [
+			"Comparing maps but forgetting to DELETE a key when its count drops to 0 — a lingering 'x: 0' makes window_counts != s1_counts even when frequencies actually match.",
+			"Skipping the len(s1) > len(s2) early return; the window can never reach full width otherwise.",
+			"Re-counting the whole window each step instead of incrementally adding/removing — turns O(n) into O(n·k).",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's1 = "ab", s2 = "eidbaooo"', expected: "true", note: "'ba' is a permutation of 'ab' sitting inside s2." },
+			{ kind: "boundary", input: 's1 = "a", s2 = "a"', expected: "true", note: "Window of width 1 matches immediately." },
+			{ kind: "trap", input: 's1 = "ab", s2 = "eidboaoo"', expected: "false", note: "'a' and 'b' both appear but never adjacent in one width-2 window — substring, not subsequence." },
+		],
+		followUps: [
+			"Find All Anagrams in a String (#438) collects every start index — same window, different output.",
+			"Could you replace the dict comparison with a single 'matches' counter for true O(1)-per-step updates?",
+		],
+		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
+	},
+	"239-sliding-window-maximum": {
+		slug: "239-sliding-window-maximum",
+		pattern: "Sliding window maximum via a heap with lazy eviction",
+		recognitionSignals: [
+			"report the maximum of every fixed-size window as it slides",
+			"recomputing each window's max from scratch is O(n·k)",
+			"you need fast access to the current largest while supporting eviction",
+		],
+		dissection:
+			"Push each element as a (−value, index) pair into a heap so the smallest tuple is the largest value (Python's heapq is a min-heap). The heap top is the window max — but it may be stale (its index already slid out of view). Before reading the max, lazily pop any top whose index is <= i − k. Record −heap[0][0] for each window.",
+		intuition:
+			"You don't need to remove out-of-window elements eagerly. As long as the CURRENT maximum's index is still inside the window, stale smaller entries buried in the heap don't affect the answer. You only evict from the top, and only when the top itself has expired — that lazy deletion keeps the bookkeeping cheap.",
+		invariant:
+			"After the eviction loop for window ending at i, heap[0] is the largest element whose index lies within [i − k + 1, i]; stale entries may remain deeper in the heap but never at the top.",
+		approachSteps: [
+			"Handle bases: if n·k == 0 return []; if k == 1 return nums.",
+			"Push the first k elements as (−nums[i], i); record −heap[0][0] as the first window max.",
+			"For i from k to n − 1: push (−nums[i], i).",
+			"While heap[0][1] <= i − k, heappop (evict the expired top).",
+			"Append −heap[0][0] to the result.",
+		],
+		complexity: {
+			time: "O(n log n)",
+			space: "O(n)",
+			note: "Heap pushes are O(log n) and the heap can grow to O(n) before stale entries are evicted; the classic monotonic-deque solution achieves O(n)/O(k).",
+		},
+		pitfalls: [
+			"Negating on push but forgetting to negate back when reading the max (−heap[0][0]).",
+			"Eviction condition off-by-one: an index is out of window when index <= i − k (the window is [i−k+1, i]).",
+			"Leaving the debug print() calls in the shown code — they make the solution O(n) slower and noisy; strip them.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,3,-1,-3,5,3,6,7], k = 3", expected: "[3,3,5,5,6,7]", note: "The README walkthrough; max tracks each window." },
+			{ kind: "boundary", input: "nums = [1], k = 1", expected: "[1]", note: "k == 1 short-circuits — every element is its own window max." },
+			{ kind: "trap", input: "nums = [7,2,4], k = 2", expected: "[7,4]", note: "After the window passes index 0, the stale 7 at the heap top must be evicted before reading max for [2,4]." },
+		],
+		followUps: [
+			"Implement the monotonic-deque version for true O(n) — how does it keep candidates in decreasing order?",
+			"When is the heap approach actually preferable despite the extra log factor?",
+		],
+		relatedNotes: ["python_builtins_for_leetcode", "time-complexity", "space-complexity"],
+	},
+} satisfies AlgorithmGuides;
+
+export function getGuide(slug: string): AlgorithmGuide | undefined {
+	return (guides as AlgorithmGuides)[slug];
+}

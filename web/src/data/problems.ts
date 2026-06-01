@@ -28,26 +28,47 @@ export const problems: Problem[] = [
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table"],
-    description: `<p><strong>🧠 Core idea:</strong> scan once while storing numbers you've already seen in a hash map. For each number <code>x</code>, check whether <code>target - x</code> has appeared earlier.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an array of integers <code>nums</code>&nbsp;and an integer <code>target</code>, return <em>indices of the two numbers such that they add up to <code>target</code></em>.</p>
+
+<p>You may assume that each input would have <strong><em>exactly</em> one solution</strong>, and you may not use the <em>same</em> element twice.</p>
+
+<p>You can return the answer in any order.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [2,7,11,15], target = 9
+<strong>Output:</strong> [0,1]
+<strong>Explanation:</strong> Because nums[0] + nums[1] == 9, we return [0, 1].
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [3,2,4], target = 6
+<strong>Output:</strong> [1,2]
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [3,3], target = 6
+<strong>Output:</strong> [0,1]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Using hash-map lookups to reduce time from <code>O(n^2)</code> to <code>O(n)</code></li>
-  <li>Index bookkeeping (return indices, not values)</li>
-  <li>One-pass thinking under constraints</li>
+	<li><code>2 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= target &lt;= 10<sup>9</sup></code></li>
+	<li><strong>Only one valid answer exists.</strong></li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Using the same element twice</li>
-  <li>Returning values instead of indices</li>
-  <li>Adding current number to map before checking complement (can break some cases)</li>
-</ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Basic case: <code>[2,7,11,15], target=9</code></li>
-  <li>Duplicate values: <code>[3,3], target=6</code></li>
-  <li>Negative numbers and mixed signs</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> when processing index <code>i</code>, if complement <code>target - nums[i]</code> is already in the map, that stored index plus <code>i</code> forms a valid pair by construction.</p>`,
+
+<p>&nbsp;</p>
+<strong>Follow-up:&nbsp;</strong>Can you come up with an algorithm that is less than <code>O(n<sup>2</sup>)</code><font face="monospace">&nbsp;</font>time complexity?`,
     solutions: {
       python: `from typing import List
 
@@ -135,26 +156,35 @@ end`,
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "string", "trie"],
-    description: `<p><strong>🧠 Core idea:</strong> compare characters column-by-column across all strings and stop at the first mismatch. The matched prefix so far is the answer.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Write a function to find the longest common prefix string amongst an array of strings.</p>
+
+<p>If there is no common prefix, return an empty string <code>&quot;&quot;</code>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> strs = [&quot;flower&quot;,&quot;flow&quot;,&quot;flight&quot;]
+<strong>Output:</strong> &quot;fl&quot;
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> strs = [&quot;dog&quot;,&quot;racecar&quot;,&quot;car&quot;]
+<strong>Output:</strong> &quot;&quot;
+<strong>Explanation:</strong> There is no common prefix among the input strings.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Choosing a clean scan strategy (vertical or horizontal)</li>
-  <li>Boundary handling when strings have different lengths</li>
-  <li>Early stopping once mismatch is found</li>
+	<li><code>1 &lt;= strs.length &lt;= 200</code></li>
+	<li><code>0 &lt;= strs[i].length &lt;= 200</code></li>
+	<li><code>strs[i]</code> consists of only lowercase English letters if it is non-empty.</li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Index-out-of-range when one string is shorter</li>
-  <li>Forgetting to handle empty strings/prefix collapse to <code>""</code></li>
-  <li>Doing unnecessary work after mismatch</li>
-</ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Shared prefix: <code>["flower","flow","flight"] -&gt; "fl"</code></li>
-  <li>No common prefix: <code>["dog","racecar","car"] -&gt; ""</code></li>
-  <li>Single string and arrays containing empty strings</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> every appended character is verified across all strings at that position, so the built result is exactly the longest common prefix.</p>`,
+`,
     solutions: {
       python: `from typing import List
 
@@ -468,41 +498,64 @@ end  # module`,
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "matrix"],
-    description: `<p><strong>🧠 Core idea:</strong> scan each filled cell once and ensure the digit is unique in its row, its column, and its 3x3 box.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Determine if a&nbsp;<code>9 x 9</code> Sudoku board&nbsp;is valid.&nbsp;Only the filled cells need to be validated&nbsp;<strong>according to the following rules</strong>:</p>
+
+<ol>
+	<li>Each row&nbsp;must contain the&nbsp;digits&nbsp;<code>1-9</code> without repetition.</li>
+	<li>Each column must contain the digits&nbsp;<code>1-9</code>&nbsp;without repetition.</li>
+	<li>Each of the nine&nbsp;<code>3 x 3</code> sub-boxes of the grid must contain the digits&nbsp;<code>1-9</code>&nbsp;without repetition.</li>
+</ol>
+
+<p><strong>Note:</strong></p>
+
 <ul>
-  <li>Modeling constraints with hash sets</li>
-  <li>Correct 3x3 box indexing via <code>(r // 3, c // 3)</code></li>
-  <li>Fast validation without trying to solve Sudoku</li>
+	<li>A Sudoku board (partially filled) could be valid but is not necessarily solvable.</li>
+	<li>Only the filled cells need to be validated according to the mentioned&nbsp;rules.</li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I keep three hash-set collections: one for rows, one for columns, and one for 3x3 boxes. For each non-empty cell, I check whether the digit already exists in any of those sets. If yes, the board is invalid; otherwise I insert it and continue. This is a single pass over the board."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Sudoku-by-L2G-20050714.svg/250px-Sudoku-by-L2G-20050714.svg.png" style="height:250px; width:250px" />
+<pre>
+<strong>Input:</strong> board =
+[[&quot;5&quot;,&quot;3&quot;,&quot;.&quot;,&quot;.&quot;,&quot;7&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;]
+,[&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;1&quot;,&quot;9&quot;,&quot;5&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;]
+,[&quot;.&quot;,&quot;9&quot;,&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;,&quot;.&quot;]
+,[&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;3&quot;]
+,[&quot;4&quot;,&quot;.&quot;,&quot;.&quot;,&quot;8&quot;,&quot;.&quot;,&quot;3&quot;,&quot;.&quot;,&quot;.&quot;,&quot;1&quot;]
+,[&quot;7&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;2&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;]
+,[&quot;.&quot;,&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;2&quot;,&quot;8&quot;,&quot;.&quot;]
+,[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;4&quot;,&quot;1&quot;,&quot;9&quot;,&quot;.&quot;,&quot;.&quot;,&quot;5&quot;]
+,[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;7&quot;,&quot;9&quot;]]
+<strong>Output:</strong> true
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> board =
+[[&quot;8&quot;,&quot;3&quot;,&quot;.&quot;,&quot;.&quot;,&quot;7&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;]
+,[&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;1&quot;,&quot;9&quot;,&quot;5&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;]
+,[&quot;.&quot;,&quot;9&quot;,&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;,&quot;.&quot;]
+,[&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;3&quot;]
+,[&quot;4&quot;,&quot;.&quot;,&quot;.&quot;,&quot;8&quot;,&quot;.&quot;,&quot;3&quot;,&quot;.&quot;,&quot;.&quot;,&quot;1&quot;]
+,[&quot;7&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;2&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;6&quot;]
+,[&quot;.&quot;,&quot;6&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;2&quot;,&quot;8&quot;,&quot;.&quot;]
+,[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;4&quot;,&quot;1&quot;,&quot;9&quot;,&quot;.&quot;,&quot;.&quot;,&quot;5&quot;]
+,[&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;.&quot;,&quot;8&quot;,&quot;.&quot;,&quot;.&quot;,&quot;7&quot;,&quot;9&quot;]]
+<strong>Output:</strong> false
+<strong>Explanation:</strong> Same as Example 1, except with the <strong>5</strong> in the top left corner being modified to <strong>8</strong>. Since there are two 8&#39;s in the top left 3x3 sub-box, it is invalid.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Trying to solve the puzzle instead of only validating current state</li>
-  <li>Computing the wrong box index</li>
-  <li>Forgetting to skip <code>"."</code> cells</li>
+	<li><code>board.length == 9</code></li>
+	<li><code>board[i].length == 9</code></li>
+	<li><code>board[i][j]</code> is a digit <code>1-9</code> or <code>&#39;.&#39;</code>.</li>
 </ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>cell = board[4][2] = "5"
-check rows[4], cols[2], boxes[(1,0)]
-if absent in all -> insert into all three
-if present in any -> invalid</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Valid partial board</li>
-  <li>Duplicate in a row</li>
-  <li>Duplicate in a column</li>
-  <li>Duplicate inside one 3x3 sub-box</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>Can this be done with bitmasks instead of sets?</li>
-  <li>What is time/space complexity for fixed 9x9 vs generalized NxN?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> every filled digit is checked against exactly the three constraints Sudoku requires, so any violation is caught immediately.</p>`,
+`,
     solutions: {
       python: `from collections import defaultdict
 from typing import List
@@ -687,39 +740,50 @@ end`,
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "string", "sorting"],
-    description: `<p><strong>🧠 Core idea:</strong> map each word to a canonical anagram signature, then group words by that signature.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an array of strings <code>strs</code>, group the <span data-keyword="anagram">anagrams</span> together. You can return the answer in <strong>any order</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">strs = [&quot;eat&quot;,&quot;tea&quot;,&quot;tan&quot;,&quot;ate&quot;,&quot;nat&quot;,&quot;bat&quot;]</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">[[&quot;bat&quot;],[&quot;nat&quot;,&quot;tan&quot;],[&quot;ate&quot;,&quot;eat&quot;,&quot;tea&quot;]]</span></p>
+
+<p><strong>Explanation:</strong></p>
+
 <ul>
-  <li>Choosing a stable hash key for grouping</li>
-  <li>Time complexity tradeoffs (sorted key vs character-count key)</li>
-  <li>Clean use of hash maps for bucketing</li>
+	<li>There is no string in strs that can be rearranged to form <code>&quot;bat&quot;</code>.</li>
+	<li>The strings <code>&quot;nat&quot;</code> and <code>&quot;tan&quot;</code> are anagrams as they can be rearranged to form each other.</li>
+	<li>The strings <code>&quot;ate&quot;</code>, <code>&quot;eat&quot;</code>, and <code>&quot;tea&quot;</code> are anagrams as they can be rearranged to form each other.</li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I build a hash map from signature to list of words. For each string, I compute a 26-length character-frequency tuple and use it as the key. All anagrams share the same frequency tuple, so they end up in the same bucket. Finally I return all buckets."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
+</div>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">strs = [&quot;&quot;]</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">[[&quot;&quot;]]</span></p>
+</div>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">strs = [&quot;a&quot;]</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">[[&quot;a&quot;]]</span></p>
+</div>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Using a mutable list as a dictionary key instead of a tuple</li>
-  <li>Forgetting empty-string inputs</li>
-  <li>Using sorted-string keys without discussing complexity tradeoff</li>
+	<li><code>1 &lt;= strs.length &lt;= 10<sup>4</sup></code></li>
+	<li><code>0 &lt;= strs[i].length &lt;= 100</code></li>
+	<li><code>strs[i]</code> consists of lowercase English letters.</li>
 </ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>"eat" -> key(counts) = (...a:1,e:1,t:1...)
-"tea" -> same key      -> same bucket
-"bat" -> different key -> different bucket</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Mixed groups: <code>["eat","tea","tan","ate","nat","bat"]</code></li>
-  <li>Single empty string: <code>[""]</code></li>
-  <li>Single-character list: <code>["a"]</code></li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>What changes if input includes Unicode characters?</li>
-  <li>When is sorted-string key acceptable over count-tuple key?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> two strings are anagrams iff they share identical character counts, so grouping by that key is both necessary and sufficient.</p>`,
+`,
     solutions: {
       python: `from collections import defaultdict
 from typing import List
@@ -765,40 +829,39 @@ if __name__ == "__main__":
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "two-pointers", "sorting"],
-    description: `<p><strong>🧠 Core idea:</strong> use three pointers (<code>left</code>, <code>mid</code>, <code>right</code>) to partition the array into 0s, 1s, and 2s in one pass (Dutch National Flag).</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an array <code>nums</code> with <code>n</code> objects colored red, white, or blue, sort them <strong><a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank">in-place</a> </strong>so that objects of the same color are adjacent, with the colors in the order red, white, and blue.</p>
+
+<p>We will use the integers <code>0</code>, <code>1</code>, and <code>2</code> to represent the color red, white, and blue, respectively.</p>
+
+<p>You must solve this problem without using the library&#39;s sort function.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [2,0,2,1,1,0]
+<strong>Output:</strong> [0,0,1,1,2,2]
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [2,0,1]
+<strong>Output:</strong> [0,1,2]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>In-place partitioning with constant extra space</li>
-  <li>Pointer invariants and swap correctness</li>
-  <li>One-pass thinking under constraints</li>
+	<li><code>n == nums.length</code></li>
+	<li><code>1 &lt;= n &lt;= 300</code></li>
+	<li><code>nums[i]</code> is either <code>0</code>, <code>1</code>, or <code>2</code>.</li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I maintain three regions: left side all 0s, middle all 1s, right side all 2s. I scan with <code>mid</code>. If value is 0, swap with <code>left</code> and advance both. If 1, just advance <code>mid</code>. If 2, swap with <code>right</code> and move <code>right</code> down without advancing <code>mid</code> yet."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Advancing <code>mid</code> after swapping with <code>right</code></li>
-  <li>Losing track of region invariants</li>
-  <li>Using built-in sort despite follow-up constraint</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>nums = [2,0,1], left=0, mid=0, right=2
-nums[mid]=2 -> swap(mid,right) => [1,0,2], right=1
-nums[mid]=1 -> mid=1
-nums[mid]=0 -> swap(mid,left)  => [0,1,2], left=1, mid=2 (done)</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Mixed input: <code>[2,0,2,1,1,0]</code></li>
-  <li>Small case: <code>[2,0,1]</code></li>
-  <li>All same value / already sorted arrays</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>Can you prove loop invariants formally?</li>
-  <li>How would this generalize to 4+ categories?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> each step shrinks the unprocessed window while preserving the three-region invariant, so final array is sorted as 0s, then 1s, then 2s.</p>`,
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong>&nbsp;Could you come up with a one-pass algorithm using only&nbsp;constant extra space?</p>
+`,
     solutions: {
       python: `import heapq
 from typing import List
@@ -851,42 +914,41 @@ class Solution:
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "union-find"],
-    description: `<p><strong>🧠 Core idea:</strong> store all numbers in a set, then only start counting from values that are sequence starts (i.e., <code>x - 1</code> is not in the set).</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an unsorted array of integers <code>nums</code>, return <em>the length of the longest consecutive elements sequence.</em></p>
+
+<p>You must write an algorithm that runs in&nbsp;<code>O(n)</code>&nbsp;time.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [100,4,200,1,3,2]
+<strong>Output:</strong> 4
+<strong>Explanation:</strong> The longest consecutive elements sequence is <code>[1, 2, 3, 4]</code>. Therefore its length is 4.
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [0,3,7,2,5,8,4,6,0,1]
+<strong>Output:</strong> 9
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,0,1,2]
+<strong>Output:</strong> 3
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Set-based <code>O(1)</code> average lookups</li>
-  <li>Avoiding redundant scans that cause <code>O(n^2)</code></li>
-  <li>Recognizing sequence-start optimization</li>
+	<li><code>0 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I insert all numbers into a set. For each number, I only expand forward if it is the start of a sequence, meaning <code>num - 1</code> is absent. Then I count <code>num+1, num+2, ...</code> while present and track the maximum length. Each number is effectively processed a constant number of times, so runtime is linear."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Sorting first (<code>O(n log n)</code>) despite <code>O(n)</code> requirement</li>
-  <li>Expanding from every number (repeated work)</li>
-  <li>Not handling duplicates correctly</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>nums = [100,4,200,1,3,2]
-set = {1,2,3,4,100,200}
-start at 1 (0 not present) -> length 4 via 1,2,3,4
-start at 100 -> length 1
-start at 200 -> length 1
-max = 4</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Standard case: <code>[100,4,200,1,3,2] -&gt; 4</code></li>
-  <li>With duplicates: <code>[0,3,7,2,5,8,4,6,0,1] -&gt; 9</code></li>
-  <li>Empty input and single-element input</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>Can you prove each element is visited at most once in expansion?</li>
-  <li>How would you adapt if data arrives as a stream?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> every consecutive run has exactly one valid start, and counting from starts covers all runs without omission or duplication.</p>`,
+`,
     solutions: {
       python: `from typing import List
 
@@ -963,26 +1025,30 @@ end`,
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "divide-and-conquer", "sorting", "counting"],
-    description: `<p><strong>🧠 Core idea:</strong> because one value appears more than half the time, it dominates all others combined. Use Boyer-Moore voting to find it in one pass.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an array <code>nums</code> of size <code>n</code>, return <em>the majority element</em>.</p>
+
+<p>The majority element is the element that appears more than <code>&lfloor;n / 2&rfloor;</code> times. You may assume that the majority element always exists in the array.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<pre><strong>Input:</strong> nums = [3,2,3]
+<strong>Output:</strong> 3
+</pre><p><strong class="example">Example 2:</strong></p>
+<pre><strong>Input:</strong> nums = [2,2,1,1,1,2,2]
+<strong>Output:</strong> 2
+</pre>
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Seeing the <code>O(1)</code>-space optimization beyond hash counting</li>
-  <li>Reasoning from problem guarantees (majority always exists)</li>
-  <li>Linear-time implementation correctness</li>
+	<li><code>n == nums.length</code></li>
+	<li><code>1 &lt;= n &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
+	<li>The input is generated such that a majority element will exist in the array.</li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Using sorting as default (<code>O(n log n)</code>) when <code>O(n)</code> is expected</li>
-  <li>Confusing plurality with strict majority (<code>&gt; n/2</code>)</li>
-  <li>Overcomplicating when guarantee already ensures existence</li>
-</ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Simple majority: <code>[3,2,3] -&gt; 3</code></li>
-  <li>Majority spread across array: <code>[2,2,1,1,1,2,2] -&gt; 2</code></li>
-  <li>Single-element input</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> every non-majority vote can be paired off against a majority vote, and the majority still remains after all cancellations.</p>`,
+
+<p>&nbsp;</p>
+<strong>Follow-up:</strong> Could you solve the problem in linear time and in <code>O(1)</code> space?`,
     solutions: {
       python: `from collections import defaultdict
 from typing import List
@@ -1012,26 +1078,49 @@ class Solution:
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "sorting"],
-    description: `<p><strong>🧠 Core idea:</strong> if the number of unique elements is smaller than the array length, a duplicate exists.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an integer array <code>nums</code>, return <code>true</code> if any value appears <strong>at least twice</strong> in the array, and return <code>false</code> if every element is distinct.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">nums = [1,2,3,1]</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">true</span></p>
+
+<p><strong>Explanation:</strong></p>
+
+<p>The element 1 occurs at the indices 0 and 3.</p>
+</div>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">nums = [1,2,3,4]</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">false</span></p>
+
+<p><strong>Explanation:</strong></p>
+
+<p>All elements are distinct.</p>
+</div>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">nums = [1,1,1,3,3,4,3,2,4,2]</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">true</span></p>
+</div>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Recognizing a set-based <code>O(n)</code> solution quickly</li>
-  <li>Time-vs-space tradeoff awareness</li>
-  <li>Clean handling of large input size constraints</li>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Using brute force <code>O(n^2)</code></li>
-  <li>Overcomplicating with unnecessary bookkeeping</li>
-  <li>Ignoring memory tradeoff compared with sorting</li>
-</ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>All unique: <code>[1,2,3,4] -&gt; false</code></li>
-  <li>Has duplicate: <code>[1,2,3,1] -&gt; true</code></li>
-  <li>Many repeats and large arrays</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> sets keep exactly one copy of each value, so <code>len(set(nums)) &lt; len(nums)</code> iff at least one value repeats.</p>`,
+`,
     solutions: {
       python: `from typing import List
 
@@ -1072,40 +1161,41 @@ end`,
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "sorting", "counting"],
-    description: `<p><strong>🧠 Core idea:</strong> there can be at most two elements appearing more than <code>n/3</code> times, so track up to two candidates with generalized Boyer-Moore voting, then verify counts.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an integer array of size <code>n</code>, find all elements that appear more than <code>&lfloor; n/3 &rfloor;</code> times.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [3,2,3]
+<strong>Output:</strong> [3]
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1]
+<strong>Output:</strong> [1]
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2]
+<strong>Output:</strong> [1,2]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Generalizing Boyer-Moore beyond the <code>n/2</code> case</li>
-  <li>Reasoning about candidate limits (max two)</li>
-  <li>Two-phase algorithm design (candidate selection + verification)</li>
+	<li><code>1 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I keep two candidates and two counters. As I scan, matching candidates increment their counters, empty counters take new candidates, and otherwise both counters decrement. This cancels groups of three distinct values. After this pass I verify which candidates actually occur more than <code>n/3</code>."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Skipping the second verification pass</li>
-  <li>Assuming only one answer exists</li>
-  <li>Incorrect candidate update order in the first pass</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>nums = [1,1,1,2,2,2,3]
-phase 1 candidates settle near 1 and 2
-phase 2 counts -> 1 appears 3, 2 appears 3, threshold = 7//3 = 2
-answer = [1,2]</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>One majority: <code>[3,2,3] -&gt; [3]</code></li>
-  <li>Two majorities: <code>[1,1,1,2,2,2,3] -&gt; [1,2]</code></li>
-  <li>No majority above <code>n/3</code>: <code>[1,2,3]</code></li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>How does this generalize to elements appearing more than <code>n/k</code> times?</li>
-  <li>Why is verification necessary even after voting?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> cancellation preserves all possible <code>&gt; n/3</code> candidates, and verification filters true winners from residual candidates.</p>`,
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> Could you solve the problem in linear time and in <code>O(1)</code> space?</p>
+`,
     solutions: {
       python: `from typing import List
 
@@ -1127,7 +1217,8 @@ class Solution:
 
 class SolutionBoyerMoore:
     def majorityElement(self, nums: List[int]) -> List[int]:
-        """Boyer-Moore Voting (generalized): O(n) time, O(1) space.
+        """
+        Boyer-Moore Voting (generalized): O(n) time, O(1) space.
 
         At most 2 elements can appear more than n/3 times.
         Phase 1: find up to 2 candidates by cancelling groups of 3
@@ -1185,43 +1276,32 @@ if __name__ == "__main__":
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "prefix-sum"],
-    description: `<p><strong>🧠 Core idea:</strong> for each index, answer = product of all elements to its left × product of all elements to its right. Build left products in one pass, then multiply by right products in a backward pass.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an integer array <code>nums</code>, return <em>an array</em> <code>answer</code> <em>such that</em> <code>answer[i]</code> <em>is equal to the product of all the elements of</em> <code>nums</code> <em>except</em> <code>nums[i]</code>.</p>
+
+<p>The product of any prefix or suffix of <code>nums</code> is <strong>guaranteed</strong> to fit in a <strong>32-bit</strong> integer.</p>
+
+<p>You must write an algorithm that runs in&nbsp;<code>O(n)</code>&nbsp;time and without using the division operation.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<pre><strong>Input:</strong> nums = [1,2,3,4]
+<strong>Output:</strong> [24,12,8,6]
+</pre><p><strong class="example">Example 2:</strong></p>
+<pre><strong>Input:</strong> nums = [-1,1,0,-3,3]
+<strong>Output:</strong> [0,0,9,0,0]
+</pre>
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Recognizing prefix/suffix product patterns under constraints</li>
-  <li>Achieving <code>O(n)</code> without division</li>
-  <li>Space optimization to <code>O(1)</code> extra space (excluding output)</li>
+	<li><code>2 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-30 &lt;= nums[i] &lt;= 30</code></li>
+	<li>The input is generated such that <code>answer[i]</code> is <strong>guaranteed</strong> to fit in a <strong>32-bit</strong> integer.</li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I store prefix products in the result array so <code>result[i]</code> starts as product of everything left of <code>i</code>. Then I walk from right to left with a running postfix product and multiply it into <code>result[i]</code>. That gives left × right for each index in linear time and constant extra space."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Using division (fails constraints and zero-handling cases)</li>
-  <li>Initializing result with <code>0</code> instead of <code>1</code></li>
-  <li>Off-by-one errors in backward traversal</li>
-  <li>Forgetting arrays with one or multiple zeros</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>nums = [1,2,3,4]
-left pass  -> result = [1,1,2,6]
-right pass -> postfix sequence: 1,4,12,24
-final      -> [24,12,8,6]</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Basic: <code>[1,2,3,4] -&gt; [24,12,8,6]</code></li>
-  <li>Single zero: <code>[-1,1,0,-3,3] -&gt; [0,0,9,0,0]</code></li>
-  <li>Multiple zeros: result should be all zeros</li>
-  <li>Negative values and sign correctness</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>Can you do this with exactly one output array and two scalars?</li>
-  <li>How does the solution behave with zeros and why?</li>
-  <li>What changes if numbers are extremely large (overflow concerns)?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> every index receives exactly the product of all values left of it and all values right of it, which is by definition the product of all elements except itself.</p>`,
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong>&nbsp;Can you solve the problem in <code>O(1)</code>&nbsp;extra&nbsp;space complexity? (The output array <strong>does not</strong> count as extra space for space complexity analysis.)</p>
+`,
     solutions: {
       python: `from typing import List
 
@@ -1315,26 +1395,36 @@ println("Running tests...")`,
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["hash-table", "string", "sorting"],
-    description: `<p><strong>🧠 Core idea:</strong> two strings are anagrams if and only if every character appears the same number of times in both strings.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given two strings <code>s</code> and <code>t</code>, return <code>true</code> if <code>t</code> is an <span data-keyword="anagram">anagram</span> of <code>s</code>, and <code>false</code> otherwise.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">s = &quot;anagram&quot;, t = &quot;nagaram&quot;</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">true</span></p>
+</div>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">s = &quot;rat&quot;, t = &quot;car&quot;</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">false</span></p>
+</div>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Frequency-counting vs sorting tradeoff (<code>O(n)</code> vs <code>O(n log n)</code>)</li>
-  <li>Early checks like unequal lengths</li>
-  <li>Handling character sets (ASCII vs Unicode)</li>
+	<li><code>1 &lt;= s.length, t.length &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>s</code> and <code>t</code> consist of lowercase English letters.</li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Only checking length and not counts</li>
-  <li>Using sorting by default when counting is more optimal</li>
-  <li>Assuming only lowercase letters when input might be broader</li>
-</ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Positive case: <code>"anagram"</code> vs <code>"nagaram"</code></li>
-  <li>Negative case: <code>"rat"</code> vs <code>"car"</code></li>
-  <li>Unicode/mixed character scenarios if extended constraints apply</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> equal frequency vectors (or maps) are exactly the definition of an anagram.</p>`,
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> What if the inputs contain Unicode characters? How would you adapt your solution to such a case?</p>
+`,
     solutions: {
       python: `class Solution:
     def isAnagram(self, s: str, t: str) -> bool:
@@ -1415,92 +1505,44 @@ end`,
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "string", "design"],
-    description: `<p><strong>🧠 Core idea:</strong> serialize each string as <code>&lt;len&gt;#&lt;content&gt;</code>, then parse by length so boundaries are unambiguous.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
-<ul>
-  <li>Designing a reversible serialization format</li>
-  <li>Parser correctness (pointer movement and off-by-one safety)</li>
-  <li>Edge-case handling under ambiguity pressure</li>
-</ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I encode each word as <code>&lt;len&gt;#&lt;word&gt;</code>. While decoding, I scan to <code>#</code>, parse the length, then consume exactly that many characters. Because boundaries come from length (not splitting by delimiter), the decode is unambiguous even when content includes <code>#</code> or empty strings."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Using <code>len(s[i:j])</code> instead of <code>int(s[i:j])</code> during decode</li>
-  <li>Trying to decode with naive <code>split("#")</code></li>
-  <li>Forgetting empty-string and multi-digit-length test cases</li>
-  <li>Building encoded output with repeated string concatenation in loops</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>Encoded: "4#lint5#co#de0#"
-i=0  -&gt; j at '#', length=4, take s[2:6]   = "lint"
-i=6  -&gt; j at '#', length=5, take s[8:13]  = "co#de"
-i=13 -&gt; j at '#', length=0, take s[15:15] = ""</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Basic round-trip: <code>decode(encode(["neet", "code"]))</code></li>
-  <li>Empty strings: <code>[""]</code> and mixed empty/non-empty inputs</li>
-  <li>Delimiter characters inside content: <code>["#", "##", "co#de"]</code></li>
-  <li><strong>Multi-digit lengths</strong> (critical): strings with length &gt; 9, e.g. <code>"abcdefghijkl"</code></li>
-  <li>Mixed symbols/spaces to ensure parser boundaries remain correct</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>How would you support streaming decode?</li>
-  <li>How would this change for bytes/binary payloads?</li>
-  <li>What constraints or guards would you add for malformed input?</li>
-</ul>
-<p><strong>🛡️ Malformed input handling (production polish):</strong> validate that a delimiter <code>#</code> exists, the parsed length is numeric and non-negative, and <code>start + length &lt;= len(encoded)</code>. If any check fails, raise <code>ValueError</code> (or return an explicit error) instead of silently mis-parsing.</p>
-<p><strong>✅ Correctness note:</strong> each chunk is self-delimiting via its length prefix, so parse boundaries are unique.</p>`,
+    description: ``,
     solutions: {
       python: `from typing import List
 
 
 class Solution:
+    # The need for using a non-ascii character for more robust encoding
+    # An abmiguous example: ["hello", "world,with,comma", "test"]
+    # But even non-ascii character can be part of the string
+    # e.g., ["neet", "co#de"] -> "neet#co#de" -> ["neet", "co", "de"]
+
     def encode(self, strs: List[str]) -> str:
-        # Time: O(total_chars), Space: O(total_chars)
-        # Build "<len>#<string>" chunks, then join once (efficient in Python).
-        return "".join(f"{len(s)}#{s}" for s in strs)
+        result = ""
+        for s in strs:
+            result = result + str(len(s)) + "#" + s
+        return result
 
     def decode(self, s: str) -> List[str]:
-        # Time: O(total_chars), Space: O(total_chars)
         result = []
-        i = 0
 
+        i = 0
         while i < len(s):
             j = i
             while s[j] != "#":
                 j += 1
-
             length = int(s[i:j])
-            start = j + 1
-            end = start + length
-            result.append(s[start:end])
+            i = j + 1
+            j = length + i
 
-            i = end
-
+            result.append(s[i:j])
+            i = j
         return result
 
 
 if __name__ == "__main__":
     sol = Solution()
-
-    # Basic case
-    assert sol.decode(sol.encode(["neet", "code"])) == ["neet", "code"]
-
-    # Empty string handling
-    assert sol.decode(sol.encode([""])) == [""]
-
-    # Delimiter-like characters inside strings
-    assert sol.decode(sol.encode(["#", "##", "co#de"])) == ["#", "##", "co#de"]
-
-    # Multi-digit length (critical parser test)
-    assert sol.decode(sol.encode(["abcdefghijkl"])) == ["abcdefghijkl"]
-
-    # Mixed content
-    assert sol.decode(sol.encode(["lint", "co#de", ""])) == ["lint", "co#de", ""]`,
+    print(sol.encode(["neet", "code"]))
+    print(sol.decode("4#neet4#code"))`,
       julia: `function encode(str::Vector{String})::String
     result = ""
     for s in str
@@ -1549,42 +1591,51 @@ println("Decoded: ", decoded_strs)`,
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "design", "matrix", "prefix-sum"],
-    description: `<p><strong>🧠 Core idea:</strong> precompute a 2D prefix-sum matrix so each rectangle sum can be answered in <code>O(1)</code> with inclusion-exclusion.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given a 2D matrix <code>matrix</code>, handle multiple queries of the following type:</p>
+
 <ul>
-  <li>2D prefix-sum construction</li>
-  <li>Index/boundary correctness with inclusion-exclusion</li>
-  <li>Trading preprocessing time for fast repeated queries</li>
+	<li>Calculate the <strong>sum</strong> of the elements of <code>matrix</code> inside the rectangle defined by its <strong>upper left corner</strong> <code>(row1, col1)</code> and <strong>lower right corner</strong> <code>(row2, col2)</code>.</li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I precompute <code>P[r][c]</code> = sum of all values in rectangle <code>(0,0)..(r,c)</code>. Then any query rectangle is <code>P[r2][c2] - P[r1-1][c2] - P[r2][c1-1] + P[r1-1][c1-1]</code>. This gives constant-time queries after linear preprocessing over the matrix."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
+
+<p>Implement the <code>NumMatrix</code> class:</p>
+
 <ul>
-  <li>Off-by-one errors for top row / left column</li>
-  <li>Forgetting to add overlap back once</li>
-  <li>Recomputing sums per query (too slow)</li>
+	<li><code>NumMatrix(int[][] matrix)</code> Initializes the object with the integer matrix <code>matrix</code>.</li>
+	<li><code>int sumRegion(int row1, int col1, int row2, int col2)</code> Returns the <strong>sum</strong> of the elements of <code>matrix</code> inside the rectangle defined by its <strong>upper left corner</strong> <code>(row1, col1)</code> and <strong>lower right corner</strong> <code>(row2, col2)</code>.</li>
 </ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>sum(row1,col1,row2,col2)
-= P[row2][col2]
-- P[row1-1][col2]
-- P[row2][col1-1]
-+ P[row1-1][col1-1]</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
+
+<p>You must design an algorithm where <code>sumRegion</code> works on <code>O(1)</code> time complexity.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<img alt="" src="https://assets.leetcode.com/uploads/2021/03/14/sum-grid.jpg" style="width: 415px; height: 415px;" />
+<pre>
+<strong>Input</strong>
+[&quot;NumMatrix&quot;, &quot;sumRegion&quot;, &quot;sumRegion&quot;, &quot;sumRegion&quot;]
+[[[[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]]], [2, 1, 4, 3], [1, 1, 2, 2], [1, 2, 2, 4]]
+<strong>Output</strong>
+[null, 8, 11, 12]
+
+<strong>Explanation</strong>
+NumMatrix numMatrix = new NumMatrix([[3, 0, 1, 4, 2], [5, 6, 3, 2, 1], [1, 2, 0, 1, 5], [4, 1, 0, 1, 7], [1, 0, 3, 0, 5]]);
+numMatrix.sumRegion(2, 1, 4, 3); // return 8 (i.e sum of the red rectangle)
+numMatrix.sumRegion(1, 1, 2, 2); // return 11 (i.e sum of the green rectangle)
+numMatrix.sumRegion(1, 2, 2, 4); // return 12 (i.e sum of the blue rectangle)
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Query fully inside matrix</li>
-  <li>Query touching top/left borders</li>
-  <li>Single-cell query</li>
-  <li>Multiple queries over same matrix</li>
+	<li><code>m == matrix.length</code></li>
+	<li><code>n == matrix[i].length</code></li>
+	<li><code>1 &lt;= m, n &lt;= 200</code></li>
+	<li><code>-10<sup>4</sup> &lt;= matrix[i][j] &lt;= 10<sup>4</sup></code></li>
+	<li><code>0 &lt;= row1 &lt;= row2 &lt; m</code></li>
+	<li><code>0 &lt;= col1 &lt;= col2 &lt; n</code></li>
+	<li>At most <code>10<sup>4</sup></code> calls will be made to <code>sumRegion</code>.</li>
 </ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>How would you support point updates too? (2D Fenwick/segment tree)</li>
-  <li>What are preprocessing/query space-time tradeoffs?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> inclusion-exclusion exactly removes areas outside the query rectangle while preserving the target area once.</p>`,
+`,
     solutions: {
       python: `from typing import List
 
@@ -1686,40 +1737,46 @@ if __name__ == "__main__":
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "divide-and-conquer", "sorting", "heap-priority-queue", "bucket-sort", "counting", "quickselect"],
-    description: `<p><strong>🧠 Core idea:</strong> count frequencies first, then retrieve the top <code>k</code> without fully sorting all elements (bucket sort or heap).</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <em>the</em> <code>k</code> <em>most frequent elements</em>. You may return the answer in <strong>any order</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">nums = [1,1,1,2,2,3], k = 2</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">[1,2]</span></p>
+</div>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">nums = [1], k = 1</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">[1]</span></p>
+</div>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<div class="example-block">
+<p><strong>Input:</strong> <span class="example-io">nums = [1,2,1,2,1,2,3,1,3,2], k = 2</span></p>
+
+<p><strong>Output:</strong> <span class="example-io">[1,2]</span></p>
+</div>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Frequency-map construction</li>
-  <li>Choosing better-than-<code>O(n log n)</code> strategies</li>
-  <li>Tradeoffs between bucket sort and heap approaches</li>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>
+	<li><code>k</code> is in the range <code>[1, the number of unique elements in the array]</code>.</li>
+	<li>It is <strong>guaranteed</strong> that the answer is <strong>unique</strong>.</li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I count each value’s frequency with a hash map. Then I place values into buckets by frequency and iterate buckets from high to low until I collect <code>k</code> values. This avoids sorting all pairs and runs in near linear time."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Sorting all unique elements by count when constraints ask for better complexity</li>
-  <li>Off-by-one errors in bucket size/indexing</li>
-  <li>Not stopping once <code>k</code> elements are collected</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>nums = [1,1,1,2,2,3], k=2
-freq: 1->3, 2->2, 3->1
-buckets[3]=[1], buckets[2]=[2], buckets[1]=[3]
-scan high->low -> pick [1,2]</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Basic case: <code>[1,1,1,2,2,3], k=2</code></li>
-  <li>Single-element input</li>
-  <li>Negative values and ties that still produce unique final set per constraints</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>When is a min-heap of size <code>k</code> preferable?</li>
-  <li>How would this change for streaming data?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> selecting values by descending frequency directly matches the definition of the top <code>k</code> frequent elements.</p>`,
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> Your algorithm&#39;s time complexity must be better than <code>O(n log n)</code>, where n is the array&#39;s size.</p>
+`,
     solutions: {
       python: `from typing import List
 
@@ -1758,6 +1815,68 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/top-k-frequent-elements/",
   },
   {
+    id: "560",
+    slug: "560-subarray-sum-equals-k",
+    leetcodeSlug: "subarray-sum-equals-k",
+    title: "Subarray Sum Equals K",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "hash-table", "prefix-sum"],
+    description: `<p>Given an array of integers <code>nums</code> and an integer <code>k</code>, return <em>the total number of subarrays whose sum equals to</em> <code>k</code>.</p>
+
+<p>A subarray is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<pre><strong>Input:</strong> nums = [1,1,1], k = 2
+<strong>Output:</strong> 2
+</pre><p><strong class="example">Example 2:</strong></p>
+<pre><strong>Input:</strong> nums = [1,2,3], k = 3
+<strong>Output:</strong> 2
+</pre>
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>
+	<li><code>-1000 &lt;= nums[i] &lt;= 1000</code></li>
+	<li><code>-10<sup>7</sup> &lt;= k &lt;= 10<sup>7</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        # prefix_count maps prefix_sum → number of times it has appeared
+        prefix_count = {0: 1}
+        prefix_sum = 0
+        count = 0
+
+        for num in nums:
+            prefix_sum += num
+            # If (prefix_sum - k) was seen before, those subarrays sum to k
+            count += prefix_count.get(prefix_sum - k, 0)
+            prefix_count[prefix_sum] = prefix_count.get(prefix_sum, 0) + 1
+
+        return count
+
+
+if __name__ == "__main__":
+    sol = Solution()
+    assert sol.subarraySum([1, 1, 1], 2) == 2          # [1,1] at idx 0-1 and 1-2
+    assert sol.subarraySum([1, 2, 3], 3) == 2           # [3] and [1,2]
+    assert sol.subarraySum([1], 0) == 0
+    assert sol.subarraySum([0, 0, 0], 0) == 6           # all subarrays
+    assert sol.subarraySum([-1, -1, 1], 0) == 1         # [-1,-1,1] sums to -1+... wait
+    assert sol.subarraySum([1, -1, 1, -1], 0) == 4
+    print("All test cases passed!")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/subarray-sum-equals-k/",
+  },
+  {
     id: "705",
     slug: "705-design-hashset",
     leetcodeSlug: "design-hashset",
@@ -1765,26 +1884,45 @@ if __name__ == "__main__":
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "linked-list", "design", "hash-function"],
-    description: `<p><strong>🧠 Core idea:</strong> hash each key into a bucket and store collisions in that bucket (separate chaining).</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Design a HashSet without using any built-in hash table libraries.</p>
+
+<p>Implement <code>MyHashSet</code> class:</p>
+
 <ul>
-  <li>Understanding hash function + bucket layout</li>
-  <li>Collision handling strategy</li>
-  <li>Correct behavior for <code>add</code>, <code>remove</code>, and <code>contains</code></li>
+	<li><code>void add(key)</code> Inserts the value <code>key</code> into the HashSet.</li>
+	<li><code>bool contains(key)</code> Returns whether the value <code>key</code> exists in the HashSet or not.</li>
+	<li><code>void remove(key)</code> Removes the value <code>key</code> in the HashSet. If <code>key</code> does not exist in the HashSet, do nothing.</li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input</strong>
+[&quot;MyHashSet&quot;, &quot;add&quot;, &quot;add&quot;, &quot;contains&quot;, &quot;contains&quot;, &quot;add&quot;, &quot;contains&quot;, &quot;remove&quot;, &quot;contains&quot;]
+[[], [1], [2], [1], [3], [2], [2], [2], [2]]
+<strong>Output</strong>
+[null, null, null, true, false, null, true, null, false]
+
+<strong>Explanation</strong>
+MyHashSet myHashSet = new MyHashSet();
+myHashSet.add(1);      // set = [1]
+myHashSet.add(2);      // set = [1, 2]
+myHashSet.contains(1); // return True
+myHashSet.contains(3); // return False, (not found)
+myHashSet.add(2);      // set = [1, 2]
+myHashSet.contains(2); // return True
+myHashSet.remove(2);   // set = [1]
+myHashSet.contains(2); // return False, (already removed)</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Ignoring collisions completely</li>
-  <li>Allowing duplicate entries in a set</li>
-  <li>Using shared bucket references by mistake</li>
+	<li><code>0 &lt;= key &lt;= 10<sup>6</sup></code></li>
+	<li>At most <code>10<sup>4</sup></code> calls will be made to <code>add</code>, <code>remove</code>, and <code>contains</code>.</li>
 </ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Repeated <code>add</code> of same key (should still exist once)</li>
-  <li>Removing non-existent keys (should not error)</li>
-  <li>Large key values near constraint limits</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> each operation inspects only the bucket determined by the hash, and set semantics are preserved by preventing duplicates.</p>`,
+`,
     solutions: {
       python: `class MyHashSet:
 
@@ -1852,26 +1990,47 @@ if __name__ == "__main__":
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "hash-table", "linked-list", "design", "hash-function"],
-    description: `<p><strong>🧠 Core idea:</strong> use buckets indexed by a hash function, and store <code>(key, value)</code> pairs in each bucket to resolve collisions.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Design a HashMap without using any built-in hash table libraries.</p>
+
+<p>Implement the <code>MyHashMap</code> class:</p>
+
 <ul>
-  <li>Hashing fundamentals and collision handling</li>
-  <li>Correct update semantics for existing keys</li>
-  <li>Implementing <code>put/get/remove</code> with consistent behavior</li>
+	<li><code>MyHashMap()</code> initializes the object with an empty map.</li>
+	<li><code>void put(int key, int value)</code> inserts a <code>(key, value)</code> pair into the HashMap. If the <code>key</code> already exists in the map, update the corresponding <code>value</code>.</li>
+	<li><code>int get(int key)</code> returns the <code>value</code> to which the specified <code>key</code> is mapped, or <code>-1</code> if this map contains no mapping for the <code>key</code>.</li>
+	<li><code>void remove(key)</code> removes the <code>key</code> and its corresponding <code>value</code> if the map contains the mapping for the <code>key</code>.</li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input</strong>
+[&quot;MyHashMap&quot;, &quot;put&quot;, &quot;put&quot;, &quot;get&quot;, &quot;get&quot;, &quot;put&quot;, &quot;get&quot;, &quot;remove&quot;, &quot;get&quot;]
+[[], [1, 1], [2, 2], [1], [3], [2, 1], [2], [2], [2]]
+<strong>Output</strong>
+[null, null, null, 1, -1, null, 1, null, -1]
+
+<strong>Explanation</strong>
+MyHashMap myHashMap = new MyHashMap();
+myHashMap.put(1, 1); // The map is now [[1,1]]
+myHashMap.put(2, 2); // The map is now [[1,1], [2,2]]
+myHashMap.get(1);    // return 1, The map is now [[1,1], [2,2]]
+myHashMap.get(3);    // return -1 (i.e., not found), The map is now [[1,1], [2,2]]
+myHashMap.put(2, 1); // The map is now [[1,1], [2,1]] (i.e., update the existing value)
+myHashMap.get(2);    // return 1, The map is now [[1,1], [2,1]]
+myHashMap.remove(2); // remove the mapping for 2, The map is now [[1,1]]
+myHashMap.get(2);    // return -1 (i.e., not found), The map is now [[1,1]]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Appending duplicate keys instead of updating value</li>
-  <li>Not handling collisions in the same bucket</li>
-  <li>Incorrectly returning values for missing keys</li>
+	<li><code>0 &lt;= key, value &lt;= 10<sup>6</sup></code></li>
+	<li>At most <code>10<sup>4</sup></code> calls will be made to <code>put</code>, <code>get</code>, and <code>remove</code>.</li>
 </ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Insert then get, update then get, remove then get</li>
-  <li>Remove non-existent key (no crash)</li>
-  <li>Many keys mapping to nearby buckets</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> the hash narrows lookup to one bucket, and linear scan within that bucket preserves map semantics for insert, update, retrieval, and deletion.</p>`,
+`,
     solutions: {
       python: `class MyHashMap:
 
@@ -1946,39 +2105,35 @@ if __name__ == "__main__":
     difficulty: "Medium",
     group: "Arrays & Hashing",
     topics: ["array", "divide-and-conquer", "sorting", "heap-priority-queue", "merge-sort", "bucket-sort", "radix-sort", "counting-sort"],
-    description: `<p><strong>🧠 Core idea:</strong> implement an <code>O(n log n)</code> sorting algorithm (e.g., merge sort / quicksort), or leverage counting sort when value range is bounded.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an array of integers <code>nums</code>, sort the array in ascending order and return it.</p>
+
+<p>You must solve the problem <strong>without using any built-in</strong> functions in <code>O(nlog(n))</code> time complexity and with the smallest space complexity possible.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [5,2,3,1]
+<strong>Output:</strong> [1,2,3,5]
+<strong>Explanation:</strong> After sorting the array, the positions of some numbers are not changed (for example, 2 and 3), while the positions of other numbers are changed (for example, 1 and 5).
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [5,1,1,2,0,0]
+<strong>Output:</strong> [0,0,1,1,2,5]
+<strong>Explanation:</strong> Note that the values of nums are not necessarily unique.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Algorithm choice under constraints (time + space)</li>
-  <li>Knowledge of stable vs unstable sorts and worst-case behavior</li>
-  <li>Ability to reason about data range and choose counting sort appropriately</li>
+	<li><code>1 &lt;= nums.length &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>-5 * 10<sup>4</sup> &lt;= nums[i] &lt;= 5 * 10<sup>4</sup></code></li>
 </ul>
-<p><strong>🗣️ 30-second explanation script:</strong><br />
-"I can solve this with merge sort for guaranteed <code>O(n log n)</code> time, or counting sort here because values are bounded. Counting sort is <code>O(n + range)</code>, which is efficient for this constraint range. I count frequencies and rebuild the array in ascending order."</p>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Calling built-in sort despite explicit constraint</li>
-  <li>Ignoring worst-case behavior for naive quicksort pivot choices</li>
-  <li>Forgetting memory tradeoffs between merge sort and counting sort</li>
-</ul>
-<details>
-  <summary><strong>🔍 Mini dry run</strong></summary>
-  <pre><code>nums = [5,1,1,2,0,0]
-freq(0)=2, freq(1)=2, freq(2)=1, freq(5)=1
-rebuild -> [0,0,1,1,2,5]</code></pre>
-</details>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Mixed values: <code>[5,2,3,1]</code></li>
-  <li>Duplicates: <code>[5,1,1,2,0,0]</code></li>
-  <li>Already sorted / reverse sorted / all-equal arrays</li>
-</ul>
-<p><strong>🚀 Follow-up prompts interviewers may ask:</strong></p>
-<ul>
-  <li>How do you avoid quicksort worst-case <code>O(n^2)</code>?</li>
-  <li>When is counting sort better than comparison-based sorts?</li>
-</ul>
-<p><strong>✅ Correctness note:</strong> reconstruction from ordered keys or recursive partition/merge guarantees non-decreasing order with all original elements preserved.</p>`,
+`,
     solutions: {
       python: `import heapq
 from collections import defaultdict
@@ -2073,6 +2228,84 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/sort-an-array/",
   },
   {
+    id: "1310",
+    slug: "1310-xor-queries-of-a-subarray",
+    leetcodeSlug: "xor-queries-of-a-subarray",
+    title: "XOR Queries of a Subarray",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "bit-manipulation", "prefix-sum"],
+    description: `<p>You are given an array <code>arr</code> of positive integers. You are also given the array <code>queries</code> where <code>queries[i] = [left<sub>i, </sub>right<sub>i</sub>]</code>.</p>
+
+<p>For each query <code>i</code> compute the <strong>XOR</strong> of elements from <code>left<sub>i</sub></code> to <code>right<sub>i</sub></code> (that is, <code>arr[left<sub>i</sub>] XOR arr[left<sub>i</sub> + 1] XOR ... XOR arr[right<sub>i</sub>]</code> ).</p>
+
+<p>Return an array <code>answer</code> where <code>answer[i]</code> is the answer to the <code>i<sup>th</sup></code> query.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> arr = [1,3,4,8], queries = [[0,1],[1,2],[0,3],[3,3]]
+<strong>Output:</strong> [2,7,14,8]
+<strong>Explanation:</strong>
+The binary representation of the elements in the array are:
+1 = 0001
+3 = 0011
+4 = 0100
+8 = 1000
+The XOR values for queries are:
+[0,1] = 1 xor 3 = 2
+[1,2] = 3 xor 4 = 7
+[0,3] = 1 xor 3 xor 4 xor 8 = 14
+[3,3] = 8
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> arr = [4,8,2,10], queries = [[2,3],[1,3],[0,0],[0,3]]
+<strong>Output:</strong> [8,0,4,4]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= arr.length, queries.length &lt;= 3 * 10<sup>4</sup></code></li>
+	<li><code>1 &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>
+	<li><code>queries[i].length == 2</code></li>
+	<li><code>0 &lt;= left<sub>i</sub> &lt;= right<sub>i</sub> &lt; arr.length</code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def xorQueries(self, arr: List[int], queries: List[List[int]]) -> List[int]:
+        # Build prefix XOR array: prefix[i] = arr[0] ^ arr[1] ^ ... ^ arr[i-1]
+        # prefix[0] = 0 (identity element for XOR)
+        n = len(arr)
+        prefix = [0] * (n + 1)
+        for i in range(n):
+            prefix[i + 1] = prefix[i] ^ arr[i]
+
+        # XOR of arr[l..r] = prefix[r+1] ^ prefix[l]
+        # Because XOR is self-inverse: a^a = 0, so common prefix cancels out
+        return [prefix[r + 1] ^ prefix[l] for l, r in queries]
+
+
+if __name__ == "__main__":
+    sol = Solution()
+    assert sol.xorQueries([1, 3, 4, 8], [[0, 1], [1, 2], [0, 3], [3, 3]]) == [2, 7, 14, 8]
+    assert sol.xorQueries([4, 8], [[0, 0], [1, 1]]) == [4, 8]
+    assert sol.xorQueries([0, 0, 0], [[0, 2]]) == [0]
+    print("All test cases passed!")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/xor-queries-of-a-subarray/",
+  },
+  {
     id: "1929",
     slug: "1929-concatenation-of-array",
     leetcodeSlug: "concatenation-of-array",
@@ -2080,26 +2313,41 @@ if __name__ == "__main__":
     difficulty: "Easy",
     group: "Arrays & Hashing",
     topics: ["array", "simulation"],
-    description: `<p><strong>🧠 Core idea:</strong> build an output array of size <code>2n</code> and copy each value from <code>nums</code> into positions <code>i</code> and <code>i + n</code>.</p>
-<p><strong>🎯 What interviewers are testing:</strong></p>
+    description: `<p>Given an integer array <code>nums</code> of length <code>n</code>, you want to create an array <code>ans</code> of length <code>2n</code> where <code>ans[i] == nums[i]</code> and <code>ans[i + n] == nums[i]</code> for <code>0 &lt;= i &lt; n</code> (<strong>0-indexed</strong>).</p>
+
+<p>Specifically, <code>ans</code> is the <strong>concatenation</strong> of two <code>nums</code> arrays.</p>
+
+<p>Return <em>the array </em><code>ans</code>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2,1]
+<strong>Output:</strong> [1,2,1,1,2,1]
+<strong>Explanation:</strong> The array ans is formed as follows:
+- ans = [nums[0],nums[1],nums[2],nums[0],nums[1],nums[2]]
+- ans = [1,2,1,1,2,1]</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,3,2,1]
+<strong>Output:</strong> [1,3,2,1,1,3,2,1]
+<strong>Explanation:</strong> The array ans is formed as follows:
+- ans = [nums[0],nums[1],nums[2],nums[3],nums[0],nums[1],nums[2],nums[3]]
+- ans = [1,3,2,1,1,3,2,1]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
 <ul>
-  <li>Basic array indexing and bounds correctness</li>
-  <li>Clean implementation with linear time</li>
-  <li>Awareness of pre-allocation vs repeated appends</li>
+	<li><code>n == nums.length</code></li>
+	<li><code>1 &lt;= n &lt;= 1000</code></li>
+	<li><code>1 &lt;= nums[i] &lt;= 1000</code></li>
 </ul>
-<p><strong>⚠️ Common mistakes:</strong></p>
-<ul>
-  <li>Off-by-one indexing errors</li>
-  <li>Mutating input unexpectedly when not intended</li>
-  <li>Unnecessary nested loops</li>
-</ul>
-<p><strong>🧪 What to test for:</strong></p>
-<ul>
-  <li>Small case: <code>[1,2,1] -&gt; [1,2,1,1,2,1]</code></li>
-  <li>Another case: <code>[1,3,2,1] -&gt; [1,3,2,1,1,3,2,1]</code></li>
-  <li>Single element: <code>[7] -&gt; [7,7]</code></li>
-</ul>
-<p><strong>✅ Correctness note:</strong> each original element is copied exactly twice at deterministic indices, so the result is precisely <code>nums + nums</code>.</p>`,
+`,
     solutions: {
       python: `from typing import List
 
@@ -2251,7 +2499,6 @@ Note that buying on day 2 and selling on day 1 is not allowed because you must b
 `,
     solutions: {
       python: `from typing import List
-
 
 # Example: prices = [7, 1, 5, 3, 6, 4]
 #

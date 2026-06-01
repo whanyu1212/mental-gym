@@ -60,6 +60,8 @@ SLUG_OVERRIDES: dict[str, str] = {
     "longest_common_prefix": "longest-common-prefix",
     "contains_duplicate": "contains-duplicate",
     "two_sum": "two-sum",
+    "subarray_sum_equals_k": "subarray-sum-equals-k",
+    "xor_queries_subarray": "xor-queries-of-a-subarray",
     "trap": "trapping-rain-water",
     "min_stack": "min-stack",
 }

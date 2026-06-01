@@ -11,7 +11,6 @@ import TrappingRainWaterAnimation from "../../components/TrappingRainWaterAnimat
 import ValidSudokuAnimation from "../../components/ValidSudokuAnimation.astro";
 import ContainerWithMostWaterAnimation from "../../components/ContainerWithMostWaterAnimation.astro";
 import ValidPalindromeAnimation from "../../components/ValidPalindromeAnimation.astro";
-import ValidParenthesesAnimation from "../../components/ValidParenthesesAnimation.astro";
 import ThreeSumAnimation from "../../components/ThreeSumAnimation.astro";
 import MinStackAnimation from "../../components/MinStackAnimation.astro";
 import TwoSumIIAnimation from "../../components/TwoSumIIAnimation.astro";
@@ -34,8 +33,11 @@ import MergeTwoSortedListsAnimation from "../../components/MergeTwoSortedListsAn
 import DesignHashSetAnimation from "../../components/DesignHashSetAnimation.astro";
 import DesignHashMapAnimation from "../../components/DesignHashMapAnimation.astro";
 import SortAnArrayAnimation from "../../components/SortAnArrayAnimation.astro";
+import SubarraySumAnimation from "../../components/notes/PrefixSumHashmapViz.astro";
+import XorQueriesAnimation from "../../components/notes/PrefixXorViz.astro";
 import RecallRating from "../../components/RecallRating.astro";
 import Layout from "../../layouts/Layout.astro";
+import { getGuide } from "../../data/algorithmGuides";
 
 export function getStaticPaths() {
 	return problems.map((problem) => ({
@@ -46,41 +48,53 @@ export function getStaticPaths() {
 
 const { problem } = Astro.props;
 const hasJulia = problem.solutions.julia.trim().length > 0;
-const animatedSlugs = new Set([
-	"1-two-sum",
-	"75-sort-colors",
-	"3-longest-substring-without-repeating-characters",
-	"121-best-time-to-buy-and-sell-stock",
-	"150-evaluate-reverse-polish-notation",
-	"36-valid-sudoku",
-	"42-trapping-rain-water",
-	"11-container-with-most-water",
-	"125-valid-palindrome",
-	"20-valid-parentheses",
-	"15-3sum",
-	"155-min-stack",
-	"167-two-sum-ii-input-array-is-sorted",
-	"238-product-of-array-except-self",
-	"424-longest-repeating-character-replacement",
-	"567-permutation-in-string",
-	"217-contains-duplicate",
-	"242-valid-anagram",
-	"1929-concatenation-of-array",
-	"14-longest-common-prefix",
-	"169-majority-element",
-	"229-majority-element-ii",
-	"49-group-anagrams",
-	"128-longest-consecutive-sequence",
-	"271-encode-and-decode-strings",
-	"304-range-sum-query-2d-immutable",
-	"347-top-k-frequent-elements",
-	"239-sliding-window-maximum",
-	"21-merge-two-sorted-lists",
-	"705-design-hashset",
-	"706-design-hashmap",
-	"912-sort-an-array",
-]);
-const hasAnimation = animatedSlugs.has(problem.slug);
+
+// slug → animation component. Replaces the old animatedSlugs Set + ~35
+// duplicated `{slug === "…" && <X/>}` branches with a single lookup.
+const animationBySlug = {
+	"1-two-sum": TwoSumAnimation,
+	"75-sort-colors": SortColorsAnimation,
+	"3-longest-substring-without-repeating-characters": LongestSubstringAnimation,
+	"121-best-time-to-buy-and-sell-stock": BuySellStockAnimation,
+	"150-evaluate-reverse-polish-notation": RPNAnimation,
+	"36-valid-sudoku": ValidSudokuAnimation,
+	"42-trapping-rain-water": TrappingRainWaterAnimation,
+	"11-container-with-most-water": ContainerWithMostWaterAnimation,
+	"125-valid-palindrome": ValidPalindromeAnimation,
+	"15-3sum": ThreeSumAnimation,
+	"155-min-stack": MinStackAnimation,
+	"167-two-sum-ii-input-array-is-sorted": TwoSumIIAnimation,
+	"238-product-of-array-except-self": ProductExceptSelfAnimation,
+	"424-longest-repeating-character-replacement": CharacterReplacementAnimation,
+	"567-permutation-in-string": PermutationInStringAnimation,
+	"217-contains-duplicate": ContainsDuplicateAnimation,
+	"242-valid-anagram": ValidAnagramAnimation,
+	"1929-concatenation-of-array": ConcatenationOfArrayAnimation,
+	"14-longest-common-prefix": LongestCommonPrefixAnimation,
+	"169-majority-element": MajorityElementAnimation,
+	"229-majority-element-ii": MajorityElementIIAnimation,
+	"49-group-anagrams": GroupAnagramsAnimation,
+	"128-longest-consecutive-sequence": LongestConsecutiveSequenceAnimation,
+	"271-encode-and-decode-strings": EncodeDecodeStringsAnimation,
+	"304-range-sum-query-2d-immutable": RangeSumQuery2DImmutableAnimation,
+	"347-top-k-frequent-elements": TopKFrequentElementsAnimation,
+	"239-sliding-window-maximum": SlidingWindowMaximumAnimation,
+	"21-merge-two-sorted-lists": MergeTwoSortedListsAnimation,
+	"705-design-hashset": DesignHashSetAnimation,
+	"706-design-hashmap": DesignHashMapAnimation,
+	"912-sort-an-array": SortAnArrayAnimation,
+	"560-subarray-sum-equals-k": SubarraySumAnimation,
+	"1310-xor-queries-of-a-subarray": XorQueriesAnimation,
+} as const;
+
+const Animation = animationBySlug[problem.slug as keyof typeof animationBySlug];
+const hasAnimation = Boolean(Animation);
+
+const guide = getGuide(problem.slug);
+const hasGuide = Boolean(guide);
+
+// Default tab priority: Guide (study material) → Animation → Solution.
+const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution";
 ---
 
 <Layout title={`${problem.title} | Mental Gym`}>
@@ -113,323 +127,164 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	<section class="content-switcher">
 		<div class="content-tabs" role="tablist" aria-label="Problem detail views">
+			{hasGuide && (
+				<button
+					class={`content-tab ${defaultView === "guide" ? "active" : ""}`}
+					type="button"
+					data-view-tab="guide"
+					role="tab"
+					aria-selected={defaultView === "guide" ? "true" : "false"}
+				>
+					Guide
+				</button>
+			)}
 			{hasAnimation && (
 				<button
-					class="content-tab active"
+					class={`content-tab ${defaultView === "animation" ? "active" : ""}`}
 					type="button"
 					data-view-tab="animation"
 					role="tab"
-					aria-selected="true"
+					aria-selected={defaultView === "animation" ? "true" : "false"}
 				>
 					Animation
 				</button>
 			)}
 			<button
-				class={`content-tab ${!hasAnimation ? "active" : ""}`}
+				class={`content-tab ${defaultView === "solution" ? "active" : ""}`}
 				type="button"
 				data-view-tab="solution"
 				role="tab"
-				aria-selected={hasAnimation ? "false" : "true"}
+				aria-selected={defaultView === "solution" ? "true" : "false"}
 			>
 				Solution
 			</button>
 		</div>
 
 		{
-			hasAnimation && (
-				<div class="content-panel" data-view-panel="animation">
-					{problem.slug === "1-two-sum" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TwoSumAnimation />
-						</section>
-					)}
+			hasGuide && guide && (
+				<div
+					class={`content-panel ${defaultView === "guide" ? "" : "hidden"}`}
+					data-view-panel="guide"
+				>
+					<section class="guide">
+						<div class="guide-pattern">
+							<h2 class="section-title">Pattern</h2>
+							<p class="pattern-name">{guide.pattern}</p>
+							<ul class="signal-list">
+								{guide.recognitionSignals.map((signal) => (
+									<li>{signal}</li>
+								))}
+							</ul>
+						</div>
 
-					{problem.slug === "75-sort-colors" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<SortColorsAnimation />
-						</section>
-					)}
+						<div class="guide-block">
+							<h3 class="guide-heading">Dissection</h3>
+							<p class="guide-prose">{guide.dissection}</p>
+						</div>
 
-					{problem.slug === "3-longest-substring-without-repeating-characters" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<LongestSubstringAnimation />
-						</section>
-					)}
+						<div class="guide-block">
+							<h3 class="guide-heading">Intuition</h3>
+							<p class="guide-prose">{guide.intuition}</p>
+							<p class="guide-invariant">
+								<span class="invariant-label">Invariant</span>
+								{guide.invariant}
+							</p>
+						</div>
 
-					{problem.slug === "121-best-time-to-buy-and-sell-stock" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<BuySellStockAnimation />
-						</section>
-					)}
+						<div class="guide-block">
+							<h3 class="guide-heading">Approach</h3>
+							<ol class="approach-list">
+								{guide.approachSteps.map((step) => (
+									<li>{step}</li>
+								))}
+							</ol>
+						</div>
 
-					{problem.slug === "150-evaluate-reverse-polish-notation" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
+						<div class="guide-block">
+							<h3 class="guide-heading">Complexity</h3>
+							<div class="complexity-row">
+								<span class="complexity-chip">
+									Time <code>{guide.complexity.time}</code>
+								</span>
+								<span class="complexity-chip">
+									Space <code>{guide.complexity.space}</code>
+								</span>
 							</div>
-							<RPNAnimation />
-						</section>
-					)}
+							{guide.complexity.note && <p class="complexity-note">{guide.complexity.note}</p>}
+						</div>
 
-					{problem.slug === "36-valid-sudoku" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ValidSudokuAnimation />
-						</section>
-					)}
+						<div class="guide-block">
+							<h3 class="guide-heading">Pitfalls</h3>
+							<ul class="pitfall-list">
+								{guide.pitfalls.map((pitfall) => (
+									<li>{pitfall}</li>
+								))}
+							</ul>
+						</div>
 
-					{problem.slug === "42-trapping-rain-water" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TrappingRainWaterAnimation />
-						</section>
-					)}
+						<div class="guide-block">
+							<h3 class="guide-heading">What to test</h3>
+							<ul class="test-list">
+								{guide.testCases.map((tc) => (
+									<li class={`test-case test-${tc.kind}`}>
+										<span class="test-kind">{tc.kind}</span>
+										<div class="test-body">
+											<code class="test-io">{tc.input} → {tc.expected}</code>
+											<span class="test-note">{tc.note}</span>
+										</div>
+									</li>
+								))}
+							</ul>
+						</div>
 
-					{problem.slug === "11-container-with-most-water" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
+						{guide.followUps.length > 0 && (
+							<div class="guide-block">
+								<h3 class="guide-heading">Follow-ups</h3>
+								<ul class="followup-list">
+									{guide.followUps.map((f) => (
+										<li>{f}</li>
+									))}
+								</ul>
 							</div>
-							<ContainerWithMostWaterAnimation />
-						</section>
-					)}
+						)}
 
-					{problem.slug === "125-valid-palindrome" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
+						{guide.relatedNotes.length > 0 && (
+							<div class="guide-block">
+								<h3 class="guide-heading">Related notes</h3>
+								<div class="related-notes">
+									{guide.relatedNotes.map((noteId) => (
+										<a class="note-link" href={withBase(`/notes/${noteId}`)}>
+											{noteId.replace(/[-_]/g, " ")}
+										</a>
+									))}
+								</div>
 							</div>
-							<ValidPalindromeAnimation />
-						</section>
-					)}
-
-					{problem.slug === "20-valid-parentheses" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ValidParenthesesAnimation />
-						</section>
-					)}
-
-					{problem.slug === "15-3sum" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ThreeSumAnimation />
-						</section>
-					)}
-
-					{problem.slug === "155-min-stack" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MinStackAnimation />
-						</section>
-					)}
-
-					{problem.slug === "167-two-sum-ii-input-array-is-sorted" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TwoSumIIAnimation />
-						</section>
-					)}
-
-					{problem.slug === "238-product-of-array-except-self" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ProductExceptSelfAnimation />
-						</section>
-					)}
-
-					{problem.slug === "424-longest-repeating-character-replacement" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<CharacterReplacementAnimation />
-						</section>
-					)}
-
-					{problem.slug === "567-permutation-in-string" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<PermutationInStringAnimation />
-						</section>
-					)}
-
-					{problem.slug === "217-contains-duplicate" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ContainsDuplicateAnimation />
-						</section>
-					)}
-
-					{problem.slug === "242-valid-anagram" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ValidAnagramAnimation />
-						</section>
-					)}
-
-					{problem.slug === "1929-concatenation-of-array" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ConcatenationOfArrayAnimation />
-						</section>
-					)}
-
-					{problem.slug === "14-longest-common-prefix" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<LongestCommonPrefixAnimation />
-						</section>
-					)}
-
-					{problem.slug === "169-majority-element" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MajorityElementAnimation />
-						</section>
-					)}
-
-					{problem.slug === "229-majority-element-ii" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MajorityElementIIAnimation />
-						</section>
-					)}
-
-					{problem.slug === "49-group-anagrams" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<GroupAnagramsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "128-longest-consecutive-sequence" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<LongestConsecutiveSequenceAnimation />
-						</section>
-					)}
-
-					{problem.slug === "271-encode-and-decode-strings" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<EncodeDecodeStringsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "304-range-sum-query-2d-immutable" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<RangeSumQuery2DImmutableAnimation />
-						</section>
-					)}
-
-					{problem.slug === "347-top-k-frequent-elements" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TopKFrequentElementsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "239-sliding-window-maximum" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<SlidingWindowMaximumAnimation />
-						</section>
-					)}
-
-					{problem.slug === "21-merge-two-sorted-lists" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MergeTwoSortedListsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "705-design-hashset" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<DesignHashSetAnimation />
-						</section>
-					)}
-
-					{problem.slug === "706-design-hashmap" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<DesignHashMapAnimation />
-						</section>
-					)}
-
-					{problem.slug === "912-sort-an-array" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<SortAnArrayAnimation />
-						</section>
-					)}
+						)}
+					</section>
 				</div>
 			)
 		}
 
-		<div class={`content-panel ${hasAnimation ? "hidden" : ""}`} data-view-panel="solution">
+		{
+			hasAnimation && Animation && (
+				<div
+					class={`content-panel ${defaultView === "animation" ? "" : "hidden"}`}
+					data-view-panel="animation"
+				>
+					<section class="animation-section">
+						<div class="solutions-header">
+							<h2 class="section-title">Animation</h2>
+						</div>
+						<Animation />
+					</section>
+				</div>
+			)
+		}
+
+		<div
+			class={`content-panel ${defaultView === "solution" ? "" : "hidden"}`}
+			data-view-panel="solution"
+		>
 			<section class="solutions">
 				<div class="solutions-header">
 					<h2 class="section-title">Solutions</h2>
@@ -801,5 +656,250 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.hidden {
 		display: none;
+	}
+
+	/* ── Guide tab ───────────────────────────────────────────── */
+	.guide {
+		display: grid;
+		gap: 1.75rem;
+	}
+
+	.guide-pattern {
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		padding: 1.25rem 1.5rem;
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+	}
+
+	.pattern-name {
+		margin: 0 0 0.75rem;
+		font-family: var(--font-serif);
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.signal-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.signal-list li {
+		font-size: 0.78rem;
+		font-family: var(--font-sans);
+		color: var(--accent);
+		background: var(--accent-soft);
+		border: 1px solid var(--accent-ring);
+		border-radius: var(--radius-pill);
+		padding: 0.2rem 0.7rem;
+		letter-spacing: 0.02em;
+	}
+
+	.guide-block {
+		display: grid;
+		gap: 0.6rem;
+	}
+
+	.guide-heading {
+		margin: 0;
+		font-size: var(--fs-eyebrow);
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--muted);
+		font-weight: 600;
+		font-family: var(--font-sans);
+	}
+
+	.guide-prose {
+		margin: 0;
+		line-height: 1.7;
+		color: var(--text);
+	}
+
+	.guide-invariant {
+		margin: 0;
+		padding: 0.7rem 1rem;
+		border-left: 3px solid var(--accent);
+		background: var(--accent-glow);
+		border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+		font-size: 0.92rem;
+		line-height: 1.6;
+		color: var(--text);
+	}
+
+	.invariant-label {
+		display: block;
+		font-size: 0.66rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--accent);
+		font-family: var(--font-sans);
+		font-weight: 600;
+		margin-bottom: 0.25rem;
+	}
+
+	.approach-list {
+		margin: 0;
+		padding-left: 1.25rem;
+		display: grid;
+		gap: 0.5rem;
+		line-height: 1.6;
+	}
+
+	.complexity-row {
+		display: flex;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+	}
+
+	.complexity-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.78rem;
+		font-family: var(--font-sans);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--muted);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		padding: 0.25rem 0.8rem;
+	}
+
+	.complexity-chip code {
+		font-size: 0.85rem;
+		color: var(--text);
+		background: none;
+		padding: 0;
+	}
+
+	.complexity-note {
+		margin: 0;
+		font-size: 0.82rem;
+		color: var(--muted);
+		font-style: italic;
+	}
+
+	.pitfall-list {
+		margin: 0;
+		padding-left: 1.25rem;
+		display: grid;
+		gap: 0.5rem;
+		line-height: 1.6;
+	}
+
+	.pitfall-list li::marker {
+		content: "⚠ ";
+		color: var(--status-hard);
+	}
+
+	/* What-to-test cases, color-coded by kind (reuses difficulty palette). */
+	.test-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 0.6rem;
+	}
+
+	.test-case {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.75rem;
+		align-items: start;
+		padding: 0.7rem 0.9rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-xs);
+		background: var(--glass-surface);
+	}
+
+	.test-kind {
+		font-size: 0.62rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-weight: 600;
+		font-family: var(--font-sans);
+		padding: 0.2rem 0.5rem;
+		border-radius: var(--radius-pill);
+		white-space: nowrap;
+	}
+
+	.test-canonical {
+		border-left: 3px solid var(--status-info);
+	}
+	.test-canonical .test-kind {
+		color: var(--status-info);
+		background: color-mix(in srgb, var(--status-info) 14%, transparent);
+	}
+
+	.test-boundary {
+		border-left: 3px solid var(--status-medium);
+	}
+	.test-boundary .test-kind {
+		color: var(--status-medium);
+		background: var(--accent-soft);
+	}
+
+	.test-trap {
+		border-left: 3px solid var(--status-hard);
+	}
+	.test-trap .test-kind {
+		color: var(--status-hard);
+		background: color-mix(in srgb, var(--status-hard) 14%, transparent);
+	}
+
+	.test-body {
+		display: grid;
+		gap: 0.3rem;
+	}
+
+	.test-io {
+		font-size: 0.85rem;
+		color: var(--text);
+		background: none;
+		padding: 0;
+	}
+
+	.test-note {
+		font-size: 0.82rem;
+		color: var(--muted);
+		line-height: 1.5;
+	}
+
+	.followup-list {
+		margin: 0;
+		padding-left: 1.25rem;
+		display: grid;
+		gap: 0.5rem;
+		line-height: 1.6;
+		color: var(--text);
+	}
+
+	.related-notes {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.note-link {
+		font-size: 0.8rem;
+		font-family: var(--font-sans);
+		color: var(--accent);
+		border: 1px solid var(--accent-ring);
+		border-radius: var(--radius-pill);
+		padding: 0.25rem 0.8rem;
+		text-transform: capitalize;
+		transition: background 0.2s ease;
+	}
+
+	.note-link:hover {
+		background: var(--accent-soft);
 	}
 </style>
