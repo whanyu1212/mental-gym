@@ -4,6 +4,7 @@ import ComplexityChart from "../../components/ComplexityChart.astro";
 import { withBase } from "../../lib/url";
 import SortingChart from "../../components/SortingChart.astro";
 import StackDepthChart from "../../components/StackDepthChart.astro";
+import LastVisited from "../../components/LastVisited.astro";
 import Layout from "../../layouts/Layout.astro";
 
 export async function getStaticPaths() {
@@ -49,6 +50,7 @@ const { Content } = await render(note);
 			</div>
 		)}
 	</article>
+	<LastVisited title={note.data.title} kind="Notes" />
 </Layout>
 
 <style>

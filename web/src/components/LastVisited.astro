@@ -1,0 +1,40 @@
+---
+/**
+ * Writer half of the "resume where you left off" feature.
+ *
+ * Dropped into each detail page (algorithm / ML / note). On load it records the
+ * current page — title, kind, and href — into a single localStorage key, which
+ * the index pages read to render a resume row. One key, overwritten each visit,
+ * so it always points at the most recently opened item across all domains.
+ *
+ * Props are serialized into data-* attributes; the inline script reads them and
+ * captures the live URL so the stored href is always correct under any base path.
+ */
+interface Props {
+	title: string;
+	kind: "Algorithms" | "Machine Learning" | "Notes";
+}
+
+const { title, kind } = Astro.props;
+---
+
+<span class="last-visited-writer" data-title={title} data-kind={kind} hidden></span>
+
+<script>
+	const el = document.querySelector<HTMLElement>(".last-visited-writer");
+	if (el) {
+		try {
+			localStorage.setItem(
+				"mental-gym:last-visited",
+				JSON.stringify({
+					title: el.dataset.title,
+					kind: el.dataset.kind,
+					href: window.location.pathname,
+				})
+			);
+		} catch {
+			// localStorage unavailable (private mode / disabled) — feature degrades
+			// silently; the index resume row simply won't appear.
+		}
+	}
+</script>

@@ -36,6 +36,7 @@ import SortAnArrayAnimation from "../../components/SortAnArrayAnimation.astro";
 import SubarraySumAnimation from "../../components/notes/PrefixSumHashmapViz.astro";
 import XorQueriesAnimation from "../../components/notes/PrefixXorViz.astro";
 import RecallRating from "../../components/RecallRating.astro";
+import LastVisited from "../../components/LastVisited.astro";
 import Layout from "../../layouts/Layout.astro";
 import { getGuide } from "../../data/algorithmGuides";
 
@@ -378,6 +379,7 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 		difficulty={problem.difficulty}
 		group={problem.group}
 	/>
+	<LastVisited title={problem.title} kind="Algorithms" />
 </Layout>
 
 <script>

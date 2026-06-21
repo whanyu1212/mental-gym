@@ -3,6 +3,7 @@ import { Code } from "astro:components";
 import { mlProblems } from "../../data/mlProblems";
 import { withBase } from "../../lib/url";
 import RecallRating from "../../components/RecallRating.astro";
+import LastVisited from "../../components/LastVisited.astro";
 import Layout from "../../layouts/Layout.astro";
 
 export function getStaticPaths() {
@@ -88,6 +89,7 @@ const { problem } = Astro.props;
 		difficulty={problem.difficulty}
 		group={problem.category}
 	/>
+	<LastVisited title={problem.title} kind="Machine Learning" />
 </Layout>
 
 <style>
