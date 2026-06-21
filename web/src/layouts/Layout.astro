@@ -166,12 +166,27 @@ const pathname = stripBase(Astro.url.pathname);
 		padding: 0;
 		width: 100%;
 		min-height: 100%;
-		background: var(--bg-gradient);
+		background: var(--bg);
 		color: var(--text);
 		font-family: var(--font-sans);
 		font-feature-settings: "ss01", "cv11";
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+	}
+
+	/* Background gradient as a single fixed layer pinned to the VIEWPORT, not
+	   the (very tall) document. Painting it on `html, body` instead repeated the
+	   radial across both boxes and let the warm bloom fade out ~60% down a long
+	   page, leaving a visible horizontal seam ("shadow") below the fold. A fixed
+	   ::before keeps the bloom anchored to the top of the screen on every scroll
+	   position, so the background reads as one continuous field. */
+	body::before {
+		content: "";
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		background: var(--bg-gradient);
+		pointer-events: none;
 	}
 
 	a {
