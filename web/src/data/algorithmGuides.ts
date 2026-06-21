@@ -46,9 +46,27 @@ export interface AlgorithmGuide {
 	intuition: string;
 	/** The loop/structural invariant that stays true each step. */
 	invariant: string;
+	/**
+	 * The slow-but-correct first rung of the ladder: the naive idea in prose plus
+	 * its (worse) Big-O, so the optimal complexity below reads as an improvement
+	 * rather than appearing from nowhere. Omit when the problem has no
+	 * meaningfully simpler approach (design/construction problems).
+	 */
+	bruteForce?: {
+		/** The naive approach in plain language. */
+		approach: string;
+		/** Its time/space cost — the contrast that motivates optimizing. */
+		complexity: Complexity;
+	};
+	/**
+	 * How the input bounds point at the target complexity — the "read the
+	 * constraints backward" habit (e.g. "n ≤ 10⁵ rules out O(n²), so we need
+	 * O(n log n) or better"). Omit when the prompt states no useful bound.
+	 */
+	constraintReasoning?: string;
 	/** Ordered steps to build the solution. */
 	approachSteps: string[];
-	/** Uniform time/space annotation. */
+	/** Uniform time/space annotation (the OPTIMAL rung). */
 	complexity: Complexity;
 	/** The traps — common mistakes, off-by-ones, wrong assumptions. */
 	pitfalls: string[];
@@ -77,6 +95,13 @@ export const guides = {
 			"A hashmap turns 'has the partner appeared?' from an O(n) scan into an O(1) lookup. You store value → index as you go, so the first time a complement matches you can return both indices immediately.",
 		invariant:
 			"At the start of iteration i, the map holds every value before index i mapped to its index, and none of those pairs summed to target.",
+		bruteForce: {
+			approach:
+				"Check every pair with two nested loops: for each i, scan every j > i and test nums[i] + nums[j] == target. Correct, but you re-scan the tail for every element.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "n(n−1)/2 pair checks, no extra storage." },
+		},
+		constraintReasoning:
+			"With n ≤ 10⁴, the O(n²) pair scan (~10⁸ ops) would still squeak under a typical time limit — so brute force isn't 'wrong', it's just leaving free performance on the table. Trading O(n) space for a hashmap drops it to one pass, which is the answer interviewers want.",
 		approachSteps: [
 			"Create an empty map seen: value → index.",
 			"For each (i, value), compute complement = target − value.",
@@ -115,6 +140,13 @@ export const guides = {
 			"A set discards duplicates by construction, so if building a set shrinks the length at all, a duplicate existed. len(nums) != len(set(nums)) answers the question in one expression.",
 		invariant:
 			"A set of seen values contains exactly the distinct elements encountered so far; its size equals the count of unique values.",
+		bruteForce: {
+			approach:
+				"Compare every pair with two nested loops, returning True the moment nums[i] == nums[j] for some i < j. No extra memory, but quadratic time.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "Up to n(n−1)/2 comparisons." },
+		},
+		constraintReasoning:
+			"Here n can reach 10⁵, so the O(n²) pair scan (~10¹⁰ ops) would blow the time limit outright — unlike two-sum's smaller bound, the constraint genuinely forbids brute force. Spending O(n) space on a set to buy O(n) time is the required trade, not a luxury.",
 		approachSteps: [
 			"Build a set from nums.",
 			"Compare its length to len(nums).",
@@ -152,6 +184,13 @@ export const guides = {
 			"Once you have a frequency map, the problem is just 'top k by count.' Sorting count→value pairs is the most direct expression; bucket sort by frequency removes the log factor since counts are bounded by n.",
 		invariant:
 			"After counting, the map holds value → exact frequency; after sorting, pairs are ordered by non-increasing count.",
+		bruteForce: {
+			approach:
+				"Count frequencies, then build the answer by repeatedly scanning the whole count map for the current maximum, emitting it, and removing it — k times.",
+			complexity: { time: "O(n·k)", space: "O(n)", note: "Each of k extractions linearly scans up to n distinct counts." },
+		},
+		constraintReasoning:
+			"k is bounded by the number of distinct values (≤ n), so O(n·k) degrades toward O(n²) when k is large — fine for tiny k, dangerous otherwise. Sorting the pairs is an unconditional O(n log n); bucket-sorting by frequency (counts live in 0..n) reaches O(n) because the key range is bounded.",
 		approachSteps: [
 			"Build counter: value → frequency.",
 			"Materialize [count, value] pairs.",
@@ -194,6 +233,13 @@ export const guides = {
 			"If num−1 is also in the set, num is in the middle of some run and counting from it would be wasted work. By only expanding from run-starts, each element is visited at most twice total, giving O(n).",
 		invariant:
 			"A walk is launched only from a value with no predecessor in the set; that walk extends as long as successive +1 values are present.",
+		bruteForce: {
+			approach:
+				"Sort the array, then sweep once counting consecutive runs (skipping duplicates). Simple and correct, but the sort dominates.",
+			complexity: { time: "O(n log n)", space: "O(1)", note: "Or O(n) if the sort isn't in place; the log factor is the cost." },
+		},
+		constraintReasoning:
+			"The problem explicitly demands O(n), which is a direct signal that sorting (O(n log n)) is disqualified — the intended solution must avoid comparison-based ordering. That points straight at a hashset, where membership is O(1) and the run-start trick keeps total work linear.",
 		approachSteps: [
 			"Insert all numbers into a set (dedups automatically).",
 			"For each value, skip it unless value−1 is absent (i.e. it starts a run).",
@@ -232,6 +278,13 @@ export const guides = {
 			"Anagram ≡ identical character multisets. A dict of counts captures the multiset exactly, and dict equality compares them in one step — no sorting needed.",
 		invariant:
 			"After scanning a string, its count map holds the exact frequency of every character seen so far.",
+		bruteForce: {
+			approach:
+				"Sort both strings and compare them character-by-character — anagrams produce identical sorted strings.",
+			complexity: { time: "O(n log n)", space: "O(n)", note: "Dominated by the two sorts." },
+		},
+		constraintReasoning:
+			"String lengths reach ~5·10⁴, so even the O(n log n) sort comfortably passes — brute force isn't a TLE risk here. Counting characters is the improvement because it's strictly O(n) and sidesteps sorting entirely; the win is elegance and the O(1)-alphabet space claim, not survival.",
 		approachSteps: [
 			"If lengths differ, return False immediately (cheap reject).",
 			"Build a frequency dict for s and another for t.",
@@ -269,6 +322,13 @@ export const guides = {
 			"If two strings have the same canonical key, they belong together. A count tuple is an O(word) key (vs O(word log word) for a sorted-string key), and a defaultdict(list) collects buckets without existence checks.",
 		invariant:
 			"Each map key is a unique letter-count signature; its bucket holds exactly the strings whose letters match that signature.",
+		bruteForce: {
+			approach:
+				"Use the sorted string as each group's key: sort every word's letters and bucket by that sorted string. Correct, but each key costs a sort.",
+			complexity: { time: "O(n·k log k)", space: "O(n·k)", note: "n words of length up to k; the per-word sort adds the log k factor." },
+		},
+		constraintReasoning:
+			"With up to ~10⁴ words of length ≤ 100, both keying schemes pass — this isn't a TLE story. The count-tuple key is the upgrade because it builds each key in O(k) instead of O(k log k), dropping the log factor that the sorted-string key carries for free.",
 		approachSteps: [
 			"Create result = defaultdict(list).",
 			"For each string, build a 26-slot count array via ord(c) − ord('a').",
@@ -307,6 +367,13 @@ export const guides = {
 			"answer[i] = (product of everything left of i) × (product of everything right of i). Two passes — left-to-right filling prefixes, right-to-left folding in suffixes — give O(n) time and O(1) extra space (the output array doesn't count).",
 		invariant:
 			"After pass 1, result[i] holds the product of all elements strictly left of i. After pass 2, it also includes all elements strictly right of i.",
+		bruteForce: {
+			approach:
+				"For each index i, loop over the whole array multiplying every element except nums[i]. The obvious double loop, no division.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "n inner products of length n−1." },
+		},
+		constraintReasoning:
+			"The prompt bans division and asks for O(n) — two constraints that together rule out both the O(n²) double loop and the tempting 'divide the total product by nums[i]' shortcut (which also dies on zeros). That pincer is the signal to precompute prefix and suffix products in two linear passes.",
 		approachSteps: [
 			"Initialize result = [1]·n.",
 			"Left pass: result[i] = prefix; prefix *= nums[i].",
@@ -397,7 +464,7 @@ export const guides = {
 		testCases: [
 			{ kind: "canonical", input: "nums = [1,2,1]", expected: "[1,2,1,1,2,1]", note: "Each value mirrored n positions later." },
 			{ kind: "boundary", input: "nums = [7]", expected: "[7,7]", note: "Single element doubles." },
-			{ kind: "trap", input: "nums = [1,3,2,1]", expected: "[1,3,2,1,1,3,2,1]", note: "Repeated values must each appear twice in order — no dedup." },
+			{ kind: "trap", input: "nums = [1,2,3]", expected: "[1,2,3,1,2,3]", note: "A reversed-second-half approach (nums + nums[::-1]) would give [1,2,3,3,2,1] — the second half must preserve order, not reverse it." },
 		],
 		followUps: ["Do it as a one-liner (nums + nums) and discuss readability vs explicitness."],
 		relatedNotes: ["arrays_and_hashing"],
@@ -417,6 +484,13 @@ export const guides = {
 			"A strict majority (> n/2) survives any pairwise cancellation of distinct values — that's the basis of Boyer-Moore. The shown count-and-track version is simpler: keep the value whose running count is highest.",
 		invariant:
 			"res always holds the value with the highest count seen so far; max_count is that count.",
+		bruteForce: {
+			approach:
+				"Count every value in a hashmap, then return the key whose count exceeds n/2. Dead simple, but it stores a count for every distinct value.",
+			complexity: { time: "O(n)", space: "O(n)", note: "Linear time already — the cost is the O(n) map." },
+		},
+		constraintReasoning:
+			"Time is already optimal at O(n); the interesting bound is the follow-up's O(1)-space demand. The 'strict majority survives pairwise cancellation' guarantee is what lets Boyer-Moore voting drop the map entirely — the constraint pushes you from a counting solution to a single-candidate one.",
 		approachSteps: [
 			"Maintain count_dict and (res, max_count).",
 			"For each num, increment its count.",
@@ -455,6 +529,13 @@ export const guides = {
 			"Since more than n/3 means at most two winners, generalized Boyer-Moore keeps two (candidate, count) slots, cancelling in groups of three distinct values. A final verification pass is mandatory — the voting only proposes candidates.",
 		invariant:
 			"At any point the two slots hold the current best two candidates; a value matching neither either claims an empty slot or decrements both counts.",
+		bruteForce: {
+			approach:
+				"Count all values in a hashmap, then filter for those with count > n/3. Obvious and correct, but uses O(n) auxiliary space.",
+			complexity: { time: "O(n)", space: "O(n)", note: "Linear time; the map is the space cost the follow-up wants gone." },
+		},
+		constraintReasoning:
+			"The '> n/3' threshold caps the answer at two values (three disjoint values each exceeding n/3 would total > n) — that algebraic bound is exactly what makes two candidate slots sufficient for O(1) space. The constraint on the *count* dictates the number of slots.",
 		approachSteps: [
 			"Phase 1: track (c1,count1),(c2,count2); match → increment, empty slot → adopt, else decrement both.",
 			"Phase 2: recount c1 and c2 over the array.",
@@ -506,7 +587,7 @@ export const guides = {
 		],
 		testCases: [
 			{ kind: "canonical", input: 'strs = ["flower","flow","flight"]', expected: '"fl"', note: "Columns f,l agree; third column o/o/i disagrees." },
-			{ kind: "boundary", input: 'strs = ["a"]', expected: '"a"', note: "Single string — the whole string is the prefix." },
+			{ kind: "boundary", input: "strs = []", expected: '""', note: "Empty list — zip yields nothing, output stays '' (the pitfall case)." },
 			{ kind: "trap", input: 'strs = ["dog","racecar","car"]', expected: '""', note: "First column already disagrees → empty prefix, not a crash." },
 		],
 		followUps: [
@@ -543,9 +624,9 @@ export const guides = {
 			"Counting '.' as a digit, or adding before checking.",
 		],
 		testCases: [
-			{ kind: "canonical", input: "a valid partially-filled board", expected: "true", note: "No row/column/box repeats." },
-			{ kind: "boundary", input: "a fully empty board (all '.')", expected: "true", note: "No filled cells ⇒ no violations." },
-			{ kind: "trap", input: "board with two 8s in the same 3×3 box but different row & column", expected: "false", note: "Passes row and column checks; only the box set catches it." },
+			{ kind: "canonical", input: 'board = [["5","3",".",".","7",".",".",".","."],["6",".",".","1","9","5",".",".","."],[".","9","8",".",".",".",".","6","."],["8",".",".",".","6",".",".",".","3"],["4",".",".","8",".","3",".",".","1"],["7",".",".",".","2",".",".",".","6"],[".","6",".",".",".",".","2","8","."],[".",".",".","4","1","9",".",".","5"],[".",".",".",".","8",".",".","7","9"]]', expected: "true", note: "Standard LeetCode valid board — no row/column/box repeats." },
+			{ kind: "boundary", input: 'board = [[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."]]', expected: "true", note: "No filled cells ⇒ no violations possible." },
+			{ kind: "trap", input: 'board = [["5",".",".",".",".",".",".",".","."],[".",".","5",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."],[".",".",".",".",".",".",".",".","."]]', expected: "false", note: "Two 5s in the top-left 3×3 box at (0,0) and (1,2) — different row and column, so only the box set catches it." },
 		],
 		followUps: [
 			"Validate in a single set with composite keys like ('r',i,d).",
@@ -568,6 +649,13 @@ export const guides = {
 			"With only three values you don't need comparison sorting. low/mid/high pointers maintain three sorted regions; mid scans forward, swapping 0s to the front and 2s to the back, so one pass fully sorts. (A heap sort also works but is O(n log n) and not single-pass.)",
 		invariant:
 			"nums[0..low-1] are all 0, nums[low..mid-1] are all 1, nums[mid..high] are unprocessed, nums[high+1..] are all 2.",
+		bruteForce: {
+			approach:
+				"Counting sort in two passes: tally how many 0s, 1s, 2s there are, then overwrite the array with that many of each. Correct and O(n), but it reads the data twice.",
+			complexity: { time: "O(n)", space: "O(1)", note: "Two passes over the array; constant extra storage." },
+		},
+		constraintReasoning:
+			"Time is already O(n) — comparison sorting (O(n log n)) is overkill once you notice only three distinct values. The follow-up's 'single pass' demand is what forces the Dutch-flag three-pointer partition over the simpler two-pass count, since one pass leaves no room to tally first.",
 		approachSteps: [
 			"Set low = mid = 0, high = n−1.",
 			"While mid ≤ high: if nums[mid]==0 swap with low, advance both; if ==1 advance mid; if ==2 swap with high and decrement high (do NOT advance mid).",
@@ -605,6 +693,13 @@ export const guides = {
 			"Running prefix sums turn 'subarray sum = k' into 'have I seen prefix_sum − k before?'. A hashmap of prefix-sum → frequency answers that in O(1), and seeding {0:1} accounts for subarrays starting at index 0. Negatives are fine because we never assume monotonic growth (which is why sliding window can't be used).",
 		invariant:
 			"prefix_count holds, for every prefix sum encountered before the current index, how many times it occurred; count accumulates valid subarrays ending at or before the current index.",
+		bruteForce: {
+			approach:
+				"Try every (i, j) subarray and sum it — either re-adding from scratch (O(n³)) or carrying a running sum for each start (O(n²)). Correct, but it re-derives sums the prefix trick caches.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "n starts × up to n ends, running sum per start." },
+		},
+		constraintReasoning:
+			"n reaches ~2·10⁴, so O(n²) (~4·10⁸) is borderline-to-TLE — the prompt wants O(n). The presence of negative numbers also rules out a sliding window (sums aren't monotonic), which leaves prefix-sum-frequency as the only linear option.",
 		approachSteps: [
 			"Initialize prefix_count = {0: 1}, prefix_sum = 0, count = 0.",
 			"For each num: prefix_sum += num.",
@@ -643,6 +738,13 @@ export const guides = {
 			"XOR is its own inverse (a^a = 0), so the shared prefix cancels: prefix[r+1] ^ prefix[l] leaves exactly arr[l]^…^arr[r]. One linear preprocessing pass makes every query O(1) — the same trick as prefix sums, with XOR as the group operation.",
 		invariant:
 			"prefix[i] equals the XOR of the first i elements; prefix[0] = 0 is the XOR identity.",
+		bruteForce: {
+			approach:
+				"Answer each query independently by XOR-ing arr[l..r] in a loop. No preprocessing, but every query re-walks its whole range.",
+			complexity: { time: "O(n·q)", space: "O(1)", note: "q queries, each up to O(n) work." },
+		},
+		constraintReasoning:
+			"Both n and q reach ~3·10⁴, so O(n·q) (~10⁹) risks TLE — the 'many queries on a static array' shape is the canonical signal to preprocess once and answer in O(1). XOR being self-inverse (a^a=0) is what makes the prefix cancellation work.",
 		approachSteps: [
 			"Allocate prefix of length n+1 with prefix[0] = 0.",
 			"For i in 0..n−1: prefix[i+1] = prefix[i] ^ arr[i].",
@@ -680,6 +782,13 @@ export const guides = {
 			"P[i][j] = M[i][j] + P[i−1][j] + P[i][j−1] − P[i−1][j−1] (the overlap is subtracted once). A region sum becomes P[r2][c2] − P[r1−1][c2] − P[r2][c1−1] + P[r1−1][c1−1] — constant time regardless of rectangle size.",
 		invariant:
 			"P[i][j] always equals the total of all cells in the rectangle with corners (0,0) and (i,j).",
+		bruteForce: {
+			approach:
+				"For each sumRegion call, loop over every cell inside the rectangle and add them up. No setup cost, but each query is proportional to the rectangle's area.",
+			complexity: { time: "O(m·n) per query", space: "O(1)", note: "Worst case sums the entire grid every call." },
+		},
+		constraintReasoning:
+			"sumRegion can be called up to ~10⁴ times, so per-query O(m·n) compounds badly — the 'repeated queries, immutable matrix' signature demands O(1) lookups. Paying O(m·n) once to build a summed-area table is the trade, and inclusion–exclusion turns any rectangle into four reads.",
 		approachSteps: [
 			"Build P with the inclusion–exclusion recurrence, guarding i=0 / j=0 edges.",
 			"For sumRegion, fetch full = P[r2][c2].",
@@ -695,7 +804,7 @@ export const guides = {
 		testCases: [
 			{ kind: "canonical", input: "sumRegion(2,1,4,3) on the 5×5 sample", expected: "8", note: "Interior rectangle via four prefix lookups." },
 			{ kind: "boundary", input: "sumRegion(0,0,0,0)", expected: "matrix[0][0]", note: "Top-left single cell — no boundary prefixes exist." },
-			{ kind: "trap", input: "sumRegion(1,1,2,2) on the sample", expected: "11", note: "Off-by-one in the −1 boundary terms gives a wrong sum here." },
+			{ kind: "trap", input: "sumRegion(1,1,2,2) on the sample", expected: "11", note: "Correct answer is 11; an off-by-one in the boundary terms (e.g. P[r1][c2] instead of P[r1−1][c2]) would give a wrong sum." },
 		],
 		followUps: [
 			"What changes if the matrix becomes mutable (update + query)? (2D BIT / Fenwick).",
@@ -794,6 +903,13 @@ export const guides = {
 			"When values lie in a bounded range, you can skip comparisons entirely: count occurrences, then emit values in index order. Shifting by min_val handles negatives. This is O(n + range), beating O(n log n) when the range is small relative to n.",
 		invariant:
 			"count_arr[i] holds the number of times (i + min_val) appears; emitting values in increasing i yields sorted output.",
+		bruteForce: {
+			approach:
+				"Any comparison sort — merge sort, heap sort, or the language built-in. Works for any comparable input, but every element is compared against others.",
+			complexity: { time: "O(n log n)", space: "O(n)", note: "The comparison-sort lower bound; merge sort needs O(n) scratch." },
+		},
+		constraintReasoning:
+			"Comparison sorting is bounded below by O(n log n) — you only beat it by exploiting structure. Here the values are integers in a bounded range, which unlocks counting sort's O(n + k): when the range k is O(n) you win, but if the range is astronomically large the comparison sort is actually the safer choice.",
 		approachSteps: [
 			"Find min_val and max_val; size = max−min+1.",
 			"Tally count_arr[num − min_val] for each num.",
@@ -831,6 +947,13 @@ export const guides = {
 			"Sorting gives the sum a monotonic 'steering wheel': moving left rightward only ever increases the sum, moving right leftward only ever decreases it. So you never have to backtrack — one linear sweep converges on the answer (or proves none exists).",
 		invariant:
 			"At every step, the answer pair (if it exists) lies within the window [L, R]. We only discard an endpoint once its sum direction proves it cannot be part of any valid pair.",
+		bruteForce: {
+			approach:
+				"Ignore the sorted order and check every pair with nested loops (or reuse the #1 hashmap). Correct, but either O(n²) time or O(n) extra space.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "Nested-loop pair scan; the hashmap variant trades to O(n) space." },
+		},
+		constraintReasoning:
+			"The input being already sorted is the gift: it makes pair sums monotonic, so two converging pointers find the answer in one O(n) sweep with O(1) space. The prompt's explicit O(1)-space ask is the signal to exploit the sort rather than fall back on the hashmap from #1.",
 		approachSteps: [
 			"Set L = 0, R = len(numbers) − 1.",
 			"While L < R, compute total = numbers[L] + numbers[R].",
@@ -873,6 +996,13 @@ export const guides = {
 			"You begin with the widest possible container, so every inward step sacrifices width. The gamble only pays off if you trade away the wall that was capping you — the shorter one. Moving the taller wall can never help: width drops AND the height stays capped by the (still shorter) other wall.",
 		invariant:
 			"The maximum-area container using any pair still inside [L, R] has not yet been excluded. Discarding the shorter wall is safe because no wider pairing with it remains that could beat the area we just recorded.",
+		bruteForce: {
+			approach:
+				"Try every pair of lines (i, j) and compute width × min(height[i], height[j]), keeping the max. Exhaustive and obviously correct.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "All n(n−1)/2 pairs evaluated." },
+		},
+		constraintReasoning:
+			"n reaches ~10⁵, so O(n²) (~10¹⁰) is a hard TLE — the prompt wants O(n). The greedy 'always abandon the shorter wall' move lets two pointers cover the answer in one pass; the exchange argument proves no skipped pair could have beaten what you recorded.",
 		approachSteps: [
 			"Set L = 0, R = len(height) − 1, max_area = 0.",
 			"While L < R, compute current_area = (R − L) × min(height[L], height[R]).",
@@ -914,6 +1044,13 @@ export const guides = {
 			"Sorting turns an O(n³) triple loop into n runs of an O(n) two-pointer sweep. The sorted order does double duty: it powers the two-pointer convergence AND it lets you dodge duplicate triplets by skipping equal neighbors instead of using a set.",
 		invariant:
 			"For the current anchor a at index i, every triplet with a smaller first element has already been fully enumerated, and no duplicate of a has been used as an anchor before.",
+		bruteForce: {
+			approach:
+				"Three nested loops over all index triples (i<j<k), testing whether nums[i]+nums[j]+nums[k]==0, with a set to dedup the triplets. Correct but cubic.",
+			complexity: { time: "O(n³)", space: "O(n)", note: "n³/6 triples; the dedup set holds found triplets." },
+		},
+		constraintReasoning:
+			"n reaches ~3000, so O(n³) (~2.7·10¹⁰) is far too slow — but O(n²) (~10⁷) passes comfortably. Sorting (O(n log n), cheaper than the main loop) is the enabler: it powers the two-pointer sweep AND turns duplicate-skipping into a neighbor check, replacing the set.",
 		approachSteps: [
 			"Sort nums ascending.",
 			"For each (i, a): if a > 0, break (no positive anchor can sum to 0); if i > 0 and a == nums[i−1], skip this duplicate anchor.",
@@ -956,6 +1093,13 @@ export const guides = {
 			"You don't need both global maxima at once — you only need to know which side is the binding constraint. The shorter wall is the bottleneck, so the water on that side is capped by its own running max. That insight removes the O(n) prefix/suffix arrays entirely, giving O(1) space.",
 		invariant:
 			"max_left is the tallest bar in [0, L] and max_right the tallest in [R, n−1]. Whenever height[L] < height[R], every column at L is bounded by max_left (a taller wall is guaranteed on the right), so its trapped water is final.",
+		bruteForce: {
+			approach:
+				"For each column, scan left for its tallest bar and scan right for its tallest bar, then add min(maxL, maxR) − height[i]. The prefix/suffix-array variant caches those scans into O(n) space.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "Two O(n) scans per column; the prefix/suffix version is O(n) time, O(n) space." },
+		},
+		constraintReasoning:
+			"n reaches ~2·10⁴, so the O(n²) rescan risks TLE — the prefix/suffix arrays fix the time at O(n) but cost O(n) space. The two-pointer insight (only the shorter side's water is ever 'locked in') removes those arrays entirely, landing at O(n) time and O(1) space.",
 		approachSteps: [
 			"Guard: if n <= 2, return 0 (need a wall on both sides).",
 			"Set l = 0, r = n − 1, max_left = max_right = 0, total = 0.",
@@ -975,7 +1119,7 @@ export const guides = {
 		],
 		testCases: [
 			{ kind: "canonical", input: "height = [0,1,0,2,1,0,1,3,2,1,2,1]", expected: "6", note: "Classic skyline; the textbook answer." },
-			{ kind: "boundary", input: "height = [4,2,0,3,2,5]", expected: "9", note: "Deep central basin filled by the tall outer walls (4 and 5)." },
+			{ kind: "boundary", input: "height = [1]", expected: "0", note: "Single bar — the n <= 2 guard returns 0 immediately; no walls on both sides." },
 			{ kind: "trap", input: "height = [3,2,1]", expected: "0", note: "Monotonic slope traps nothing — no right wall ever rises above the left." },
 		],
 		followUps: [
@@ -998,6 +1142,13 @@ export const guides = {
 			"The naive route builds a filtered lowercase copy and reverses it — clean but O(n) space. The two-pointer version filters lazily, skipping junk in place, so you spend O(1) extra space. The file even keeps the naive version commented out to mark exactly that space trade-off.",
 		invariant:
 			"Everything outside the window [L, R] has already been confirmed to mirror correctly. Each step either skips a non-alphanumeric character or verifies one matched alphanumeric pair.",
+		bruteForce: {
+			approach:
+				"Build a cleaned, lowercased copy keeping only alphanumerics, then compare it to its reverse (cleaned == cleaned[::-1]). Clean and obvious, but it allocates a whole second string.",
+			complexity: { time: "O(n)", space: "O(n)", note: "The filtered copy and its reverse are both O(n)." },
+		},
+		constraintReasoning:
+			"Time is O(n) either way — this isn't a TLE story, it's a *space* one. The prompt nudges toward O(1) extra space, which rules out materializing a cleaned copy. Two pointers that skip junk in place achieve the same check while allocating nothing.",
 		approachSteps: [
 			"Set l = 0, r = len(s) − 1.",
 			"While l < r: advance l past any non-alphanumeric char (l < r and not s[l].isalnum()).",
@@ -1040,6 +1191,13 @@ export const guides = {
 			"Each character enters the window exactly once and leaves at most once, so the two edges sweep forward without backtracking — that's what makes it O(n) instead of O(n²). The set answers 'is this character already in the window?' in O(1), which is the engine of the whole approach.",
 		invariant:
 			"At the end of each iteration, the window s[left..r] contains only distinct characters, and result holds the length of the longest distinct-character window seen so far.",
+		bruteForce: {
+			approach:
+				"Enumerate every substring (every start × end) and check each for duplicate characters with a set, tracking the longest valid one.",
+			complexity: { time: "O(n²)", space: "O(min(n, charset))", note: "O(n²) substrings; the distinctness check is O(1) amortized with a set per window." },
+		},
+		constraintReasoning:
+			"With n up to ~5·10⁴, O(n²) (~2.5·10⁹) is too slow — the 'longest contiguous run under a constraint' shape is the textbook sliding-window signal. Because each character enters and leaves the window at most once, the two edges sweep linearly, collapsing O(n²) to O(n).",
 		approachSteps: [
 			"Create an empty char_set, left = 0, result = 0.",
 			"For each right index r: while s[r] is already in char_set, remove s[left] and increment left.",
@@ -1081,6 +1239,13 @@ export const guides = {
 			"Unlike a contracting window, left never slides one step at a time — it teleports to a new low whenever the price drops below the current buy. So you are really tracking 'the lowest price so far' and asking, at each day, 'what if I sold today?'. One pass, no backtracking.",
 		invariant:
 			"prices[left] is the minimum price in prices[0..r], and max_profit is the best (sell − buy) achievable with the buy occurring at or after that minimum and the sell at or before index r.",
+		bruteForce: {
+			approach:
+				"Try every buy day i and every later sell day j > i, tracking the maximum prices[j] − prices[i]. Exhaustive over all valid transactions.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "All ordered pairs (i < j) evaluated." },
+		},
+		constraintReasoning:
+			"n reaches ~10⁵, so O(n²) (~10¹⁰) is a clear TLE — you need one pass. The key realization is that you only ever care about the lowest price seen *before* today, so tracking a running minimum collapses the inner loop and gives O(n).",
 		approachSteps: [
 			"Set left = 0, r = 1, max_profit = 0.",
 			"While r < len(prices): if prices[left] < prices[r], update max_profit = max(max_profit, prices[r] − prices[left]).",
@@ -1122,6 +1287,13 @@ export const guides = {
 			"The window only ever needs to grow to beat its record, so once max_f reflects a large window we never need to lower it — a stale max_f can only make the validity test stricter, never wrongly accept a window. That's why the code never decrements max_f when shrinking, and the answer stays correct.",
 		invariant:
 			"char_count holds the frequency of every character in the current window s[left..r], and res is the longest window for which (length − most-frequent-count) never exceeded k.",
+		bruteForce: {
+			approach:
+				"For every (start, end) substring, count its characters and test whether (length − most-frequent-count) <= k, keeping the longest valid one.",
+			complexity: { time: "O(n²·26)", space: "O(26)", note: "O(n²) substrings, each re-counting up to 26 letters." },
+		},
+		constraintReasoning:
+			"n reaches ~10⁵, so the O(n²) substring scan is hopeless — the 'longest window under a budget' shape calls for a sliding window. The subtlety: a stale max-frequency is safe (it can only make the validity test stricter), which is what keeps the single pass correct without recomputing the max on every shrink.",
 		approachSteps: [
 			"Init char_count = {}, left = 0, max_f = 0, res = 0.",
 			"For each r: increment char_count[s[r]] and update max_f = max(max_f, char_count[s[r]]).",
@@ -1205,6 +1377,13 @@ export const guides = {
 			"Instead of recomputing the minimum on demand, you cache it at every level. Because each min-stack entry remembers 'the smallest value at or below this point', popping the top instantly reveals the new minimum — no rescanning. You trade O(n) extra space for O(1) on every operation.",
 		invariant:
 			"len(min_stack) == len(stack) at all times, and min_stack[-1] equals min(stack) for the current contents (or is undefined only when both are empty).",
+		bruteForce: {
+			approach:
+				"Keep a single normal stack and, when getMin is called, scan the whole stack for the smallest value. push/pop/top stay O(1) but getMin walks everything.",
+			complexity: { time: "O(n) per getMin", space: "O(1) extra", note: "No auxiliary structure, but each minimum query is a full scan." },
+		},
+		constraintReasoning:
+			"The spec demands every operation be O(1), which forbids the on-demand scan. The fix is to *cache* the minimum at each level: the parallel min-stack trades O(n) extra space for O(1) on every call — a deliberate space-for-time swap the constraint forces.",
 		approachSteps: [
 			"Initialize self.stack = [] and self.minStack = [].",
 			"push(val): append val to stack; append min(val, minStack[-1] if minStack else val) to minStack.",
@@ -1246,6 +1425,13 @@ export const guides = {
 			"The two counters encode all the validity you need: never open more than n, and never close more than you have opened. By enforcing those rules at the moment of choice, every leaf of the recursion is guaranteed valid — there's no generate-then-filter waste. The stack is just the current partial string you push to and pop from as you explore.",
 		invariant:
 			"At every recursive call, the buffer is a valid prefix of some well-formed parenthesis string: 0 <= closedN <= openN <= n.",
+		bruteForce: {
+			approach:
+				"Generate every possible string of 2n brackets (2^(2n) of them), then filter for the well-formed ones with a validity check. Correct, but it builds mountains of garbage to throw away.",
+			complexity: { time: "O(2^(2n) · n)", space: "O(n)", note: "All 2^(2n) strings generated, each validated in O(n)." },
+		},
+		constraintReasoning:
+			"n is tiny (≤ 8), so even exponential work is technically feasible — but generating-then-filtering wastes almost everything. Pruning at the moment of choice (never open > n, never close > open) means every leaf is valid, dropping the count to the nth Catalan number, O(4ⁿ/√n). Small-n problems are exactly where backtracking shines.",
 		approachSteps: [
 			"Maintain stack (the current characters) and res (completed strings).",
 			"backtrack(openN, closedN): if openN == closedN == n, join the stack and append to res, then return.",
@@ -1330,6 +1516,13 @@ export const guides = {
 			"Anagrams are equal as multisets, so the question reduces to 'does any fixed-width window have the same letter counts as s1?'. Keeping a rolling frequency map means each slide is a couple of map updates rather than recounting the window from scratch.",
 		invariant:
 			"window_counts holds the exact character frequencies of the current window of s2, whose width is at most len(s1); once the width equals len(s1) it is compared against s1_counts.",
+		bruteForce: {
+			approach:
+				"Slide a width-len(s1) window across s2 and, at each position, recount that window's characters from scratch to compare against s1's counts. (The truly naive version generates all k! permutations of s1 and substring-searches each.)",
+			complexity: { time: "O(n·k)", space: "O(k)", note: "n window positions × O(k) to recount each; the permutation variant is a hopeless O(k!·n)." },
+		},
+		constraintReasoning:
+			"With s2 up to ~10⁴, O(n·k) is borderline and the permutation explosion is out of the question. The fix is to make each slide O(1): add the entering char and drop the leaving char from a rolling count instead of recounting, which turns the whole scan into O(n).",
 		approachSteps: [
 			"If len(s1) > len(s2), return False early.",
 			"Build s1_counts from s1; init window_counts = {}, L = 0.",
@@ -1372,6 +1565,13 @@ export const guides = {
 			"You don't need to remove out-of-window elements eagerly. As long as the CURRENT maximum's index is still inside the window, stale smaller entries buried in the heap don't affect the answer. You only evict from the top, and only when the top itself has expired — that lazy deletion keeps the bookkeeping cheap.",
 		invariant:
 			"After the eviction loop for window ending at i, heap[0] is the largest element whose index lies within [i − k + 1, i]; stale entries may remain deeper in the heap but never at the top.",
+		bruteForce: {
+			approach:
+				"For each of the n − k + 1 windows, scan all k elements to find the maximum. No bookkeeping, but every window is recomputed independently.",
+			complexity: { time: "O(n·k)", space: "O(1)", note: "(n−k+1) windows × O(k) scan each." },
+		},
+		constraintReasoning:
+			"n reaches ~10⁵ and k can be large, so O(n·k) approaches 10¹⁰ — too slow. The shown heap with lazy eviction gets to O(n log n); a monotonic deque (kept in decreasing order so the front is always the window max) reaches the true optimum O(n) with O(k) space. This is a three-rung ladder, and the heap is the accessible middle.",
 		approachSteps: [
 			"Handle bases: if n·k == 0 return []; if k == 1 return nums.",
 			"Push the first k elements as (−nums[i], i); record −heap[0][0] as the first window max.",
@@ -1387,7 +1587,7 @@ export const guides = {
 		pitfalls: [
 			"Negating on push but forgetting to negate back when reading the max (−heap[0][0]).",
 			"Eviction condition off-by-one: an index is out of window when index <= i − k (the window is [i−k+1, i]).",
-			"Leaving the debug print() calls in the shown code — they make the solution O(n) slower and noisy; strip them.",
+			"The heap grows to O(n) because stale entries are only evicted from the top — a monotonic deque bounds space to O(k).",
 		],
 		testCases: [
 			{ kind: "canonical", input: "nums = [1,3,-1,-3,5,3,6,7], k = 3", expected: "[3,3,5,5,6,7]", note: "The README walkthrough; max tracks each window." },

@@ -103,7 +103,7 @@
   }
 
   .due-count {
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     font-family: var(--font-sans);
     color: var(--status-hard);
     background: color-mix(in srgb, var(--status-hard) 15%, transparent);
@@ -142,14 +142,14 @@
   }
 
   .due-cards :global(.due-card-title) {
-    font-size: 0.88rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-sans);
     color: var(--text);
     font-weight: 500;
   }
 
   .due-cards :global(.due-card-status) {
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     font-family: var(--font-sans);
     padding: 0.15rem 0.5rem;
     border-radius: var(--radius-xs);
@@ -175,13 +175,13 @@
   }
 
   .due-cards :global(.due-card-group) {
-    font-size: 0.7rem;
+    font-size: var(--fs-eyebrow);
     color: var(--muted);
     font-family: var(--font-sans);
   }
 
   .due-cards :global(.due-card-diff) {
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     padding: 0.1rem 0.4rem;
     border-radius: var(--radius-xs);
     border: 1px solid var(--border);

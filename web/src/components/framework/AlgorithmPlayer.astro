@@ -254,7 +254,7 @@ const stepsJson = JSON.stringify(steps);
     gap: 0.75rem;
   }
   algo-player .anim-title {
-    font-size: 0.78rem;
+    font-size: var(--fs-eyebrow);
     font-family: var(--font-mono);
     color: var(--muted);
   }
@@ -268,7 +268,7 @@ const stepsJson = JSON.stringify(steps);
     border: 1px solid var(--accent);
     color: var(--accent);
     padding: 0.4rem 1.1rem;
-    font-size: 0.82rem;
+    font-size: var(--fs-fine);
     font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -294,7 +294,7 @@ const stepsJson = JSON.stringify(steps);
     cursor: default;
   }
   algo-player .anim-step {
-    font-size: 0.72rem;
+    font-size: var(--fs-eyebrow);
     color: var(--muted);
     font-family: var(--font-sans);
     min-width: 5rem;
@@ -310,7 +310,7 @@ const stepsJson = JSON.stringify(steps);
     margin-bottom: 1.25rem;
   }
   algo-player .anim-label {
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--muted);
@@ -320,7 +320,7 @@ const stepsJson = JSON.stringify(steps);
   }
   algo-player .anim-explanation {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: var(--fs-sm);
     font-family: var(--font-sans);
     color: var(--text);
     line-height: 1.65;
@@ -341,7 +341,7 @@ const stepsJson = JSON.stringify(steps);
     margin: 0;
     padding-left: 1.1rem;
     color: var(--text);
-    font-size: 0.84rem;
+    font-size: var(--fs-fine);
     font-family: var(--font-sans);
     line-height: 1.6;
   }
@@ -360,7 +360,7 @@ const stepsJson = JSON.stringify(steps);
   }
   algo-player .decision-title {
     margin: 0 0 0.35rem;
-    font-size: 0.82rem;
+    font-size: var(--fs-fine);
     font-weight: 700;
     color: var(--text);
     font-family: var(--font-sans);
@@ -368,7 +368,7 @@ const stepsJson = JSON.stringify(steps);
   algo-player .decision-body {
     margin: 0;
     color: var(--text);
-    font-size: 0.84rem;
+    font-size: var(--fs-fine);
     font-family: var(--font-sans);
     line-height: 1.6;
   }
@@ -380,7 +380,7 @@ const stepsJson = JSON.stringify(steps);
     white-space: pre-wrap;
     color: var(--accent);
     font-family: var(--font-mono);
-    font-size: 0.84rem;
+    font-size: var(--fs-fine);
     line-height: 1.65;
   }
 
@@ -461,7 +461,7 @@ const stepsJson = JSON.stringify(steps);
     justify-content: center;
     border: 1px solid var(--border);
     border-radius: var(--radius-xs);
-    font-size: 1rem;
+    font-size: var(--fs-base);
     font-family: var(--font-mono);
     font-weight: 500;
     color: var(--text);
@@ -469,7 +469,7 @@ const stepsJson = JSON.stringify(steps);
     transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
   }
   algo-player .cell-idx {
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     color: var(--muted);
     opacity: 0.5;
     font-family: var(--font-sans);
@@ -483,7 +483,7 @@ const stepsJson = JSON.stringify(steps);
     justify-content: center;
   }
   algo-player .ptr {
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     font-family: var(--font-mono);
     font-weight: bold;
     padding: 0.1rem 0.3rem;
@@ -503,14 +503,14 @@ const stepsJson = JSON.stringify(steps);
     align-items: center;
   }
   algo-player .hashmap-empty {
-    font-size: 0.8rem;
+    font-size: var(--fs-fine);
     color: var(--muted);
     opacity: 0.4;
     font-family: var(--font-mono);
     font-style: italic;
   }
   algo-player .hashmap-entry {
-    font-size: 0.82rem;
+    font-size: var(--fs-fine);
     font-family: var(--font-mono);
     color: var(--text);
     background: var(--surface-base);
@@ -542,7 +542,7 @@ const stepsJson = JSON.stringify(steps);
     transition: border-color 0.2s;
   }
   algo-player .stat-label {
-    font-size: 0.6rem;
+    font-size: var(--fs-micro);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--muted);
@@ -550,7 +550,7 @@ const stepsJson = JSON.stringify(steps);
     margin-bottom: 0.2rem;
   }
   algo-player .stat-val {
-    font-size: 1.25rem;
+    font-size: var(--fs-xl);
     font-family: var(--font-mono);
     color: var(--text);
     font-weight: bold;

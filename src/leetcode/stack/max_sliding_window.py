@@ -60,10 +60,7 @@ class Solution:
         result.append(-heap[0][0])  # Get initial maximum
 
         for i in range(k, n):
-            print(f"i: {i}")
             heapq.heappush(heap, (-nums[i], i))
-            print(f"Current window: {i-k+1} to {i}")
-            print(f"Index of the current smallest: {heap[0][1]}")
 
             # if the current smallest is less or equal to just before the window start,
             # pop it

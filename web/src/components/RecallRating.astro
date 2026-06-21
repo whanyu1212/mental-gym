@@ -146,7 +146,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
   }
 
   .recall-heading {
-    font-size: 0.7rem;
+    font-size: var(--fs-eyebrow);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--muted);
@@ -156,7 +156,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
   }
 
   .recall-status-badge {
-    font-size: 0.68rem;
+    font-size: var(--fs-micro);
     font-family: var(--font-sans);
     padding: 0.15rem 0.5rem;
     border-radius: var(--radius-xs);
@@ -183,7 +183,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 
   .recall-prompt {
     margin: 0 0 1rem;
-    font-size: 0.88rem;
+    font-size: var(--fs-sm);
     color: var(--text);
     font-family: var(--font-sans);
   }
@@ -220,14 +220,14 @@ const { domain, slug, title, difficulty, group } = Astro.props;
   }
 
   .btn-label {
-    font-size: 0.82rem;
+    font-size: var(--fs-fine);
     font-weight: 600;
     font-family: var(--font-sans);
     letter-spacing: 0.03em;
   }
 
   .btn-hint {
-    font-size: 0.62rem;
+    font-size: var(--fs-micro);
     color: var(--muted);
     font-family: var(--font-sans);
   }
@@ -246,7 +246,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 
   .recall-result {
     margin: 0.75rem 0 0;
-    font-size: 0.8rem;
+    font-size: var(--fs-fine);
     color: var(--muted);
     font-family: var(--font-sans);
     opacity: 0;

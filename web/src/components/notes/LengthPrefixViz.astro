@@ -378,7 +378,7 @@ const steps: TeachingStep[] = [
     align-items: center;
     gap: 0;
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: var(--fs-base);
     padding: 0.45rem 0.9rem;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -399,7 +399,7 @@ const steps: TeachingStep[] = [
     opacity: 0.4;
   }
 
-  .lp-word-quote { color: var(--muted); font-size: 0.9em; }
+  .lp-word-quote { color: var(--muted); font-size: var(--fs-sm); }
 
   /* Encoded string box */
   .lp-encoded-box {
@@ -412,7 +412,7 @@ const steps: TeachingStep[] = [
     align-items: center;
     justify-content: center;
     font-family: var(--font-mono);
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
     letter-spacing: 1.5px;
     word-break: break-all;
     flex-wrap: wrap;
@@ -422,7 +422,7 @@ const steps: TeachingStep[] = [
   .lp-empty-hint {
     opacity: var(--dim-hard);
     font-style: italic;
-    font-size: 0.85rem;
+    font-size: var(--fs-sm);
     color: var(--muted);
   }
 
@@ -466,13 +466,13 @@ const steps: TeachingStep[] = [
     color: var(--muted);
     font-style: italic;
     opacity: 0.4;
-    font-size: 0.9rem;
+    font-size: var(--fs-sm);
     padding: 0.5rem;
   }
 
   .lp-decoded-cell {
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: var(--fs-base);
     padding: 0.45rem 0.9rem;
     border: 1px solid var(--border);
     border-radius: 4px;

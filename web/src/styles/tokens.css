@@ -13,15 +13,19 @@
 
   /* --- Type scale -------------------------------------------------------- */
   /* A modular-ish ramp. Page heroes use --fs-hero; prose body uses --fs-base. */
+  --fs-micro: 0.625rem;  /* tiny SVG/cell labels in animations */
   --fs-eyebrow: 0.72rem; /* uppercase kicker labels (stat labels, meta, section headings) */
   --fs-fine: 0.8rem;     /* breadcrumbs, captions, fine print */
   --fs-sm: 0.875rem;     /* secondary copy, code in prose */
   --fs-base: 1rem;       /* canonical prose body */
-  --fs-lg: 1.125rem;     /* lead paragraphs */
   --fs-h3: 1.05rem;      /* prose h3 (rendered uppercase, so kept small) */
+  --fs-lg: 1.125rem;     /* lead paragraphs */
+  --fs-xl: 1.25rem;      /* card titles, pattern names */
   --fs-h2: 1.5rem;       /* prose h2 / section heads */
+  --fs-display: 1.75rem; /* sub-hero headings, dashboard stat numbers */
   --fs-h1: 2.1rem;       /* page title (problem pages) */
   --fs-hero: 2.6rem;     /* note hero h1 */
+  --fs-mega: 3.5rem;     /* hero numbers, large display stats */
 
   /* Backwards-compatible alias for the original eyebrow token. */
   --text-eyebrow: var(--fs-eyebrow);

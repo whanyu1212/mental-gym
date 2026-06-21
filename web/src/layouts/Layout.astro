@@ -143,10 +143,10 @@ const pathname = stripBase(Astro.url.pathname);
 		--status-info: #2f6fa6;
 		--glass-surface: rgba(246, 240, 228, 0.68);
 		--glass-surface-strong: rgba(239, 231, 216, 0.78);
-		--glass-border: rgba(255, 255, 255, 0.42);
-		--glass-border-strong: rgba(255, 255, 255, 0.58);
-		--glass-highlight: rgba(255, 255, 255, 0.28);
-		--glass-highlight-strong: rgba(255, 255, 255, 0.4);
+		--glass-border: rgba(32, 29, 23, 0.12);
+		--glass-border-strong: rgba(32, 29, 23, 0.18);
+		--glass-highlight: rgba(32, 29, 23, 0.04);
+		--glass-highlight-strong: rgba(32, 29, 23, 0.08);
 		--glass-blur: 16px;
 		--shadow-sm: 0 2px 8px rgba(32, 29, 23, 0.06);
 		--shadow-lg: 0 10px 24px rgba(32, 29, 23, 0.1);
@@ -210,7 +210,7 @@ const pathname = stripBase(Astro.url.pathname);
 	.brand {
 		color: var(--accent);
 		font-weight: 600;
-		font-size: 1.35rem;
+		font-size: var(--fs-xl);
 		letter-spacing: 0.5px;
 		font-family: var(--font-serif);
 	}
@@ -265,7 +265,7 @@ const pathname = stripBase(Astro.url.pathname);
 	}
 
 	.theme-toggle__icon {
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		line-height: 1;
 	}
 

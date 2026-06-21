@@ -95,7 +95,7 @@ const { problem } = Astro.props;
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		font-size: 0.8rem;
+		font-size: var(--fs-fine);
 		color: var(--muted);
 		margin-bottom: 1.5rem;
 		flex-wrap: wrap;
@@ -124,7 +124,7 @@ const { problem } = Astro.props;
 	.meta {
 		margin: 0;
 		color: var(--muted);
-		font-size: 0.8rem;
+		font-size: var(--fs-fine);
 		font-family: var(--font-sans);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
@@ -132,7 +132,7 @@ const { problem } = Astro.props;
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-h1);
 		letter-spacing: 0.3px;
 		font-family: var(--font-serif);
 		font-weight: 600;
@@ -142,7 +142,7 @@ const { problem } = Astro.props;
 		margin: 0;
 		color: var(--muted);
 		line-height: 1.7;
-		font-size: 0.95rem;
+		font-size: var(--fs-base);
 		max-width: 760px;
 	}
 
@@ -167,7 +167,7 @@ const { problem } = Astro.props;
 	.badge {
 		font-weight: 600;
 		text-transform: uppercase;
-		font-size: 0.66rem;
+		font-size: var(--fs-micro);
 	}
 	.badge.easy {
 		color: var(--status-easy);
@@ -244,7 +244,7 @@ const { problem } = Astro.props;
 	.back-link {
 		display: inline-block;
 		margin-top: 1rem;
-		font-size: 0.85rem;
+		font-size: var(--fs-sm);
 	}
 
 	.solution-section {
@@ -264,7 +264,7 @@ const { problem } = Astro.props;
 
 	.blur-hint {
 		margin: 0;
-		font-size: 0.78rem;
+		font-size: var(--fs-eyebrow);
 		color: var(--muted);
 		font-style: italic;
 		font-family: var(--font-sans);
@@ -285,7 +285,7 @@ const { problem } = Astro.props;
 		border: 1px solid var(--border);
 		padding: 1.25rem;
 		overflow-x: auto;
-		font-size: 0.88rem;
+		font-size: var(--fs-sm);
 		line-height: 1.6;
 	}
 
