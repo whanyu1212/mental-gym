@@ -3,6 +3,7 @@ import { problems } from "../../data/problems";
 import { mlProblems } from "../../data/mlProblems";
 import DueForReview from "../../components/DueForReview.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
+import ResumeRow from "../../components/ResumeRow.astro";
 import Layout from "../../layouts/Layout.astro";
 import { withBase } from "../../lib/url";
 
@@ -37,6 +38,7 @@ const mlByCategory = Object.fromEntries(
 		</p>
 	</div>
 
+	<ResumeRow />
 	<DueForReview />
 	<SRDataManager />
 
@@ -47,6 +49,34 @@ const mlByCategory = Object.fromEntries(
 	</div>
 
 	<div id="algo-section" class="problem-section active">
+		<div class="filter-bar">
+			<div class="filter-difficulty" role="group" aria-label="Filter by difficulty">
+				<button class="filter-chip active" data-difficulty="all">All</button>
+				<button class="filter-chip" data-difficulty="easy">Easy</button>
+				<button class="filter-chip" data-difficulty="medium">Medium</button>
+				<button class="filter-chip" data-difficulty="hard">Hard</button>
+			</div>
+			<div class="filter-active" hidden>
+				<span class="filter-active-label">Topic</span>
+				<button class="filter-topic-clear" data-clear-topic>
+					<span class="filter-topic-name"></span>
+					<span class="filter-topic-x">✕</span>
+				</button>
+			</div>
+			<span class="filter-count" aria-live="polite"></span>
+		</div>
+
+		<nav class="group-nav" aria-label="Jump to algorithm group">
+			{algoGroups.map((group) => {
+				const id = `algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`;
+				return (
+					<a class="group-nav-pill" href={`#${id}`} data-group-link={id}>
+						<span class="group-nav-name">{group}</span>
+						<span class="group-nav-count">{algoByGroup[group].length}</span>
+					</a>
+				);
+			})}
+		</nav>
 		{
 			algoGroups.map((group) => (
 				<section
@@ -60,12 +90,17 @@ const mlByCategory = Object.fromEntries(
 								<th class="col-id">#</th>
 								<th class="col-title">Problem</th>
 								<th class="col-diff">Difficulty</th>
+								<th class="col-review">Review</th>
 								<th class="col-tags">Topics</th>
 							</tr>
 						</thead>
 						<tbody>
 							{algoByGroup[group].map((problem) => (
-								<tr>
+								<tr
+									data-sr-key={`algorithms:${problem.slug}`}
+									data-difficulty={problem.difficulty.toLowerCase()}
+									data-topics={problem.topics.join(" ")}
+								>
 									<td class="col-id muted">{problem.id}</td>
 									<td class="col-title">
 										<a href={withBase(`/algorithms/${problem.slug}/`)}>{problem.title}</a>
@@ -75,9 +110,10 @@ const mlByCategory = Object.fromEntries(
 											{problem.difficulty}
 										</span>
 									</td>
+									<td class="col-review" data-sr-pill />
 									<td class="col-tags">
 										{problem.topics.slice(0, 3).map((tag) => (
-											<span class="tag">{tag}</span>
+											<button class="tag tag-btn" data-topic={tag}>{tag}</button>
 										))}
 									</td>
 								</tr>
@@ -99,9 +135,9 @@ const mlByCategory = Object.fromEntries(
 	<div id="ml-section" class="problem-section hidden">
 		<div class="ml-intro">
 			<p>
-				Placeholder section for ML coding interview questions and implementation drills.
-				These represent common interview styles: classical ML, evaluation,
-				transformers, and practical PyTorch.
+				From-scratch implementation drills across classical ML, evaluation,
+				transformers, and PyTorch. Problems marked <span class="status-chip">Drafting</span>
+				are scoped but not yet written up.
 			</p>
 		</div>
 
@@ -118,19 +154,24 @@ const mlByCategory = Object.fromEntries(
 								<th class="col-id">#</th>
 								<th class="col-title">Problem</th>
 								<th class="col-diff">Difficulty</th>
-								<th class="col-tags">Tags</th>
-								<th class="col-status">Status</th>
+								<th class="col-review">Review</th>
+								<th class="col-tags">Topics</th>
 							</tr>
 						</thead>
 						<tbody>
 							{mlByCategory[category].map((problem) => (
-								<tr>
+								<tr data-sr-key={`ml:${problem.slug}`}>
 									<td class="col-id muted">{problem.id}</td>
 									<td class="col-title">
 										<div class="problem-copy">
-											<a class="problem-name" href={withBase(`/machine-learning/${problem.slug}/`)}>
-												{problem.title}
-											</a>
+											<span class="problem-name-row">
+												<a class="problem-name" href={withBase(`/machine-learning/${problem.slug}/`)}>
+													{problem.title}
+												</a>
+												{problem.status !== "Completed" && (
+													<span class="status-chip">Drafting</span>
+												)}
+											</span>
 											<span class="problem-summary">{problem.summary}</span>
 										</div>
 									</td>
@@ -139,11 +180,9 @@ const mlByCategory = Object.fromEntries(
 											{problem.difficulty}
 										</span>
 									</td>
+									<td class="col-review" data-sr-pill />
 									<td class="col-tags">
 										{problem.tags.map((tag) => <span class="tag">{tag}</span>)}
-									</td>
-									<td class="col-status">
-										<span class="status">{problem.status}</span>
 									</td>
 								</tr>
 							))}
@@ -192,6 +231,179 @@ const mlByCategory = Object.fromEntries(
 		const tab = document.querySelector(`[data-target="${target}"]`) as HTMLButtonElement;
 		if (tab) tab.click();
 	}
+
+	// --- Spaced-repetition status pills -------------------------------------
+	// SR state lives in IndexedDB (client-only), so the pill cells render empty
+	// at build time (reserving column width — no layout shift) and we fill them
+	// here by joining each row's data-sr-key against the stored review records.
+	import("../../scripts/sr-db").then(async ({ getAllRecords }) => {
+		const { statusOf, daysUntilDue, todayISO } = await import("../../scripts/sr-scheduler");
+		const today = todayISO();
+		const records = await getAllRecords();
+		const byKey = new Map(records.map((r) => [r.problemKey, r]));
+
+		for (const cell of document.querySelectorAll<HTMLElement>("[data-sr-pill]")) {
+			const row = cell.closest("tr");
+			const key = row?.dataset.srKey;
+			if (!key) continue;
+			const record = byKey.get(key);
+			if (!record) continue; // never reviewed → leave blank (quiet by default)
+
+			const status = statusOf(record, today);
+			let label: string;
+			if (status === "overdue") {
+				label = `${Math.abs(daysUntilDue(record, today))}d overdue`;
+			} else if (status === "due") {
+				label = "Due today";
+			} else {
+				// upcoming — show how it's tracking ("3× · 5d")
+				const reps = record.repetitions;
+				const days = daysUntilDue(record, today);
+				label = reps > 0 ? `${reps}× · ${days}d` : `in ${days}d`;
+			}
+
+			const pill = document.createElement("span");
+			pill.className = `sr-pill sr-${status}`;
+			pill.textContent = label;
+			pill.title =
+				status === "overdue" || status === "due"
+					? "Due for spaced-repetition review"
+					: `Reviewed ${record.repetitions}× · next in ${daysUntilDue(record, today)}d`;
+			cell.appendChild(pill);
+		}
+	});
+
+	// --- Algorithm filters: difficulty (segmented) + topic (chip click) ------
+	// Both stack: a row is shown only if it matches the active difficulty AND
+	// (no topic selected OR it carries the active topic). Group sections with
+	// zero visible rows are hidden so headings never strand over empty tables.
+	(() => {
+		const algoSection = document.getElementById("algo-section");
+		if (!algoSection) return;
+
+		const diffChips = algoSection.querySelectorAll<HTMLButtonElement>(".filter-chip");
+		const rows = algoSection.querySelectorAll<HTMLTableRowElement>("tbody tr[data-difficulty]");
+		const groups = algoSection.querySelectorAll<HTMLElement>(".group");
+		const activeBox = algoSection.querySelector<HTMLElement>(".filter-active");
+		const activeName = algoSection.querySelector<HTMLElement>(".filter-topic-name");
+		const countEl = algoSection.querySelector<HTMLElement>(".filter-count");
+		const clearBtn = algoSection.querySelector<HTMLButtonElement>("[data-clear-topic]");
+
+		let activeDiff = "all";
+		let activeTopic: string | null = null;
+
+		const apply = () => {
+			let shown = 0;
+			rows.forEach((row) => {
+				const diffOk = activeDiff === "all" || row.dataset.difficulty === activeDiff;
+				const topics = (row.dataset.topics ?? "").split(" ");
+				const topicOk = !activeTopic || topics.includes(activeTopic);
+				const visible = diffOk && topicOk;
+				row.hidden = !visible;
+				if (visible) shown++;
+			});
+
+			// Hide any group whose rows are all filtered out — and keep the
+			// sticky group-nav pill in sync so it never links to an empty group.
+			groups.forEach((group) => {
+				const anyVisible = group.querySelector("tbody tr[data-difficulty]:not([hidden])");
+				group.hidden = !anyVisible;
+				const pill = algoSection.querySelector<HTMLElement>(`[data-group-link="${group.id}"]`);
+				if (pill) pill.hidden = !anyVisible;
+			});
+
+			// Reflect topic state in the UI.
+			if (activeTopic && activeBox && activeName) {
+				activeName.textContent = activeTopic;
+				activeBox.hidden = false;
+			} else if (activeBox) {
+				activeBox.hidden = true;
+			}
+
+			// Highlight any visible chips matching the active topic.
+			algoSection.querySelectorAll<HTMLButtonElement>(".tag-btn").forEach((chip) => {
+				chip.classList.toggle("tag-btn--active", chip.dataset.topic === activeTopic);
+			});
+
+			if (countEl) {
+				const filtered = activeDiff !== "all" || activeTopic;
+				countEl.textContent = filtered ? `${shown} shown` : "";
+			}
+		};
+
+		diffChips.forEach((chip) => {
+			chip.addEventListener("click", () => {
+				diffChips.forEach((c) => c.classList.remove("active"));
+				chip.classList.add("active");
+				activeDiff = chip.dataset.difficulty ?? "all";
+				apply();
+			});
+		});
+
+		algoSection.querySelectorAll<HTMLButtonElement>(".tag-btn").forEach((chip) => {
+			chip.addEventListener("click", () => {
+				const topic = chip.dataset.topic ?? null;
+				// Clicking the already-active topic toggles it off.
+				activeTopic = activeTopic === topic ? null : topic;
+				apply();
+			});
+		});
+
+		clearBtn?.addEventListener("click", () => {
+			activeTopic = null;
+			apply();
+		});
+	})();
+
+	// --- Scroll-spy: highlight the group-nav pill for the section in view ----
+	(() => {
+		const sections = [...document.querySelectorAll<HTMLElement>("#algo-section .group")];
+		if (!sections.length) return;
+
+		const visible = new Set<string>();
+		const setActive = (id: string | null) => {
+			document.querySelectorAll<HTMLElement>(".group-nav-pill").forEach((p) => {
+				p.classList.toggle("active", !!id && p.dataset.groupLink === id);
+			});
+		};
+
+		// Single source of truth for "which group is current", called by both the
+		// observer and the scroll listener so they can't race to opposite answers.
+		const recompute = () => {
+			// Bottom-of-page guard first: a short final section can't scroll to the
+			// top of a tall viewport, so the observer never marks it current. At the
+			// page bottom, force the last non-hidden group active.
+			const atBottom =
+				window.innerHeight + window.scrollY >= document.body.scrollHeight - 4;
+			if (atBottom) {
+				const last = [...sections].reverse().find((s) => !s.hidden);
+				if (last) return setActive(last.id);
+			}
+			// Otherwise: first section (document order) in the detection band, with
+			// a cold-start fallback to the first non-hidden group so the nav is
+			// never blank above the first section's band.
+			const current = sections.find((s) => visible.has(s.id));
+			const fallback = sections.find((s) => !s.hidden)?.id ?? null;
+			setActive(current?.id ?? fallback);
+		};
+
+		// The rootMargin's negative top (~header 60px + nav ~52px) means a section
+		// counts as current only once it clears the sticky chrome; the large
+		// negative bottom narrows the band so one section is active at a time.
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) visible.add(entry.target.id);
+					else visible.delete(entry.target.id);
+				}
+				recompute();
+			},
+			{ rootMargin: "-120px 0px -65% 0px", threshold: 0 }
+		);
+
+		sections.forEach((s) => observer.observe(s));
+		window.addEventListener("scroll", recompute, { passive: true });
+	})();
 </script>
 
 <style>
@@ -228,7 +440,7 @@ const mlByCategory = Object.fromEntries(
 		font-size: var(--fs-sm);
 		font-family: var(--font-sans);
 		cursor: pointer;
-		border-radius: 4px;
+		border-radius: var(--radius-xs);
 		transition: background 0.2s, color 0.2s;
 	}
 
@@ -247,6 +459,177 @@ const mlByCategory = Object.fromEntries(
 		display: none;
 	}
 
+	/* --- Algorithm filter bar -------------------------------------------- */
+	.filter-bar {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.75rem 1rem;
+		margin-bottom: 1.75rem;
+	}
+
+	.filter-difficulty {
+		display: inline-flex;
+		gap: 0.25rem;
+		padding: 0.2rem;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-sm);
+	}
+
+	.filter-chip {
+		background: transparent;
+		border: none;
+		color: var(--muted);
+		padding: 0.3rem 0.8rem;
+		font-size: var(--fs-sm);
+		font-family: var(--font-sans);
+		cursor: pointer;
+		border-radius: var(--radius-xs);
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.filter-chip:hover {
+		color: var(--text);
+	}
+
+	.filter-chip.active {
+		background: var(--accent-dim);
+		color: var(--accent);
+		font-weight: 500;
+	}
+
+	.filter-active {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: var(--fs-eyebrow);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--muted);
+		font-family: var(--font-sans);
+	}
+
+	/* Author rule re-asserting the `hidden` attribute — the UA `[hidden]`
+	   stylesheet rule loses to the `display: inline-flex` above. */
+	.filter-active[hidden] {
+		display: none;
+	}
+
+	.filter-topic-clear {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		background: var(--accent-dim);
+		border: 1px solid var(--accent-ring);
+		color: var(--accent);
+		padding: 0.15rem 0.55rem;
+		border-radius: var(--radius-pill);
+		font-size: var(--fs-eyebrow);
+		font-family: var(--font-mono);
+		letter-spacing: 0;
+		text-transform: none;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+
+	.filter-topic-clear:hover {
+		background: var(--accent-veil);
+	}
+
+	.filter-topic-x {
+		font-size: var(--fs-micro);
+		opacity: 0.7;
+	}
+
+	.filter-count {
+		margin-left: auto;
+		font-size: var(--fs-eyebrow);
+		color: var(--muted);
+		font-family: var(--font-sans);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Clickable topic chips — inherit the .tag look but signal interactivity. */
+	.tag-btn {
+		cursor: pointer;
+		background: transparent;
+		transition: border-color 0.15s, color 0.15s, background 0.15s;
+	}
+
+	.tag-btn:hover {
+		border-color: var(--accent-ring);
+		color: var(--text);
+	}
+
+	.tag-btn--active {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--accent-dim);
+	}
+
+	/* --- Sticky in-page group nav ---------------------------------------- */
+	/* Sits under the 60px site header. Horizontally scrollable on narrow
+	   screens so the pill row never wraps or overflows the layout. */
+	.group-nav {
+		position: sticky;
+		top: 60px;
+		z-index: 5;
+		display: flex;
+		gap: 0.4rem;
+		margin-bottom: 1.5rem;
+		padding: 0.5rem;
+		background: color-mix(in srgb, var(--glass-surface-strong) 92%, transparent);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-pill);
+		backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.group-nav::-webkit-scrollbar {
+		display: none;
+	}
+
+	.group-nav-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-shrink: 0;
+		padding: 0.3rem 0.75rem;
+		border-radius: var(--radius-pill);
+		color: var(--muted);
+		font-size: var(--fs-sm);
+		font-family: var(--font-sans);
+		white-space: nowrap;
+		text-decoration: none;
+		transition: background 0.15s, color 0.15s;
+	}
+
+	.group-nav-pill:hover {
+		color: var(--text);
+		background: var(--accent-dim);
+		text-decoration: none;
+	}
+
+	.group-nav-pill.active {
+		color: var(--accent);
+		background: var(--accent-dim);
+		font-weight: 500;
+	}
+
+	.group-nav-count {
+		font-size: var(--fs-eyebrow);
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.group-nav-pill.active .group-nav-count {
+		color: var(--accent);
+	}
+
 	.ml-intro {
 		margin-bottom: 2rem;
 		max-width: 720px;
@@ -260,6 +643,9 @@ const mlByCategory = Object.fromEntries(
 
 	.group {
 		margin-bottom: 2.5rem;
+		/* Offset anchor jumps (#algo-…) so a clicked group lands BELOW the
+		   sticky site-header (60px) + sticky group-nav (~52px), not under them. */
+		scroll-margin-top: 120px;
 	}
 
 	.group-title {
@@ -277,7 +663,7 @@ const mlByCategory = Object.fromEntries(
 		border-collapse: collapse;
 		background: color-mix(in srgb, var(--glass-surface-strong) 92%, transparent);
 		border: 1px solid var(--glass-border-strong);
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		backdrop-filter: blur(calc(var(--glass-blur) * 1.05)) saturate(145%);
 		-webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.05)) saturate(145%);
 		box-shadow: inset 0 1px 0 var(--glass-highlight-strong), 0 0 0 1px color-mix(in srgb, var(--glass-border) 45%, transparent), var(--shadow-sm);
@@ -330,10 +716,6 @@ const mlByCategory = Object.fromEntries(
 		width: 6rem;
 	}
 
-	.col-status {
-		width: 7rem;
-	}
-
 	.muted {
 		color: var(--muted);
 	}
@@ -370,22 +752,74 @@ const mlByCategory = Object.fromEntries(
 		white-space: nowrap;
 	}
 
-	.status {
+	/* Quiet "Drafting" marker — shown inline next to the title only on
+	   unfinished rows, so it carries signal instead of repeating on every row. */
+	.status-chip {
 		display: inline-block;
-		font-size: var(--fs-eyebrow);
-		padding: 0.2rem 0.55rem;
+		font-size: var(--fs-micro);
+		padding: 0.1rem 0.4rem;
 		border-radius: var(--radius-xs);
 		border: 1px solid var(--border);
-		color: var(--accent);
+		color: var(--muted);
+		background: var(--panel);
 		font-family: var(--font-sans);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		white-space: nowrap;
+		vertical-align: middle;
+	}
+
+	.problem-name-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	/* Spaced-repetition review pills. Cell reserves width at build time;
+	   the pill itself is injected client-side and reuses DueForReview's
+	   status color tokens so the two surfaces stay in lockstep. */
+	.col-review {
+		width: 6.5rem;
+		white-space: nowrap;
+	}
+
+	.sr-pill {
+		display: inline-block;
+		font-size: var(--fs-micro);
+		font-family: var(--font-sans);
+		padding: 0.15rem 0.5rem;
+		border-radius: var(--radius-xs);
+		white-space: nowrap;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+
+	.sr-overdue {
+		color: var(--status-hard);
+		background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+	}
+
+	.sr-due {
+		color: var(--accent);
+		background: var(--accent-dim);
+	}
+
+	/* upcoming / well-tracked — understated, just a quiet ledger of progress */
+	.sr-upcoming {
+		color: var(--muted);
+		background: color-mix(in srgb, var(--muted) 10%, transparent);
 	}
 
 	.coming-soon {
 		padding: 4rem 2rem;
 		text-align: center;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-xs);
-		background: var(--panel);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-lg);
+		background: var(--glass-surface);
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 	}
 
 	.coming-soon-title {
