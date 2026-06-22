@@ -175,7 +175,15 @@ def find_julia_solution(norm_key: str) -> str:
 
 
 def js_string(s: str) -> str:
-    """Escape a string for embedding in a JS/TS template literal."""
+    """
+    Escape a string for embedding in a JS/TS template literal.
+
+    Trailing whitespace is stripped per line first: LeetCode's HTML
+    descriptions carry trailing spaces that the trailing-whitespace
+    pre-commit hook would otherwise strip on every regeneration. Only
+    the right side is trimmed so HTML/code indentation is preserved.
+    """
+    s = "\n".join(line.rstrip() for line in s.split("\n"))
     s = s.replace("\\", "\\\\")
     s = s.replace("`", "\\`")
     s = s.replace("${", "\\${")
