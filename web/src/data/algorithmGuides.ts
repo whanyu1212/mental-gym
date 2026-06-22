@@ -1177,6 +1177,106 @@ export const guides = {
 		],
 		relatedNotes: ["two_pointers", "space-complexity", "python_builtins_for_leetcode"],
 	},
+	"344-reverse-string": {
+		slug: "344-reverse-string",
+		pattern: "Two pointers with in-place swap",
+		recognitionSignals: [
+			"reverse an array in place with O(1) extra memory",
+			"input is a mutable list and output should modify it directly",
+			"symmetric swap from both ends toward the center",
+		],
+		dissection:
+			"Place one pointer at each end of the array. Swap the elements at the two pointers, then move both inward. Repeat until the pointers meet or cross — at that point the entire array has been reversed.",
+		intuition:
+			"Reversing is just mirroring: element at index i trades places with element at index n−1−i. Two pointers make this a single pass with O(1) extra space because swaps happen in place — no second array is needed.",
+		invariant:
+			"After each swap, the elements outside the window [l, r] are in their final reversed positions. The elements inside the window have not yet been touched.",
+		bruteForce: {
+			approach:
+				"Allocate a new array, copy elements from the original in reverse order, then copy back. Correct but uses O(n) extra space.",
+			complexity: { time: "O(n)", space: "O(n)", note: "A second array of the same size is allocated." },
+		},
+		constraintReasoning:
+			"The prompt explicitly requires O(1) extra memory, which rules out the copy-to-new-array approach. In-place swapping with two pointers is the canonical O(1)-space reversal.",
+		approachSteps: [
+			"Set l = 0, r = len(s) − 1.",
+			"While l < r: swap s[l] and s[r].",
+			"Move both pointers inward: l += 1, r -= 1.",
+			"When l >= r, all pairs have been swapped — the array is reversed.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "Each element is swapped exactly once. Only two index variables are used.",
+		},
+		pitfalls: [
+			"Using l <= r instead of l < r — when l == r (the middle element), swapping it with itself is harmless but wasteful.",
+			"Forgetting to move both pointers inward — an infinite loop.",
+			"Returning a new array instead of modifying in place — the problem requires in-place mutation.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's = ["h","e","l","l","o"]', expected: '["o","l","l","e","h"]', note: "Standard odd-length reversal; the middle 'l' stays in place." },
+			{ kind: "boundary", input: 's = ["a","b"]', expected: '["b","a"]', note: "Even-length array — one swap completes the reversal." },
+			{ kind: "trap", input: 's = ["a"]', expected: '["a"]', note: "Single element — the loop body never executes, and the array is unchanged." },
+		],
+		followUps: [
+			"Reverse only a subrange of the array (e.g., reverse s[i..j]) — how does the pointer initialization change?",
+			"Reverse the words in a sentence in place (e.g., 'the sky is blue' → 'blue is sky the') — how does this combine two reversals?",
+			"Rotate an array by k positions in O(1) space — how does reversal help (reverse three subranges)?",
+		],
+		relatedNotes: ["two_pointers", "space-complexity"],
+	},
+	"680-valid-palindrome-ii": {
+		slug: "680-valid-palindrome-ii",
+		pattern: "Two pointers with greedy single deletion",
+		recognitionSignals: [
+			"check a palindrome but allow deleting at most one character",
+			"standard palindrome check with a skip/deletion tolerance",
+			"on first mismatch, two branches need checking — skip left or skip right",
+		],
+		dissection:
+			"Walk from both ends. When characters match, move inward. On the first mismatch, you have exactly two choices: skip the left character or skip the right character. If either resulting substring is a palindrome, the original string qualifies.",
+		intuition:
+			"A standard palindrome check fails on the first mismatch. Here, you get one 'skip' — but only at the point of mismatch. Trying the skip anywhere else wouldn't help because all prior pairs already matched. So the decision is greedy: at the first mismatch, branch into two sub-checks (skip left vs skip right) and return true if either succeeds.",
+		invariant:
+			"Before the first mismatch, every outer pair has been confirmed. After the mismatch, the sub-check verifies that the remaining window (with one character skipped) is a plain palindrome — no further deletions allowed.",
+		bruteForce: {
+			approach:
+				"Try deleting each of the n characters one at a time, and check if the resulting string is a palindrome. Correct, but you run a full palindrome check (O(n)) for each of n deletion positions.",
+			complexity: { time: "O(n²)", space: "O(n)", note: "n deletion attempts × O(n) palindrome check each, plus O(n) string copy per attempt." },
+		},
+		constraintReasoning:
+			"With n ≤ 10⁵, the O(n²) brute force (~10¹⁰ ops) is far too slow. The key insight is that the deletion can only matter at the first mismatch — all prior pairs already matched. So we only branch once, making the entire check O(n).",
+		approachSteps: [
+			"Set l = 0, r = len(s) − 1.",
+			"While l < r: if s[l] == s[r], move both inward (l += 1, r -= 1).",
+			"On the first mismatch (s[l] != s[r]): check if s[l+1 .. r] is a palindrome (skip left) OR s[l .. r−1] is a palindrome (skip right).",
+			"Return true if either sub-check passes; if both fail, return false.",
+			"If the loop completes without any mismatch, the string is already a palindrome — return true.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1) with index-based helper, O(n) with slicing",
+			note: "Each pointer moves at most n times. On mismatch, two O(n) sub-checks. Total is still O(n) because each character is visited at most a constant number of times.",
+		},
+		pitfalls: [
+			"Only checking one branch (e.g., only skip left) — the other branch might be the one that works.",
+			"Trying to handle multiple mismatches with multiple deletions — you only get ONE deletion.",
+			"Trying all n deletion positions instead of branching at the first mismatch — that's the O(n²) brute force.",
+			"With slicing: s[l+1:r+1] skips left, s[l:r] skips right — the +1 on the right bound is easy to get wrong.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 's = "abca"', expected: "true", note: "Delete 'b' → 'aca' or delete 'c' → 'aba' — both are palindromes." },
+			{ kind: "boundary", input: 's = "a"', expected: "true", note: "Single character is trivially a palindrome with zero deletions." },
+			{ kind: "trap", input: 's = "abc"', expected: "false", note: "No single deletion can make 'abc' a palindrome. Both branches fail: skip left → 'bc' (no), skip right → 'ab' (no)." },
+		],
+		followUps: [
+			"Valid Palindrome III: at most k deletions — how does the approach change (hint: dynamic programming)?",
+			"Why is greedy correct here? Could skipping at a later mismatch be better than the first?",
+			"What if the problem allowed at most one insertion instead of one deletion?",
+		],
+		relatedNotes: ["two_pointers", "space-complexity"],
+	},
 	"3-longest-substring-without-repeating-characters": {
 		slug: "3-longest-substring-without-repeating-characters",
 		pattern: "Variable-size sliding window with a seen-set",

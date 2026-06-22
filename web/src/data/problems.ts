@@ -81,7 +81,7 @@ class Solution:
         # and we need to use enumerate to keep track of the index of the
         # element in the list
 
-        for i, element in nums:
+        for i, element in enumerate(nums):
             difference = target - element
             if difference in difference_seen:
                 return [difference_seen[difference], i]
@@ -1865,11 +1865,11 @@ class Solution:
 
 if __name__ == "__main__":
     sol = Solution()
-    assert sol.subarraySum([1, 1, 1], 2) == 2          # [1,1] at idx 0-1 and 1-2
-    assert sol.subarraySum([1, 2, 3], 3) == 2           # [3] and [1,2]
+    assert sol.subarraySum([1, 1, 1], 2) == 2  # [1,1] at idx 0-1 and 1-2
+    assert sol.subarraySum([1, 2, 3], 3) == 2  # [3] and [1,2]
     assert sol.subarraySum([1], 0) == 0
-    assert sol.subarraySum([0, 0, 0], 0) == 6           # all subarrays
-    assert sol.subarraySum([-1, -1, 1], 0) == 1         # [-1,-1,1] sums to -1+... wait
+    assert sol.subarraySum([0, 0, 0], 0) == 6  # all subarrays
+    assert sol.subarraySum([-1, -1, 1], 0) == 1  # [-1,-1,1] sums to -1+... wait
     assert sol.subarraySum([1, -1, 1, -1], 0) == 4
     print("All test cases passed!")`,
       julia: ``,
@@ -2290,14 +2290,19 @@ class Solution:
         for i in range(n):
             prefix[i + 1] = prefix[i] ^ arr[i]
 
-        # XOR of arr[l..r] = prefix[r+1] ^ prefix[l]
+        # XOR of arr[lo..hi] = prefix[hi+1] ^ prefix[lo]
         # Because XOR is self-inverse: a^a = 0, so common prefix cancels out
-        return [prefix[r + 1] ^ prefix[l] for l, r in queries]
+        return [prefix[hi + 1] ^ prefix[lo] for lo, hi in queries]
 
 
 if __name__ == "__main__":
     sol = Solution()
-    assert sol.xorQueries([1, 3, 4, 8], [[0, 1], [1, 2], [0, 3], [3, 3]]) == [2, 7, 14, 8]
+    assert sol.xorQueries([1, 3, 4, 8], [[0, 1], [1, 2], [0, 3], [3, 3]]) == [
+        2,
+        7,
+        14,
+        8,
+    ]
     assert sol.xorQueries([4, 8], [[0, 0], [1, 1]]) == [4, 8]
     assert sol.xorQueries([0, 0, 0], [[0, 2]]) == [0]
     print("All test cases passed!")`,
@@ -3140,10 +3145,7 @@ class Solution:
         result.append(-heap[0][0])  # Get initial maximum
 
         for i in range(k, n):
-            print(f"i: {i}")
             heapq.heappush(heap, (-nums[i], i))
-            print(f"Current window: {i-k+1} to {i}")
-            print(f"Index of the current smallest: {heap[0][1]}")
 
             # if the current smallest is less or equal to just before the window start,
             # pop it
@@ -3880,5 +3882,114 @@ if __name__ == "__main__":
       julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+  },
+  {
+    id: "344",
+    slug: "344-reverse-string",
+    leetcodeSlug: "reverse-string",
+    title: "Reverse String",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["two-pointers", "string"],
+    description: `<p>Write a function that reverses a string. The input string is given as an array of characters <code>s</code>.</p>
+
+<p>You must do this by modifying the input array <a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank">in-place</a> with <code>O(1)</code> extra memory.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<pre><strong>Input:</strong> s = ["h","e","l","l","o"]
+<strong>Output:</strong> ["o","l","l","e","h"]
+</pre><p><strong class="example">Example 2:</strong></p>
+<pre><strong>Input:</strong> s = ["H","a","n","n","a","h"]
+<strong>Output:</strong> ["h","a","n","n","a","H"]
+</pre>
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>s[i]</code> is a <a href="https://en.wikipedia.org/wiki/ASCII#Printable_characters" target="_blank">printable ascii character</a>.</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def reverseString(self, s: List[str]) -> None:
+        l, r = 0, len(s) - 1
+        while l < r:
+            s[l], s[r] = s[r], s[l]
+            l += 1
+            r -= 1
+
+
+if __name__ == "__main__":
+    s = ["h", "e", "l", "l", "o"]
+    Solution().reverseString(s)
+    print(s)`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/reverse-string/",
+  },
+  {
+    id: "680",
+    slug: "680-valid-palindrome-ii",
+    leetcodeSlug: "valid-palindrome-ii",
+    title: "Valid Palindrome II",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["two-pointers", "string", "greedy"],
+    description: `<p>Given a string <code>s</code>, return <code>true</code> <em>if the </em><code>s</code><em> can be palindrome after deleting <strong>at most one</strong> character from it</em>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;aba&quot;
+<strong>Output:</strong> true
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;abca&quot;
+<strong>Output:</strong> true
+<strong>Explanation:</strong> You could delete the character &#39;c&#39;.
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;abc&quot;
+<strong>Output:</strong> false
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>s</code> consists of lowercase English letters.</li>
+</ul>
+`,
+    solutions: {
+      python: `class Solution:
+    def validPalindrome(self, s: str) -> bool:
+        def is_pali(sub: str) -> bool:
+            return sub == sub[::-1]
+
+        l, r = 0, len(s) - 1
+        while l < r:
+            if s[l] != s[r]:
+                # Try skipping s[l] OR skipping s[r]
+                return is_pali(s[l + 1 : r + 1]) or is_pali(s[l:r])
+            l += 1
+            r -= 1
+
+        return True`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/valid-palindrome-ii/",
   },
 ];
