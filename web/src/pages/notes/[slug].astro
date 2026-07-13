@@ -26,6 +26,13 @@ const { Content } = await render(note);
 		<span>{note.data.title}</span>
 	</nav>
 
+	{(note.data.status === "wip" || (note.data.tags && note.data.tags.length > 0)) && (
+		<div class="note-meta">
+			{note.data.status === "wip" && <span class="status">WIP</span>}
+			{note.data.tags && note.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+		</div>
+	)}
+
 	<article class="prose">
 		<Content />
 		{note.id === "asymptotic-analysis" && (
@@ -75,6 +82,30 @@ const { Content } = await render(note);
 
 	.sep {
 		opacity: 0.4;
+	}
+
+	.note-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 0 0 1.5rem;
+	}
+
+	.status,
+	.tag {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		color: var(--muted);
+		font: var(--fs-micro) var(--font-sans);
+		letter-spacing: 0.04em;
+		padding: 0.2rem 0.55rem;
+		text-transform: uppercase;
+	}
+
+	.status {
+		border-color: color-mix(in srgb, var(--status-medium) 45%, transparent);
+		color: var(--status-medium);
+		font-weight: 600;
 	}
 
 	.chart-section {

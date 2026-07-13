@@ -2,6 +2,12 @@
 title: Time Complexity Interview Questions & Cheat Sheet
 description: A comprehensive guide to time complexity analysis for DSA interviews, covering common questions, patterns, and quick reference tables.
 category: Complexity
+order: 4
+status: stable
+tags:
+  - complexity
+  - interview-prep
+  - big-o
 ---
 
 # Time Complexity Interview Questions & Cheat Sheet

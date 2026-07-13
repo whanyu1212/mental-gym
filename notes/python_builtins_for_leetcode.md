@@ -2,6 +2,12 @@
 title: Python Built-in Functions & Operators for LeetCode
 description: A comprehensive reference of Python built-in functions, data structures, and libraries commonly used in LeetCode problems.
 category: Languages
+order: 2
+status: stable
+tags:
+  - python
+  - leetcode
+  - reference
 ---
 
 # Python Built-in Functions & Operators for LeetCode
