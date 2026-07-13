@@ -1,7 +1,7 @@
 import {
+  deduplicateImportedEvents,
   parseExport,
   serializeExport,
-  withoutEventIds,
 } from "./sr-export";
 import type {
   ImportResult,
@@ -136,6 +136,8 @@ export function exportAll(
 
 export async function importAll(json: string): Promise<ImportResult> {
   const { records, events } = parseExport(json);
+  const existingEvents = await getAllReviewEvents();
+  const newEvents = deduplicateImportedEvents(existingEvents, events);
   const db = await open();
   const transaction = db.transaction(
     [REVIEWS_STORE, EVENTS_STORE],
@@ -147,14 +149,14 @@ export async function importAll(json: string): Promise<ImportResult> {
   for (const record of records) {
     reviewsStore.put(record);
   }
-  for (const event of withoutEventIds(events)) {
+  for (const event of newEvents) {
     eventsStore.add(event);
   }
 
   await complete(transaction);
   return {
     recordCount: records.length,
-    eventCount: events.length,
+    eventCount: newEvents.length,
   };
 }
 

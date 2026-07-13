@@ -88,30 +88,43 @@ const { domain, slug, title, difficulty, group } = Astro.props;
         }
       });
 
+      let isSubmitting = false;
+
       buttons.forEach((btn) => {
         btn.addEventListener("click", async () => {
+          if (isSubmitting) return;
+          isSubmitting = true;
+          buttons.forEach((button) => (button.disabled = true));
+
           const quality = Number(btn.dataset.quality) as ReviewQuality;
 
-          let record = await getRecord(key);
-          if (!record) {
-            record = createNewRecord(domain, slug, title, difficulty, group);
+          let updated: ReturnType<typeof schedule>;
+          try {
+            let record = await getRecord(key);
+            if (!record) {
+              record = createNewRecord(domain, slug, title, difficulty, group);
+            }
+
+            updated = schedule(record, quality);
+            const reviewedAt = new Date();
+            await putReviewAndEvent(updated, {
+              reviewedAt: reviewedAt.toISOString(),
+              reviewDate: localDateISO(reviewedAt),
+              problemKey: updated.problemKey,
+              domain: updated.domain,
+              group: updated.group,
+              rating: quality,
+              interval: updated.interval,
+            });
+          } catch {
+            isSubmitting = false;
+            buttons.forEach((button) => (button.disabled = false));
+            resultEl.textContent = "Could not save this review. Please try again.";
+            resultEl.classList.add("visible");
+            return;
           }
 
-          const updated = schedule(record, quality);
-          const reviewedAt = new Date();
-          await putReviewAndEvent(updated, {
-            reviewedAt: reviewedAt.toISOString(),
-            reviewDate: localDateISO(reviewedAt),
-            problemKey: updated.problemKey,
-            domain: updated.domain,
-            group: updated.group,
-            rating: quality,
-            interval: updated.interval,
-          });
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
-
-          // Disable buttons, show result
-          buttons.forEach((b) => (b.disabled = true));
           btn.classList.add("selected");
 
           const days = daysUntilDue(updated);

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  deduplicateImportedEvents,
   normalizeExport,
   parseExport,
   serializeExport,
@@ -70,6 +71,30 @@ test("imported events discard browser-local auto-increment ids", () => {
       interval: event.interval,
     },
   ]);
+});
+
+test("re-importing the same event does not duplicate history", () => {
+  assert.deepEqual(deduplicateImportedEvents([event], [event]), []);
+});
+
+test("duplicate events within one backup are imported once", () => {
+  assert.deepEqual(
+    deduplicateImportedEvents([], [event, { ...event, id: 2 }]),
+    withoutEventIds([event])
+  );
+});
+
+test("distinct events are preserved when imported", () => {
+  const later = {
+    ...event,
+    id: 2,
+    reviewedAt: "2026-07-14T12:00:00.000Z",
+    reviewDate: "2026-07-14",
+  };
+  assert.deepEqual(
+    deduplicateImportedEvents([event], [event, later]),
+    withoutEventIds([later])
+  );
 });
 
 test("invalid versions and malformed events are rejected", () => {

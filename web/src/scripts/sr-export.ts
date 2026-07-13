@@ -80,6 +80,35 @@ export function withoutEventIds(events: ReviewEvent[]): ReviewEvent[] {
   return events.map(({ id: _id, ...event }) => event);
 }
 
+export function eventKey(event: ReviewEvent): string {
+  return [
+    event.reviewedAt,
+    event.reviewDate,
+    event.problemKey,
+    event.domain,
+    event.group,
+    event.rating,
+    event.interval,
+  ].join("|");
+}
+
+export function deduplicateImportedEvents(
+  existing: ReviewEvent[],
+  imported: ReviewEvent[]
+): ReviewEvent[] {
+  const known = new Set(existing.map(eventKey));
+  const unique: ReviewEvent[] = [];
+
+  for (const event of withoutEventIds(imported)) {
+    const key = eventKey(event);
+    if (known.has(key)) continue;
+    known.add(key);
+    unique.push(event);
+  }
+
+  return unique;
+}
+
 export function serializeExport(
   records: ReviewRecord[],
   events: ReviewEvent[],
