@@ -1,0 +1,388 @@
+---
+import { withBase } from "../lib/url";
+
+interface Props {
+  detailed?: boolean;
+}
+
+const { detailed = false } = Astro.props;
+---
+
+<progress-summary data-detailed={detailed ? "true" : "false"}>
+  <section class:list={["progress-panel", { detailed }]}>
+    <div class="progress-loading">Loading local progress…</div>
+
+    <div class="progress-empty" hidden>
+      <h2>No review progress yet</h2>
+      <p>Rate a problem after practicing it to start building your local dashboard.</p>
+      <a href={withBase("/problems")}>Start practicing <span>→</span></a>
+    </div>
+
+    <div class="progress-content" hidden>
+      <div class="metric-grid">
+        <article>
+          <strong data-metric="reviewed">0</strong>
+          <span>Reviewed</span>
+        </article>
+        <article>
+          <strong data-metric="learning">0</strong>
+          <span>Learning</span>
+        </article>
+        <article>
+          <strong data-metric="established">0</strong>
+          <span>Established</span>
+        </article>
+        <article>
+          <strong data-metric="due">0</strong>
+          <span>Due today</span>
+        </article>
+        <article>
+          <strong class="overdue" data-metric="overdue">0</strong>
+          <span>Overdue</span>
+        </article>
+      </div>
+
+      <div class="compact-footer" hidden={detailed}>
+        <p>Established means at least three consecutive successful recalls with a review interval of seven days or more.</p>
+        <a href={withBase("/progress")}>View full progress <span>→</span></a>
+      </div>
+
+      {detailed && (
+        <div class="details">
+          <section>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Coverage</p>
+                <h2>By domain</h2>
+              </div>
+            </div>
+            <div class="breakdown-list" data-domain-list></div>
+          </section>
+
+          <section>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Focus areas</p>
+                <h2>By topic</h2>
+              </div>
+            </div>
+            <div class="breakdown-list" data-topic-list></div>
+          </section>
+
+          <section>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Act now</p>
+                <h2>Review queue</h2>
+              </div>
+            </div>
+            <div class="review-list" data-review-list></div>
+            <p class="queue-empty" data-queue-empty hidden>Nothing is due. Your next reviews are scheduled for later.</p>
+          </section>
+        </div>
+      )}
+    </div>
+  </section>
+</progress-summary>
+
+<script>
+  import { withBase } from "../lib/url";
+  import { getAllRecords } from "../scripts/sr-db";
+  import { summarizeProgress } from "../scripts/sr-stats";
+  import { todayISO } from "../scripts/sr-scheduler";
+
+  const escapeHtml = (value: string) =>
+    value.replace(
+      /[&<>"']/g,
+      (character) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[character] ?? character
+    );
+
+  class ProgressSummaryElement extends HTMLElement {
+    connectedCallback() {
+      this.render();
+      window.addEventListener("mental-gym:progress-updated", this.render);
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener("mental-gym:progress-updated", this.render);
+    }
+
+    render = async () => {
+      const loading = this.querySelector<HTMLElement>(".progress-loading");
+      const empty = this.querySelector<HTMLElement>(".progress-empty");
+      const content = this.querySelector<HTMLElement>(".progress-content");
+
+      try {
+        const records = await getAllRecords();
+        const stats = summarizeProgress(records, todayISO());
+
+        if (loading) loading.hidden = true;
+
+        if (stats.reviewed === 0) {
+          if (empty) empty.hidden = false;
+          if (content) content.hidden = true;
+          return;
+        }
+
+        if (empty) empty.hidden = true;
+        if (content) content.hidden = false;
+
+        for (const metric of ["reviewed", "learning", "established", "due", "overdue"] as const) {
+          const element = this.querySelector<HTMLElement>(`[data-metric="${metric}"]`);
+          if (element) element.textContent = String(stats[metric]);
+        }
+
+        if (this.dataset.detailed !== "true") return;
+
+        const renderBreakdown = (groups: typeof stats.domains) =>
+          groups
+            .map(
+              (group) => `
+                <article class="breakdown-row">
+                  <strong>${escapeHtml(group.name)}</strong>
+                  <span>${group.reviewed} reviewed</span>
+                  <span>${group.learning} learning</span>
+                  <span>${group.established} established</span>
+                  <span class="${group.overdue > 0 ? "attention" : ""}">${group.due + group.overdue} due</span>
+                </article>
+              `
+            )
+            .join("");
+
+        const domainList = this.querySelector<HTMLElement>("[data-domain-list]");
+        const topicList = this.querySelector<HTMLElement>("[data-topic-list]");
+        if (domainList) domainList.innerHTML = renderBreakdown(stats.domains);
+        if (topicList) topicList.innerHTML = renderBreakdown(stats.topics);
+
+        const reviewList = this.querySelector<HTMLElement>("[data-review-list]");
+        const queueEmpty = this.querySelector<HTMLElement>("[data-queue-empty]");
+        if (stats.dueRecords.length === 0) {
+          if (reviewList) reviewList.innerHTML = "";
+          if (queueEmpty) queueEmpty.hidden = false;
+          return;
+        }
+
+        if (queueEmpty) queueEmpty.hidden = true;
+        if (reviewList) {
+          reviewList.innerHTML = stats.dueRecords
+            .map((record) => {
+              const path =
+                record.domain === "algorithms"
+                  ? `/algorithms/${encodeURIComponent(record.slug)}/`
+                  : `/machine-learning/${encodeURIComponent(record.slug)}/`;
+              const href = withBase(path);
+              const state = record.dueDate < todayISO() ? "Overdue" : "Due today";
+
+              return `
+                <a class="review-row" href="${href}">
+                  <span>
+                    <strong>${escapeHtml(record.title)}</strong>
+                    <small>${escapeHtml(record.group)}</small>
+                  </span>
+                  <em class="${state === "Overdue" ? "attention" : ""}">${state}</em>
+                </a>
+              `;
+            })
+            .join("");
+        }
+      } catch {
+        if (loading) loading.textContent = "Progress data is unavailable in this browser.";
+      }
+    };
+  }
+
+  if (!customElements.get("progress-summary")) {
+    customElements.define("progress-summary", ProgressSummaryElement);
+  }
+</script>
+
+<style>
+  progress-summary {
+    display: block;
+  }
+
+  .progress-panel {
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+    padding: 1.25rem;
+  }
+
+  .progress-loading,
+  .progress-empty p,
+  .compact-footer p,
+  .queue-empty {
+    color: var(--muted);
+    font: var(--fs-fine) var(--font-sans);
+  }
+
+  .progress-empty h2 {
+    font: 600 var(--fs-xl) var(--font-serif);
+    margin: 0 0 0.4rem;
+  }
+
+  .progress-empty p {
+    line-height: 1.6;
+    margin: 0 0 0.75rem;
+  }
+
+  .progress-empty a,
+  .compact-footer a {
+    color: var(--accent);
+    font: 600 var(--fs-eyebrow) var(--font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .metric-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .metric-grid article {
+    background: color-mix(in srgb, var(--panel) 72%, transparent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+  }
+
+  .metric-grid strong {
+    color: var(--text);
+    font: 600 var(--fs-display) var(--font-serif);
+  }
+
+  .metric-grid strong.overdue,
+  :global(.attention) {
+    color: var(--status-hard);
+  }
+
+  .metric-grid span {
+    color: var(--muted);
+    font: var(--fs-eyebrow) var(--font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .compact-footer {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  .compact-footer p {
+    line-height: 1.5;
+    margin: 0;
+    max-width: 620px;
+  }
+
+  .details {
+    display: grid;
+    gap: 2.75rem;
+    margin-top: 3rem;
+  }
+
+  .section-heading {
+    margin-bottom: 0.9rem;
+  }
+
+  .eyebrow {
+    color: var(--accent);
+    font: 600 var(--fs-eyebrow) var(--font-sans);
+    letter-spacing: 0.14em;
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+  }
+
+  .section-heading h2 {
+    font: 600 var(--fs-h2) var(--font-serif);
+    margin: 0;
+  }
+
+  .breakdown-list,
+  .review-list {
+    border-top: 1px solid var(--border);
+  }
+
+  :global(.breakdown-row) {
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(170px, 1.5fr) repeat(4, minmax(80px, 1fr));
+    padding: 0.8rem 0;
+  }
+
+  :global(.breakdown-row) strong,
+  :global(.review-row) strong {
+    color: var(--text);
+    font: 600 var(--fs-base) var(--font-serif);
+  }
+
+  :global(.breakdown-row) span {
+    color: var(--muted);
+    font: var(--fs-eyebrow) var(--font-sans);
+  }
+
+  :global(.review-row) {
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    text-decoration: none;
+  }
+
+  :global(.review-row):hover {
+    text-decoration: none;
+  }
+
+  :global(.review-row) > span {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  :global(.review-row) small,
+  :global(.review-row) em {
+    color: var(--muted);
+    font: normal var(--fs-eyebrow) var(--font-sans);
+  }
+
+  .queue-empty {
+    margin: 0.75rem 0 0;
+  }
+
+  @media (max-width: 720px) {
+    .metric-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    :global(.breakdown-row) {
+      align-items: start;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    :global(.breakdown-row) strong {
+      grid-column: 1 / -1;
+    }
+
+    .compact-footer {
+      align-items: start;
+      flex-direction: column;
+    }
+  }
+</style>

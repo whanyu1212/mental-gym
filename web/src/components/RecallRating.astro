@@ -98,6 +98,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 
           const updated = schedule(record, quality);
           await putRecord(updated);
+          window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
 
           // Disable buttons, show result
           buttons.forEach((b) => (b.disabled = true));

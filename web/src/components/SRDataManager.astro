@@ -91,6 +91,7 @@
           const count = await importAll(text);
           showFeedback(`Imported ${count} records.`);
           await updateSummary();
+          window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
         } catch (e: any) {
           showFeedback(`Import failed: ${e.message}`);
         }
@@ -111,6 +112,7 @@
         dialog.close();
         showFeedback("All review data cleared.");
         await updateSummary();
+        window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
       });
     }
   }
