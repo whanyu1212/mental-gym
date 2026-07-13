@@ -1,3 +1,8 @@
+---
+title: Notes Organization
+category: Meta
+---
+
 # Notes
 
 This directory contains reusable technical knowledge that complements the practice artifacts in `src/`.
