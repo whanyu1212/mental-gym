@@ -1,30 +1,62 @@
-import type { ReviewRecord, SRExport } from "./sr-types";
+import { parseExport, serializeExport } from "./sr-export";
+import type {
+  ImportResult,
+  ReviewEvent,
+  ReviewRecord,
+} from "./sr-types";
 
 const DB_NAME = "mental-gym-sr";
-const DB_VERSION = 1;
-const STORE = "reviews";
+const DB_VERSION = 2;
+const REVIEWS_STORE = "reviews";
+const EVENTS_STORE = "reviewEvents";
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        const store = db.createObjectStore(STORE, { keyPath: "problemKey" });
-        store.createIndex("dueDate", "dueDate", { unique: false });
-        store.createIndex("domain", "domain", { unique: false });
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+
+      if (!db.objectStoreNames.contains(REVIEWS_STORE)) {
+        const reviews = db.createObjectStore(REVIEWS_STORE, {
+          keyPath: "problemKey",
+        });
+        reviews.createIndex("dueDate", "dueDate", { unique: false });
+        reviews.createIndex("domain", "domain", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(EVENTS_STORE)) {
+        const events = db.createObjectStore(EVENTS_STORE, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        events.createIndex("reviewDate", "reviewDate", { unique: false });
+        events.createIndex("problemKey", "problemKey", { unique: false });
+        events.createIndex("domain", "domain", { unique: false });
       }
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
   });
 }
 
-function tx(
+function store(
   db: IDBDatabase,
+  storeName: string,
   mode: IDBTransactionMode
 ): IDBObjectStore {
-  return db.transaction(STORE, mode).objectStore(STORE);
+  return db.transaction(storeName, mode).objectStore(storeName);
+}
+
+function complete(transaction: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error("Database transaction aborted"));
+    transaction.onerror = () =>
+      reject(transaction.error ?? new Error("Database transaction failed"));
+  });
 }
 
 export async function getRecord(
@@ -32,27 +64,49 @@ export async function getRecord(
 ): Promise<ReviewRecord | undefined> {
   const db = await open();
   return new Promise((resolve, reject) => {
-    const req = tx(db, "readonly").get(key);
-    req.onsuccess = () => resolve(req.result as ReviewRecord | undefined);
-    req.onerror = () => reject(req.error);
+    const request = store(db, REVIEWS_STORE, "readonly").get(key);
+    request.onsuccess = () =>
+      resolve(request.result as ReviewRecord | undefined);
+    request.onerror = () => reject(request.error);
   });
 }
 
 export async function putRecord(record: ReviewRecord): Promise<void> {
   const db = await open();
-  return new Promise((resolve, reject) => {
-    const req = tx(db, "readwrite").put(record);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
+  const transaction = db.transaction(REVIEWS_STORE, "readwrite");
+  transaction.objectStore(REVIEWS_STORE).put(record);
+  await complete(transaction);
+}
+
+export async function putReviewAndEvent(
+  record: ReviewRecord,
+  event: ReviewEvent
+): Promise<void> {
+  const db = await open();
+  const transaction = db.transaction(
+    [REVIEWS_STORE, EVENTS_STORE],
+    "readwrite"
+  );
+  transaction.objectStore(REVIEWS_STORE).put(record);
+  transaction.objectStore(EVENTS_STORE).add(event);
+  await complete(transaction);
 }
 
 export async function getAllRecords(): Promise<ReviewRecord[]> {
   const db = await open();
   return new Promise((resolve, reject) => {
-    const req = tx(db, "readonly").getAll();
-    req.onsuccess = () => resolve(req.result as ReviewRecord[]);
-    req.onerror = () => reject(req.error);
+    const request = store(db, REVIEWS_STORE, "readonly").getAll();
+    request.onsuccess = () => resolve(request.result as ReviewRecord[]);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getAllReviewEvents(): Promise<ReviewEvent[]> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const request = store(db, EVENTS_STORE, "readonly").getAll();
+    request.onsuccess = () => resolve(request.result as ReviewEvent[]);
+    request.onerror = () => reject(request.error);
   });
 }
 
@@ -62,49 +116,51 @@ export async function getDueRecords(
   const db = await open();
   return new Promise((resolve, reject) => {
     const range = IDBKeyRange.upperBound(todayISO);
-    const idx = tx(db, "readonly").index("dueDate");
-    const req = idx.getAll(range);
-    req.onsuccess = () => resolve(req.result as ReviewRecord[]);
-    req.onerror = () => reject(req.error);
+    const index = store(db, REVIEWS_STORE, "readonly").index("dueDate");
+    const request = index.getAll(range);
+    request.onsuccess = () => resolve(request.result as ReviewRecord[]);
+    request.onerror = () => reject(request.error);
   });
 }
 
-export async function deleteAllRecords(): Promise<void> {
+export function exportAll(
+  records: ReviewRecord[],
+  events: ReviewEvent[]
+): string {
+  return serializeExport(records, events);
+}
+
+export async function importAll(json: string): Promise<ImportResult> {
+  const { records, events } = parseExport(json);
   const db = await open();
-  return new Promise((resolve, reject) => {
-    const req = tx(db, "readwrite").clear();
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
+  const transaction = db.transaction(
+    [REVIEWS_STORE, EVENTS_STORE],
+    "readwrite"
+  );
+  const reviewsStore = transaction.objectStore(REVIEWS_STORE);
+  const eventsStore = transaction.objectStore(EVENTS_STORE);
 
-export function exportAll(records: ReviewRecord[]): string {
-  const data: SRExport = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    records,
+  for (const record of records) {
+    reviewsStore.put(record);
+  }
+  for (const event of events) {
+    eventsStore.put(event);
+  }
+
+  await complete(transaction);
+  return {
+    recordCount: records.length,
+    eventCount: events.length,
   };
-  return JSON.stringify(data, null, 2);
-}
-
-export async function importAll(json: string): Promise<number> {
-  const data: SRExport = JSON.parse(json);
-  if (data.version !== 1 || !Array.isArray(data.records)) {
-    throw new Error("Invalid SR export file");
-  }
-  const db = await open();
-  const store = tx(db, "readwrite");
-  let count = 0;
-  for (const record of data.records) {
-    store.put(record);
-    count++;
-  }
-  return new Promise((resolve, reject) => {
-    store.transaction.oncomplete = () => resolve(count);
-    store.transaction.onerror = () => reject(store.transaction.error);
-  });
 }
 
 export async function resetDatabase(): Promise<void> {
-  await deleteAllRecords();
+  const db = await open();
+  const transaction = db.transaction(
+    [REVIEWS_STORE, EVENTS_STORE],
+    "readwrite"
+  );
+  transaction.objectStore(REVIEWS_STORE).clear();
+  transaction.objectStore(EVENTS_STORE).clear();
+  await complete(transaction);
 }

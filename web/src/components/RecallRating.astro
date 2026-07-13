@@ -48,9 +48,10 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 </recall-rating>
 
 <script>
-  import { getRecord, putRecord } from "../scripts/sr-db";
+  import { getRecord, putReviewAndEvent } from "../scripts/sr-db";
   import {
     createNewRecord,
+    localDateISO,
     schedule,
     statusOf,
     daysUntilDue,
@@ -97,7 +98,16 @@ const { domain, slug, title, difficulty, group } = Astro.props;
           }
 
           const updated = schedule(record, quality);
-          await putRecord(updated);
+          const reviewedAt = new Date();
+          await putReviewAndEvent(updated, {
+            reviewedAt: reviewedAt.toISOString(),
+            reviewDate: localDateISO(reviewedAt),
+            problemKey: updated.problemKey,
+            domain: updated.domain,
+            group: updated.group,
+            rating: quality,
+            interval: updated.interval,
+          });
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
 
           // Disable buttons, show result

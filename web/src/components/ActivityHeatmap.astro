@@ -1,0 +1,48 @@
+<activity-heatmap>
+	<p class="empty">Activity will appear after your next review.</p>
+	<div class="grid" hidden></div>
+</activity-heatmap>
+
+<script>
+	class ActivityHeatmap extends HTMLElement {
+		setData(counts: Map<string, number>, today: string) {
+			const grid = this.querySelector<HTMLElement>(".grid");
+			const empty = this.querySelector<HTMLElement>(".empty");
+			if (!grid || !empty) return;
+			const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+			empty.hidden = total > 0;
+			grid.hidden = total === 0;
+			if (total === 0) return;
+
+			const start = new Date(`${today}T00:00:00`);
+			start.setDate(start.getDate() - 83);
+			grid.innerHTML = Array.from({ length: 84 }, (_, offset) => {
+				const date = new Date(start);
+				date.setDate(start.getDate() + offset);
+				const dateISO = [
+					date.getFullYear(),
+					String(date.getMonth() + 1).padStart(2, "0"),
+					String(date.getDate()).padStart(2, "0"),
+				].join("-");
+				const count = counts.get(dateISO) ?? 0;
+				const level = count === 0 ? 0 : count === 1 ? 1 : count <= 3 ? 2 : count <= 6 ? 3 : 4;
+				const label = `${count} ${count === 1 ? "review" : "reviews"} on ${date.toLocaleDateString()}`;
+				return `<span data-level="${level}" title="${label}" aria-label="${label}"></span>`;
+			}).join("");
+		}
+	}
+
+	if (!customElements.get("activity-heatmap")) {
+		customElements.define("activity-heatmap", ActivityHeatmap);
+	}
+</script>
+
+<style>
+	.empty { color: var(--muted); font: var(--fs-fine) var(--font-sans); margin: 0; }
+	.grid { display: grid; gap: .3rem; grid-auto-flow: column; grid-template-columns: repeat(12, .75rem); grid-template-rows: repeat(7, .75rem); overflow-x: auto; }
+	.grid :global(span) { background: var(--surface-base); border: 1px solid var(--border); border-radius: 2px; height: .75rem; width: .75rem; }
+	.grid :global([data-level="1"]) { background: color-mix(in srgb, var(--accent) 24%, var(--surface-base)); }
+	.grid :global([data-level="2"]) { background: color-mix(in srgb, var(--accent) 44%, var(--surface-base)); }
+	.grid :global([data-level="3"]) { background: color-mix(in srgb, var(--accent) 68%, var(--surface-base)); }
+	.grid :global([data-level="4"]) { background: var(--accent); }
+</style>

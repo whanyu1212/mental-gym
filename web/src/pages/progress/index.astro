@@ -1,4 +1,5 @@
 ---
+import ProgressHistory from "../../components/ProgressHistory.astro";
 import ProgressSummary from "../../components/ProgressSummary.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
 import Layout from "../../layouts/Layout.astro";
@@ -14,6 +15,15 @@ import { withBase } from "../../lib/url";
 	</section>
 
 	<ProgressSummary detailed={true} />
+
+	<section class="history-section">
+		<div class="section-heading">
+			<p class="eyebrow">Activity</p>
+			<h2>See how practice compounds.</h2>
+			<p>History begins with reviews recorded after this update; existing schedules are preserved without inventing past activity.</p>
+		</div>
+		<ProgressHistory />
+	</section>
 
 	<section class="data-section">
 		<div>
@@ -58,6 +68,27 @@ import { withBase } from "../../lib/url";
 		font-size: var(--fs-lg);
 		line-height: 1.6;
 		margin: 0 0 1.25rem;
+	}
+
+	.history-section {
+		margin-top: 2rem;
+	}
+
+	.section-heading {
+		margin-bottom: 1rem;
+	}
+
+	.section-heading h2 {
+		font-size: var(--fs-h2);
+		margin: 0 0 0.4rem;
+	}
+
+	.section-heading > p:not(.eyebrow) {
+		color: var(--muted);
+		font: var(--fs-sm) var(--font-sans);
+		line-height: 1.6;
+		margin: 0;
+		max-width: 720px;
 	}
 
 	.data-section {
