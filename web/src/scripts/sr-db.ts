@@ -1,4 +1,8 @@
-import { parseExport, serializeExport } from "./sr-export";
+import {
+  parseExport,
+  serializeExport,
+  withoutEventIds,
+} from "./sr-export";
 import type {
   ImportResult,
   ReviewEvent,
@@ -143,8 +147,8 @@ export async function importAll(json: string): Promise<ImportResult> {
   for (const record of records) {
     reviewsStore.put(record);
   }
-  for (const event of events) {
-    eventsStore.put(event);
+  for (const event of withoutEventIds(events)) {
+    eventsStore.add(event);
   }
 
   await complete(transaction);

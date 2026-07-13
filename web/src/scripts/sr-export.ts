@@ -76,6 +76,10 @@ export function parseExport(json: string): NormalizedSRExport {
   return normalizeExport(JSON.parse(json));
 }
 
+export function withoutEventIds(events: ReviewEvent[]): ReviewEvent[] {
+  return events.map(({ id: _id, ...event }) => event);
+}
+
 export function serializeExport(
   records: ReviewRecord[],
   events: ReviewEvent[],

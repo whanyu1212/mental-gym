@@ -5,6 +5,7 @@ import {
   normalizeExport,
   parseExport,
   serializeExport,
+  withoutEventIds,
 } from "../src/scripts/sr-export.ts";
 import type { ReviewEvent, ReviewRecord } from "../src/scripts/sr-types.ts";
 
@@ -55,6 +56,20 @@ test("version 2 round trip preserves records and events", () => {
     records: [record],
     events: [event],
   });
+});
+
+test("imported events discard browser-local auto-increment ids", () => {
+  assert.deepEqual(withoutEventIds([event]), [
+    {
+      reviewedAt: event.reviewedAt,
+      reviewDate: event.reviewDate,
+      problemKey: event.problemKey,
+      domain: event.domain,
+      group: event.group,
+      rating: event.rating,
+      interval: event.interval,
+    },
+  ]);
 });
 
 test("invalid versions and malformed events are rejected", () => {
