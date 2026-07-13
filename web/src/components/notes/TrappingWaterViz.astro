@@ -156,7 +156,7 @@ const steps: TeachingStep[] = [
         {heights.map((h, i) => (
           <div class="tw-col" data-idx={i} data-teach-target={`cell:${i}`}>
             <div class="tw-bar-stack">
-              <div class="tw-water" aria-hidden="true"></div>
+              <div class="tw-water-overlay" aria-hidden="true"></div>
               <div class="tw-bar" style={`height: ${h * 18 + 4}px`}>{h}</div>
             </div>
             <span class="cell-idx">{i}</span>
@@ -186,7 +186,7 @@ const steps: TeachingStep[] = [
           if (i === step.left || i === step.right) col.classList.add('active');
           else if (i < step.left || i > step.right) col.classList.add('visited');
 
-          const water = col.querySelector('.tw-water');
+          const water = col.querySelector('.tw-water-overlay');
           const units = step.phase === 'found' ? this.waterUnits[i] : 0;
           if (water) {
             water.style.height = `${units * 18}px`;
@@ -250,7 +250,7 @@ const steps: TeachingStep[] = [
     min-height: 4px;
   }
 
-  .tw-water {
+  .tw-water-overlay {
     position: absolute;
     bottom: 0;
     width: 100%;
@@ -266,7 +266,7 @@ const steps: TeachingStep[] = [
     transition: height 0.3s ease, opacity 0.2s ease;
   }
 
-  .tw-water.visible { opacity: 1; }
+  .tw-water-overlay.visible { opacity: 1; }
 
   .tw-col .cell-idx {
     font-size: var(--fs-micro);
