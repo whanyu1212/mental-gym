@@ -53,7 +53,7 @@ Use one of these categories for new notes:
 
 ## Frontmatter for New Notes
 
-Start from [`templates/note.md`](../templates/note.md). New published notes should include:
+Start from [`templates/note.md`](https://github.com/whanyu1212/mental-gym/blob/develop/templates/note.md). New published notes should include:
 
 ```yaml
 ---
