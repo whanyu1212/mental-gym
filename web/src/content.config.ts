@@ -8,6 +8,8 @@ const notes = defineCollection({
     description: z.string().optional(),
     category: z.string().default("General"),
     order: z.number().optional(),
+    status: z.enum(["wip", "stable"]).optional(),
+    tags: z.array(z.string()).optional(),
   }),
 });
 

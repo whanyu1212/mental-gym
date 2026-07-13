@@ -43,13 +43,24 @@ cache-aside-pattern.mdx
 
 Use `.md` for straightforward prose. Use `.mdx` when the note benefits from math, interactive components, or richer site presentation.
 
+## Categories
+
+Use one of these categories for new notes:
+
+- `DSA` for data structures, algorithms, patterns, and complexity.
+- `Machine Learning` for model foundations, implementations, evaluation, and ML systems.
+- `System Design` for architecture, scaling, reliability, and trade-offs.
+
 ## Frontmatter for New Notes
 
-Add minimal frontmatter to new notes:
+Start from [`templates/note.md`](../templates/note.md). New published notes should include:
 
 ```yaml
 ---
 title: Binary Search Invariants
+description: The decision rule and boundary handling behind binary search.
+category: DSA
+order: 10
 status: wip
 tags:
   - dsa
@@ -57,4 +68,4 @@ tags:
 ---
 ```
 
-Use `status: wip` while developing a note and `status: stable` once it is ready to rely on as a reference. Keep tags specific enough to support future navigation and discovery.
+Use `status: wip` while developing a note and `status: stable` once it is ready to rely on as a reference. Keep tags specific enough to support future navigation and discovery. `order` is optional; use it when notes in the same category need a deliberate reading sequence.
