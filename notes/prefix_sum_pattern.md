@@ -3,6 +3,11 @@ title: Prefix Sum Pattern
 description: A guide to the Prefix Sum pattern for efficient range sum queries in 1D, 2D, and 3D arrays.
 category: Patterns
 order: 2
+status: stable
+tags:
+  - dsa
+  - prefix-sum
+  - range-queries
 ---
 
 # Prefix Sum Pattern
