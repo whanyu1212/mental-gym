@@ -39,11 +39,13 @@ const pathname = stripBase(Astro.url.pathname);
 			<div class="container">
 				<a class="brand" href={withBase("/")}>Mental Gym</a>
 				<nav>
-					<a href={withBase("/problems")} class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") ? "active" : ""}
-						>Problems</a
+					<a href={withBase("/problems")} class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") || pathname.startsWith("/system-design") ? "active" : ""}
+						>Practice</a
 					>
 					<a href={withBase("/notes")} class={pathname.startsWith("/notes") ? "active" : ""}
-						>Notes</a
+						>Learn</a
+					>
+					<a href={withBase("/#review")}>Review</a
 					>
 					<button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
 						<span class="theme-toggle__icon" aria-hidden="true">◐</span>
