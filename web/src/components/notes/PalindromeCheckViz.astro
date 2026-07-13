@@ -158,14 +158,14 @@ const steps: TeachingStep[] = [
 
   .pc-ptr-label {
     position: absolute;
-    font-size: 0.72rem;
+    font-size: var(--fs-eyebrow);
     font-weight: 700;
     color: var(--accent);
     transition: left 0.25s ease;
   }
 
   .pc-char.verified .cell-val {
-    opacity: 0.45;
+    opacity: var(--dim-soft);
     border-color: var(--status-easy);
     color: var(--status-easy);
   }
@@ -174,7 +174,7 @@ const steps: TeachingStep[] = [
   .pc-char.active .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.1);
+    background: rgb(var(--accent-rgb) / 10%);
   }
 
   .pc-char.found .cell-val {

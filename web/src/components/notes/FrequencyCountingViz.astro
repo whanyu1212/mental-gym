@@ -177,7 +177,7 @@ const steps: TeachingStep[] = [
 <style>
   freq-viz { display: block; }
 
-  .fv-cell.visited .cell-val { opacity: 0.35; }
+  .fv-cell.visited .cell-val { opacity: var(--dim-soft); }
 
   .fv-cell.found .cell-val {
     border-color: var(--status-easy);
@@ -192,7 +192,7 @@ const steps: TeachingStep[] = [
   }
 
   .fv-discard-entry {
-    opacity: 0.35;
+    opacity: var(--dim-soft);
   }
 
   .stat-box.success-box {

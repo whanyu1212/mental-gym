@@ -11,7 +11,7 @@ import TrappingRainWaterAnimation from "../../components/TrappingRainWaterAnimat
 import ValidSudokuAnimation from "../../components/ValidSudokuAnimation.astro";
 import ContainerWithMostWaterAnimation from "../../components/ContainerWithMostWaterAnimation.astro";
 import ValidPalindromeAnimation from "../../components/ValidPalindromeAnimation.astro";
-import ValidParenthesesAnimation from "../../components/ValidParenthesesAnimation.astro";
+import ValidPalindrome2Animation from "../../components/ValidPalindrome2Animation.astro";
 import ThreeSumAnimation from "../../components/ThreeSumAnimation.astro";
 import MinStackAnimation from "../../components/MinStackAnimation.astro";
 import TwoSumIIAnimation from "../../components/TwoSumIIAnimation.astro";
@@ -34,8 +34,12 @@ import MergeTwoSortedListsAnimation from "../../components/MergeTwoSortedListsAn
 import DesignHashSetAnimation from "../../components/DesignHashSetAnimation.astro";
 import DesignHashMapAnimation from "../../components/DesignHashMapAnimation.astro";
 import SortAnArrayAnimation from "../../components/SortAnArrayAnimation.astro";
+import SubarraySumAnimation from "../../components/notes/PrefixSumHashmapViz.astro";
+import XorQueriesAnimation from "../../components/notes/PrefixXorViz.astro";
 import RecallRating from "../../components/RecallRating.astro";
+import LastVisited from "../../components/LastVisited.astro";
 import Layout from "../../layouts/Layout.astro";
+import { getGuide } from "../../data/algorithmGuides";
 
 export function getStaticPaths() {
 	return problems.map((problem) => ({
@@ -46,41 +50,54 @@ export function getStaticPaths() {
 
 const { problem } = Astro.props;
 const hasJulia = problem.solutions.julia.trim().length > 0;
-const animatedSlugs = new Set([
-	"1-two-sum",
-	"75-sort-colors",
-	"3-longest-substring-without-repeating-characters",
-	"121-best-time-to-buy-and-sell-stock",
-	"150-evaluate-reverse-polish-notation",
-	"36-valid-sudoku",
-	"42-trapping-rain-water",
-	"11-container-with-most-water",
-	"125-valid-palindrome",
-	"20-valid-parentheses",
-	"15-3sum",
-	"155-min-stack",
-	"167-two-sum-ii-input-array-is-sorted",
-	"238-product-of-array-except-self",
-	"424-longest-repeating-character-replacement",
-	"567-permutation-in-string",
-	"217-contains-duplicate",
-	"242-valid-anagram",
-	"1929-concatenation-of-array",
-	"14-longest-common-prefix",
-	"169-majority-element",
-	"229-majority-element-ii",
-	"49-group-anagrams",
-	"128-longest-consecutive-sequence",
-	"271-encode-and-decode-strings",
-	"304-range-sum-query-2d-immutable",
-	"347-top-k-frequent-elements",
-	"239-sliding-window-maximum",
-	"21-merge-two-sorted-lists",
-	"705-design-hashset",
-	"706-design-hashmap",
-	"912-sort-an-array",
-]);
-const hasAnimation = animatedSlugs.has(problem.slug);
+
+// slug → animation component. Replaces the old animatedSlugs Set + ~35
+// duplicated `{slug === "…" && <X/>}` branches with a single lookup.
+const animationBySlug = {
+	"1-two-sum": TwoSumAnimation,
+	"75-sort-colors": SortColorsAnimation,
+	"3-longest-substring-without-repeating-characters": LongestSubstringAnimation,
+	"121-best-time-to-buy-and-sell-stock": BuySellStockAnimation,
+	"150-evaluate-reverse-polish-notation": RPNAnimation,
+	"36-valid-sudoku": ValidSudokuAnimation,
+	"42-trapping-rain-water": TrappingRainWaterAnimation,
+	"11-container-with-most-water": ContainerWithMostWaterAnimation,
+	"125-valid-palindrome": ValidPalindromeAnimation,
+	"680-valid-palindrome-ii": ValidPalindrome2Animation,
+	"15-3sum": ThreeSumAnimation,
+	"155-min-stack": MinStackAnimation,
+	"167-two-sum-ii-input-array-is-sorted": TwoSumIIAnimation,
+	"238-product-of-array-except-self": ProductExceptSelfAnimation,
+	"424-longest-repeating-character-replacement": CharacterReplacementAnimation,
+	"567-permutation-in-string": PermutationInStringAnimation,
+	"217-contains-duplicate": ContainsDuplicateAnimation,
+	"242-valid-anagram": ValidAnagramAnimation,
+	"1929-concatenation-of-array": ConcatenationOfArrayAnimation,
+	"14-longest-common-prefix": LongestCommonPrefixAnimation,
+	"169-majority-element": MajorityElementAnimation,
+	"229-majority-element-ii": MajorityElementIIAnimation,
+	"49-group-anagrams": GroupAnagramsAnimation,
+	"128-longest-consecutive-sequence": LongestConsecutiveSequenceAnimation,
+	"271-encode-and-decode-strings": EncodeDecodeStringsAnimation,
+	"304-range-sum-query-2d-immutable": RangeSumQuery2DImmutableAnimation,
+	"347-top-k-frequent-elements": TopKFrequentElementsAnimation,
+	"239-sliding-window-maximum": SlidingWindowMaximumAnimation,
+	"21-merge-two-sorted-lists": MergeTwoSortedListsAnimation,
+	"705-design-hashset": DesignHashSetAnimation,
+	"706-design-hashmap": DesignHashMapAnimation,
+	"912-sort-an-array": SortAnArrayAnimation,
+	"560-subarray-sum-equals-k": SubarraySumAnimation,
+	"1310-xor-queries-of-a-subarray": XorQueriesAnimation,
+} as const;
+
+const Animation = animationBySlug[problem.slug as keyof typeof animationBySlug];
+const hasAnimation = Boolean(Animation);
+
+const guide = getGuide(problem.slug);
+const hasGuide = Boolean(guide);
+
+// Default tab priority: Guide (study material) → Animation → Solution.
+const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution";
 ---
 
 <Layout title={`${problem.title} | Mental Gym`}>
@@ -108,328 +125,217 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	<section class="problem-statement">
 		<h2 class="section-title">Problem</h2>
-		<div class="description" set:html={problem.description} />
+		<div class="prose" set:html={problem.description} />
 	</section>
 
 	<section class="content-switcher">
 		<div class="content-tabs" role="tablist" aria-label="Problem detail views">
+			{hasGuide && (
+				<button
+					class={`content-tab ${defaultView === "guide" ? "active" : ""}`}
+					type="button"
+					data-view-tab="guide"
+					role="tab"
+					aria-selected={defaultView === "guide" ? "true" : "false"}
+				>
+					Guide
+				</button>
+			)}
 			{hasAnimation && (
 				<button
-					class="content-tab active"
+					class={`content-tab ${defaultView === "animation" ? "active" : ""}`}
 					type="button"
 					data-view-tab="animation"
 					role="tab"
-					aria-selected="true"
+					aria-selected={defaultView === "animation" ? "true" : "false"}
 				>
 					Animation
 				</button>
 			)}
 			<button
-				class={`content-tab ${!hasAnimation ? "active" : ""}`}
+				class={`content-tab ${defaultView === "solution" ? "active" : ""}`}
 				type="button"
 				data-view-tab="solution"
 				role="tab"
-				aria-selected={hasAnimation ? "false" : "true"}
+				aria-selected={defaultView === "solution" ? "true" : "false"}
 			>
 				Solution
 			</button>
 		</div>
 
 		{
-			hasAnimation && (
-				<div class="content-panel" data-view-panel="animation">
-					{problem.slug === "1-two-sum" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TwoSumAnimation />
-						</section>
-					)}
+			hasGuide && guide && (
+				<div
+					class={`content-panel ${defaultView === "guide" ? "" : "hidden"}`}
+					data-view-panel="guide"
+				>
+					<section class="guide">
+						<aside class="guide-sidebar">
+							<nav class="guide-toc" data-guide-toc>
+								<span class="toc-label">Contents</span>
+								<a href="#guide-dissection" class="toc-link active">Dissection</a>
+								<a href="#guide-intuition" class="toc-link">Intuition</a>
+								<a href="#guide-approach" class="toc-link">Approach</a>
+								<a href="#guide-complexity" class="toc-link">Complexity</a>
+								<a href="#guide-pitfalls" class="toc-link">Pitfalls</a>
+								<a href="#guide-tests" class="toc-link">Tests</a>
+								{guide.followUps.length > 0 && <a href="#guide-followups" class="toc-link">Follow-ups</a>}
+							</nav>
+						</aside>
 
-					{problem.slug === "75-sort-colors" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<SortColorsAnimation />
-						</section>
-					)}
+						<div class="guide-content">
+						<div class="guide-card guide-pattern">
+							<h2 class="section-title">Pattern</h2>
+							<p class="pattern-name">{guide.pattern}</p>
+							<ul class="signal-list">
+								{guide.recognitionSignals.map((signal) => (
+									<li>{signal}</li>
+								))}
+							</ul>
+						</div>
 
-					{problem.slug === "3-longest-substring-without-repeating-characters" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<LongestSubstringAnimation />
-						</section>
-					)}
+						<div class="guide-card guide-block" id="guide-dissection">
+							<h3 class="guide-heading">Dissection</h3>
+							<p class="guide-prose guide-prose-dissection">{guide.dissection}</p>
+						</div>
 
-					{problem.slug === "121-best-time-to-buy-and-sell-stock" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<BuySellStockAnimation />
-						</section>
-					)}
+						<div class="guide-card guide-block" id="guide-intuition">
+							<h3 class="guide-heading">Intuition</h3>
+							<p class="guide-prose">{guide.intuition}</p>
+							<p class="guide-invariant">
+								<span class="invariant-label">Invariant</span>
+								{guide.invariant}
+							</p>
+						</div>
 
-					{problem.slug === "150-evaluate-reverse-polish-notation" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<RPNAnimation />
-						</section>
-					)}
+						<div class="guide-card guide-block" id="guide-approach">
+							<h3 class="guide-heading">Approach</h3>
+							<ol class="approach-list">
+								{guide.approachSteps.map((step) => (
+									<li><span class="step-text">{step}</span></li>
+								))}
+							</ol>
+						</div>
 
-					{problem.slug === "36-valid-sudoku" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
+						<div class="guide-card guide-block" id="guide-complexity">
+							<h3 class="guide-heading">Complexity</h3>
+							{guide.bruteForce && (
+								<div class="complexity-rung complexity-rung-brute">
+									<span class="rung-label">Brute force</span>
+									<p class="guide-prose">{guide.bruteForce.approach}</p>
+									<div class="complexity-row">
+										<span class="complexity-chip">
+											Time <code>{guide.bruteForce.complexity.time}</code>
+										</span>
+										<span class="complexity-chip">
+											Space <code>{guide.bruteForce.complexity.space}</code>
+										</span>
+									</div>
+									{guide.bruteForce.complexity.note && (
+										<p class="complexity-note">{guide.bruteForce.complexity.note}</p>
+									)}
+								</div>
+							)}
+							<div class="complexity-rung complexity-rung-optimal">
+								{guide.bruteForce && <span class="rung-label">Optimal</span>}
+								<div class="complexity-row">
+									<span class="complexity-chip">
+										Time <code>{guide.complexity.time}</code>
+									</span>
+									<span class="complexity-chip">
+										Space <code>{guide.complexity.space}</code>
+									</span>
+								</div>
+								{guide.complexity.note && <p class="complexity-note">{guide.complexity.note}</p>}
 							</div>
-							<ValidSudokuAnimation />
-						</section>
-					)}
+							{guide.constraintReasoning && (
+								<p class="constraint-reasoning">
+									<span class="constraint-label">Reading the constraints</span>
+									{guide.constraintReasoning}
+								</p>
+							)}
+						</div>
 
-					{problem.slug === "42-trapping-rain-water" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TrappingRainWaterAnimation />
-						</section>
-					)}
+						<div class="guide-card guide-block" id="guide-pitfalls">
+							<h3 class="guide-heading">Pitfalls</h3>
+							<ul class="pitfall-list">
+								{guide.pitfalls.map((pitfall) => (
+									<li><span class="pitfall-icon" aria-hidden="true">!</span><span class="pitfall-text">{pitfall}</span></li>
+								))}
+							</ul>
+						</div>
 
-					{problem.slug === "11-container-with-most-water" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ContainerWithMostWaterAnimation />
-						</section>
-					)}
+						<div class="guide-card guide-block" id="guide-tests">
+							<h3 class="guide-heading">What to test</h3>
+							<ul class="test-list">
+								{guide.testCases.map((tc) => (
+									<li class={`test-case test-${tc.kind}`}>
+										<span class="test-kind">{tc.kind}</span>
+										<div class="test-body">
+											<div class="test-io-row">
+												<code class="test-io">{tc.input} → {tc.expected}</code>
+												<button class="copy-btn" data-copy-target={tc.input} type="button" aria-label="Copy input">Copy</button>
+											</div>
+											<span class="test-note">{tc.note}</span>
+										</div>
+									</li>
+								))}
+							</ul>
+						</div>
 
-					{problem.slug === "125-valid-palindrome" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ValidPalindromeAnimation />
-						</section>
-					)}
+						{guide.followUps.length > 0 && (
+							<details class="guide-card guide-block collapsible" id="guide-followups" open>
+								<summary class="collapsible-summary">
+									<h3 class="guide-heading">Follow-ups</h3>
+								</summary>
+								<ul class="followup-list">
+									{guide.followUps.map((f) => (
+										<li>{f}</li>
+									))}
+								</ul>
+							</details>
+						)}
 
-					{problem.slug === "20-valid-parentheses" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ValidParenthesesAnimation />
-						</section>
-					)}
-
-					{problem.slug === "15-3sum" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ThreeSumAnimation />
-						</section>
-					)}
-
-					{problem.slug === "155-min-stack" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MinStackAnimation />
-						</section>
-					)}
-
-					{problem.slug === "167-two-sum-ii-input-array-is-sorted" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TwoSumIIAnimation />
-						</section>
-					)}
-
-					{problem.slug === "238-product-of-array-except-self" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ProductExceptSelfAnimation />
-						</section>
-					)}
-
-					{problem.slug === "424-longest-repeating-character-replacement" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<CharacterReplacementAnimation />
-						</section>
-					)}
-
-					{problem.slug === "567-permutation-in-string" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<PermutationInStringAnimation />
-						</section>
-					)}
-
-					{problem.slug === "217-contains-duplicate" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ContainsDuplicateAnimation />
-						</section>
-					)}
-
-					{problem.slug === "242-valid-anagram" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ValidAnagramAnimation />
-						</section>
-					)}
-
-					{problem.slug === "1929-concatenation-of-array" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<ConcatenationOfArrayAnimation />
-						</section>
-					)}
-
-					{problem.slug === "14-longest-common-prefix" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<LongestCommonPrefixAnimation />
-						</section>
-					)}
-
-					{problem.slug === "169-majority-element" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MajorityElementAnimation />
-						</section>
-					)}
-
-					{problem.slug === "229-majority-element-ii" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MajorityElementIIAnimation />
-						</section>
-					)}
-
-					{problem.slug === "49-group-anagrams" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<GroupAnagramsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "128-longest-consecutive-sequence" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<LongestConsecutiveSequenceAnimation />
-						</section>
-					)}
-
-					{problem.slug === "271-encode-and-decode-strings" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<EncodeDecodeStringsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "304-range-sum-query-2d-immutable" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<RangeSumQuery2DImmutableAnimation />
-						</section>
-					)}
-
-					{problem.slug === "347-top-k-frequent-elements" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<TopKFrequentElementsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "239-sliding-window-maximum" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<SlidingWindowMaximumAnimation />
-						</section>
-					)}
-
-					{problem.slug === "21-merge-two-sorted-lists" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<MergeTwoSortedListsAnimation />
-						</section>
-					)}
-
-					{problem.slug === "705-design-hashset" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<DesignHashSetAnimation />
-						</section>
-					)}
-
-					{problem.slug === "706-design-hashmap" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<DesignHashMapAnimation />
-						</section>
-					)}
-
-					{problem.slug === "912-sort-an-array" && (
-						<section class="animation-section">
-							<div class="solutions-header">
-								<h2 class="section-title">Animation</h2>
-							</div>
-							<SortAnArrayAnimation />
-						</section>
-					)}
+						{guide.relatedNotes.length > 0 && (
+							<details class="guide-card guide-block collapsible">
+								<summary class="collapsible-summary">
+									<h3 class="guide-heading">Related notes</h3>
+								</summary>
+								<div class="related-notes">
+									{guide.relatedNotes.map((noteId) => (
+										<a class="note-link" href={withBase(`/notes/${noteId}`)}>
+											{noteId.replace(/[-_]/g, " ")}
+										</a>
+									))}
+								</div>
+							</details>
+						)}
+						</div>
+					</section>
 				</div>
 			)
 		}
 
-		<div class={`content-panel ${hasAnimation ? "hidden" : ""}`} data-view-panel="solution">
+		{
+			hasAnimation && Animation && (
+				<div
+					class={`content-panel ${defaultView === "animation" ? "" : "hidden"}`}
+					data-view-panel="animation"
+				>
+					<section class="animation-section">
+						<div class="solutions-header">
+							<h2 class="section-title">Animation</h2>
+						</div>
+						<Animation />
+					</section>
+				</div>
+			)
+		}
+
+		<div
+			class={`content-panel ${defaultView === "solution" ? "" : "hidden"}`}
+			data-view-panel="solution"
+		>
 			<section class="solutions">
 				<div class="solutions-header">
 					<h2 class="section-title">Solutions</h2>
@@ -475,6 +381,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		difficulty={problem.difficulty}
 		group={problem.group}
 	/>
+	<LastVisited title={problem.title} kind="Algorithms" />
 </Layout>
 
 <script>
@@ -507,6 +414,73 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 			});
 		});
 	});
+
+	// ── Guide: TOC scrollspy ─────────────────────────────────
+	const tocLinks = document.querySelectorAll<HTMLAnchorElement>("[data-guide-toc] .toc-link");
+	const guideHeadings = document.querySelectorAll<HTMLElement>(".guide-block[id]");
+
+	if (tocLinks.length > 0 && guideHeadings.length > 0) {
+		const setActiveToc = (id: string) => {
+			tocLinks.forEach((link) => {
+				link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
+			});
+		};
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						setActiveToc(entry.target.id);
+					}
+				});
+			},
+			{
+				// Trigger when heading is in the top third of the viewport
+				rootMargin: "-20% 0px -60% 0px",
+				threshold: 0,
+			}
+		);
+
+		guideHeadings.forEach((heading) => observer.observe(heading));
+	}
+
+	// ── Guide: copy-to-clipboard for test case inputs ────────
+	const copyButtons = document.querySelectorAll<HTMLButtonElement>(".copy-btn[data-copy-target]");
+	copyButtons.forEach((btn) => {
+		btn.addEventListener("click", async () => {
+			const text = btn.dataset.copyTarget || "";
+			try {
+				await navigator.clipboard.writeText(text);
+				const originalText = btn.textContent;
+				btn.textContent = "Copied!";
+				btn.classList.add("copied");
+				setTimeout(() => {
+					btn.textContent = originalText;
+					btn.classList.remove("copied");
+				}, 1500);
+			} catch {
+				// Fallback for older browsers
+				const textarea = document.createElement("textarea");
+				textarea.value = text;
+				textarea.style.position = "fixed";
+				textarea.style.opacity = "0";
+				document.body.appendChild(textarea);
+				textarea.select();
+				try {
+					document.execCommand("copy");
+					btn.textContent = "Copied!";
+					btn.classList.add("copied");
+					setTimeout(() => {
+						btn.textContent = "Copy";
+						btn.classList.remove("copied");
+					}, 1500);
+				} catch {
+					// silently fail
+				}
+				document.body.removeChild(textarea);
+			}
+		});
+	});
 </script>
 
 <style>
@@ -514,11 +488,11 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		font-size: 0.8rem;
+		font-size: var(--fs-fine);
 		color: var(--muted);
 		margin-bottom: 1.5rem;
 		flex-wrap: wrap;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.03em;
 	}
 
@@ -543,15 +517,15 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 	.meta {
 		margin: 0;
 		color: var(--muted);
-		font-size: 0.8rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-size: var(--fs-fine);
+		font-family: var(--font-sans);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 	}
 
 	h1 {
 		margin: 0;
-		font-size: 2rem;
+		font-size: var(--fs-h1);
 		letter-spacing: 0.3px;
 		font-family: var(--font-serif);
 		font-weight: 600;
@@ -566,105 +540,65 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.badge,
 	.tag {
-		font-size: 0.7rem;
-		padding: 0.2rem 0.6rem;
-		border-radius: 2px;
+		font-size: var(--fs-eyebrow);
+		padding: 0.2rem 0.7rem;
+		border-radius: var(--radius-pill);
 		border: 1px solid var(--border);
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 		letter-spacing: 0.04em;
 	}
 
-	.easy { color: var(--status-easy); }
-	.medium { color: var(--status-medium); }
-	.hard { color: var(--status-hard); }
+	.badge {
+		font-weight: 600;
+		text-transform: uppercase;
+		font-size: var(--fs-micro);
+	}
+	.badge.easy {
+		color: var(--status-easy);
+		border-color: color-mix(in srgb, var(--status-easy) 45%, transparent);
+		background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+	}
+	.badge.medium {
+		color: var(--status-medium);
+		border-color: color-mix(in srgb, var(--status-medium) 45%, transparent);
+		background: var(--accent-soft);
+	}
+	.badge.hard {
+		color: var(--status-hard);
+		border-color: color-mix(in srgb, var(--status-hard) 45%, transparent);
+		background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+	}
 
 	.tag {
 		color: var(--muted);
 	}
 
 	.lc-link {
-		font-size: 0.78rem;
+		font-size: var(--fs-eyebrow);
 		color: var(--muted);
 		margin-left: 0.25rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.section-title {
-		font-size: 0.7rem;
+		font-size: var(--fs-eyebrow);
 		text-transform: uppercase;
 		letter-spacing: 0.12em;
 		color: var(--muted);
 		font-weight: 600;
 		margin: 0 0 1rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.problem-statement {
 		background: var(--glass-surface);
 		border: 1px solid var(--glass-border);
-		border-radius: 10px;
+		border-radius: var(--radius-md);
 		padding: 1.5rem;
 		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
 		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
 		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 		margin-bottom: 2rem;
-	}
-
-	/* Style the raw LeetCode HTML */
-	.description :global(p) {
-		margin: 0 0 0.75rem;
-		line-height: 1.65;
-		color: var(--text);
-		font-family: Inter, system-ui, sans-serif;
-		font-size: 0.93rem;
-	}
-
-	.description :global(pre) {
-		background: var(--surface-strong);
-		border: 1px solid var(--border);
-		border-radius: 2px;
-		padding: 0.85rem 1rem;
-		overflow-x: auto;
-		font-size: 0.85rem;
-		line-height: 1.5;
-		margin: 0.75rem 0;
-	}
-
-	.description :global(code) {
-		font-family: var(--font-mono);
-		font-weight: 500;
-		font-size: 0.88em;
-		background: var(--accent-dim);
-		padding: 0.1em 0.35em;
-		border-radius: 2px;
-	}
-
-	.description :global(pre code) {
-		background: none;
-		padding: 0;
-		font-size: inherit;
-	}
-
-	.description :global(ul),
-	.description :global(ol) {
-		padding-left: 1.5rem;
-		margin: 0.5rem 0;
-		font-family: Inter, system-ui, sans-serif;
-		font-size: 0.93rem;
-	}
-
-	.description :global(li) {
-		margin-bottom: 0.3rem;
-		line-height: 1.6;
-	}
-
-	.description :global(strong) {
-		color: var(--text);
-		font-weight: 600;
-	}
-
-	.description :global(.example) {
-		color: var(--accent);
 	}
 
 	.solutions {
@@ -684,10 +618,10 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.blur-hint {
 		margin: 0;
-		font-size: 0.78rem;
+		font-size: var(--fs-eyebrow);
 		color: var(--muted);
 		font-style: italic;
-		font-family: Inter, system-ui, sans-serif;
+		font-family: var(--font-sans);
 	}
 
 	.code-panels {
@@ -708,15 +642,12 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		display: inline-flex;
 		padding: 4px;
 		margin-bottom: 1.25rem;
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 999px;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-pill);
 		backdrop-filter: blur(24px) saturate(180%);
 		-webkit-backdrop-filter: blur(24px) saturate(180%);
-		/* Inner shadow for depth, outer subtle bottom edge to catch light */
-		box-shadow:
-			inset 0 1px 4px rgba(0, 0, 0, 0.3),
-			inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-			0 1px 0 rgba(255, 255, 255, 0.06);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 	}
 
 	.content-tab,
@@ -726,10 +657,10 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 		border: none;
 		color: var(--muted);
 		padding: 0.4rem 1.25rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		cursor: pointer;
-		font-size: 0.8rem;
-		font-family: Inter, system-ui, sans-serif;
+		font-size: var(--fs-fine);
+		font-family: var(--font-sans);
 		font-weight: 500;
 		letter-spacing: 0.02em;
 		transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -745,10 +676,10 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 	.lang-icon {
 		width: 0.48rem;
 		height: 0.48rem;
-		border-radius: 999px;
+		border-radius: var(--radius-pill);
 		display: inline-block;
 		flex-shrink: 0;
-		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22) inset;
+		box-shadow: 0 0 0 1px var(--glass-highlight-strong) inset;
 	}
 
 	.lang-icon-python {
@@ -762,7 +693,7 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 	.content-tab:hover:not(.active),
 	.lang-tab:hover:not(.active) {
 		color: var(--text);
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--glass-highlight);
 	}
 
 	.content-tab:focus-visible,
@@ -775,15 +706,11 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 	.lang-tab.active {
 		color: var(--text);
 		font-weight: 600;
-		/* Frosted glass active piece */
-		background: color-mix(in srgb, var(--text) 12%, rgba(255,255,255,0.06));
-		/* Soft drop shadow + sharp white top edge + subtle border */
+		background: color-mix(in srgb, var(--text) 12%, var(--glass-highlight));
 		box-shadow:
-			0 2px 8px rgba(0, 0, 0, 0.25),
-			0 1px 2px rgba(0, 0, 0, 0.15),
-			inset 0 1px 0.5px rgba(255, 255, 255, 0.25),
-			inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-		text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+			0 2px 8px var(--shadow-sm),
+			inset 0 1px 0.5px var(--glass-highlight-strong),
+			inset 0 0 0 1px var(--glass-border);
 	}
 
 	.lang-tab[data-lang="python"]:hover:not(.active) {
@@ -798,33 +725,31 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.lang-tab.active[data-lang="python"] {
 		color: var(--status-info);
-		background: color-mix(in srgb, var(--status-info) 16%, rgba(255,255,255,0.08));
+		background: color-mix(in srgb, var(--status-info) 16%, var(--glass-highlight));
 		box-shadow:
-			0 2px 8px color-mix(in srgb, var(--status-info) 25%, rgba(0, 0, 0, 0.2)),
-			0 1px 2px rgba(0, 0, 0, 0.15),
-			inset 0 1px 0.5px rgba(255, 255, 255, 0.25),
+			0 2px 8px color-mix(in srgb, var(--status-info) 25%, var(--shadow-sm)),
+			inset 0 1px 0.5px var(--glass-highlight-strong),
 			inset 0 0 0 1px color-mix(in srgb, var(--status-info) 35%, transparent);
 	}
 
 	.lang-tab.active[data-lang="julia"] {
 		color: var(--status-easy);
-		background: color-mix(in srgb, var(--status-easy) 16%, rgba(255,255,255,0.08));
+		background: color-mix(in srgb, var(--status-easy) 16%, var(--glass-highlight));
 		box-shadow:
-			0 2px 8px color-mix(in srgb, var(--status-easy) 25%, rgba(0, 0, 0, 0.2)),
-			0 1px 2px rgba(0, 0, 0, 0.15),
-			inset 0 1px 0.5px rgba(255, 255, 255, 0.25),
+			0 2px 8px color-mix(in srgb, var(--status-easy) 25%, var(--shadow-sm)),
+			inset 0 1px 0.5px var(--glass-highlight-strong),
 			inset 0 0 0 1px color-mix(in srgb, var(--status-easy) 35%, transparent);
 	}
 
 	.code-panel :global(pre) {
 		margin: 0;
-		border-radius: 12px;
+		border-radius: var(--radius-md);
 		border: 1px solid color-mix(in srgb, var(--glass-border-strong) 88%, transparent);
 		padding: 1.25rem;
 		overflow-x: auto;
-		font-size: 0.88rem;
+		font-size: var(--fs-sm);
 		line-height: 1.6;
-		box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
+		box-shadow: inset 0 2px 8px var(--shadow-sm), var(--shadow-lg);
 	}
 
 	.code-panel[data-lang-panel="python"] :global(pre) {
@@ -841,5 +766,522 @@ const hasAnimation = animatedSlugs.has(problem.slug);
 
 	.hidden {
 		display: none;
+	}
+
+	/* ── Guide tab ───────────────────────────────────────────── */
+	.guide {
+		display: grid;
+		grid-template-columns: 160px 1fr;
+		gap: 1.75rem;
+		align-items: start;
+	}
+
+	/* Sidebar: sticky TOC + progress bar */
+	.guide-sidebar {
+		position: sticky;
+		top: 4.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.guide-toc {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.75rem 0;
+		border-top: 1px solid var(--border);
+		border-bottom: 1px solid var(--border);
+	}
+	.toc-label {
+		font-size: var(--fs-micro);
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		color: var(--accent);
+		font-family: var(--font-sans);
+		font-weight: 600;
+		margin-bottom: 0.4rem;
+		opacity: 0.7;
+	}
+	.toc-link {
+		font-size: var(--fs-fine);
+		font-family: var(--font-sans);
+		font-weight: 500;
+		color: var(--muted);
+		padding: 0.25rem 0.5rem;
+		border-left: 2px solid transparent;
+		text-decoration: none;
+		transition: all 0.2s ease;
+		line-height: 1.4;
+	}
+	.toc-link:hover {
+		color: var(--text);
+		border-left-color: var(--border);
+	}
+	.toc-link.active {
+		color: var(--accent);
+		border-left-color: var(--accent);
+		font-weight: 600;
+	}
+
+	.guide-content {
+		display: grid;
+		gap: 1.5rem;
+		min-width: 0;
+	}
+
+	/* All guide sections now share the same card surface for visual chunking. */
+	.guide-card {
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		padding: 1.25rem 1.5rem;
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+	}
+
+	.guide-block {
+		display: grid;
+		gap: 0.6rem;
+		scroll-margin-top: 3.5rem; /* offset for sticky TOC when jumping to anchors */
+	}
+
+	.pattern-name {
+		margin: 0 0 0.75rem;
+		font-family: var(--font-serif);
+		font-size: var(--fs-xl);
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.signal-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.signal-list li {
+		font-size: var(--fs-eyebrow);
+		font-family: var(--font-sans);
+		color: var(--accent);
+		background: var(--accent-soft);
+		border: 1px solid var(--accent-ring);
+		border-radius: var(--radius-pill);
+		padding: 0.2rem 0.7rem;
+		letter-spacing: 0.02em;
+	}
+
+	.guide-heading {
+		margin: 0;
+		font-size: var(--fs-lg);
+		font-family: var(--font-serif);
+		font-weight: 600;
+		color: var(--text);
+		letter-spacing: 0.3px;
+	}
+
+	.guide-prose {
+		margin: 0;
+		line-height: var(--lh-prose);
+		color: var(--text);
+		font-family: var(--font-sans);
+		font-size: var(--fs-base);
+	}
+
+	/* Dissection gets a subtle left border so it reads as "problem restatement"
+	   and is distinguishable from Intuition. */
+	.guide-prose-dissection {
+		padding-left: 0.85rem;
+		border-left: 2px solid color-mix(in srgb, var(--muted) 35%, transparent);
+	}
+
+	.guide-invariant {
+		margin: 0;
+		padding: 0.7rem 1rem;
+		border-left: 3px solid var(--accent);
+		background: var(--accent-glow);
+		border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+		font-size: var(--fs-fine);
+		line-height: 1.6;
+		color: var(--text);
+	}
+
+	.invariant-label {
+		display: block;
+		font-size: var(--fs-micro);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--accent);
+		font-family: var(--font-sans);
+		font-weight: 600;
+		margin-bottom: 0.25rem;
+	}
+
+	/* Custom numbered approach steps — styled pills instead of default <ol> markers. */
+	.approach-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		counter-reset: step;
+		display: grid;
+		gap: 0.6rem;
+		line-height: 1.6;
+	}
+	.approach-list li {
+		counter-increment: step;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.75rem;
+		align-items: start;
+	}
+	.approach-list li::before {
+		content: counter(step);
+		font-size: var(--fs-eyebrow);
+		font-family: var(--font-sans);
+		font-weight: 600;
+		color: var(--accent);
+		background: var(--accent-soft);
+		border: 1px solid var(--accent-ring);
+		border-radius: var(--radius-pill);
+		min-width: 1.5rem;
+		height: 1.5rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 1;
+	}
+
+	.complexity-row {
+		display: flex;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+	}
+
+	.complexity-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: var(--fs-eyebrow);
+		font-family: var(--font-sans);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--muted);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		padding: 0.25rem 0.8rem;
+	}
+
+	.complexity-chip code {
+		font-size: var(--fs-sm);
+		color: var(--text);
+		background: none;
+		padding: 0;
+	}
+
+	.complexity-note {
+		margin: 0;
+		font-size: var(--fs-fine);
+		color: var(--muted);
+		font-style: italic;
+	}
+
+	.complexity-rung {
+		display: grid;
+		gap: 0.4rem;
+	}
+
+	.complexity-rung + .complexity-rung {
+		margin-top: 0.85rem;
+		padding-top: 0.85rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.complexity-rung-brute {
+		opacity: 0.72;
+	}
+
+	.rung-label {
+		display: block;
+		font-size: var(--fs-micro);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		font-family: var(--font-sans);
+		font-weight: 600;
+		color: var(--muted);
+	}
+
+	.complexity-rung-optimal .rung-label {
+		color: var(--accent);
+	}
+
+	.constraint-reasoning {
+		margin: 0.85rem 0 0;
+		font-size: var(--fs-sm);
+		line-height: 1.55;
+		color: var(--text);
+	}
+
+	.constraint-label {
+		display: block;
+		font-size: var(--fs-micro);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--accent);
+		font-family: var(--font-sans);
+		font-weight: 600;
+		margin-bottom: 0.25rem;
+	}
+
+	/* Pitfall list — now uses styled badge icons instead of emoji markers. */
+	.pitfall-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 0.55rem;
+		line-height: 1.6;
+	}
+	.pitfall-list li {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.6rem;
+		align-items: start;
+	}
+	.pitfall-icon {
+		flex-shrink: 0;
+		min-width: 1.4rem;
+		height: 1.4rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: var(--fs-eyebrow);
+		font-weight: 700;
+		font-family: var(--font-sans);
+		color: var(--status-hard);
+		background: color-mix(in srgb, var(--status-hard) 14%, transparent);
+		border: 1px solid color-mix(in srgb, var(--status-hard) 35%, transparent);
+		border-radius: var(--radius-pill);
+		line-height: 1;
+	}
+
+	/* What-to-test cases, color-coded by kind (reuses difficulty palette). */
+	.test-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: grid;
+		gap: 0.6rem;
+	}
+
+	.test-case {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.75rem;
+		align-items: start;
+		padding: 0.7rem 0.9rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-xs);
+		background: transparent;
+	}
+
+	.test-kind {
+		font-size: var(--fs-micro);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-weight: 600;
+		font-family: var(--font-sans);
+		padding: 0.2rem 0.5rem;
+		border-radius: var(--radius-pill);
+		white-space: nowrap;
+	}
+
+	.test-canonical {
+		border-left: 3px solid var(--status-info);
+	}
+	.test-canonical .test-kind {
+		color: var(--status-info);
+		background: color-mix(in srgb, var(--status-info) 14%, transparent);
+	}
+
+	.test-boundary {
+		border-left: 3px solid var(--status-medium);
+	}
+	.test-boundary .test-kind {
+		color: var(--status-medium);
+		background: var(--accent-soft);
+	}
+
+	.test-trap {
+		border-left: 3px solid var(--status-hard);
+	}
+	.test-trap .test-kind {
+		color: var(--status-hard);
+		background: color-mix(in srgb, var(--status-hard) 14%, transparent);
+	}
+
+	.test-body {
+		display: grid;
+		gap: 0.3rem;
+	}
+
+	.test-io-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.test-io {
+		font-size: var(--fs-sm);
+		color: var(--text);
+		background: none;
+		padding: 0;
+		word-break: break-word;
+	}
+
+	.copy-btn {
+		font-size: var(--fs-micro);
+		font-family: var(--font-sans);
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--muted);
+		background: var(--accent-soft);
+		border: 1px solid var(--accent-ring);
+		border-radius: var(--radius-pill);
+		padding: 0.15rem 0.5rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+	}
+	.copy-btn:hover {
+		color: var(--accent);
+		border-color: var(--accent-ring);
+		background: var(--accent-soft);
+	}
+	.copy-btn.copied {
+		color: var(--status-easy);
+		border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+		background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+	}
+
+	.test-note {
+		font-size: var(--fs-fine);
+		color: var(--muted);
+		line-height: 1.5;
+	}
+
+	/* Collapsible sections — Follow-ups and Related Notes. */
+	.collapsible {
+		padding: 0;
+		overflow: hidden;
+	}
+	.collapsible > summary {
+		list-style: none;
+		cursor: pointer;
+		padding: 1.25rem 1.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		user-select: none;
+		transition: background 0.2s ease;
+	}
+	.collapsible > summary::-webkit-details-marker {
+		display: none;
+	}
+	.collapsible > summary:hover {
+		background: var(--accent-glow);
+	}
+	.collapsible > summary::after {
+		content: "▾";
+		color: var(--muted);
+		font-size: var(--fs-fine);
+		transition: transform 0.2s ease;
+	}
+	.collapsible:not([open]) > summary::after {
+		transform: rotate(-90deg);
+	}
+	.collapsible > summary .guide-heading {
+		margin: 0;
+	}
+	.collapsible > *:not(summary) {
+		padding: 0 1.5rem 1.25rem;
+	}
+
+	.followup-list {
+		margin: 0;
+		padding-left: 1.25rem;
+		display: grid;
+		gap: 0.5rem;
+		line-height: 1.6;
+		color: var(--text);
+	}
+
+	.related-notes {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.note-link {
+		font-size: var(--fs-fine);
+		font-family: var(--font-sans);
+		color: var(--accent);
+		border: 1px solid var(--accent-ring);
+		border-radius: var(--radius-pill);
+		padding: 0.25rem 0.8rem;
+		text-transform: capitalize;
+		transition: background 0.2s ease;
+	}
+
+	.note-link:hover {
+		background: var(--accent-soft);
+	}
+
+	/* Mobile: sidebar collapses, TOC becomes a horizontal scroll bar */
+	@media (max-width: 768px) {
+		.guide {
+			grid-template-columns: 1fr;
+		}
+		.guide-sidebar {
+			position: static;
+		}
+		.guide-toc {
+			flex-direction: row;
+			overflow-x: auto;
+			gap: 0.35rem;
+			padding: 0.5rem 0;
+			-webkit-overflow-scrolling: touch;
+			border-top: none;
+			border-bottom: 1px solid var(--border);
+		}
+		.toc-label {
+			display: none;
+		}
+		.toc-link {
+			border-left: none;
+			border-bottom: 2px solid transparent;
+			padding: 0.25rem 0.6rem;
+			white-space: nowrap;
+			flex-shrink: 0;
+		}
+		.toc-link.active {
+			border-left: none;
+			border-bottom-color: var(--accent);
+		}
+	}
+
+	@media (max-width: 640px) {
+		.test-case {
+			grid-template-columns: 1fr;
+			gap: 0.5rem;
+		}
+		.test-kind {
+			justify-self: start;
+		}
 	}
 </style>

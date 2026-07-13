@@ -194,7 +194,7 @@ const steps: TeachingStep[] = [
 
   .rd-ptr-label {
     position: absolute;
-    font-size: 0.68rem;
+    font-size: var(--fs-micro);
     font-weight: 700;
     transition: left 0.25s ease;
   }
@@ -202,12 +202,12 @@ const steps: TeachingStep[] = [
   .rd-slow-label { color: var(--accent); }
   .rd-fast-label { color: var(--status-medium); }
 
-  .rd-cell.scanned .cell-val { opacity: 0.35; }
+  .rd-cell.scanned .cell-val { opacity: var(--dim-soft); }
 
   .rd-cell.slow-ptr .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.1);
+    background: rgb(var(--accent-rgb) / 10%);
     transform: translateY(-4px);
   }
 

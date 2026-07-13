@@ -181,13 +181,13 @@ const steps: TeachingStep[] = [
 <style>
   cl-viz { display: block; }
 
-  .cl-cell.visited .cell-val { opacity: 0.35; }
+  .cl-cell.visited .cell-val { opacity: var(--dim-soft); }
 
   .cl-cell.active { transform: translateY(-4px); }
   .cl-cell.active .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
   }
 
   .cl-cell.found .cell-val {

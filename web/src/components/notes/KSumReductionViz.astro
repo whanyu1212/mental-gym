@@ -258,7 +258,7 @@ const steps: TeachingStep[] = [
 
   .ks-ptr-label {
     position: absolute;
-    font-size: 0.68rem;
+    font-size: var(--fs-micro);
     font-weight: 700;
     transition: left 0.25s ease;
   }
@@ -267,12 +267,12 @@ const steps: TeachingStep[] = [
   .ks-l-label { color: var(--status-medium); }
   .ks-r-label { color: var(--status-medium); }
 
-  .ks-cell.visited .cell-val { opacity: 0.3; }
+  .ks-cell.visited .cell-val { opacity: var(--dim-hard); }
 
   .ks-cell.pivot .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.12);
+    background: var(--accent-soft);
   }
 
   .ks-cell.left-ptr .cell-val,

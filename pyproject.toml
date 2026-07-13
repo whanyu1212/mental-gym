@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "mental-gym"
 version = "0.1.0"
-description = ""
+description = "Build technical fluency through deliberate practice and first-principles implementation."
 authors = ["hy"]
 readme = "README.md"
 package-mode = false

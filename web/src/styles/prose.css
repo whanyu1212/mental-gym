@@ -1,0 +1,203 @@
+/* ============================================================================
+   Canonical prose layer.
+
+   Collapses the three previously-divergent reading treatments
+   (notes `.note`, algorithms `.description`, ML `.body-copy`/`.list`) into one
+   `.prose` block. Apply `.prose` to any element wrapping long-form rendered
+   content (markdown output, raw LeetCode HTML, hand-authored copy).
+
+   Tuned from the notes treatment, which was the most evolved: full token
+   usage, 1rem body, generous 1.8 leading. The other surfaces are pulled UP
+   to this standard rather than averaged down.
+
+   Scoped selectors use :where() so specificity stays at (0,1,0) — page-level
+   overrides remain trivial without !important.
+   ============================================================================ */
+
+.prose {
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-prose);
+}
+
+/* --- Headings ------------------------------------------------------------ */
+.prose :where(h1) {
+  font-size: var(--fs-hero);
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--space-2);
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+.prose :where(h2) {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-tight);
+  margin: var(--space-7) 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.prose :where(h3) {
+  font-size: var(--fs-eyebrow);
+  margin: var(--space-5) 0 var(--space-2);
+  color: var(--accent);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+/* --- Body --------------------------------------------------------------- */
+.prose :where(p) {
+  margin: 0 0 var(--space-4);
+  line-height: var(--lh-prose);
+  color: var(--text);
+}
+
+.prose :where(p, li) {
+  max-width: var(--measure);
+}
+
+.prose :where(ul, ol) {
+  padding-left: var(--space-5);
+  margin: 0 0 var(--space-4);
+}
+
+.prose :where(li) {
+  line-height: var(--lh-prose);
+  margin-bottom: var(--space-2);
+}
+
+.prose :where(strong) {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prose :where(a) {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* --- Inline + block code ------------------------------------------------ */
+.prose :where(code) {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.875em;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-xs);
+}
+
+.prose :where(pre) {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  overflow-x: auto;
+  margin: var(--space-3) 0 var(--space-5);
+  line-height: var(--lh-snug);
+}
+
+.prose :where(pre code) {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: var(--fs-sm);
+  font-weight: 400;
+}
+
+/* --- Tables ------------------------------------------------------------- */
+.prose :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-3) 0 var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.prose :where(th) {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--fs-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.prose :where(td) {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  line-height: var(--lh-snug);
+}
+
+.prose :where(tr:hover td) {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+/* --- Blockquote (used heavily for pattern-recognition callouts) ---------- */
+.prose :where(blockquote) {
+  border-left: 2px solid var(--accent);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
+}
+
+.prose :where(blockquote p) {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+  max-width: var(--measure);
+}
+
+/* --- Semantic callouts emitted by generate_problems.py ------------------ */
+/* The generator wraps LeetCode "Example N:" pre blocks and the constraints
+   list in .prose-example / .prose-constraints so they read as distinct
+   panels rather than undifferentiated body text. */
+.prose :where(.prose-example) {
+  background: color-mix(in srgb, var(--surface-strong) 70%, transparent);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+.prose :where(.prose-example .prose-example-label) {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--fs-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+}
+
+.prose :where(.prose-constraints) {
+  background: color-mix(in srgb, var(--surface-strong) 55%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-5) + var(--space-2));
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.prose :where(.prose-constraints-label) {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--fs-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 var(--space-2) calc(-1 * var(--space-3));
+}

@@ -298,7 +298,7 @@ const steps = [
 
   .sa-rule-box .stat-val {
     color: var(--muted);
-    font-size: 0.75rem;
+    font-size: var(--fs-eyebrow);
   }
 
   .sa-phase-box.split {
@@ -395,7 +395,7 @@ const steps = [
   }
 
   .cell-val.visited {
-    opacity: 0.3;
+    opacity: var(--dim-hard);
   }
 
   .cell-val.active-split {
@@ -421,7 +421,7 @@ const steps = [
   @keyframes pop-in {
     from {
       transform: scale(0.94);
-      opacity: 0.35;
+      opacity: var(--dim-soft);
     }
 
     to {

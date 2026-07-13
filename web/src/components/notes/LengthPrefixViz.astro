@@ -378,7 +378,7 @@ const steps: TeachingStep[] = [
     align-items: center;
     gap: 0;
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: var(--fs-base);
     padding: 0.45rem 0.9rem;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -389,7 +389,7 @@ const steps: TeachingStep[] = [
 
   .lp-word-cell.lp-word-active {
     border-color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
     transform: translateX(4px);
   }
 
@@ -399,7 +399,7 @@ const steps: TeachingStep[] = [
     opacity: 0.4;
   }
 
-  .lp-word-quote { color: var(--muted); font-size: 0.9em; }
+  .lp-word-quote { color: var(--muted); font-size: var(--fs-sm); }
 
   /* Encoded string box */
   .lp-encoded-box {
@@ -412,7 +412,7 @@ const steps: TeachingStep[] = [
     align-items: center;
     justify-content: center;
     font-family: var(--font-mono);
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
     letter-spacing: 1.5px;
     word-break: break-all;
     flex-wrap: wrap;
@@ -420,16 +420,16 @@ const steps: TeachingStep[] = [
   }
 
   .lp-empty-hint {
-    opacity: 0.3;
+    opacity: var(--dim-hard);
     font-style: italic;
-    font-size: 0.85rem;
+    font-size: var(--fs-sm);
     color: var(--muted);
   }
 
   .lp-enc-len {
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.12);
-    border-radius: 2px;
+    background: var(--accent-soft);
+    border-radius: var(--radius-xs);
     padding: 0 2px;
     font-weight: 600;
   }
@@ -442,11 +442,11 @@ const steps: TeachingStep[] = [
   .lp-enc-data {
     color: var(--text);
     background: color-mix(in srgb, var(--status-easy) 10%, transparent);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 0 2px;
   }
 
-  .lp-enc-faded { opacity: 0.3; }
+  .lp-enc-faded { opacity: var(--dim-hard); }
 
   .lp-enc-rest { opacity: 0.5; }
 
@@ -466,13 +466,13 @@ const steps: TeachingStep[] = [
     color: var(--muted);
     font-style: italic;
     opacity: 0.4;
-    font-size: 0.9rem;
+    font-size: var(--fs-sm);
     padding: 0.5rem;
   }
 
   .lp-decoded-cell {
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: var(--fs-base);
     padding: 0.45rem 0.9rem;
     border: 1px solid var(--border);
     border-radius: 4px;

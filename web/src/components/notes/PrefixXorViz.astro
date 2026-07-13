@@ -1,0 +1,281 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const arr = [1, 3, 4, 8];
+const queries = [[0, 1], [1, 2], [0, 3]];
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'init',
+    active: -1,
+    prefix: [0, 0, 0, 0, 0],
+    queryActive: -1,
+    result: [],
+    exp: 'Initialize prefix XOR array of length n+1. prefix[0]=0 (identity: any value XOR 0 = itself). We will fill left-to-right.',
+    reason: 'XOR is its own inverse: a^a=0. So prefix[r+1]^prefix[l] cancels all elements outside [l,r], leaving only arr[l..r].',
+    invariant: 'prefix[i] = arr[0] ^ arr[1] ^ ... ^ arr[i-1]',
+    formula: 'XOR(arr[l..r]) = prefix[r+1] ^ prefix[l]',
+    highlights: [{ target: 'prefix-row', kind: 'focus' }],
+  },
+  {
+    id: 'build-0',
+    phase: 'build',
+    active: 0,
+    prefix: [0, 1, 0, 0, 0],
+    queryActive: -1,
+    result: [],
+    exp: 'prefix[1] = prefix[0] ^ arr[0] = 0 ^ 1 = 1',
+    reason: 'prefix[1] holds the XOR of the first element only.',
+    invariant: 'prefix[i] = XOR of arr[0..i-1]',
+    formula: '0 ^ 1 = 1',
+    highlights: [{ target: 'arr:0', kind: 'compare' }, { target: 'pre:1', kind: 'write' }],
+  },
+  {
+    id: 'build-1',
+    phase: 'build',
+    active: 1,
+    prefix: [0, 1, 2, 0, 0],
+    queryActive: -1,
+    result: [],
+    exp: 'prefix[2] = prefix[1] ^ arr[1] = 1 ^ 3 = 2',
+    reason: '1 in binary is 01, 3 is 11 → XOR = 10 = 2.',
+    invariant: 'prefix[i] = XOR of arr[0..i-1]',
+    formula: '1 ^ 3 = 2',
+    highlights: [{ target: 'arr:1', kind: 'compare' }, { target: 'pre:2', kind: 'write' }],
+  },
+  {
+    id: 'build-2',
+    phase: 'build',
+    active: 2,
+    prefix: [0, 1, 2, 6, 0],
+    queryActive: -1,
+    result: [],
+    exp: 'prefix[3] = prefix[2] ^ arr[2] = 2 ^ 4 = 6',
+    reason: '2 is 010, 4 is 100 → XOR = 110 = 6.',
+    invariant: 'prefix[i] = XOR of arr[0..i-1]',
+    formula: '2 ^ 4 = 6',
+    highlights: [{ target: 'arr:2', kind: 'compare' }, { target: 'pre:3', kind: 'write' }],
+  },
+  {
+    id: 'build-3',
+    phase: 'build',
+    active: 3,
+    prefix: [0, 1, 2, 6, 14],
+    queryActive: -1,
+    result: [],
+    exp: 'prefix[4] = prefix[3] ^ arr[3] = 6 ^ 8 = 14',
+    reason: '6 is 0110, 8 is 1000 → XOR = 1110 = 14. Prefix array complete!',
+    invariant: 'prefix[i] = XOR of arr[0..i-1]',
+    formula: '6 ^ 8 = 14',
+    highlights: [{ target: 'arr:3', kind: 'compare' }, { target: 'pre:4', kind: 'write' }],
+  },
+  {
+    id: 'q0',
+    phase: 'query',
+    active: -1,
+    prefix: [0, 1, 2, 6, 14],
+    queryActive: 0,
+    result: [2],
+    exp: 'Query [0,1]: XOR(arr[0..1]) = prefix[2] ^ prefix[0] = 2 ^ 0 = 2. Answer: 2.',
+    reason: 'prefix[2]=2 is XOR of all up to index 1. prefix[0]=0 is XOR of nothing. XOR-ing them cancels nothing, leaving arr[0]^arr[1]=1^3=2.',
+    invariant: 'XOR(arr[l..r]) = prefix[r+1] ^ prefix[l]',
+    formula: 'prefix[2] ^ prefix[0] = 2 ^ 0 = 2',
+    highlights: [{ target: 'pre:2', kind: 'compare' }, { target: 'pre:0', kind: 'compare' }, { target: 'result-box', kind: 'write' }],
+  },
+  {
+    id: 'q1',
+    phase: 'query',
+    active: -1,
+    prefix: [0, 1, 2, 6, 14],
+    queryActive: 1,
+    result: [2, 7],
+    exp: 'Query [1,2]: XOR(arr[1..2]) = prefix[3] ^ prefix[1] = 6 ^ 1 = 7. Answer: 7.',
+    reason: 'prefix[3]=6 covers arr[0..2]. prefix[1]=1 covers arr[0]. XOR cancels arr[0], leaving arr[1]^arr[2]=3^4=7.',
+    invariant: 'XOR(arr[l..r]) = prefix[r+1] ^ prefix[l]',
+    formula: 'prefix[3] ^ prefix[1] = 6 ^ 1 = 7',
+    highlights: [{ target: 'pre:3', kind: 'compare' }, { target: 'pre:1', kind: 'compare' }, { target: 'result-box', kind: 'write' }],
+  },
+  {
+    id: 'q2',
+    phase: 'query',
+    active: -1,
+    prefix: [0, 1, 2, 6, 14],
+    queryActive: 2,
+    result: [2, 7, 14],
+    exp: 'Query [0,3]: XOR(arr[0..3]) = prefix[4] ^ prefix[0] = 14 ^ 0 = 14. Answer: 14.',
+    reason: 'prefix[4]=14 covers the entire array. prefix[0]=0 cancels nothing. Result is XOR of all elements.',
+    invariant: 'XOR(arr[l..r]) = prefix[r+1] ^ prefix[l]',
+    formula: 'prefix[4] ^ prefix[0] = 14 ^ 0 = 14',
+    highlights: [{ target: 'pre:4', kind: 'compare' }, { target: 'pre:0', kind: 'compare' }, { target: 'result-box', kind: 'confirmed' }],
+  },
+];
+---
+
+<prefix-xor-viz>
+  <AlgorithmPlayer title="XOR Queries of a Subarray — prefix XOR — arr=[1,3,4,8]" steps={steps}>
+    <div class="anim-row">
+      <p class="anim-label">arr (input)</p>
+      <div class="array-row">
+        {arr.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell pxv-arr-cell" data-idx={i} data-teach-target={`arr:${i}`}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="anim-row" data-teach-target="prefix-row">
+      <p class="anim-label">prefix XOR (length n+1)</p>
+      <div class="array-row">
+        {[0, 0, 0, 0, 0].map((_, i) => (
+          <div class="array-col">
+            <div class="array-cell pxv-pre-cell" data-idx={i} data-teach-target={`pre:${i}`}>
+              <span class="cell-val pxv-pre-val">0</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="stats-row pxv-bottom-row">
+      <div class="stat-box pxv-query-box">
+        <span class="stat-label">Active Query</span>
+        <span class="stat-val pxv-query-val">—</span>
+      </div>
+      <div class="stat-box pxv-result-box" data-teach-target="result-box">
+        <span class="stat-label">Results</span>
+        <span class="stat-val pxv-result-val">[]</span>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</prefix-xor-viz>
+
+<script>
+  class PrefixXorViz extends HTMLElement {
+    connectedCallback() {
+      this.preCells = Array.from(this.querySelectorAll('.pxv-pre-cell'));
+      this.arrCells = Array.from(this.querySelectorAll('.pxv-arr-cell'));
+      this.queryValEl = this.querySelector('.pxv-query-val');
+      this.resultValEl = this.querySelector('.pxv-result-val');
+      this.resultBox = this.querySelector('.pxv-result-box');
+
+      const queries = [[0, 1], [1, 2], [0, 3]];
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        // Update prefix cells
+        if (Array.isArray(step.prefix)) {
+          this.preCells.forEach((cell, i) => {
+            const span = cell.querySelector('.pxv-pre-val');
+            if (span) span.textContent = String(step.prefix[i] ?? 0);
+          });
+        }
+
+        // Update query display
+        const qi = step.queryActive ?? -1;
+        if (this.queryValEl) {
+          this.queryValEl.textContent = qi >= 0 ? `[${queries[qi]}]` : '—';
+        }
+
+        // Update result display
+        if (this.resultValEl && Array.isArray(step.result)) {
+          this.resultValEl.textContent = `[${step.result.join(', ')}]`;
+        }
+
+        // Highlight arr cells
+        this.arrCells.forEach((cell, i) => {
+          const span = cell.querySelector('.cell-val');
+          if (!span) return;
+          span.className = 'cell-val';
+          if (step.phase === 'build' && i === step.active) span.classList.add('pxv-active');
+          else if (step.phase === 'build' && i < step.active) span.classList.add('pxv-visited');
+          else if (step.phase === 'query' && qi >= 0 && i >= queries[qi][0] && i <= queries[qi][1]) {
+            span.classList.add('pxv-range');
+          }
+        });
+
+        // Highlight prefix cells
+        this.preCells.forEach((cell, i) => {
+          const span = cell.querySelector('.pxv-pre-val');
+          if (!span) return;
+          span.className = 'cell-val pxv-pre-val';
+          if (step.phase === 'build' && i === step.active + 1) span.classList.add('pxv-active');
+          else if (step.phase === 'build' && i <= step.active) span.classList.add('pxv-visited');
+          else if (step.phase === 'query' && qi >= 0) {
+            if (i === queries[qi][1] + 1 || i === queries[qi][0]) span.classList.add('pxv-query-tap');
+          }
+        });
+
+        // Result box state
+        this.resultBox?.classList.remove('pxv-result-hit', 'pxv-result-done');
+        if (step.phase === 'query' && qi === 2) this.resultBox?.classList.add('pxv-result-done');
+        else if (step.phase === 'query') this.resultBox?.classList.add('pxv-result-hit');
+      });
+    }
+  }
+
+  if (!customElements.get('prefix-xor-viz')) {
+    customElements.define('prefix-xor-viz', PrefixXorViz);
+  }
+</script>
+
+<style>
+  prefix-xor-viz { display: block; }
+
+  .pxv-bottom-row {
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pxv-query-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+  }
+  .pxv-query-box .stat-val { color: var(--status-info); }
+
+  .pxv-result-box {
+    flex: 1 1 auto;
+    border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 8%, transparent);
+  }
+  .pxv-result-box .stat-val { color: var(--status-easy); }
+
+  .pxv-result-box.pxv-result-hit {
+    border-color: var(--status-warn);
+    background: color-mix(in srgb, var(--status-warn) 12%, transparent);
+  }
+  .pxv-result-box.pxv-result-hit .stat-val { color: var(--status-warn); }
+
+  .pxv-result-box.pxv-result-done {
+    border-color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 16%, transparent);
+  }
+
+  .cell-val.pxv-active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.pxv-visited { opacity: var(--dim-soft); }
+
+  .cell-val.pxv-range {
+    border-color: color-mix(in srgb, var(--status-info) 60%, transparent);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 12%, transparent);
+  }
+
+  .pxv-pre-val.pxv-query-tap {
+    border-color: var(--status-warn);
+    color: var(--status-warn);
+    background: color-mix(in srgb, var(--status-warn) 12%, transparent);
+    transform: translateY(-4px);
+  }
+</style>

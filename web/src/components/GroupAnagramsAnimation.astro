@@ -337,7 +337,7 @@ const steps: TeachingStep[] = [
     flex-direction: column;
     gap: 0.5rem;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     padding: 1rem;
     background: var(--surface-strong);
     min-height: 150px;
@@ -356,7 +356,7 @@ const steps: TeachingStep[] = [
     padding: 0.5rem;
     background: #151515;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
   }
 
   .ga-map-entry.active-entry {
@@ -401,12 +401,12 @@ const steps: TeachingStep[] = [
   .ptr-up {
     color: var(--accent);
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: var(--fs-xl);
     transition: opacity 0.2s;
   }
 
   .stat-box.highlight {
-    border-color: rgba(201, 168, 76, 0.4);
+    border-color: rgb(var(--accent-rgb) / 40%);
     background: var(--accent-dim);
   }
 

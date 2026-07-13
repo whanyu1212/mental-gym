@@ -1,20 +1,33 @@
-# Mental Gym
+# Mental Gym — Build technical fluency
 
-Personal interview practice space — algorithms, ML coding, and system design.
+A personal workspace for deliberate practice, first-principles implementation, and structured technical knowledge.
 
 [![Deploy Docs](https://github.com/whanyu1212/mental-gym/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/whanyu1212/mental-gym/actions/workflows/deploy-docs.yml)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
 
-**Site:** [whanyu1212.github.io/mental-gym](https://whanyu121212.github.io/mental-gym/)
+**Site:** [whanyu1212.github.io/mental-gym](https://whanyu1212.github.io/mental-gym/)
+
+Mental Gym supports a repeatable learning loop:
+
+> **Learn → implement → practice → review → retain**
+
+## Domains
+
+| Domain | Practice | Knowledge |
+| --- | --- | --- |
+| DSA | `src/leetcode/` solutions and tests | `notes/` for patterns, complexity, and invariants |
+| ML engineering | `src/ml/` from-scratch implementations | ML notes as the collection grows |
+| System design | Design exercises and implementation trade-offs | System-design notes and case studies |
 
 ## Structure
 
 ```
+.adal/skills/   # Project coaching skills
 src/leetcode/   # LeetCode solutions (Python + Julia)
-src/ml/         # ML coding interview implementations
-notes/          # Markdown notes (asymptotic analysis, time/space complexity)
+src/ml/         # NumPy-first ML implementations
+notes/          # Technical knowledge notes; see notes/README.md
 web/            # Astro site
-scripts/        # Data generation scripts
+scripts/        # Data generation and validation scripts
 ```
 
 ## Dev

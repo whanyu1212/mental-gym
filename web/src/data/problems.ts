@@ -81,7 +81,7 @@ class Solution:
         # and we need to use enumerate to keep track of the index of the
         # element in the list
 
-        for i, element in nums:
+        for i, element in enumerate(nums):
             difference = target - element
             if difference in difference_seen:
                 return [difference_seen[difference], i]
@@ -1217,7 +1217,8 @@ class Solution:
 
 class SolutionBoyerMoore:
     def majorityElement(self, nums: List[int]) -> List[int]:
-        """Boyer-Moore Voting (generalized): O(n) time, O(1) space.
+        """
+        Boyer-Moore Voting (generalized): O(n) time, O(1) space.
 
         At most 2 elements can appear more than n/3 times.
         Phase 1: find up to 2 candidates by cancelling groups of 3
@@ -1814,6 +1815,68 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/top-k-frequent-elements/",
   },
   {
+    id: "560",
+    slug: "560-subarray-sum-equals-k",
+    leetcodeSlug: "subarray-sum-equals-k",
+    title: "Subarray Sum Equals K",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "hash-table", "prefix-sum"],
+    description: `<p>Given an array of integers <code>nums</code> and an integer <code>k</code>, return <em>the total number of subarrays whose sum equals to</em> <code>k</code>.</p>
+
+<p>A subarray is a contiguous <strong>non-empty</strong> sequence of elements within an array.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<pre><strong>Input:</strong> nums = [1,1,1], k = 2
+<strong>Output:</strong> 2
+</pre><p><strong class="example">Example 2:</strong></p>
+<pre><strong>Input:</strong> nums = [1,2,3], k = 3
+<strong>Output:</strong> 2
+</pre>
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 2 * 10<sup>4</sup></code></li>
+	<li><code>-1000 &lt;= nums[i] &lt;= 1000</code></li>
+	<li><code>-10<sup>7</sup> &lt;= k &lt;= 10<sup>7</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def subarraySum(self, nums: List[int], k: int) -> int:
+        # prefix_count maps prefix_sum → number of times it has appeared
+        prefix_count = {0: 1}
+        prefix_sum = 0
+        count = 0
+
+        for num in nums:
+            prefix_sum += num
+            # If (prefix_sum - k) was seen before, those subarrays sum to k
+            count += prefix_count.get(prefix_sum - k, 0)
+            prefix_count[prefix_sum] = prefix_count.get(prefix_sum, 0) + 1
+
+        return count
+
+
+if __name__ == "__main__":
+    sol = Solution()
+    assert sol.subarraySum([1, 1, 1], 2) == 2  # [1,1] at idx 0-1 and 1-2
+    assert sol.subarraySum([1, 2, 3], 3) == 2  # [3] and [1,2]
+    assert sol.subarraySum([1], 0) == 0
+    assert sol.subarraySum([0, 0, 0], 0) == 6  # all subarrays
+    assert sol.subarraySum([-1, -1, 1], 0) == 1  # [-1,-1,1] sums to -1+... wait
+    assert sol.subarraySum([1, -1, 1, -1], 0) == 4
+    print("All test cases passed!")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/subarray-sum-equals-k/",
+  },
+  {
     id: "705",
     slug: "705-design-hashset",
     leetcodeSlug: "design-hashset",
@@ -2165,6 +2228,89 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/sort-an-array/",
   },
   {
+    id: "1310",
+    slug: "1310-xor-queries-of-a-subarray",
+    leetcodeSlug: "xor-queries-of-a-subarray",
+    title: "XOR Queries of a Subarray",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "bit-manipulation", "prefix-sum"],
+    description: `<p>You are given an array <code>arr</code> of positive integers. You are also given the array <code>queries</code> where <code>queries[i] = [left<sub>i, </sub>right<sub>i</sub>]</code>.</p>
+
+<p>For each query <code>i</code> compute the <strong>XOR</strong> of elements from <code>left<sub>i</sub></code> to <code>right<sub>i</sub></code> (that is, <code>arr[left<sub>i</sub>] XOR arr[left<sub>i</sub> + 1] XOR ... XOR arr[right<sub>i</sub>]</code> ).</p>
+
+<p>Return an array <code>answer</code> where <code>answer[i]</code> is the answer to the <code>i<sup>th</sup></code> query.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> arr = [1,3,4,8], queries = [[0,1],[1,2],[0,3],[3,3]]
+<strong>Output:</strong> [2,7,14,8]
+<strong>Explanation:</strong>
+The binary representation of the elements in the array are:
+1 = 0001
+3 = 0011
+4 = 0100
+8 = 1000
+The XOR values for queries are:
+[0,1] = 1 xor 3 = 2
+[1,2] = 3 xor 4 = 7
+[0,3] = 1 xor 3 xor 4 xor 8 = 14
+[3,3] = 8
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> arr = [4,8,2,10], queries = [[2,3],[1,3],[0,0],[0,3]]
+<strong>Output:</strong> [8,0,4,4]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= arr.length, queries.length &lt;= 3 * 10<sup>4</sup></code></li>
+	<li><code>1 &lt;= arr[i] &lt;= 10<sup>9</sup></code></li>
+	<li><code>queries[i].length == 2</code></li>
+	<li><code>0 &lt;= left<sub>i</sub> &lt;= right<sub>i</sub> &lt; arr.length</code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def xorQueries(self, arr: List[int], queries: List[List[int]]) -> List[int]:
+        # Build prefix XOR array: prefix[i] = arr[0] ^ arr[1] ^ ... ^ arr[i-1]
+        # prefix[0] = 0 (identity element for XOR)
+        n = len(arr)
+        prefix = [0] * (n + 1)
+        for i in range(n):
+            prefix[i + 1] = prefix[i] ^ arr[i]
+
+        # XOR of arr[lo..hi] = prefix[hi+1] ^ prefix[lo]
+        # Because XOR is self-inverse: a^a = 0, so common prefix cancels out
+        return [prefix[hi + 1] ^ prefix[lo] for lo, hi in queries]
+
+
+if __name__ == "__main__":
+    sol = Solution()
+    assert sol.xorQueries([1, 3, 4, 8], [[0, 1], [1, 2], [0, 3], [3, 3]]) == [
+        2,
+        7,
+        14,
+        8,
+    ]
+    assert sol.xorQueries([4, 8], [[0, 0], [1, 1]]) == [4, 8]
+    assert sol.xorQueries([0, 0, 0], [[0, 2]]) == [0]
+    print("All test cases passed!")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/xor-queries-of-a-subarray/",
+  },
+  {
     id: "1929",
     slug: "1929-concatenation-of-array",
     leetcodeSlug: "concatenation-of-array",
@@ -2358,7 +2504,6 @@ Note that buying on day 2 and selling on day 1 is not allowed because you must b
 `,
     solutions: {
       python: `from typing import List
-
 
 # Example: prices = [7, 1, 5, 3, 6, 4]
 #
@@ -3000,10 +3145,7 @@ class Solution:
         result.append(-heap[0][0])  # Get initial maximum
 
         for i in range(k, n):
-            print(f"i: {i}")
             heapq.heappush(heap, (-nums[i], i))
-            print(f"Current window: {i-k+1} to {i}")
-            print(f"Index of the current smallest: {heap[0][1]}")
 
             # if the current smallest is less or equal to just before the window start,
             # pop it
@@ -3740,5 +3882,184 @@ if __name__ == "__main__":
       julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+  },
+  {
+    id: "344",
+    slug: "344-reverse-string",
+    leetcodeSlug: "reverse-string",
+    title: "Reverse String",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["two-pointers", "string"],
+    description: `<p>Write a function that reverses a string. The input string is given as an array of characters <code>s</code>.</p>
+
+<p>You must do this by modifying the input array <a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank">in-place</a> with <code>O(1)</code> extra memory.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+<pre><strong>Input:</strong> s = ["h","e","l","l","o"]
+<strong>Output:</strong> ["o","l","l","e","h"]
+</pre><p><strong class="example">Example 2:</strong></p>
+<pre><strong>Input:</strong> s = ["H","a","n","n","a","h"]
+<strong>Output:</strong> ["h","a","n","n","a","H"]
+</pre>
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>s[i]</code> is a <a href="https://en.wikipedia.org/wiki/ASCII#Printable_characters" target="_blank">printable ascii character</a>.</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def reverseString(self, s: List[str]) -> None:
+        l, r = 0, len(s) - 1
+        while l < r:
+            s[l], s[r] = s[r], s[l]
+            l += 1
+            r -= 1
+
+
+if __name__ == "__main__":
+    s = ["h", "e", "l", "l", "o"]
+    Solution().reverseString(s)
+    print(s)`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/reverse-string/",
+  },
+  {
+    id: "680",
+    slug: "680-valid-palindrome-ii",
+    leetcodeSlug: "valid-palindrome-ii",
+    title: "Valid Palindrome II",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["two-pointers", "string", "greedy"],
+    description: `<p>Given a string <code>s</code>, return <code>true</code> <em>if the </em><code>s</code><em> can be palindrome after deleting <strong>at most one</strong> character from it</em>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;aba&quot;
+<strong>Output:</strong> true
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;abca&quot;
+<strong>Output:</strong> true
+<strong>Explanation:</strong> You could delete the character &#39;c&#39;.
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;abc&quot;
+<strong>Output:</strong> false
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= s.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>s</code> consists of lowercase English letters.</li>
+</ul>
+`,
+    solutions: {
+      python: `class Solution:
+    def validPalindrome(self, s: str) -> bool:
+        def is_pali(sub: str) -> bool:
+            return sub == sub[::-1]
+
+        l, r = 0, len(s) - 1
+        while l < r:
+            if s[l] != s[r]:
+                # Try skipping s[l] OR skipping s[r]
+                return is_pali(s[l + 1 : r + 1]) or is_pali(s[l:r])
+            l += 1
+            r -= 1
+
+        return True`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/valid-palindrome-ii/",
+  },
+  {
+    id: "1768",
+    slug: "1768-merge-strings-alternately",
+    leetcodeSlug: "merge-strings-alternately",
+    title: "Merge Strings Alternately",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["two-pointers", "string"],
+    description: `<p>You are given two strings <code>word1</code> and <code>word2</code>. Merge the strings by adding letters in alternating order, starting with <code>word1</code>. If a string is longer than the other, append the additional letters onto the end of the merged string.</p>
+
+<p>Return <em>the merged string.</em></p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> word1 = &quot;abc&quot;, word2 = &quot;pqr&quot;
+<strong>Output:</strong> &quot;apbqcr&quot;
+<strong>Explanation:</strong>&nbsp;The merged string will be merged as so:
+word1:  a   b   c
+word2:    p   q   r
+merged: a p b q c r
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> word1 = &quot;ab&quot;, word2 = &quot;pqrs&quot;
+<strong>Output:</strong> &quot;apbqrs&quot;
+<strong>Explanation:</strong>&nbsp;Notice that as word2 is longer, &quot;rs&quot; is appended to the end.
+word1:  a   b
+word2:    p   q   r   s
+merged: a p b q   r   s
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> word1 = &quot;abcd&quot;, word2 = &quot;pq&quot;
+<strong>Output:</strong> &quot;apbqcd&quot;
+<strong>Explanation:</strong>&nbsp;Notice that as word1 is longer, &quot;cd&quot; is appended to the end.
+word1:  a   b   c   d
+word2:    p   q
+merged: a p b q c   d
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= word1.length, word2.length &lt;= 100</code></li>
+	<li><code>word1</code> and <code>word2</code> consist of lowercase English letters.</li>
+</ul>`,
+    solutions: {
+      python: `class Solution:
+    def mergeAlternately(self, word1: str, word2: str) -> str:
+        i, j = 0, 0
+        result = []
+        while i < len(word1) and j < len(word2):
+            result.append(word1[i])
+            result.append(word2[j])
+            i += 1
+            j += 1
+        result.append(word1[i:])
+        result.append(word2[j:])
+        return "".join(result)`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/merge-strings-alternately/",
   },
 ];

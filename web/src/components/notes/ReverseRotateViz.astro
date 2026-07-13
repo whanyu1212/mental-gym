@@ -145,7 +145,7 @@ const steps: TeachingStep[] = [
 
   .rr-ptr-label {
     position: absolute;
-    font-size: 0.72rem;
+    font-size: var(--fs-eyebrow);
     font-weight: 700;
     color: var(--accent);
     transition: left 0.25s ease;
@@ -157,7 +157,7 @@ const steps: TeachingStep[] = [
   .rr-char.active .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.1);
+    background: rgb(var(--accent-rgb) / 10%);
   }
 
   .rr-char.found .cell-val {

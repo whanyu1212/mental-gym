@@ -1,0 +1,410 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../lib/teaching/types';
+
+const s = "abca".split("");
+
+const steps: TeachingStep[] = [
+  {
+    id: 'initial',
+    l: 0,
+    r: 3,
+    leftChar: 'a',
+    rightChar: 'a',
+    match: true,
+    branch: 'none',
+    isDone: false,
+    exp: "Start with pointers at both ends. Compare 'a' and 'a' — they match.",
+    reason: 'A palindrome is checked from the outside in. Matching outer pairs confirm symmetry.',
+    invariant: 'No deletions used yet. The entire string is still under consideration.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:3', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'mismatch',
+    l: 1,
+    r: 2,
+    leftChar: 'b',
+    rightChar: 'c',
+    match: false,
+    branch: 'none',
+    isDone: false,
+    exp: "Move inward. Now compare 'b' and 'c' — they do NOT match. This is the first mismatch.",
+    reason: 'With a standard palindrome check, we would return false here. But we are allowed to delete at most one character.',
+    invariant: 'All outer pairs (before this window) have been confirmed. We have one deletion available.',
+    action: 'compare',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'decision-box', kind: 'focus' },
+      { target: 'cell:1', kind: 'compare' },
+      { target: 'cell:2', kind: 'compare' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'branch-intro',
+    l: 1,
+    r: 2,
+    leftChar: 'b',
+    rightChar: 'c',
+    match: false,
+    branch: 'branch',
+    isDone: false,
+    exp: "First mismatch! We have two choices: skip the left character ('b') or skip the right character ('c'). We check both branches — if either results in a palindrome, the answer is true.",
+    reason: 'The deletion can only help at the point of mismatch. Skipping a character earlier or later would not fix this pair.',
+    invariant: 'The decision is greedy: branch at the first mismatch, not at any other position.',
+    action: 'expand',
+    highlights: [
+      { target: 'branch-box', kind: 'focus' },
+      { target: 'cell:1', kind: 'discard' },
+      { target: 'cell:2', kind: 'discard' },
+    ],
+  },
+  {
+    id: 'skip-left',
+    l: 2,
+    r: 2,
+    leftChar: 'c',
+    rightChar: 'c',
+    match: true,
+    branch: 'skip-left',
+    isDone: false,
+    exp: "Branch A — skip left ('b'): check substring s[2..2] = 'c'. A single character is trivially a palindrome. ✓",
+    reason: "By skipping the left character, we removed 'b' — the remaining 'aca' is a valid palindrome.",
+    invariant: 'One deletion used (left skip). The remaining window must be a standard palindrome.',
+    action: 'shrink',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'branch-a', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'discard' },
+      { target: 'cell:2', kind: 'focus' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'skip-right',
+    l: 1,
+    r: 1,
+    leftChar: 'b',
+    rightChar: 'b',
+    match: true,
+    branch: 'skip-right',
+    isDone: false,
+    exp: "Branch B — skip right ('c'): check substring s[1..1] = 'b'. Also a single character — palindrome. ✓",
+    reason: "By skipping the right character, we removed 'c' — the remaining 'aba' is also a valid palindrome.",
+    invariant: 'One deletion used (right skip). The remaining window must be a standard palindrome.',
+    action: 'shrink',
+    highlights: [
+      { target: 'compare-box', kind: 'compare' },
+      { target: 'branch-b', kind: 'confirmed' },
+      { target: 'cell:1', kind: 'focus' },
+      { target: 'cell:2', kind: 'discard' },
+      { target: 'pointer:l', kind: 'focus' },
+      { target: 'pointer:r', kind: 'focus' },
+    ],
+  },
+  {
+    id: 'result',
+    l: 1,
+    r: 2,
+    leftChar: 'b',
+    rightChar: 'c',
+    match: false,
+    branch: 'result',
+    isDone: true,
+    exp: "Both branches succeeded! Deleting 'b' gives 'aca', deleting 'c' gives 'aba' — both are palindromes. Return true.",
+    reason: 'We only need ONE branch to succeed. The `or` in `is_pali(s[l+1:r+1]) or is_pali(s[l:r])` short-circuits on the first success.',
+    invariant: 'At most one deletion was used. The greedy branch at the first mismatch is sufficient.',
+    action: 'confirm',
+    highlights: [
+      { target: 'compare-box', kind: 'confirmed' },
+      { target: 'decision-box', kind: 'confirmed' },
+      { target: 'branch-a', kind: 'confirmed' },
+      { target: 'branch-b', kind: 'confirmed' },
+    ],
+  },
+];
+---
+
+<valid-palindrome-2-visuals>
+  <AlgorithmPlayer title="s = 'abca'" steps={steps}>
+    <div class="stats-row vp2-stats-row">
+      <div class="stat-box" data-teach-target="compare-box">
+        <span class="stat-label">Comparing</span>
+        <span class="stat-val vp2-compare">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="decision-box">
+        <span class="stat-label">Decision</span>
+        <span class="stat-val vp2-decision">-</span>
+      </div>
+      <div class="stat-box" data-teach-target="branch-box">
+        <span class="stat-label">Branch Check</span>
+        <span class="stat-val vp2-branch">-</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">String</p>
+      <div class="array-row vp2-row" data-teach-target="string-view">
+        {s.map((char, i) => (
+          <div class="array-col">
+            <div class="array-cell vp2-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+              <span class="cell-val">{char}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+            <div class="pointers-row vp2-ptr-col" data-idx={i}>
+              <span class="ptr ptr-l hidden" data-teach-target={i === 0 ? 'pointer:l' : undefined}>L</span>
+              <span class="ptr ptr-r hidden" data-teach-target={i === 0 ? 'pointer:r' : undefined}>R</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="branch-section" data-teach-target="branch-section">
+      <div class="branch-card" data-teach-target="branch-a">
+        <p class="branch-title">Branch A: Skip Left (delete 'b')</p>
+        <p class="branch-desc">Check s[2..2] = "c" → palindrome ✓</p>
+      </div>
+      <div class="branch-card" data-teach-target="branch-b">
+        <p class="branch-title">Branch B: Skip Right (delete 'c')</p>
+        <p class="branch-desc">Check s[1..1] = "b" → palindrome ✓</p>
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</valid-palindrome-2-visuals>
+
+<script>
+  class ValidPalindrome2Visuals extends HTMLElement {
+    connectedCallback() {
+      this.cells = Array.from(this.querySelectorAll(".vp2-cell"));
+      this.ptrCols = Array.from(this.querySelectorAll(".vp2-ptr-col"));
+      this.compareEl = this.querySelector(".vp2-compare");
+      this.decisionEl = this.querySelector(".vp2-decision");
+      this.branchEl = this.querySelector(".vp2-branch");
+      this.branchSection = this.querySelector('[data-teach-target="branch-section"]');
+      this.branchA = this.querySelector('[data-teach-target="branch-a"]');
+      this.branchB = this.querySelector('[data-teach-target="branch-b"]');
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+
+        if (this.compareEl) {
+          if (step.branch === 'branch' || step.branch === 'result') {
+            this.compareEl.textContent = `${step.leftChar} ≠ ${step.rightChar}`;
+          } else {
+            this.compareEl.textContent = `${step.leftChar} ↔ ${step.rightChar}`;
+          }
+        }
+
+        if (this.decisionEl) {
+          if (step.isDone) {
+            this.decisionEl.textContent = 'True — at most one deletion makes it a palindrome';
+          } else if (!step.match && step.branch === 'none') {
+            this.decisionEl.textContent = 'Mismatch! Try skipping a character';
+          } else if (step.match && !step.isDone) {
+            this.decisionEl.textContent = 'Match → move pointers inward';
+          } else if (step.branch === 'branch') {
+            this.decisionEl.textContent = 'Branch into two sub-checks';
+          } else {
+            this.decisionEl.textContent = '-';
+          }
+        }
+
+        if (this.branchEl) {
+          if (step.branch === 'skip-left') {
+            this.branchEl.textContent = 'A: skip left ✓';
+          } else if (step.branch === 'skip-right') {
+            this.branchEl.textContent = 'B: skip right ✓';
+          } else if (step.branch === 'branch') {
+            this.branchEl.textContent = 'Checking A and B...';
+          } else if (step.branch === 'result') {
+            this.branchEl.textContent = 'A ✓ or B ✓ → true';
+          } else {
+            this.branchEl.textContent = '-';
+          }
+        }
+
+        // Show/hide branch section
+        if (this.branchSection) {
+          this.branchSection.style.opacity = (step.branch === 'branch' || step.branch === 'skip-left' || step.branch === 'skip-right' || step.branch === 'result') ? '1' : '0.3';
+        }
+
+        // Highlight branch cards
+        if (this.branchA) {
+          this.branchA.classList.toggle('confirmed-card', step.branch === 'skip-left' || step.branch === 'result');
+        }
+        if (this.branchB) {
+          this.branchB.classList.toggle('confirmed-card', step.branch === 'skip-right' || step.branch === 'result');
+        }
+
+        // Update cells
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.classList.remove("active-l", "active-r", "conflict", "visited", "confirmed", "skipped");
+
+          if (step.branch === 'skip-left' && i === 1) {
+            valSpan.classList.add("skipped");
+          }
+          if (step.branch === 'skip-right' && i === 2) {
+            valSpan.classList.add("skipped");
+          }
+          if (i < step.l || i > step.r) {
+            if (step.branch !== 'skip-left' || i !== 1) {
+              if (step.branch !== 'skip-right' || i !== 2) {
+                valSpan.classList.add("visited");
+              }
+            }
+          }
+          if (i === step.l && step.branch !== 'result' && step.branch !== 'branch') valSpan.classList.add("active-l");
+          if (i === step.r && step.branch !== 'result' && step.branch !== 'branch') valSpan.classList.add("active-r");
+          if (!step.match && (i === step.l || i === step.r) && step.branch === 'none') {
+            valSpan.classList.add("conflict");
+          }
+          if (step.isDone) {
+            valSpan.classList.add("confirmed");
+          }
+        });
+
+        // Update pointers
+        this.ptrCols.forEach((col, i) => {
+          const l = col.querySelector(".ptr-l");
+          const r = col.querySelector(".ptr-r");
+
+          if (l) l.className = `ptr ptr-l ${i === step.l && step.branch !== 'branch' && step.branch !== 'result' ? "" : "hidden"}`;
+          if (r) r.className = `ptr ptr-r ${i === step.r && step.branch !== 'branch' && step.branch !== 'result' ? "" : "hidden"}`;
+        });
+      });
+    }
+  }
+
+  if (!customElements.get('valid-palindrome-2-visuals')) {
+    customElements.define('valid-palindrome-2-visuals', ValidPalindrome2Visuals);
+  }
+</script>
+
+<style>
+  valid-palindrome-2-visuals {
+    display: block;
+  }
+
+  .vp2-stats-row {
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box.success-box {
+    border-color: var(--status-easy) !important;
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent) !important;
+  }
+
+  .stat-box.success-box .stat-val {
+    color: var(--status-easy) !important;
+  }
+
+  .vp2-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .cell-val.active-l {
+    border-color: var(--status-info);
+    color: var(--status-info);
+    background: color-mix(in srgb, var(--status-info) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-r {
+    border-color: var(--status-easy);
+    color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 15%, transparent);
+    transform: translateY(-4px);
+  }
+
+  .cell-val.active-l.active-r,
+  .cell-val.confirmed {
+    border-color: var(--status-medium);
+    color: #e0bc5c;
+    background: var(--accent-dim);
+  }
+
+  .cell-val.conflict {
+    border-color: var(--status-hard) !important;
+    color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+    animation: shake 0.4s ease-in-out;
+  }
+
+  .cell-val.skipped {
+    opacity: 0.3;
+    text-decoration: line-through;
+  }
+
+  .cell-val.visited {
+    opacity: var(--dim-hard);
+  }
+
+  .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+
+  .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
+
+  .branch-section {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    transition: opacity 0.3s ease;
+  }
+
+  .branch-card {
+    flex: 1;
+    padding: 1rem;
+    border: 1px solid var(--border-dim, #333);
+    border-radius: 0.5rem;
+    background: var(--bg-dim, #1a1a1a);
+    transition: all 0.3s ease;
+  }
+
+  .branch-card.confirmed-card {
+    border-color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+  }
+
+  .branch-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .branch-desc {
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
+
+  @keyframes shake {
+    0%, 100% {
+      transform: translateX(0) translateY(-4px);
+    }
+    25% {
+      transform: translateX(-4px) translateY(-4px);
+    }
+    75% {
+      transform: translateX(4px) translateY(-4px);
+    }
+  }
+</style>

@@ -55,11 +55,15 @@ SLUG_OVERRIDES: dict[str, str] = {
     "sort_an_array": "sort-an-array",
     "sort_colors": "sort-colors",
     "valid_palindrome": "valid-palindrome",
+    "valid_palindrome_2": "valid-palindrome-ii",
+    "merge_alternatively": "merge-strings-alternately",
     "majority_element": "majority-element",
     "majority_element_2": "majority-element-ii",
     "longest_common_prefix": "longest-common-prefix",
     "contains_duplicate": "contains-duplicate",
     "two_sum": "two-sum",
+    "subarray_sum_equals_k": "subarray-sum-equals-k",
+    "xor_queries_subarray": "xor-queries-of-a-subarray",
     "trap": "trapping-rain-water",
     "min_stack": "min-stack",
 }
@@ -171,7 +175,15 @@ def find_julia_solution(norm_key: str) -> str:
 
 
 def js_string(s: str) -> str:
-    """Escape a string for embedding in a JS/TS template literal."""
+    """
+    Escape a string for embedding in a JS/TS template literal.
+
+    Trailing whitespace is stripped per line first: LeetCode's HTML
+    descriptions carry trailing spaces that the trailing-whitespace
+    pre-commit hook would otherwise strip on every regeneration. Only
+    the right side is trimmed so HTML/code indentation is preserved.
+    """
+    s = "\n".join(line.rstrip() for line in s.split("\n"))
     s = s.replace("\\", "\\\\")
     s = s.replace("`", "\\`")
     s = s.replace("${", "\\${")

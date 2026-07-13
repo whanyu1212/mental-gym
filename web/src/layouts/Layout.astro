@@ -1,5 +1,7 @@
 ---
 import { withBase, stripBase } from "../lib/url";
+import "../styles/tokens.css";
+import "../styles/prose.css";
 
 interface Props {
 	title?: string;
@@ -83,14 +85,9 @@ const pathname = stripBase(Astro.url.pathname);
 </html>
 
 <style>
-	:root {
-		--font-serif: "Cormorant Garamond", Georgia, serif;
-		--font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
-		--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-		/* Smallest uppercase kicker labels (stat labels, section/column headings, meta) */
-		--text-eyebrow: 0.72rem;
-	}
+	/* Structural tokens (type families, scale, radius, spacing, accent channels)
+	   live in src/styles/tokens.css, imported above. This block holds only the
+	   per-theme palette — the values that flip between dark and light. */
 
 	:root,
 	[data-theme="dark"] {
@@ -102,13 +99,15 @@ const pathname = stripBase(Astro.url.pathname);
 		--text: #f0ead6;
 		--muted: #8a8070;
 		--border: #2a2520;
-		--link: #c9a84c;
-		--accent: #c9a84c;
-		--accent-dim: rgba(201, 168, 76, 0.15);
+		--accent-rgb: 201 168 76; /* brand gold — drives --accent + all --accent-* channels */
+		--easy-rgb: 125 171 125;  /* status green — drives --easy-* channels */
+		--link: rgb(var(--accent-rgb));
+		--accent: rgb(var(--accent-rgb));
+		--accent-dim: var(--accent-soft);
 		--header-bg: rgba(14, 14, 14, 0.85);
 		--bg-gradient: radial-gradient(ellipse at top, #1a1710 0%, var(--bg) 60%);
-		--status-easy: #7dab7d;
-		--status-medium: #c9a84c;
+		--status-easy: rgb(var(--easy-rgb));
+		--status-medium: var(--accent);
 		--status-hard: #b05a5a;
 		--status-info: #5a82b0;
 		--glass-surface: rgba(22, 22, 22, 0.68);
@@ -131,21 +130,23 @@ const pathname = stripBase(Astro.url.pathname);
 		--text: #201d17;
 		--muted: #5c5446;
 		--border: #d8cfbd;
-		--link: #8a6d1f;
-		--accent: #8a6d1f;
-		--accent-dim: rgba(138, 109, 31, 0.11);
+		--accent-rgb: 138 109 31; /* brand gold (light) */
+		--easy-rgb: 46 125 50;    /* status green (light) */
+		--link: rgb(var(--accent-rgb));
+		--accent: rgb(var(--accent-rgb));
+		--accent-dim: var(--accent-soft);
 		--header-bg: rgba(253, 251, 246, 0.88);
 		--bg-gradient: radial-gradient(ellipse at top, #f1e7d4 0%, var(--bg) 70%);
-		--status-easy: #2e7d32;
+		--status-easy: rgb(var(--easy-rgb));
 		--status-medium: #b26a00;
 		--status-hard: #b23b3b;
 		--status-info: #2f6fa6;
 		--glass-surface: rgba(246, 240, 228, 0.68);
 		--glass-surface-strong: rgba(239, 231, 216, 0.78);
-		--glass-border: rgba(255, 255, 255, 0.42);
-		--glass-border-strong: rgba(255, 255, 255, 0.58);
-		--glass-highlight: rgba(255, 255, 255, 0.28);
-		--glass-highlight-strong: rgba(255, 255, 255, 0.4);
+		--glass-border: rgba(32, 29, 23, 0.12);
+		--glass-border-strong: rgba(32, 29, 23, 0.18);
+		--glass-highlight: rgba(32, 29, 23, 0.04);
+		--glass-highlight-strong: rgba(32, 29, 23, 0.08);
 		--glass-blur: 16px;
 		--shadow-sm: 0 2px 8px rgba(32, 29, 23, 0.06);
 		--shadow-lg: 0 10px 24px rgba(32, 29, 23, 0.1);
@@ -165,12 +166,27 @@ const pathname = stripBase(Astro.url.pathname);
 		padding: 0;
 		width: 100%;
 		min-height: 100%;
-		background: var(--bg-gradient);
+		background: var(--bg);
 		color: var(--text);
 		font-family: var(--font-sans);
 		font-feature-settings: "ss01", "cv11";
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
+	}
+
+	/* Background gradient as a single fixed layer pinned to the VIEWPORT, not
+	   the (very tall) document. Painting it on `html, body` instead repeated the
+	   radial across both boxes and let the warm bloom fade out ~60% down a long
+	   page, leaving a visible horizontal seam ("shadow") below the fold. A fixed
+	   ::before keeps the bloom anchored to the top of the screen on every scroll
+	   position, so the background reads as one continuous field. */
+	body::before {
+		content: "";
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		background: var(--bg-gradient);
+		pointer-events: none;
 	}
 
 	a {
@@ -209,7 +225,7 @@ const pathname = stripBase(Astro.url.pathname);
 	.brand {
 		color: var(--accent);
 		font-weight: 600;
-		font-size: 1.35rem;
+		font-size: var(--fs-xl);
 		letter-spacing: 0.5px;
 		font-family: var(--font-serif);
 	}
@@ -264,7 +280,7 @@ const pathname = stripBase(Astro.url.pathname);
 	}
 
 	.theme-toggle__icon {
-		font-size: 0.9rem;
+		font-size: var(--fs-sm);
 		line-height: 1;
 	}
 

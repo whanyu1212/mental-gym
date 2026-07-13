@@ -1,0 +1,117 @@
+---
+/**
+ * Reader half of the "resume where you left off" feature. Renders one
+ * accent-edged row linking back to the most recently opened detail page,
+ * populated client-side from the localStorage key that LastVisited writes.
+ *
+ * Hidden until filled, so a first-time visitor (empty storage) sees nothing —
+ * zero cost when there's nothing to resume. Used on both index pages.
+ */
+---
+
+<a class="resume-row" data-resume hidden href="#">
+	<span class="resume-eyebrow">Resume</span>
+	<span class="resume-body">
+		<span class="resume-title" data-resume-title></span>
+		<span class="resume-kind" data-resume-kind></span>
+	</span>
+	<span class="resume-arrow">→</span>
+</a>
+
+<script>
+	const row = document.querySelector<HTMLAnchorElement>("[data-resume]");
+	if (row) {
+		try {
+			const raw = localStorage.getItem("mental-gym:last-visited");
+			if (raw) {
+				const { title, kind, href } = JSON.parse(raw);
+				if (title && href) {
+					row.href = href;
+					const titleEl = row.querySelector<HTMLElement>("[data-resume-title]");
+					const kindEl = row.querySelector<HTMLElement>("[data-resume-kind]");
+					if (titleEl) titleEl.textContent = title;
+					if (kindEl) kindEl.textContent = kind ?? "";
+					row.hidden = false;
+				}
+			}
+		} catch {
+			// malformed/unavailable storage — leave the row hidden.
+		}
+	}
+</script>
+
+<style>
+	.resume-row {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+		padding: 0.85rem 1.1rem;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-left: 3px solid var(--accent);
+		border-radius: var(--radius-sm);
+		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		text-decoration: none;
+		transition: border-color 0.15s, transform 0.15s;
+	}
+
+	.resume-row[hidden] {
+		display: none;
+	}
+
+	.resume-row:hover {
+		border-color: var(--accent);
+		transform: translateY(-1px);
+		text-decoration: none;
+	}
+
+	.resume-eyebrow {
+		font-size: var(--fs-eyebrow);
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--accent);
+		font-weight: 600;
+		font-family: var(--font-sans);
+		flex-shrink: 0;
+	}
+
+	.resume-body {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.resume-title {
+		font-family: var(--font-serif);
+		font-size: var(--fs-lg);
+		color: var(--text);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.resume-kind {
+		font-size: var(--fs-eyebrow);
+		color: var(--muted);
+		font-family: var(--font-sans);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		flex-shrink: 0;
+	}
+
+	.resume-arrow {
+		color: var(--accent);
+		font-family: var(--font-sans);
+		transition: transform 0.15s;
+		flex-shrink: 0;
+	}
+
+	.resume-row:hover .resume-arrow {
+		transform: translateX(4px);
+	}
+</style>

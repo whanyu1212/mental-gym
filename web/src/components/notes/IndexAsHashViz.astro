@@ -240,7 +240,7 @@ const steps: TeachingStep[] = [
 
   .slot-target {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: var(--fs-micro);
     color: var(--muted);
   }
 
@@ -253,7 +253,7 @@ const steps: TeachingStep[] = [
 
   .target-indicator {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: var(--fs-eyebrow);
     color: var(--muted);
     padding: 2px 8px;
     border-radius: 4px;
@@ -264,7 +264,7 @@ const steps: TeachingStep[] = [
   .target-indicator.visible {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
   }
 
   /* Cell states */
@@ -280,7 +280,7 @@ const steps: TeachingStep[] = [
   .ih-cell.active .cell-val {
     border-color: var(--accent);
     color: var(--accent);
-    background: rgba(201, 168, 76, 0.08);
+    background: var(--accent-glow);
   }
 
   .ih-cell.target .cell-val {

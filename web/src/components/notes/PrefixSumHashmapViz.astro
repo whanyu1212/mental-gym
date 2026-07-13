@@ -1,0 +1,206 @@
+---
+import AlgorithmPlayer from '../framework/AlgorithmPlayer.astro';
+import type { TeachingStep } from '../../lib/teaching/types';
+
+const nums = [1, 2, 3];
+const k = 3;
+
+const steps: TeachingStep[] = [
+  {
+    id: 'init',
+    phase: 'init',
+    active: -1,
+    prefixSum: 0,
+    count: 0,
+    mapState: { 0: 1 },
+    found: null,
+    exp: 'Initialize: prefix_sum=0, count=0, map={0:1}. We seed the map with {0:1} to handle subarrays starting at index 0.',
+    reason: 'If prefix_sum == k at some index, we need (prefix_sum - k) = 0 to already be in the map.',
+    invariant: 'map[s] = number of indices where the prefix sum equals s (including the virtual index -1).',
+    formula: 'count += map.get(prefix_sum - k, 0)',
+    highlights: [{ target: 'map-box', kind: 'focus' }, { target: 'count-box', kind: 'focus' }],
+  },
+  {
+    id: 'i0',
+    phase: 'scan',
+    active: 0,
+    prefixSum: 1,
+    count: 0,
+    mapState: { 0: 1, 1: 1 },
+    found: null,
+    exp: 'i=0, num=1: prefix_sum = 0+1 = 1. Check map for (1-3)=-2: not found → count stays 0. Add prefix_sum=1 to map.',
+    reason: 'prefix_sum - k = 1 - 3 = -2. No subarray ending here sums to 3.',
+    invariant: 'map[s] = how many times prefix sum s has appeared so far.',
+    formula: 'prefix_sum=1, lookup -2 → miss',
+    highlights: [{ target: 'nums:0', kind: 'compare' }, { target: 'prefix-box', kind: 'write' }, { target: 'map-box', kind: 'focus' }],
+  },
+  {
+    id: 'i1',
+    phase: 'scan',
+    active: 1,
+    prefixSum: 3,
+    count: 1,
+    mapState: { 0: 1, 1: 1, 3: 1 },
+    found: '0..1',
+    exp: 'i=1, num=2: prefix_sum = 1+2 = 3. Check map for (3-3)=0: found 1 → count becomes 1. Subarray [1,2] (indices 0-1) sums to 3!',
+    reason: 'map[0]=1 means there is 1 place where prefix_sum was 0 (the start). So exactly one subarray ending here sums to k.',
+    invariant: 'Each map hit corresponds to a distinct subarray ending at i that sums to k.',
+    formula: 'prefix_sum=3, lookup 0 → hit (×1) → count=1',
+    highlights: [{ target: 'nums:1', kind: 'compare' }, { target: 'prefix-box', kind: 'write' }, { target: 'count-box', kind: 'write' }, { target: 'map-box', kind: 'confirmed' }],
+  },
+  {
+    id: 'i2',
+    phase: 'scan',
+    active: 2,
+    prefixSum: 6,
+    count: 2,
+    mapState: { 0: 1, 1: 1, 3: 2, 6: 1 },
+    found: '2',
+    exp: 'i=2, num=3: prefix_sum = 3+3 = 6. Check map for (6-3)=3: found 1 → count becomes 2. Subarray [3] (index 2) sums to 3!',
+    reason: 'map[3]=1 means prefix_sum was 3 once before (after index 1). The subarray from index 2 to 2 has sum 6-3=3=k.',
+    invariant: 'count = total number of subarrays found so far that sum to k.',
+    formula: 'prefix_sum=6, lookup 3 → hit (×1) → count=2',
+    highlights: [{ target: 'nums:2', kind: 'compare' }, { target: 'prefix-box', kind: 'write' }, { target: 'count-box', kind: 'write' }, { target: 'map-box', kind: 'confirmed' }],
+  },
+  {
+    id: 'done',
+    phase: 'done',
+    active: -1,
+    prefixSum: 6,
+    count: 2,
+    mapState: { 0: 1, 1: 1, 3: 2, 6: 1 },
+    found: null,
+    exp: 'Done! Found 2 subarrays that sum to k=3: [1,2] (indices 0-1) and [3] (index 2).',
+    reason: 'The prefix_sum + hashmap pattern finds all subarrays in O(n) time and O(n) space.',
+    invariant: 'Final count = total subarrays summing to k.',
+    formula: 'Answer: 2',
+    highlights: [{ target: 'count-box', kind: 'confirmed' }],
+  },
+];
+---
+
+<prefix-sum-hashmap-viz>
+  <AlgorithmPlayer title={`Subarray Sum Equals K — prefix sum + hashmap — nums=[1,2,3], k=3`} steps={steps}>
+    <div class="stats-row ps-meta-row">
+      <div class="stat-box psh-prefix-box" data-teach-target="prefix-box">
+        <span class="stat-label">prefix_sum</span>
+        <span class="stat-val psh-prefix-val">0</span>
+      </div>
+      <div class="stat-box psh-count-box" data-teach-target="count-box">
+        <span class="stat-label">count</span>
+        <span class="stat-val psh-count-val">0</span>
+      </div>
+      <div class="stat-box psh-map-box" data-teach-target="map-box">
+        <span class="stat-label">map</span>
+        <span class="stat-val psh-map-val">&#123;0: 1&#125;</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">nums (input), k={k}</p>
+      <div class="array-row">
+        {nums.map((n, i) => (
+          <div class="array-col">
+            <div class="array-cell psh-num-cell" data-idx={i} data-teach-target={`nums:${i}`}>
+              <span class="cell-val">{n}</span>
+              <span class="cell-idx">{i}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </AlgorithmPlayer>
+</prefix-sum-hashmap-viz>
+
+<script>
+  class PrefixSumHashmapViz extends HTMLElement {
+    connectedCallback() {
+      this.prefixValEl = this.querySelector('.psh-prefix-val');
+      this.countValEl = this.querySelector('.psh-count-val');
+      this.mapValEl = this.querySelector('.psh-map-val');
+      this.numCells = Array.from(this.querySelectorAll('.psh-num-cell'));
+      this.countBox = this.querySelector('.psh-count-box');
+
+      this.addEventListener('step-change', (e) => {
+        const step = e.detail.step;
+
+        if (this.prefixValEl) this.prefixValEl.textContent = String(step.prefixSum ?? 0);
+        if (this.countValEl) this.countValEl.textContent = String(step.count ?? 0);
+        if (this.mapValEl && step.mapState) {
+          const entries = Object.entries(step.mapState).map(([k, v]) => `${k}:${v}`).join(', ');
+          this.mapValEl.textContent = `{${entries}}`;
+        }
+
+        // Highlight active input cell
+        this.numCells.forEach((cell, i) => {
+          const valSpan = cell.querySelector('.cell-val');
+          if (!valSpan) return;
+          valSpan.className = 'cell-val';
+          if (i === step.active) valSpan.classList.add('psh-num-active');
+          else if (step.active > -1 && i < step.active) valSpan.classList.add('psh-num-visited');
+        });
+
+        // Count box color on hit
+        this.countBox?.classList.remove('psh-count-hit', 'psh-count-done');
+        if (step.phase === 'done') this.countBox?.classList.add('psh-count-done');
+        else if (step.found) this.countBox?.classList.add('psh-count-hit');
+      });
+    }
+  }
+
+  if (!customElements.get('prefix-sum-hashmap-viz')) {
+    customElements.define('prefix-sum-hashmap-viz', PrefixSumHashmapViz);
+  }
+</script>
+
+<style>
+  prefix-sum-hashmap-viz { display: block; }
+
+  .ps-meta-row {
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .psh-prefix-box {
+    border-color: color-mix(in srgb, var(--status-info) 40%, transparent);
+    background: color-mix(in srgb, var(--status-info) 8%, transparent);
+  }
+  .psh-prefix-box .stat-val { color: var(--status-info); }
+
+  .psh-map-box {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    flex: 1 1 auto;
+    min-width: 180px;
+  }
+  .psh-map-box .stat-val {
+    color: var(--accent);
+    font-size: var(--fs-fine);
+    word-break: break-all;
+  }
+
+  .psh-count-box {
+    border-color: color-mix(in srgb, var(--status-easy) 40%, transparent);
+    background: color-mix(in srgb, var(--status-easy) 8%, transparent);
+  }
+  .psh-count-box .stat-val { color: var(--status-easy); }
+
+  .psh-count-box.psh-count-hit {
+    border-color: var(--status-warn);
+    background: color-mix(in srgb, var(--status-warn) 12%, transparent);
+  }
+  .psh-count-box.psh-count-hit .stat-val { color: var(--status-warn); }
+
+  .psh-count-box.psh-count-done {
+    border-color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 16%, transparent);
+  }
+
+  .cell-val.psh-num-active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    transform: translateY(-4px);
+  }
+  .cell-val.psh-num-visited { opacity: var(--dim-soft); }
+</style>
