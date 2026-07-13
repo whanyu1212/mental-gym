@@ -3,41 +3,58 @@ import Layout from "../../layouts/Layout.astro";
 import { withBase } from "../../lib/url";
 ---
 
-<Layout title="System Design | Mental Gym">
+<Layout title="ML/AI Systems Design | Mental Gym">
 	<section class="hero">
-		<p>System design</p>
-		<h1>Practice making trade-offs explicit.</h1>
-		<p>Build a repeatable approach to requirements, scale, architecture, reliability, and the decisions that connect them.</p>
-		<a href={withBase("/notes")}>Explore current knowledge notes <span>→</span></a>
+		<p>ML/AI systems design</p>
+		<h1>Design the systems around the model.</h1>
+		<p>Practice the decisions that connect data, training, evaluation, deployment, inference, monitoring, and feedback.</p>
+		<a href={withBase("/notes/sd-real-time-ml-inference/")}>Start the inference platform case study <span>→</span></a>
 	</section>
 
-	<section class="roadmap">
-		<article><span>01</span><h2>Frame the problem</h2><p>Clarify functional requirements, constraints, users, and what success means before proposing a system.</p></article>
-		<article><span>02</span><h2>Estimate scale</h2><p>Translate assumptions into traffic, storage, throughput, latency, and availability targets.</p></article>
-		<article><span>03</span><h2>Design the system</h2><p>Choose APIs, data models, components, and boundaries that satisfy the stated needs.</p></article>
-		<article><span>04</span><h2>Examine trade-offs</h2><p>Discuss bottlenecks, failure modes, observability, security, cost, and future evolution.</p></article>
+	<section class="lifecycle" aria-label="ML system lifecycle">
+		<article><span>01</span><h2>Data</h2><p>Define data contracts, freshness, quality checks, and feedback capture.</p></article>
+		<article><span>02</span><h2>Train</h2><p>Choose reproducible datasets, features, experiments, and versioned artifacts.</p></article>
+		<article><span>03</span><h2>Evaluate</h2><p>Measure offline quality, safety, calibration, and product-relevant outcomes.</p></article>
+		<article><span>04</span><h2>Deploy</h2><p>Register models, stage releases, canary traffic, and retain rollback paths.</p></article>
+		<article><span>05</span><h2>Serve</h2><p>Meet latency, throughput, availability, and cost constraints on the online path.</p></article>
+		<article><span>06</span><h2>Monitor</h2><p>Observe operational health, drift, quality, fairness, and fallback behavior.</p></article>
+		<article><span>07</span><h2>Improve</h2><p>Join feedback to predictions and use the evidence to improve the next version.</p></article>
+	</section>
+
+	<section class="featured">
+		<div>
+			<p>First case study</p>
+			<h2>Real-Time ML Inference Platform</h2>
+			<p>Design a low-latency prediction service with versioned models, online features, batching, safe rollouts, monitoring, and fallbacks.</p>
+		</div>
+		<a href={withBase("/notes/sd-real-time-ml-inference/")}>Read the case study <span>→</span></a>
 	</section>
 
 	<section class="next">
-		<p>Current focus</p>
-		<h2>A system-design practice library is being built.</h2>
-		<p>Use the problem bank for the existing system-design track today. Case studies, design prompts, and supporting notes will live here as the collection grows.</p>
-		<a href={withBase("/problems?tab=system-design")}>Open system-design practice <span>→</span></a>
+		<p>Practice next</p>
+		<h2>Explain the trade-off, not just the component.</h2>
+		<p>For every design, state the product metric, the model-quality risk, and the operational constraint before choosing an architecture.</p>
+		<a href={withBase("/machine-learning")}>Explore ML engineering <span>→</span></a>
 	</section>
 </Layout>
 
 <style>
-	.hero { max-width: 700px; padding: 3.5rem 0 2.5rem; }
-	.hero > p:first-child, .next > p:first-child, a { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; text-transform: uppercase; }
+	.hero { max-width: 740px; padding: 3.5rem 0 2.5rem; }
+	.hero > p:first-child, .featured > div > p, .next > p:first-child, a { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; text-transform: uppercase; }
 	h1, h2 { font-family: var(--font-serif); font-weight: 600; }
 	h1 { font-size: var(--fs-mega); line-height: 1; margin: .45rem 0 1rem; }
-	.hero > p:not(:first-child), .next > p:not(:first-child) { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 0 0 1.25rem; }
-	.roadmap { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); margin: .5rem 0 3rem; }
-	.roadmap article, .next { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); padding: 1.3rem; }
-	.roadmap span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; }
-	.roadmap h2, .next h2 { font-size: var(--fs-xl); margin: .65rem 0 .55rem; }
-	.roadmap p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
-	.next { max-width: 700px; }
+	.hero > p:not(:first-child), .featured > div > p:not(:first-child), .next > p:not(:first-child) { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 0 0 1.25rem; }
+	.lifecycle { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin: .5rem 0 3rem; }
+	.lifecycle article, .featured, .next { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); padding: 1.3rem; }
+	.lifecycle span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; }
+	.lifecycle h2, .featured h2, .next h2 { font-size: var(--fs-xl); margin: .65rem 0 .55rem; }
+	.lifecycle p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
+	.featured { align-items: end; display: flex; gap: 2rem; justify-content: space-between; margin-bottom: 1rem; }
+	.featured > div { max-width: 620px; }
+	.featured > div > p:not(:first-child) { font-size: var(--fs-base); margin-bottom: 0; }
+	.featured a, .next a { flex-shrink: 0; white-space: nowrap; }
+	.next { max-width: 760px; }
 	.next > p:not(:first-child) { font-size: var(--fs-base); }
-	@media (max-width: 650px) { .roadmap { grid-template-columns: 1fr; } }
+	@media (max-width: 760px) { .lifecycle { grid-template-columns: repeat(2, 1fr); } .featured { align-items: start; flex-direction: column; gap: 1rem; } }
+	@media (max-width: 520px) { .lifecycle { grid-template-columns: 1fr; } }
 </style>
