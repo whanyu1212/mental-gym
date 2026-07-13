@@ -31,7 +31,13 @@
 </sr-data-manager>
 
 <script>
-  import { getAllRecords, exportAll, importAll, resetDatabase } from "../scripts/sr-db";
+  import {
+    exportAll,
+    getAllRecords,
+    getAllReviewEvents,
+    importAll,
+    resetDatabase,
+  } from "../scripts/sr-db";
   import { todayISO } from "../scripts/sr-scheduler";
 
   class SRDataManagerElement extends HTMLElement {
@@ -66,12 +72,15 @@
 
       // Export
       exportBtn.addEventListener("click", async () => {
-        const records = await getAllRecords();
-        if (records.length === 0) {
+        const [records, events] = await Promise.all([
+          getAllRecords(),
+          getAllReviewEvents(),
+        ]);
+        if (records.length === 0 && events.length === 0) {
           showFeedback("Nothing to export.");
           return;
         }
-        const json = exportAll(records);
+        const json = exportAll(records, events);
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -79,7 +88,7 @@
         a.download = `mental-gym-sr-${todayISO()}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        showFeedback(`Exported ${records.length} records.`);
+        showFeedback(`Exported ${records.length} records and ${events.length} review events.`);
       });
 
       // Import
@@ -88,8 +97,10 @@
         if (!file) return;
         try {
           const text = await file.text();
-          const count = await importAll(text);
-          showFeedback(`Imported ${count} records.`);
+          const result = await importAll(text);
+          showFeedback(
+            `Imported ${result.recordCount} records and ${result.eventCount} review events.`
+          );
           await updateSummary();
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
         } catch (e: any) {

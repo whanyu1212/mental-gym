@@ -1,0 +1,104 @@
+---
+import ActivityHeatmap from "./ActivityHeatmap.astro";
+---
+
+<progress-history>
+	<section class="panel">
+		<p class="loading">Loading review history…</p>
+		<div class="content" hidden>
+			<div class="metrics">
+				<article><strong data-value="week">0</strong><span>Last 7 days</span></article>
+				<article><strong data-value="month">0</strong><span>Last 30 days</span></article>
+				<article><strong data-value="active">0</strong><span>Active days</span></article>
+				<article><strong data-value="current">0</strong><span>Current streak</span></article>
+				<article><strong data-value="longest">0</strong><span>Longest streak</span></article>
+			</div>
+			<div class="details">
+				<section><h3>Review activity</h3><ActivityHeatmap /></section>
+				<section><h3>Ratings</h3><div class="distribution" data-ratings></div></section>
+				<section><h3>Domains</h3><div class="distribution" data-domains></div></section>
+			</div>
+		</div>
+	</section>
+</progress-history>
+
+<script>
+	import { getAllReviewEvents } from "../scripts/sr-db";
+	import { summarizeHistory } from "../scripts/sr-history";
+	import { QUALITY_LABELS, todayISO } from "../scripts/sr-scheduler";
+
+	interface HeatmapElement extends HTMLElement {
+		setData(counts: Map<string, number>, today: string): void;
+	}
+
+	class ProgressHistory extends HTMLElement {
+		connectedCallback() {
+			this.render();
+			window.addEventListener("mental-gym:progress-updated", this.render);
+		}
+
+		disconnectedCallback() {
+			window.removeEventListener("mental-gym:progress-updated", this.render);
+		}
+
+		render = async () => {
+			const loading = this.querySelector<HTMLElement>(".loading");
+			const content = this.querySelector<HTMLElement>(".content");
+
+			try {
+				const today = todayISO();
+				const history = summarizeHistory(await getAllReviewEvents(), today);
+				if (loading) loading.hidden = true;
+				if (content) content.hidden = false;
+
+				const values = {
+					week: history.reviewsLast7Days,
+					month: history.reviewsLast30Days,
+					active: history.activeDaysLast30Days,
+					current: history.currentStreak,
+					longest: history.longestStreak,
+				};
+
+				for (const [name, value] of Object.entries(values)) {
+					const element = this.querySelector<HTMLElement>(`[data-value="${name}"]`);
+					if (element) element.textContent = String(value);
+				}
+
+				const ratings = this.querySelector<HTMLElement>("[data-ratings]");
+				if (ratings) {
+					ratings.innerHTML = ([0, 1, 2, 3] as const)
+						.map((rating) => `<div><span>${QUALITY_LABELS[rating]}</span><strong>${history.ratingCounts[rating]}</strong></div>`)
+						.join("");
+				}
+
+				const domains = this.querySelector<HTMLElement>("[data-domains]");
+				if (domains) {
+					domains.innerHTML = `<div><span>Algorithms</span><strong>${history.domainCounts.algorithms}</strong></div><div><span>Machine Learning</span><strong>${history.domainCounts.ml}</strong></div>`;
+				}
+
+				await customElements.whenDefined("activity-heatmap");
+				this.querySelector<HeatmapElement>("activity-heatmap")?.setData(history.dailyCounts, today);
+			} catch {
+				if (loading) loading.textContent = "Historical progress is unavailable.";
+			}
+		};
+	}
+
+	if (!customElements.get("progress-history")) {
+		customElements.define("progress-history", ProgressHistory);
+	}
+</script>
+
+<style>
+	.panel { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); padding: 1.25rem; }
+	.loading { color: var(--muted); font: var(--fs-fine) var(--font-sans); margin: 0; }
+	.metrics { display: grid; gap: .75rem; grid-template-columns: repeat(5, 1fr); }
+	.metrics article { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: .25rem; padding: 1rem; }
+	.metrics strong { color: var(--text); font: 600 var(--fs-display) var(--font-serif); }
+	.metrics span, .distribution :global(span) { color: var(--muted); font: var(--fs-eyebrow) var(--font-sans); text-transform: uppercase; }
+	.details { display: grid; gap: 1rem; grid-template-columns: 2fr 1fr 1fr; margin-top: 1.5rem; }
+	.details section { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; }
+	h3 { font: 600 var(--fs-xl) var(--font-serif); margin: 0 0 1rem; }
+	.distribution :global(div) { border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; padding: .5rem 0; }
+	@media (max-width: 800px) { .metrics { grid-template-columns: repeat(2, 1fr); } .details { grid-template-columns: 1fr; } }
+</style>
