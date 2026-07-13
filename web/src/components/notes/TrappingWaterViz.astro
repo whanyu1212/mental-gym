@@ -156,7 +156,11 @@ const steps: TeachingStep[] = [
         {heights.map((h, i) => (
           <div class="tw-col" data-idx={i} data-teach-target={`cell:${i}`}>
             <div class="tw-bar-stack">
-              <div class="tw-water-overlay" aria-hidden="true"></div>
+              <div
+                class="tw-water-overlay"
+                style={`bottom: ${h * 18 + 4}px`}
+                aria-hidden="true"
+              ></div>
               <div class="tw-bar" style={`height: ${h * 18 + 4}px`}>{h}</div>
             </div>
             <span class="cell-idx">{i}</span>
