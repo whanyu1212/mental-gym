@@ -218,11 +218,12 @@ const mlByCategory = Object.fromEntries(
 	});
 
 	const hash = window.location.hash;
+	const requestedTab = new URLSearchParams(window.location.search).get("tab");
 	const stored = sessionStorage.getItem("problems-tab");
 	sessionStorage.removeItem("problems-tab");
 
-	const target = hash.startsWith("#ml-") ? "ml-section"
-		: hash.startsWith("#sd-") ? "sd-section"
+	const target = hash.startsWith("#ml-") || requestedTab === "ml" ? "ml-section"
+		: hash.startsWith("#sd-") || requestedTab === "system-design" ? "sd-section"
 		: stored === "ml" ? "ml-section"
 		: stored === "system-design" ? "sd-section"
 		: null;

@@ -1,0 +1,43 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
+---
+
+<Layout title="System Design | Mental Gym">
+	<section class="hero">
+		<p>System design</p>
+		<h1>Practice making trade-offs explicit.</h1>
+		<p>Build a repeatable approach to requirements, scale, architecture, reliability, and the decisions that connect them.</p>
+		<a href={withBase("/notes")}>Explore current knowledge notes <span>→</span></a>
+	</section>
+
+	<section class="roadmap">
+		<article><span>01</span><h2>Frame the problem</h2><p>Clarify functional requirements, constraints, users, and what success means before proposing a system.</p></article>
+		<article><span>02</span><h2>Estimate scale</h2><p>Translate assumptions into traffic, storage, throughput, latency, and availability targets.</p></article>
+		<article><span>03</span><h2>Design the system</h2><p>Choose APIs, data models, components, and boundaries that satisfy the stated needs.</p></article>
+		<article><span>04</span><h2>Examine trade-offs</h2><p>Discuss bottlenecks, failure modes, observability, security, cost, and future evolution.</p></article>
+	</section>
+
+	<section class="next">
+		<p>Current focus</p>
+		<h2>A system-design practice library is being built.</h2>
+		<p>Use the problem bank for the existing system-design track today. Case studies, design prompts, and supporting notes will live here as the collection grows.</p>
+		<a href={withBase("/problems?tab=system-design")}>Open system-design practice <span>→</span></a>
+	</section>
+</Layout>
+
+<style>
+	.hero { max-width: 700px; padding: 3.5rem 0 2.5rem; }
+	.hero > p:first-child, .next > p:first-child, a { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; text-transform: uppercase; }
+	h1, h2 { font-family: var(--font-serif); font-weight: 600; }
+	h1 { font-size: var(--fs-mega); line-height: 1; margin: .45rem 0 1rem; }
+	.hero > p:not(:first-child), .next > p:not(:first-child) { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 0 0 1.25rem; }
+	.roadmap { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); margin: .5rem 0 3rem; }
+	.roadmap article, .next { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); padding: 1.3rem; }
+	.roadmap span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; }
+	.roadmap h2, .next h2 { font-size: var(--fs-xl); margin: .65rem 0 .55rem; }
+	.roadmap p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
+	.next { max-width: 700px; }
+	.next > p:not(:first-child) { font-size: var(--fs-base); }
+	@media (max-width: 650px) { .roadmap { grid-template-columns: 1fr; } }
+</style>

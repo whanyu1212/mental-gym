@@ -1,154 +1,111 @@
 ---
 import { getCollection } from "astro:content";
+import DueForReview from "../components/DueForReview.astro";
+import ResumeRow from "../components/ResumeRow.astro";
 import { mlProblems } from "../data/mlProblems";
 import { problems } from "../data/problems";
 import Layout from "../layouts/Layout.astro";
 import { withBase } from "../lib/url";
 
-const notes = await getCollection("notes");
-
+const notes = (await getCollection("notes")).filter((note) => note.data.category !== "Meta");
 const total = problems.length;
-const easy = problems.filter((p) => p.difficulty === "Easy").length;
-const medium = problems.filter((p) => p.difficulty === "Medium").length;
-const hard = problems.filter((p) => p.difficulty === "Hard").length;
-
-const groups = [...new Set(problems.map((p) => p.group))];
-const groupCounts = Object.fromEntries(
-	groups.map((g) => [g, problems.filter((p) => p.group === g).length]),
-);
-
-const mlCategories = [...new Set(mlProblems.map((p) => p.category))];
-const mlCategoryCounts = Object.fromEntries(
-	mlCategories.map((c) => [c, mlProblems.filter((p) => p.category === c).length]),
-);
+const completedML = mlProblems.filter((problem) => problem.status === "Completed").length;
 ---
 
-<Layout title="Mental Gym">
+<Layout title="Mental Gym — Build technical fluency">
 	<section class="hero">
-		<h1>Mental Gym</h1>
-		<p class="tagline">My personal interview practice space.</p>
+		<p class="eyebrow">Mental Gym</p>
+		<h1>Build technical fluency.</h1>
 		<p class="description">
-			Problems I've worked through, solutions I've written, patterns I want to remember.
+			A workspace for deliberate practice, first-principles implementation, and durable technical knowledge.
 		</p>
+		<p class="learning-loop">Learn <span>→</span> implement <span>→</span> practice <span>→</span> review <span>→</span> retain</p>
 	</section>
 
-	<section class="stats">
-		<div class="stat">
-			<span class="stat-value">{total}</span>
-			<span class="stat-label">Algorithms</span>
+	<ResumeRow />
+
+	<section class="workflow" aria-label="Learning workflow">
+		<a class="workflow-card practice" href={withBase("/problems")}>
+			<p class="card-index">01</p>
+			<h2>Practice</h2>
+			<p>Work through DSA, ML coding, and system-design prompts with the current problem bank.</p>
+			<span class="card-link">Open practice <span>→</span></span>
+		</a>
+		<a class="workflow-card learn" href={withBase("/notes")}>
+			<p class="card-index">02</p>
+			<h2>Learn</h2>
+			<p>Review patterns, complexity, invariants, and implementation ideas worth retaining.</p>
+			<span class="card-link">Explore notes <span>→</span></span>
+		</a>
+		<a class="workflow-card review" href={withBase("/#review")}>
+			<p class="card-index">03</p>
+			<h2>Review</h2>
+			<p>Return to problems on a spaced schedule and turn solved work into recall practice.</p>
+			<span class="card-link">Review queue <span>→</span></span>
+		</a>
+		<a class="workflow-card progress" href={withBase("/problems")}>
+			<p class="card-index">04</p>
+			<h2>Progress</h2>
+			<p>Use the problem bank to see coverage by domain, pattern, difficulty, and learning status.</p>
+			<span class="card-link">View progress <span>→</span></span>
+		</a>
+	</section>
+
+	<section id="review" class="review-area">
+		<div class="section-heading">
+			<div>
+				<p class="eyebrow">Keep it active</p>
+				<h2>Review what you have practiced</h2>
+			</div>
+			<a href={withBase("/#review")}>Open practice <span>→</span></a>
 		</div>
-		<div class="stat">
-			<span class="stat-value">{mlProblems.length}</span>
-			<span class="stat-label">ML Problems</span>
-		</div>
-		<div class="stat">
-			<span class="stat-value">{notes.length}</span>
-			<span class="stat-label">Notes</span>
-		</div>
-		<div class="stat">
-			<span class="stat-value easy">{easy}</span>
-			<span class="stat-label">Easy</span>
-		</div>
-		<div class="stat">
-			<span class="stat-value medium">{medium}</span>
-			<span class="stat-label">Medium</span>
-		</div>
-		<div class="stat">
-			<span class="stat-value hard">{hard}</span>
-			<span class="stat-label">Hard</span>
-		</div>
+		<DueForReview />
+		<p class="review-empty">Your review queue appears here after you rate a completed problem.</p>
 	</section>
 
 	<section class="domains">
-		<a class="domain-card" href={withBase("/problems?tab=algorithms")}>
-			<div class="domain-accent"></div>
-			<div class="domain-body">
-				<p class="domain-label">01</p>
-				<h2 class="domain-title">Algorithms</h2>
-				<p class="domain-desc">LeetCode-style problems grouped by pattern — arrays, hashing, sliding window, two pointers, stack, and more.</p>
-				<div class="domain-meta">
-					<span>{total} problems</span>
-					<span class="domain-arrow">→</span>
-				</div>
-			</div>
-		</a>
-
-		<a class="domain-card" href={withBase("/problems?tab=ml")}>
-			<div class="domain-accent ml"></div>
-			<div class="domain-body">
-				<p class="domain-label">02</p>
-				<h2 class="domain-title">Machine Learning</h2>
-				<p class="domain-desc">ML coding interview questions — implement algorithms from scratch, evaluation metrics, transformers, and PyTorch.</p>
-				<div class="domain-meta">
-					<span>{mlProblems.length} problems</span>
-					<span class="domain-arrow">→</span>
-				</div>
-			</div>
-		</a>
-
-		<a class="domain-card domain-card--muted" href={withBase("/problems?tab=system-design")}>
-			<div class="domain-accent sd"></div>
-			<div class="domain-body">
-				<p class="domain-label">03</p>
-				<h2 class="domain-title">System Design</h2>
-				<p class="domain-desc">ML system design cases — architecture tradeoffs, distributed training, inference, and production pipelines.</p>
-				<div class="domain-meta">
-					<span class="coming-soon-tag">Coming soon</span>
-					<span class="domain-arrow">→</span>
-				</div>
-			</div>
-		</a>
-	</section>
-
-	<section class="subtopics">
-		<div class="subtopics-col">
-			<h3 class="col-heading">Algorithm Topics</h3>
-			<div class="topic-list">
-				{groups.map((group, i) => (
-					<a class="topic-row" href={withBase(`/problems#algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}>
-						<span class="topic-num">{String(i + 1).padStart(2, "0")}</span>
-						<span class="topic-name">{group}</span>
-						<span class="topic-count">{groupCounts[group]}</span>
-					</a>
-				))}
+		<div class="section-heading">
+			<div>
+				<p class="eyebrow">Choose a domain</p>
+				<h2>Practice and knowledge, connected</h2>
 			</div>
 		</div>
-
-		<div class="subtopics-col">
-			<h3 class="col-heading">ML Categories</h3>
-			<div class="topic-list">
-				{mlCategories.map((category, i) => (
-					<a class="topic-row" href={withBase(`/problems#ml-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`)}>
-						<span class="topic-num">{String(i + 1).padStart(2, "0")}</span>
-						<span class="topic-name">{category}</span>
-						<span class="topic-count">{mlCategoryCounts[category]}</span>
-					</a>
-				))}
-			</div>
+		<div class="domain-grid">
+			<a class="domain-card" href={withBase("/problems?tab=algorithms")}>
+				<h3>DSA</h3>
+				<p>Pattern-based coding problems, algorithm guides, and notes on complexity and invariants.</p>
+				<span>{total} problems <b>→</b></span>
+			</a>
+			<a class="domain-card" href={withBase("/machine-learning")}>
+				<h3>ML engineering</h3>
+				<p>From-scratch implementations, ML coding prompts, and practical model-development concepts.</p>
+				<span>{mlProblems.length} prompts · {completedML} completed <b>→</b></span>
+			</a>
+			<a class="domain-card" href={withBase("/system-design")}>
+				<h3>System design</h3>
+				<p>Build the vocabulary and decision-making habits for designing reliable systems.</p>
+				<span>Explore the roadmap <b>→</b></span>
+			</a>
 		</div>
 	</section>
 
 	{notes.length > 0 && (
 		<section class="notes">
-			<div class="section-header">
-				<h3 class="col-heading">Featured Notes</h3>
-				<a href={withBase("/notes")} class="view-all-link">
-					<span>View all notes</span>
-					<span class="view-all-arrow">→</span>
-				</a>
+			<div class="section-heading">
+				<div>
+					<p class="eyebrow">Knowledge library</p>
+					<h2>Start with a note</h2>
+				</div>
+				<a href={withBase("/notes")}>All notes <span>→</span></a>
 			</div>
-			<ol class="notes-list">
-				{notes.slice(0, 3).map((note, i) => (
-					<li class="note-entry">
-						<a href={withBase(`/notes/${note.id}/`)} class="note-link">
-							<span class="note-index">{String(i + 1).padStart(2, "0")}</span>
-							<span class="note-body">
-								<span class="note-title">{note.data.title}</span>
-								{note.data.description && (
-									<span class="note-desc">{note.data.description}</span>
-								)}
-							</span>
-							<span class="note-arrow">→</span>
+			<ol>
+				{notes.slice(0, 3).map((note, index) => (
+					<li>
+						<a href={withBase(`/notes/${note.id}/`)}>
+							<span>{String(index + 1).padStart(2, "0")}</span>
+							<strong>{note.data.title}</strong>
+							<em>{note.data.category}</em>
+							<b>→</b>
 						</a>
 					</li>
 				))}
@@ -157,431 +114,38 @@ const mlCategoryCounts = Object.fromEntries(
 	)}
 </Layout>
 
-<script>
-	// Pass tab param to /problems when clicking domain cards
-	document.querySelectorAll<HTMLAnchorElement>(".domain-card").forEach((card) => {
-		card.addEventListener("click", (e) => {
-			const url = new URL(card.href);
-			const tab = url.searchParams.get("tab");
-			if (tab) {
-				sessionStorage.setItem("problems-tab", tab);
-			}
-		});
-	});
-</script>
-
 <style>
-	.hero {
-		text-align: center;
-		padding: 3.5rem 1rem 2rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.6rem;
-	}
-
-	.hero h1 {
-		font-size: var(--fs-mega);
-		margin: 0;
-		letter-spacing: 1px;
-		color: var(--accent);
-		font-family: var(--font-serif);
-		font-weight: 600;
-	}
-
-	.tagline {
-		font-size: var(--fs-lg);
-		color: var(--muted);
-		margin: 0;
-		font-style: italic;
-		font-family: var(--font-serif);
-	}
-
-	.description {
-		color: var(--muted);
-		margin: 0;
-		max-width: 400px;
-		line-height: 1.7;
-		font-size: var(--fs-sm);
-		font-family: var(--font-sans);
-	}
-
-	/* Stats */
-	.stats {
-		display: flex;
-		justify-content: center;
-		gap: 2.5rem;
-		padding: 1.25rem 1.5rem;
-		background: var(--glass-surface);
-		border: 1px solid var(--glass-border);
-		border-radius: 10px;
-		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
-		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
-		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
-		margin-bottom: 2.5rem;
-	}
-
-	.stat {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.15rem;
-	}
-
-	.stat-value {
-		font-size: var(--fs-display);
-		font-weight: 600;
-		font-family: var(--font-serif);
-		line-height: 1;
-	}
-
-	.stat-label {
-		font-size: var(--text-eyebrow);
-		color: var(--muted);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		font-family: var(--font-sans);
-	}
-
-	.easy { color: var(--status-easy); }
-	.medium { color: var(--status-medium); }
-	.hard { color: var(--status-hard); }
-
-	/* Domain cards */
-	.domains {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 1rem;
-		margin-bottom: 2.5rem;
-	}
-
-	.domain-card {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		background: var(--glass-surface);
-		border: 1px solid var(--glass-border);
-		border-radius: 10px;
-		overflow: hidden;
-		text-decoration: none;
-		backdrop-filter: blur(var(--glass-blur)) saturate(135%);
-		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%);
-		transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
-	}
-
-	.domain-card:hover {
-		border-color: var(--accent);
-		transform: translateY(-4px);
-		box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 12px var(--accent-dim);
-		text-decoration: none;
-	}
-
-	.domain-card:active {
-		transform: translateY(-1px) scale(0.99);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		transition: all 0.1s ease-out;
-	}
-
-	.domain-card--muted:hover {
-		border-color: var(--muted);
-	}
-
-	.domain-accent {
-		height: 3px;
-		background: var(--accent);
-	}
-
-	.domain-accent.ml {
-		background: #7d9bab;
-	}
-
-	.domain-accent.sd {
-		background: #2a2520;
-	}
-
-	.domain-body {
-		padding: 1.5rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		flex: 1;
-	}
-
-	.domain-label {
-		margin: 0;
-		font-size: var(--text-eyebrow);
-		color: var(--accent);
-		font-family: var(--font-sans);
-		letter-spacing: 0.12em;
-		opacity: 0.6;
-	}
-
-	.domain-card--muted .domain-label {
-		color: var(--muted);
-	}
-
-	.domain-title {
-		margin: 0;
-		font-size: var(--fs-xl);
-		font-family: var(--font-serif);
-		font-weight: 600;
-		color: var(--text);
-		letter-spacing: 0.3px;
-	}
-
-	.domain-card--muted .domain-title {
-		color: var(--muted);
-	}
-
-	.domain-desc {
-		margin: 0;
-		font-size: var(--fs-fine);
-		color: var(--muted);
-		font-family: var(--font-sans);
-		line-height: 1.6;
-		flex: 1;
-	}
-
-	.domain-meta {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-top: 0.5rem;
-		font-size: var(--fs-eyebrow);
-		color: var(--muted);
-		font-family: var(--font-sans);
-	}
-
-	.domain-arrow {
-		color: var(--accent);
-		opacity: 0;
-		transition: opacity 0.15s, transform 0.2s;
-	}
-
-	.domain-card--muted .domain-arrow {
-		color: var(--muted);
-	}
-
-	.domain-card:hover .domain-arrow {
-		opacity: 1;
-		transform: translateX(4px);
-	}
-
-	.coming-soon-tag {
-		font-size: var(--fs-micro);
-		padding: 0.15rem 0.5rem;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-xs);
-		color: var(--muted);
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-	}
-
-	/* Subtopics two-column list */
-	.subtopics {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1.5rem;
-		margin-bottom: 2.5rem;
-	}
-
-	.col-heading {
-		margin: 0 0 0.75rem;
-		font-size: var(--text-eyebrow);
-		color: var(--accent);
-		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		font-weight: 600;
-		font-family: var(--font-sans);
-	}
-
-	.topic-list {
-		border-top: 1px solid var(--border);
-	}
-
-	.topic-row {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.55rem 0;
-		border-bottom: 1px solid var(--border);
-		text-decoration: none;
-		transition: padding-left 0.15s;
-	}
-
-	.topic-row:hover {
-		padding-left: 0.4rem;
-		text-decoration: none;
-	}
-
-	.topic-row:hover .topic-name {
-		color: var(--accent);
-	}
-
-	.topic-num {
-		font-size: var(--fs-micro);
-		color: var(--accent);
-		opacity: 0.5;
-		font-family: var(--font-sans);
-		letter-spacing: 0.05em;
-		flex-shrink: 0;
-		min-width: 1.5rem;
-	}
-
-	.topic-name {
-		flex: 1;
-		font-size: var(--fs-sm);
-		color: var(--text);
-		font-family: var(--font-sans);
-		transition: color 0.15s;
-	}
-
-	.topic-count {
-		font-size: var(--fs-eyebrow);
-		color: var(--muted);
-		font-family: var(--font-sans);
-		background: var(--panel);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-xs);
-		padding: 0.1rem 0.4rem;
-	}
-
-	/* Notes */
-	.notes {
-		margin-top: 0;
-	}
-
-	.section-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		margin-bottom: 0.75rem;
-	}
-
-	.view-all-link {
-		font-family: var(--font-serif);
-		font-size: var(--fs-sm);
-		font-style: italic;
-		color: var(--muted);
-		text-decoration: none;
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		transition: color 0.2s;
-	}
-
-	.view-all-link span:first-child {
-		border-bottom: 1px solid transparent;
-		transition: border-color 0.2s;
-	}
-
-	.view-all-link:hover {
-		color: var(--accent);
-		text-decoration: none;
-	}
-
-	.view-all-link:hover span:first-child {
-		border-color: var(--accent-dim);
-	}
-
-	.view-all-arrow {
-		font-family: var(--font-sans);
-		font-style: normal;
-		font-size: var(--fs-base);
-		transition: transform 0.2s;
-	}
-
-	.view-all-link:hover .view-all-arrow {
-		transform: translateX(4px);
-	}
-
-	.notes-list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		border-top: 1px solid var(--border);
-	}
-
-	.note-entry {
-		border-bottom: 1px solid var(--border);
-	}
-
-	.note-link {
-		display: flex;
-		align-items: baseline;
-		gap: 1.25rem;
-		padding: 0.9rem 0;
-		text-decoration: none;
-		transition: padding-left 0.2s;
-	}
-
-	.note-link:hover {
-		padding-left: 0.5rem;
-		text-decoration: none;
-	}
-
-	.note-link:hover .note-title {
-		color: var(--accent);
-	}
-
-	.note-link:hover .note-arrow {
-		opacity: 1;
-		transform: translateX(4px);
-	}
-
-	.note-index {
-		font-family: var(--font-sans);
-		font-size: var(--fs-eyebrow);
-		color: var(--accent);
-		opacity: 0.6;
-		letter-spacing: 0.05em;
-		flex-shrink: 0;
-		min-width: 1.5rem;
-	}
-
-	.note-body {
-		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
-		flex: 1;
-	}
-
-	.note-title {
-		color: var(--text);
-		font-family: var(--font-serif);
-		font-size: var(--fs-h3);
-		font-weight: 600;
-		transition: color 0.15s;
-	}
-
-	.note-desc {
-		color: var(--muted);
-		font-size: var(--fs-fine);
-		line-height: 1.5;
-		font-family: var(--font-sans);
-	}
-
-	.note-arrow {
-		font-family: var(--font-sans);
-		color: var(--accent);
-		opacity: 0;
-		transition: opacity 0.15s, transform 0.2s;
-		flex-shrink: 0;
-	}
-
-	@media (max-width: 720px) {
-		.domains {
-			grid-template-columns: 1fr;
-		}
-
-		.subtopics {
-			grid-template-columns: 1fr;
-		}
-
-		.stats {
-			gap: 1.5rem;
-			flex-wrap: wrap;
-		}
-	}
+	.hero { max-width: 720px; padding: 4rem 0 2.5rem; }
+	.eyebrow, .card-index { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .14em; margin: 0 0 .65rem; text-transform: uppercase; }
+	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
+	h1 { font-size: var(--fs-mega); line-height: .95; letter-spacing: -.02em; margin: 0; }
+	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0; max-width: 620px; }
+	.learning-loop { color: var(--text); font: 500 var(--fs-fine) var(--font-sans); letter-spacing: .04em; margin: 0; text-transform: uppercase; }
+	.learning-loop span { color: var(--accent); margin: 0 .25rem; }
+	.workflow, .domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
+	.workflow { margin: 1rem 0 3rem; }
+	.workflow-card, .domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
+	.workflow-card:hover, .domain-card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-3px); }
+	.workflow-card h2, .domain-card h3 { font-size: var(--fs-xl); margin: 0 0 .55rem; }
+	.workflow-card p:not(.card-index), .domain-card p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
+	.card-link, .domain-card span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; margin-top: auto; padding-top: 1.25rem; text-transform: uppercase; }
+	.card-link span, .domain-card b, .section-heading a span { transition: transform .15s; }
+	.workflow-card:hover .card-link span, .domain-card:hover b, .section-heading a:hover span { display: inline-block; transform: translateX(4px); }
+	.review-area, .domains, .notes { margin-top: 3.5rem; }
+	.section-heading { align-items: end; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+	.section-heading h2 { font-size: var(--fs-h2); margin: 0; }
+	.section-heading a { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+	.review-empty { color: var(--muted); font-size: var(--fs-fine); margin: 0; }
+	.domain-grid { grid-template-columns: repeat(3, 1fr); }
+	.domain-card { min-height: 200px; }
+	.notes ol { border-top: 1px solid var(--border); list-style: none; margin: 0; padding: 0; }
+	.notes li { border-bottom: 1px solid var(--border); }
+	.notes li a { align-items: baseline; color: var(--text); display: flex; gap: 1rem; padding: .9rem 0; text-decoration: none; }
+	.notes li a:hover { color: var(--accent); }
+	.notes li span { color: var(--accent); font: var(--fs-eyebrow) var(--font-sans); opacity: .65; }
+	.notes li strong { flex: 1; font: 600 var(--fs-h3) var(--font-serif); }
+	.notes li em { color: var(--muted); font: normal var(--fs-eyebrow) var(--font-sans); text-transform: uppercase; }
+	.notes li b { color: var(--accent); }
+	@media (max-width: 800px) { .workflow { grid-template-columns: repeat(2, 1fr); } .domain-grid { grid-template-columns: 1fr; } }
+	@media (max-width: 560px) { .hero { padding-top: 2.5rem; } .workflow { grid-template-columns: 1fr; } .section-heading { align-items: start; flex-direction: column; } .notes li em { display: none; } }
 </style>

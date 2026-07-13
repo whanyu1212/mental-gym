@@ -1,0 +1,62 @@
+---
+import { mlProblems } from "../../data/mlProblems";
+import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
+
+const categories = [...new Set(mlProblems.map((problem) => problem.category))];
+---
+
+<Layout title="ML Engineering | Mental Gym">
+	<section class="hero">
+		<p>ML engineering</p>
+		<h1>Implement the ideas, not just the APIs.</h1>
+		<p>Practice model fundamentals, evaluation, and production-minded ML coding through guided prompts and from-scratch implementations.</p>
+		<a href={withBase("/notes")}>Browse knowledge notes <span>→</span></a>
+	</section>
+
+	<section class="principles">
+		<div><strong>Formulate</strong><span>Define inputs, outputs, objective, and constraints.</span></div>
+		<div><strong>Implement</strong><span>Reason about shapes, vectorization, and numerical stability.</span></div>
+		<div><strong>Validate</strong><span>Use baselines, small examples, and appropriate metrics.</span></div>
+	</section>
+
+	{categories.map((category) => (
+		<section class="category">
+			<h2>{category}</h2>
+			<div class="problem-grid">
+				{mlProblems.filter((problem) => problem.category === category).map((problem) => (
+					<a href={withBase(`/machine-learning/${problem.slug}/`)} class="problem-card">
+						<div><span class={`difficulty ${problem.difficulty.toLowerCase()}`}>{problem.difficulty}</span><span class="status">{problem.status}</span></div>
+						<h3>{problem.title}</h3>
+						<p>{problem.summary}</p>
+						<b>Open prompt →</b>
+					</a>
+				))}
+			</div>
+		</section>
+	))}
+</Layout>
+
+<style>
+	.hero { max-width: 700px; padding: 3.5rem 0 2.5rem; }
+	.hero > p:first-child, .hero a, .problem-card b { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; text-transform: uppercase; }
+	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
+	h1 { font-size: var(--fs-mega); line-height: 1; margin: .45rem 0 1rem; }
+	.hero > p:not(:first-child) { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 0 0 1.25rem; }
+	.principles { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); margin-bottom: 3rem; }
+	.principles div, .problem-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); }
+	.principles div { padding: 1.1rem; }
+	.principles strong { display: block; font: 600 var(--fs-h3) var(--font-serif); margin-bottom: .35rem; }
+	.principles span, .problem-card p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.5; }
+	.category { margin: 2.5rem 0; }
+	h2 { font-size: var(--fs-h2); margin-bottom: 1rem; }
+	.problem-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); }
+	.problem-card { color: var(--text); display: flex; flex-direction: column; min-height: 220px; padding: 1.25rem; text-decoration: none; transition: border-color .2s, transform .2s; }
+	.problem-card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-2px); }
+	.problem-card h3 { font-size: var(--fs-xl); margin: 1rem 0 .55rem; }
+	.problem-card p { margin: 0; }
+	.problem-card b { margin-top: auto; padding-top: 1rem; }
+	.difficulty, .status { border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--muted); font: var(--fs-micro) var(--font-sans); margin-right: .35rem; padding: .18rem .5rem; text-transform: uppercase; }
+	.difficulty.easy { color: var(--status-easy); } .difficulty.medium { color: var(--status-medium); } .difficulty.hard { color: var(--status-hard); }
+	@media (max-width: 650px) { .principles, .problem-grid { grid-template-columns: 1fr; } }
+</style>
