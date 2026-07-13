@@ -53,7 +53,7 @@ Use one of these categories for new notes:
 
 ## Frontmatter for New Notes
 
-Start from [`templates/note.md`](https://github.com/whanyu1212/mental-gym/blob/develop/templates/note.md). New published notes should include:
+New published notes should include frontmatter like this:
 
 ```yaml
 ---
@@ -69,3 +69,41 @@ tags:
 ```
 
 Use `status: wip` while developing a note and `status: stable` once it is ready to rely on as a reference. Keep tags specific enough to support future navigation and discovery. `order` is optional; use it when notes in the same category need a deliberate reading sequence.
+
+## Note Outline
+
+Copy and adapt this outline for a new note:
+
+```md
+# Topic Title
+
+## Intuition
+
+Explain the problem this concept solves and the mental model to retain.
+
+## Baseline and Improvement
+
+Describe the simple approach first, where its cost comes from, and the key observation that enables a better approach.
+
+## Invariant or Correctness
+
+State the condition that remains true throughout the algorithm or process. Explain why it establishes correctness.
+
+## Complexity
+
+State and justify time and space complexity.
+
+## Implementation Notes
+
+Document important API contracts, data shapes, state transitions, or language-specific details.
+
+## Edge Cases and Pitfalls
+
+List the failures that are easy to miss and how to test for them.
+
+## Related Practice
+
+- Problem: link to the relevant practice prompt.
+- Implementation: link to the source file or repository implementation.
+- Related note: link to a prerequisite or follow-up concept.
+```
