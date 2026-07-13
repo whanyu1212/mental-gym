@@ -17,6 +17,7 @@ const EVENTS_STORE = "reviewEvents";
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
+    let settled = false;
 
     request.onupgradeneeded = () => {
       const db = request.result;
@@ -40,8 +41,34 @@ function open(): Promise<IDBDatabase> {
       }
     };
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onblocked = () => {
+      if (settled) return;
+      settled = true;
+      reject(
+        new Error(
+          "Progress storage upgrade is blocked by another Mental Gym tab. Close other tabs and reload this page."
+        )
+      );
+    };
+
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => db.close();
+
+      if (settled) {
+        db.close();
+        return;
+      }
+
+      settled = true;
+      resolve(db);
+    };
+
+    request.onerror = () => {
+      if (settled) return;
+      settled = true;
+      reject(request.error ?? new Error("Could not open progress storage"));
+    };
   });
 }
 
