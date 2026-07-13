@@ -53,6 +53,57 @@ const steps: TeachingStep[] = [
     ],
   },
   {
+    id: 'pivot-0-l2',
+    phase: 'compare',
+    pivot: 0,
+    left: 2,
+    right: 5,
+    triplets: [],
+    exp: 'L moves one position: nums[2]+nums[5] = −1+2 = 1 < 4. The sum is still too small, so move L again.',
+    reason: 'Show every pointer increment: a small sum only eliminates the current left value.',
+    invariant: 'The answer, if any, remains in nums[2..5].',
+    formula: '−1 + 2 = 1 < 4 → L++',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:2', kind: 'compare' },
+      { target: 'cell:5', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'pivot-0-l3',
+    phase: 'compare',
+    pivot: 0,
+    left: 3,
+    right: 5,
+    triplets: [],
+    exp: 'L moves again: nums[3]+nums[5] = 0+2 = 2 < 4. Keep R and advance L one more time.',
+    reason: 'Do not jump past repeated pointer moves; each comparison justifies one elimination.',
+    invariant: 'The answer, if any, remains in nums[3..5].',
+    formula: '0 + 2 = 2 < 4 → L++',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:3', kind: 'compare' },
+      { target: 'cell:5', kind: 'compare' },
+    ],
+  },
+  {
+    id: 'pivot-0-l4',
+    phase: 'compare',
+    pivot: 0,
+    left: 4,
+    right: 5,
+    triplets: [],
+    exp: 'L moves again: nums[4]+nums[5] = 1+2 = 3 < 4. Advance L to 5.',
+    reason: 'The sorted order proves no smaller left value can make the sum reach 4.',
+    invariant: 'Only the final pair remains to be ruled out.',
+    formula: '1 + 2 = 3 < 4 → L++',
+    highlights: [
+      { target: 'cell:0', kind: 'focus' },
+      { target: 'cell:4', kind: 'compare' },
+      { target: 'cell:5', kind: 'compare' },
+    ],
+  },
+  {
     id: 'pivot-0-exhaust',
     phase: 'skip',
     pivot: 0,
@@ -223,15 +274,19 @@ const steps: TeachingStep[] = [
           else if (step.pivot >= 0 && i < step.pivot) cell.classList.add('visited');
         });
 
-        const setPtr = (el, idx) => {
+        const setPtr = (el, idx, offsetY = 0) => {
           if (!el || idx < 0) { if (el) el.style.visibility = 'hidden'; return; }
           el.style.visibility = 'visible';
           el.style.left = `${idx * cellWidth + cellWidth / 2}%`;
-          el.style.transform = 'translateX(-50%)';
+          el.style.transform = `translate(-50%, ${offsetY}px)`;
         };
-        setPtr(this.pivotLabel, step.pivot);
-        setPtr(this.lLabel, step.left);
-        setPtr(this.rLabel, step.right);
+        setPtr(this.pivotLabel, step.pivot, 0);
+        setPtr(this.lLabel, step.left, step.left === step.pivot ? 16 : 0);
+        setPtr(
+          this.rLabel,
+          step.right,
+          step.right === step.pivot || step.right === step.left ? 32 : 0,
+        );
 
         if (this.tripletsEl) {
           const t = step.triplets ?? [];

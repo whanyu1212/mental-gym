@@ -157,6 +157,7 @@ const steps: TeachingStep[] = [
           const i = parseInt(cell.dataset.idx ?? '0', 10);
           cell.className = 'array-cell rd-cell';
           if (step.phase === 'found' && i <= step.slow) cell.classList.add('found');
+          else if (step.phase === 'found') cell.classList.add('ignored-tail');
           else if (i === step.slow) cell.classList.add('slow-ptr');
           else if (i === step.fast) cell.classList.add('fast-ptr');
           else if (i > step.slow && i < step.fast) cell.classList.add('scanned');
@@ -216,6 +217,12 @@ const steps: TeachingStep[] = [
     color: var(--status-medium);
     background: rgba(255, 192, 30, 0.08);
     transform: translateY(-4px);
+  }
+
+  .rd-cell.ignored-tail .cell-val {
+    opacity: var(--dim-soft);
+    border-style: dashed;
+    text-decoration: line-through;
   }
 
   .rd-cell.found .cell-val {

@@ -45,8 +45,8 @@ const steps: TeachingStep[] = [
   {
     id: 'step2',
     phase: 'compare',
-    p1: 1,
-    p2: 1,
+    p1: 2,
+    p2: 0,
     pw: 3,
     arr1: [1, 2, 3, 0, 5, 6],
     exp: 'nums1[2]=3 vs nums2[1]=5: 5 > 3 → place 5 at nums1[4]. p2=0, write=3.',
@@ -62,8 +62,8 @@ const steps: TeachingStep[] = [
   {
     id: 'step3',
     phase: 'compare',
-    p1: 0,
-    p2: 1,
+    p1: 1,
+    p2: 0,
     pw: 2,
     arr1: [1, 2, 3, 3, 5, 6],
     exp: 'nums1[2]=3 vs nums2[0]=2: 3 ≥ 2 → place 3 at nums1[3]. p1=1, write=2.',
@@ -79,7 +79,7 @@ const steps: TeachingStep[] = [
   {
     id: 'step4',
     phase: 'compare',
-    p1: -1,
+    p1: 0,
     p2: 0,
     pw: 1,
     arr1: [1, 2, 2, 3, 5, 6],
@@ -96,12 +96,12 @@ const steps: TeachingStep[] = [
   {
     id: 'done',
     phase: 'found',
-    p1: -1,
+    p1: 0,
     p2: -1,
     pw: 0,
     arr1: [1, 2, 2, 3, 5, 6],
-    exp: 'p1 exhausted. Remaining nums2[0]=2 → nums1[1]=2. p2 now −1. nums1=[1,2,2,3,5,6]. Done.',
-    reason: 'When nums2 is exhausted, remaining nums1 elements are already in place. When nums1 is exhausted, remaining nums2 elements copy directly in.',
+    exp: 'nums2 is exhausted. nums1[0]=1 is already in its final position, so no copy is needed. nums1=[1,2,2,3,5,6]. Done.',
+    reason: 'When nums2 is exhausted, remaining nums1 elements are already in place. Only leftover nums2 values need to be copied.',
     invariant: 'All m+n elements merged in-place, O(m+n) time, O(1) extra space.',
     formula: 'merged: [1,2,2,3,5,6] ✓',
     highlights: [
@@ -165,14 +165,14 @@ const steps: TeachingStep[] = [
           cell.className = 'array-cell mt-a1-cell' + (i >= 3 ? ' slot' : '');
           if (i === step.pw) cell.classList.add('write-ptr');
           else if (i === step.p1) cell.classList.add('p1-ptr');
-          else if (i > step.pw) cell.classList.add('done');
+          else if (i > step.pw) cell.classList.add('finalized');
         });
 
         this.a2Cells.forEach((cell) => {
           const i = parseInt(cell.dataset.idx ?? '0', 10);
           cell.className = 'array-cell mt-a2-cell';
           if (i === step.p2) cell.classList.add('p2-ptr');
-          else if (i > step.p2) cell.classList.add('done');
+          else if (i > step.p2) cell.classList.add('consumed');
         });
       });
     }
@@ -203,6 +203,15 @@ const steps: TeachingStep[] = [
     transform: translateY(-4px);
   }
 
-  .mt-a1-cell.done .cell-val,
-  .mt-a2-cell.done .cell-val { opacity: var(--dim-hard); }
+  .mt-a1-cell.finalized .cell-val {
+    border-color: var(--status-easy);
+    background: color-mix(in srgb, var(--status-easy) 10%, transparent);
+    color: var(--status-easy);
+  }
+
+  .mt-a2-cell.consumed .cell-val {
+    opacity: var(--dim-hard);
+    border-style: dashed;
+    text-decoration: line-through;
+  }
 </style>
