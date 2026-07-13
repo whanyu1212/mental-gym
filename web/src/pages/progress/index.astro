@@ -1,0 +1,90 @@
+---
+import ProgressSummary from "../../components/ProgressSummary.astro";
+import SRDataManager from "../../components/SRDataManager.astro";
+import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
+---
+
+<Layout title="Progress | Mental Gym">
+	<section class="hero">
+		<p>Local progress</p>
+		<h1>See what is becoming durable.</h1>
+		<p>Your dashboard is calculated from spaced-repetition data stored only in this browser.</p>
+		<a href={withBase("/problems")}>Continue practicing <span>→</span></a>
+	</section>
+
+	<ProgressSummary detailed={true} />
+
+	<section class="data-section">
+		<div>
+			<p class="eyebrow">Your data</p>
+			<h2>Private by default, portable by choice.</h2>
+			<p>Deployments and page refreshes do not erase progress, but another browser or device cannot see it automatically. Export a backup to transfer or preserve your review data.</p>
+		</div>
+		<SRDataManager />
+	</section>
+</Layout>
+
+<style>
+	.hero {
+		max-width: 720px;
+		padding: 3.5rem 0 2.5rem;
+	}
+
+	.hero > p:first-child,
+	.eyebrow,
+	.hero a {
+		color: var(--accent);
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	h1,
+	h2 {
+		font-family: var(--font-serif);
+		font-weight: 600;
+	}
+
+	h1 {
+		font-size: var(--fs-mega);
+		line-height: 1;
+		margin: 0.45rem 0 1rem;
+	}
+
+	.hero > p:not(:first-child),
+	.data-section > div > p:not(.eyebrow) {
+		color: var(--muted);
+		font-size: var(--fs-lg);
+		line-height: 1.6;
+		margin: 0 0 1.25rem;
+	}
+
+	.data-section {
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		display: grid;
+		gap: 2rem;
+		grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+		margin-top: 2rem;
+		padding: 1.5rem;
+	}
+
+	.data-section h2 {
+		font-size: var(--fs-xl);
+		margin: 0 0 0.5rem;
+	}
+
+	.data-section > div > p:not(.eyebrow) {
+		font-size: var(--fs-sm);
+		margin: 0;
+	}
+
+	@media (max-width: 720px) {
+		.data-section {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

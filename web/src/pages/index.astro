@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import DueForReview from "../components/DueForReview.astro";
+import ProgressSummary from "../components/ProgressSummary.astro";
 import ResumeRow from "../components/ResumeRow.astro";
 import { mlProblems } from "../data/mlProblems";
 import { problems } from "../data/problems";
@@ -24,6 +25,16 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 
 	<ResumeRow />
 
+	<section class="progress-summary">
+		<div class="section-heading">
+			<div>
+				<p class="eyebrow">Local progress</p>
+				<h2>Build durable recall</h2>
+			</div>
+		</div>
+		<ProgressSummary />
+	</section>
+
 	<section class="workflow" aria-label="Learning workflow">
 		<a class="workflow-card practice" href={withBase("/problems")}>
 			<p class="card-index">01</p>
@@ -43,7 +54,7 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 			<p>Return to problems on a spaced schedule and turn solved work into recall practice.</p>
 			<span class="card-link">Review queue <span>→</span></span>
 		</a>
-		<a class="workflow-card progress" href={withBase("/problems")}>
+		<a class="workflow-card progress" href={withBase("/progress")}>
 			<p class="card-index">04</p>
 			<h2>Progress</h2>
 			<p>Use the problem bank to see coverage by domain, pattern, difficulty, and learning status.</p>
@@ -131,6 +142,7 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 	.card-link, .domain-card span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; margin-top: auto; padding-top: 1.25rem; text-transform: uppercase; }
 	.card-link span, .domain-card b, .section-heading a span { transition: transform .15s; }
 	.workflow-card:hover .card-link span, .domain-card:hover b, .section-heading a:hover span { display: inline-block; transform: translateX(4px); }
+	.progress-summary { margin: 1rem 0 3rem; }
 	.review-area, .domains, .notes { margin-top: 3.5rem; }
 	.section-heading { align-items: end; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 	.section-heading h2 { font-size: var(--fs-h2); margin: 0; }
