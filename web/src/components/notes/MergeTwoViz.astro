@@ -100,10 +100,10 @@ const steps: TeachingStep[] = [
     p2: -1,
     pw: 0,
     arr1: [1, 2, 2, 3, 5, 6],
-    exp: 'nums2 is exhausted. nums1[0]=1 is already in its final position, so no copy is needed. nums1=[1,2,2,3,5,6]. Done.',
-    reason: 'When nums2 is exhausted, remaining nums1 elements are already in place. Only leftover nums2 values need to be copied.',
+    exp: 'nums1[0]=1 vs nums2[0]=2: 2 > 1 → place 2 at nums1[1]. p2=-1, write=0. nums2 is now exhausted, and nums1[0]=1 is already in its final position. Done.',
+    reason: 'The final nums2 value must be copied before nums2 is exhausted. After that, any remaining nums1 values are already correctly positioned.',
     invariant: 'All m+n elements merged in-place, O(m+n) time, O(1) extra space.',
-    formula: 'merged: [1,2,2,3,5,6] ✓',
+    formula: '2 > 1 → nums1[1]=2; p2--; write--; merged: [1,2,2,3,5,6] ✓',
     highlights: [
       { target: 'a1:0', kind: 'confirmed' },
       { target: 'a1:1', kind: 'confirmed' },
