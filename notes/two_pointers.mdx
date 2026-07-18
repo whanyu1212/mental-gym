@@ -467,6 +467,23 @@ Only `nums2` needs a leftover loop:
 - If `nums2` is exhausted first, remaining `nums1` values are already correctly positioned.
 - If `nums1` is exhausted first, the remaining smaller `nums2` values must fill the prefix.
 
+**Boundary case: `nums1` is exhausted first.** The zero in `nums1` is only
+available capacity; because `m = 0`, it is not an input value:
+
+```text
+nums1 = [0], m = 0
+nums2 = [1], n = 1
+
+Start:  p1 = -1, p2 = 0, write = 0
+Main loop: skipped because p1 < 0
+Cleanup:  nums1[0] = nums2[0] = 1, then p2 = -1
+Result:   nums1 = [1]
+```
+
+This is the case that makes `while p2 >= 0` necessary. There are no original
+`nums1` values left to protect or move, but the remaining `nums2` values still
+need to be written into the prefix of `nums1`.
+
 The algorithm does not require `m >= n`; it only requires `nums1` to have total capacity `m + n`.
 
 **Merge Strings Alternately:**
