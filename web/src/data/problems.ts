@@ -3903,7 +3903,8 @@ class Solution:
         # live in nums1, and merging from right to left has left them sorted.
         while j >= 0:
             nums1[k] = nums2[j]
-            j -= 1`,
+            j -= 1
+            k -= 1`,
       julia: `"""
     merge(nums1::Vector{Int}, m::Int, nums2::Vector{Int}, n::Int)
 
