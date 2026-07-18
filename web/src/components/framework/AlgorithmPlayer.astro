@@ -26,7 +26,11 @@ const stepsJson = JSON.stringify(steps);
   <div class="teaching-content">
     <div class="anim-row">
       <p class="anim-label">Step</p>
-      <p class="anim-explanation player-explanation"></p>
+      <p
+        class="anim-explanation player-explanation"
+        aria-live="polite"
+        aria-atomic="true"
+      ></p>
     </div>
 
     <InvariantBar />

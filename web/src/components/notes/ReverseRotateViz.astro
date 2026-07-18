@@ -98,14 +98,24 @@ const steps: TeachingStep[] = [
       this.vals = Array.from(this.querySelectorAll('.rr-val'));
       this.lLabel = this.querySelector('.rr-l-label');
       this.rLabel = this.querySelector('.rr-r-label');
+      this.previousArr = ['h', 'e', 'l', 'l', 'o'];
 
       this.addEventListener('step-change', (e) => {
         const step = e.detail.step;
         const count = this.chars.length;
         const cellWidth = 100 / count;
 
+        const changedIndexes = new Set(
+          (step.arr ?? [])
+            .map((value, index) => (
+              value !== this.previousArr[index] ? index : -1
+            ))
+            .filter((index) => index >= 0),
+        );
+
         if (step.arr && this.vals.length === step.arr.length) {
           step.arr.forEach((ch, i) => { this.vals[i].textContent = ch; });
+          this.previousArr = [...step.arr];
         }
 
         this.chars.forEach((ch) => {
@@ -114,6 +124,7 @@ const steps: TeachingStep[] = [
           if (step.phase === 'found') ch.classList.add('found');
           else if (i === step.left || i === step.right) ch.classList.add('active');
           else if (i < step.left || i > step.right) ch.classList.add('done');
+          if (changedIndexes.has(i)) ch.classList.add('swapped');
         });
 
         const setPtr = (el, idx) => {
@@ -152,6 +163,16 @@ const steps: TeachingStep[] = [
   }
 
   .rr-char.done .cell-val { opacity: 0.4; }
+
+  .rr-char.swapped .cell-val {
+    animation: rr-swap-pop 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes rr-swap-pop {
+    0% { transform: translateY(0) scale(1); }
+    45% { transform: translateY(-10px) scale(1.12); }
+    100% { transform: translateY(0) scale(1); }
+  }
 
   .rr-char.active { transform: translateY(-4px); }
   .rr-char.active .cell-val {

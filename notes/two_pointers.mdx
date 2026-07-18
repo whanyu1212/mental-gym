@@ -21,48 +21,150 @@ import TrappingWaterViz from '../web/src/components/notes/TrappingWaterViz.astro
 
 # Two Pointers
 
-Two pointers is not a single trick — it is a family of techniques that all share one property: you maintain two indices into a sequence and move them according to a logical rule that guarantees correctness while visiting each element at most O(1) times. The result is usually O(n) from what would otherwise be O(n²).
+Two pointers is a family of techniques in which two positions move through one or more sequences without repeatedly revisiting the same work. The pointers may converge, move in the same direction, or belong to separate inputs.
+
+The important idea is not merely that there are two variables. Every movement must be justified by an invariant or a safe elimination rule.
 
 ---
 
 ## Table of Contents
 
-- [Why Two Pointers Works](#why-two-pointers-works)
+- [Core Mental Model](#core-mental-model)
+- [Pointer-Motion Families](#pointer-motion-families)
 - [Pattern Recognition Guide](#pattern-recognition-guide)
 - [Core Patterns](#core-patterns)
   - [1. Opposite-Ends Converging](#1-opposite-ends-converging-sorted-array)
   - [2. Palindrome Check](#2-palindrome-check--skip)
   - [3. Reverse / Rotate In-Place](#3-reverse--rotate-in-place)
-  - [4. Merge Two Sorted Sequences](#4-merge-two-sorted-sequences)
-  - [5. Write Pointer (Remove Duplicates)](#5-write-pointer-remove-duplicates)
-  - [6. K-Sum Reduction (3Sum / 4Sum)](#6-k-sum-reduction-3sum--4sum)
-  - [7. Running Max Walls (Trapping Rain Water)](#7-running-max-walls-trapping-rain-water)
-- [Decision Guide: Which Pointer Strategy?](#decision-guide-which-pointer-strategy)
+  - [4. Read/Write Pointers](#4-readwrite-pointers-in-place-filtering)
+  - [5. Merge Two Sorted Sequences](#5-merge-two-sorted-sequences)
+  - [6. K-Sum Reduction](#6-k-sum-reduction-3sum--4sum)
+  - [7. Running Max Walls](#7-running-max-walls-trapping-rain-water)
+- [Two Pointers vs. Sliding Window](#two-pointers-vs-sliding-window)
+- [Beyond Arrays: Fast/Slow Pointers](#beyond-arrays-fastslow-pointers)
+- [Common Pitfalls](#common-pitfalls)
+- [Decision Guide](#decision-guide-which-pointer-strategy)
 - [Complexity Reference](#complexity-reference)
+- [Recall Checklist](#recall-checklist)
 
 ---
 
-## Why Two Pointers Works
+## Core Mental Model
 
-Every two-pointer algorithm rests on a **monotone invariant**: moving a pointer in one direction always makes some quantity larger (or smaller). This eliminates the need to check every pair:
+Before writing code, answer three questions:
 
-> Instead of "check all combinations of i and j (O(n²))", you ask: "given the current sum/comparison, which direction must I move to get closer to the answer?"
+1. **What does each pointer represent?**
+2. **What region has already been processed?**
+3. **Why is the next pointer movement safe?**
 
-For this reasoning to work, the array is usually **sorted** (for numeric problems) or has a known structure (string symmetry, pre-allocated space). When you see "sorted array" or "in-place with O(1) space" in a problem, two pointers is the first thing to reach for.
+For sorted pair search, order makes it safe to eliminate one endpoint. For read/write filtering, the output prefix is already complete. For an in-place merge, the suffix after the write pointer is already in its final position.
+
+Two pointers often turns an O(n²) pair search into O(n), but not always:
+
+- Sorting first can make the total O(n log n).
+- 3Sum uses an outer loop plus a linear scan, so it remains O(n²).
+- The real benefit is avoiding unnecessary repeated work.
+
+If pointers move only forward or inward and never reset, they usually make at most O(n) movements in total.
+
+---
+
+## Pointer-Motion Families
+
+### A. Converging pointers
+
+Start at opposite ends and move inward.
+
+```python
+left, right = 0, len(items) - 1
+
+while left < right:
+    if should_move_left:
+        left += 1
+    else:
+        right -= 1
+```
+
+Typical uses: sorted pair search, palindrome checks, reversal, and maximum-area problems.
+
+**Invariant:** everything outside `[left, right]` has been processed or safely eliminated.
+
+### B. Read/write pointers
+
+Both move forward, but they have different jobs.
+
+```python
+write = 0
+
+for read in range(len(items)):
+    if should_keep(items[read]):
+        items[write] = items[read]
+        write += 1
+```
+
+Typical uses: remove elements, remove duplicates, move selected values, and compact an array in place.
+
+**Invariant:** `items[:write]` is the completed output built from the input examined so far.
+
+### C. One pointer per input
+
+Each pointer tracks one sequence. A separate output pointer may record where the next result belongs.
+
+```python
+i = j = 0
+
+while i < len(a) and j < len(b):
+    if a[i] <= b[j]:
+        take(a[i])
+        i += 1
+    else:
+        take(b[j])
+        j += 1
+```
+
+Typical uses: merging or intersecting sorted sequences.
+
+**Invariant:** everything before `i` and `j` has already been handled.
+
+### D. Fixed anchor plus converging pointers
+
+Fix one or more values, then use converging pointers on the remaining sorted suffix.
+
+Typical uses: 3Sum, 4Sum, and general K-sum reduction.
 
 ---
 
 ## Pattern Recognition Guide
 
-| If the problem says / constraints say… | Pattern |
+```text
+Need a pair in sorted input?
+→ Converging pointers
+
+Need to compare mirrored positions?
+→ Converging pointers
+
+Need to filter or compact an array in place?
+→ Read/write pointers
+
+Need to combine two sorted inputs?
+→ One pointer per input
+
+Need a triplet or quadruplet?
+→ Fix anchors, then converge
+
+Need the longest or shortest valid contiguous range?
+→ Probably sliding window
+```
+
+| Signal | Pattern |
 |---|---|
-| Sorted array, find pair/triplet with sum = target | [Opposite-Ends Converging](#1-opposite-ends-converging-sorted-array) |
-| Check/validate a palindrome, allow one deletion | [Palindrome Check / Skip](#2-palindrome-check--skip) |
-| Reverse a string in-place, rotate an array | [Reverse / Rotate In-Place](#3-reverse--rotate-in-place) |
-| Merge two sorted arrays/strings into one | [Merge Two Sorted Sequences](#4-merge-two-sorted-sequences) |
-| Remove duplicates from sorted array, O(1) space | [Write Pointer](#5-write-pointer-remove-duplicates) |
-| 3Sum, 4Sum — reduce to pair sum problem | [K-Sum Reduction](#6-k-sum-reduction-3sum--4sum) |
-| "Trap water", "max area", "container", running maximums | [Running Max Walls](#7-running-max-walls-trapping-rain-water) |
+| Sorted array, find pair/triplet with target sum | [Opposite-Ends Converging](#1-opposite-ends-converging-sorted-array) |
+| Validate a palindrome or allow one deletion | [Palindrome Check / Skip](#2-palindrome-check--skip) |
+| Reverse or rotate in place | [Reverse / Rotate In-Place](#3-reverse--rotate-in-place) |
+| Remove values or duplicates in place | [Read/Write Pointers](#4-readwrite-pointers-in-place-filtering) |
+| Combine two sorted inputs | [Merge Two Sorted Sequences](#5-merge-two-sorted-sequences) |
+| 3Sum or 4Sum | [K-Sum Reduction](#6-k-sum-reduction-3sum--4sum) |
+| Trap water or maintain boundaries from both sides | [Running Max Walls](#7-running-max-walls-trapping-rain-water) |
 
 ---
 
@@ -70,57 +172,67 @@ For this reasoning to work, the array is usually **sorted** (for numeric problem
 
 ### 1. Opposite-Ends Converging (sorted array)
 
-> **Signals:** sorted array, find pair/triplet summing to target, "two sum II", "container with most water", "boats to save people"
+> **Signals:** sorted array, pair sum, Two Sum II, Container With Most Water, Boats to Save People
 
 <PatternVizModal label="Opposite-Ends Converging">
   <OppositeEndsViz />
 </PatternVizModal>
 
-**The invariant:** At every step, if the answer exists it lies within `[left, right]`. We eliminate one element per step:
-- If `sum > target` → `right--` (the right value is too large; eliminate it)
-- If `sum < target` → `left++` (the left value is too small; eliminate it)
+**Invariant:** if the answer exists, it remains within `[left, right]`. Each step safely eliminates one endpoint:
+
+- If `sum > target`, move `right` because the right value is too large.
+- If `sum < target`, move `left` because the left value is too small.
 
 ```python
-# Two Sum II — sorted input, 1-indexed output
 def two_sum(numbers, target):
-    l, r = 0, len(numbers) - 1
-    while l < r:
-        s = numbers[l] + numbers[r]
-        if s == target:
-            return [l + 1, r + 1]
-        elif s < target:
-            l += 1
+    left, right = 0, len(numbers) - 1
+
+    while left < right:
+        total = numbers[left] + numbers[right]
+
+        if total == target:
+            return [left + 1, right + 1]
+        if total < target:
+            left += 1
         else:
-            r -= 1
+            right -= 1
 ```
 
-**Container With Most Water** — same converging logic, different decision rule: move the pointer with the *shorter* wall (moving the taller one can only decrease area):
+**Container With Most Water** has the same shape but a different movement rule. Move the shorter wall because it limits the current area; moving the taller wall cannot improve that limit while width decreases.
 
 ```python
 def max_area(height):
-    l, r = 0, len(height) - 1
-    res = 0
-    while l < r:
-        res = max(res, min(height[l], height[r]) * (r - l))
-        if height[l] < height[r]:
-            l += 1
+    left, right = 0, len(height) - 1
+    result = 0
+
+    while left < right:
+        result = max(
+            result,
+            min(height[left], height[right]) * (right - left),
+        )
+
+        if height[left] < height[right]:
+            left += 1
         else:
-            r -= 1
-    return res
+            right -= 1
+
+    return result
 ```
 
-**Boats to Save People** — sort first, then greedily pair heaviest with lightest:
+**Boats to Save People** sorts first, then pairs the heaviest person with the lightest when possible:
 
 ```python
 def num_rescue_boats(people, limit):
     people.sort()
-    l, r = 0, len(people) - 1
+    left, right = 0, len(people) - 1
     boats = 0
-    while l <= r:
-        if people[l] + people[r] <= limit:
-            l += 1
-        r -= 1
+
+    while left <= right:
+        if people[left] + people[right] <= limit:
+            left += 1
+        right -= 1
         boats += 1
+
     return boats
 ```
 
@@ -128,285 +240,528 @@ def num_rescue_boats(people, limit):
 
 ### 2. Palindrome Check / Skip
 
-> **Signals:** "valid palindrome", "palindrome after one deletion", skip non-alphanumeric, allow one mismatch
+> **Signals:** valid palindrome, one allowed deletion, skip non-alphanumeric characters
 
 <PatternVizModal label="Palindrome Check">
   <PalindromeCheckViz />
 </PatternVizModal>
 
-**Valid Palindrome** — skip non-alphanumeric characters, compare case-insensitively:
+Palindrome checks compare mirrored positions and shrink the unknown region from both ends.
 
 ```python
 def is_palindrome(s: str) -> bool:
-    l, r = 0, len(s) - 1
-    while l < r:
-        while l < r and not s[l].isalnum():
-            l += 1
-        while l < r and not s[r].isalnum():
-            r -= 1
-        if s[l].lower() != s[r].lower():
+    left, right = 0, len(s) - 1
+
+    while left < right:
+        while left < right and not s[left].isalnum():
+            left += 1
+        while left < right and not s[right].isalnum():
+            right -= 1
+
+        if s[left].lower() != s[right].lower():
             return False
-        l += 1
-        r -= 1
+
+        left += 1
+        right -= 1
+
     return True
 ```
 
-**Valid Palindrome II** — allow one deletion. The key: on the first mismatch, try skipping left **or** right, and check if either sub-string is a palindrome:
+**Valid Palindrome II** allows one deletion. At the first mismatch, skip either side and test the remaining range:
 
 ```python
 def valid_palindrome(s: str) -> bool:
-    def is_pal(l, r):
-        while l < r:
-            if s[l] != s[r]:
+    def is_pal(left, right):
+        while left < right:
+            if s[left] != s[right]:
                 return False
-            l += 1; r -= 1
+            left += 1
+            right -= 1
         return True
 
-    l, r = 0, len(s) - 1
-    while l < r:
-        if s[l] != s[r]:
-            return is_pal(l + 1, r) or is_pal(l, r - 1)
-        l += 1; r -= 1
+    left, right = 0, len(s) - 1
+
+    while left < right:
+        if s[left] != s[right]:
+            return (
+                is_pal(left + 1, right)
+                or is_pal(left, right - 1)
+            )
+        left += 1
+        right -= 1
+
     return True
 ```
 
-**Why this works:** A palindrome can absorb at most one bad character by deleting it from either side. The first mismatch is the only branch point.
+The first mismatch is the only branch point. Passing index boundaries rather than slices also avoids allocating new strings.
 
 ---
 
 ### 3. Reverse / Rotate In-Place
 
-> **Signals:** "reverse string in-place", "rotate array by k steps", O(1) extra space required
+> **Signals:** reverse in place, rotate by `k`, O(1) extra space
 
 <PatternVizModal label="Reverse / Rotate In-Place">
   <ReverseRotateViz />
 </PatternVizModal>
 
-**Reverse a String** — classic swap, O(n/2) steps:
-
 ```python
 def reverse_string(s: list) -> None:
-    l, r = 0, len(s) - 1
-    while l < r:
-        s[l], s[r] = s[r], s[l]
-        l += 1; r -= 1
+    left, right = 0, len(s) - 1
+
+    while left < right:
+        s[left], s[right] = s[right], s[left]
+        left += 1
+        right -= 1
 ```
 
-**Rotate Array by k** — the three-reversal trick avoids O(n) extra space:
+**Rotate Array** uses three reversals:
 
 ```python
 def rotate(nums: list, k: int) -> None:
-    k %= len(nums)          # handle k > n
+    if not nums:
+        return
 
-    def rev(l, r):
-        while l < r:
-            nums[l], nums[r] = nums[r], nums[l]
-            l += 1; r -= 1
+    k %= len(nums)
 
-    rev(0, len(nums) - 1)   # 1. reverse entire array
-    rev(0, k - 1)           # 2. reverse first k elements
-    rev(k, len(nums) - 1)   # 3. reverse remaining elements
+    def reverse(left, right):
+        while left < right:
+            nums[left], nums[right] = nums[right], nums[left]
+            left += 1
+            right -= 1
+
+    reverse(0, len(nums) - 1)
+    reverse(0, k - 1)
+    reverse(k, len(nums) - 1)
 ```
 
-**Why three reversals work:** Rotating right by k is equivalent to moving the last k elements to the front. Reversing the whole array, then reversing each half independently, achieves this without extra allocation.
+The empty-input guard prevents division by zero in `k %= len(nums)`.
 
 ---
 
-### 4. Merge Two Sorted Sequences
+### 4. Read/Write Pointers (In-Place Filtering)
 
-> **Signals:** "merge sorted array", "merge strings alternately", "two sorted inputs into one output"
-
-<PatternVizModal label="Merge Two Sequences">
-  <MergeTwoViz />
-</PatternVizModal>
-
-**Merge Sorted Array** — fill from the **back** to avoid overwriting unprocessed elements:
-
-```python
-def merge(nums1, m, nums2, n):
-    p1, p2, w = m - 1, n - 1, m + n - 1
-    while p1 >= 0 and p2 >= 0:
-        if nums1[p1] >= nums2[p2]:
-            nums1[w] = nums1[p1]; p1 -= 1
-        else:
-            nums1[w] = nums2[p2]; p2 -= 1
-        w -= 1
-    # Any remaining nums2 elements:
-    nums1[:p2 + 1] = nums2[:p2 + 1]
-```
-
-**Merge Strings Alternately** — two pointers on two strings, alternating picks:
-
-```python
-def merge_alternately(word1, word2):
-    i = j = 0
-    res = []
-    while i < len(word1) and j < len(word2):
-        res.append(word1[i]); i += 1
-        res.append(word2[j]); j += 1
-    res.append(word1[i:])
-    res.append(word2[j:])
-    return ''.join(res)
-```
-
----
-
-### 5. Write Pointer (Remove Duplicates)
-
-> **Signals:** "remove duplicates from sorted array", "remove element in-place", O(1) extra space, return new length
+> **Signals:** remove in place, compact values, move zeroes, return the new length
 
 <PatternVizModal label="Write Pointer — Remove Duplicates">
   <RemoveDupsViz />
 </PatternVizModal>
 
-The slow/fast (read/write) pattern: `fast` scans every element; `slow` only advances when a *new* unique value is found.
+- `read` examines the next input value.
+- `write` points to the next kept value’s destination.
+
+Because `write <= read`, assigning `nums[write] = nums[read]` cannot destroy unread input.
+
+**Remove Element:**
+
+```python
+def remove_element(nums, value) -> int:
+    write = 0
+
+    for read in range(len(nums)):
+        if nums[read] != value:
+            nums[write] = nums[read]
+            write += 1
+
+    return write
+```
+
+**Invariant:** `nums[:write]` contains exactly the kept values from the input examined so far.
+
+**Remove Duplicates from Sorted Array:**
 
 ```python
 def remove_duplicates(nums) -> int:
-    slow = 0
-    for fast in range(1, len(nums)):
-        if nums[fast] != nums[slow]:
-            slow += 1
-            nums[slow] = nums[fast]
-    return slow + 1
+    if not nums:
+        return 0
+
+    write = 1
+
+    for read in range(1, len(nums)):
+        if nums[read] != nums[write - 1]:
+            nums[write] = nums[read]
+            write += 1
+
+    return write
 ```
 
-**Remove Duplicates II** (allow at most 2 of each):
+**Retain at most `k` copies:**
 
 ```python
-def remove_duplicates_ii(nums) -> int:
-    slow = 0
-    for fast in range(len(nums)):
-        if slow < 2 or nums[fast] != nums[slow - 2]:
-            nums[slow] = nums[fast]
-            slow += 1
-    return slow
+def retain_at_most_k(nums, k) -> int:
+    if k <= 0:
+        return 0
+
+    write = 0
+
+    for read in range(len(nums)):
+        if write < k or nums[read] != nums[write - k]:
+            nums[write] = nums[read]
+            write += 1
+
+    return write
 ```
 
-**The generalisation:** The condition `nums[fast] != nums[slow - k + 1]` controls how many duplicates are allowed. For k=1 (no dups), compare to `nums[slow]`. For k=2, compare to `nums[slow - 1]`.
+For `k = 2`, compare the current value with the value two accepted positions behind it. If they differ, accepting the current value cannot create more than two copies.
+
+---
+
+### 5. Merge Two Sorted Sequences
+
+> **Signals:** merge sorted arrays, two ordered inputs, pre-allocated output space
+
+<PatternVizModal label="Merge Two Sequences">
+  <MergeTwoViz />
+</PatternVizModal>
+
+A normal forward merge compares the smallest unprocessed values. If the output must overwrite `nums1`, writing from the front can destroy values that have not been compared. Fill from the back instead:
+
+```python
+def merge(nums1, m, nums2, n):
+    p1 = m - 1
+    p2 = n - 1
+    write = m + n - 1
+
+    while p1 >= 0 and p2 >= 0:
+        if nums1[p1] >= nums2[p2]:
+            nums1[write] = nums1[p1]
+            p1 -= 1
+        else:
+            nums1[write] = nums2[p2]
+            p2 -= 1
+
+        write -= 1
+
+    while p2 >= 0:
+        nums1[write] = nums2[p2]
+        p2 -= 1
+        write -= 1
+```
+
+The pointers mean:
+
+```text
+p1    last unmerged real value in nums1
+p2    last unmerged value in nums2
+write next destination slot in nums1
+```
+
+This is often called a two-pointer solution even though it contains three pointer variables: `p1` and `p2` make the merge decision, while `write` tracks the output position.
+
+**Invariant:** everything to the right of `write` is already in its final sorted position.
+
+```text
+nums1 = [10, 20, 20, 40, 0, 0], m = 4
+nums2 = [1, 2],                  n = 2
+
+Start: p1=3 (40), p2=1 (2), write=5
+Turn 1: write 40 → [10, 20, 20, 40, 0, 40]
+Turn 2: write 20 → [10, 20, 20, 40, 20, 40]
+Turn 3: write 20 → [10, 20, 20, 20, 20, 40]
+Turn 4: write 10 → [10, 20, 10, 20, 20, 40]
+Leftovers:          [1, 2, 10, 20, 20, 40]
+```
+
+Only `nums2` needs a leftover loop:
+
+- If `nums2` is exhausted first, remaining `nums1` values are already correctly positioned.
+- If `nums1` is exhausted first, the remaining smaller `nums2` values must fill the prefix.
+
+The algorithm does not require `m >= n`; it only requires `nums1` to have total capacity `m + n`.
+
+**Merge Strings Alternately:**
+
+```python
+def merge_alternately(word1, word2):
+    i = j = 0
+    result = []
+
+    while i < len(word1) and j < len(word2):
+        result.append(word1[i])
+        result.append(word2[j])
+        i += 1
+        j += 1
+
+    result.append(word1[i:])
+    result.append(word2[j:])
+    return ''.join(result)
+```
 
 ---
 
 ### 6. K-Sum Reduction (3Sum / 4Sum)
 
-> **Signals:** "3Sum", "4Sum", "find all triplets/quadruplets summing to target", deduplicated results
+> **Signals:** triplets or quadruplets summing to a target, unique results
 
 <PatternVizModal label="3Sum Reduction">
   <KSumReductionViz />
 </PatternVizModal>
 
-**The core idea:** Reduce k-Sum to (k−1)-Sum. 3Sum = fix one element (O(n)) × two-pointer pair search (O(n)) = O(n²). 4Sum = fix two elements (O(n²)) × two-pointer = O(n³).
+Sort the input, fix one or more anchors, then reduce the remaining task to a converging pair search:
 
-**Deduplication rules** (critical for correctness):
-1. Skip duplicate **pivot** values: `if i > 0 and nums[i] == nums[i-1]: continue`
-2. After a match, skip duplicate **left** values: `while l < r and nums[l] == nums[l-1]: l++`
-3. After a match, skip duplicate **right** values: `while l < r and nums[r] == nums[r+1]: r--`
+- 3Sum: one anchor × O(n) pair search = O(n²)
+- 4Sum: two anchors × O(n) pair search = O(n³)
+
+Deduplication is part of correctness:
+
+1. Skip duplicate anchor values.
+2. After a match, move both pointers.
+3. Skip repeated values at both pointers.
 
 ```python
 def three_sum(nums):
     nums.sort()
-    res = []
+    result = []
+
     for i in range(len(nums) - 2):
-        if i > 0 and nums[i] == nums[i - 1]:  # skip dup pivot
+        if i > 0 and nums[i] == nums[i - 1]:
             continue
-        l, r = i + 1, len(nums) - 1
-        while l < r:
-            s = nums[i] + nums[l] + nums[r]
-            if s == 0:
-                res.append([nums[i], nums[l], nums[r]])
-                while l < r and nums[l] == nums[l + 1]: l += 1  # skip dup L
-                while l < r and nums[r] == nums[r - 1]: r -= 1  # skip dup R
-                l += 1; r -= 1
-            elif s < 0:
-                l += 1
+
+        left, right = i + 1, len(nums) - 1
+
+        while left < right:
+            total = nums[i] + nums[left] + nums[right]
+
+            if total < 0:
+                left += 1
+            elif total > 0:
+                right -= 1
             else:
-                r -= 1
-    return res
+                result.append([nums[i], nums[left], nums[right]])
+                left += 1
+                right -= 1
+
+                while left < right and nums[left] == nums[left - 1]:
+                    left += 1
+                while left < right and nums[right] == nums[right + 1]:
+                    right -= 1
+
+    return result
 ```
 
-**4Sum** follows the exact same pattern with an outer loop:
+**4Sum** follows the same structure with a second fixed anchor:
 
 ```python
 def four_sum(nums, target):
     nums.sort()
-    res = []
+    result = []
+
     for i in range(len(nums) - 3):
-        if i > 0 and nums[i] == nums[i - 1]: continue
+        if i > 0 and nums[i] == nums[i - 1]:
+            continue
+
         for j in range(i + 1, len(nums) - 2):
-            if j > i + 1 and nums[j] == nums[j - 1]: continue
-            l, r = j + 1, len(nums) - 1
-            while l < r:
-                s = nums[i] + nums[j] + nums[l] + nums[r]
-                if s == target:
-                    res.append([nums[i], nums[j], nums[l], nums[r]])
-                    while l < r and nums[l] == nums[l + 1]: l += 1
-                    while l < r and nums[r] == nums[r - 1]: r -= 1
-                    l += 1; r -= 1
-                elif s < target:
-                    l += 1
+            if j > i + 1 and nums[j] == nums[j - 1]:
+                continue
+
+            left, right = j + 1, len(nums) - 1
+
+            while left < right:
+                total = (
+                    nums[i]
+                    + nums[j]
+                    + nums[left]
+                    + nums[right]
+                )
+
+                if total < target:
+                    left += 1
+                elif total > target:
+                    right -= 1
                 else:
-                    r -= 1
-    return res
+                    result.append([
+                        nums[i],
+                        nums[j],
+                        nums[left],
+                        nums[right],
+                    ])
+                    left += 1
+                    right -= 1
+
+                    while left < right and nums[left] == nums[left - 1]:
+                        left += 1
+                    while left < right and nums[right] == nums[right + 1]:
+                        right -= 1
+
+    return result
 ```
 
 ---
 
 ### 7. Running Max Walls (Trapping Rain Water)
 
-> **Signals:** "trap rain water", "amount of water trapped", elevation map / heights array
+> **Signals:** elevation map, trapped water, boundaries on both sides
 
 <PatternVizModal label="Trapping Rain Water">
   <TrappingWaterViz />
 </PatternVizModal>
 
-**The insight:** Water at position `i` is limited by the shorter of the two tallest walls on each side: `min(leftMax, rightMax) - height[i]`. Instead of precomputing both max arrays (O(n) space), use two pointers to compute them on the fly:
+Water at position `i` is limited by:
 
-- If `leftMax < rightMax`: the right wall is tall enough — water at `left` is determined purely by `leftMax`. Process left.
-- Otherwise: process right.
+```text
+min(left_max, right_max) - height[i]
+```
+
+Maintain both maxima while processing whichever side is currently safe:
 
 ```python
 def trap(height):
-    l, r = 0, len(height) - 1
+    left, right = 0, len(height) - 1
     left_max = right_max = 0
     water = 0
-    while l <= r:
+
+    while left <= right:
         if left_max <= right_max:
-            left_max = max(left_max, height[l])
-            water += left_max - height[l]
-            l += 1
+            left_max = max(left_max, height[left])
+            water += left_max - height[left]
+            left += 1
         else:
-            right_max = max(right_max, height[r])
-            water += right_max - height[r]
-            r -= 1
+            right_max = max(right_max, height[right])
+            water += right_max - height[right]
+            right -= 1
+
     return water
 ```
 
-**Why this is O(1) space:** `leftMax` and `rightMax` replace the two auxiliary arrays from the naive O(n) space solution. The two-pointer invariant guarantees the "safe side" is always processed correctly.
+The running maxima replace two auxiliary arrays, reducing extra space from O(n) to O(1).
+
+---
+
+## Two Pointers vs. Sliding Window
+
+Sliding window often uses `left` and `right`, but it maintains state for an entire contiguous range.
+
+| General two pointers | Sliding window |
+|---|---|
+| Processes values at pointer positions | Maintains state for every value in a window |
+| Eliminates candidates or builds output | Expands and shrinks a contiguous valid range |
+| Pair, symmetry, merge, or in-place signals | Longest, shortest, “at most,” substring, or subarray signals |
+
+```python
+left = 0
+
+for right in range(len(items)):
+    add(items[right])
+
+    while window_is_invalid():
+        remove(items[left])
+        left += 1
+
+    update_answer(left, right)
+```
+
+After the inner loop, `items[left:right + 1]` is valid. Treat sliding window as a related but separate pattern.
+
+---
+
+## Beyond Arrays: Fast/Slow Pointers
+
+Linked lists are not a prerequisite for array-based two pointers. After learning linked-list traversal, different pointer speeds support:
+
+- Finding the middle node
+- Detecting a cycle
+- Finding a cycle entrance
+
+```python
+slow = fast = head
+
+while fast is not None and fast.next is not None:
+    slow = slow.next
+    fast = fast.next.next
+```
+
+When `fast` reaches the end, `slow` is near the middle. In a cycle, a faster pointer eventually catches a slower one.
+
+---
+
+## Common Pitfalls
+
+### Incorrect boundaries
+
+Use `left < right` when two distinct positions are required. Use `left <= right` when a single remaining position must also be processed.
+
+### Sorting destroys original indices
+
+Retain indices before sorting when the answer requires original positions:
+
+```python
+indexed = sorted(
+    (value, index)
+    for index, value in enumerate(nums)
+)
+```
+
+### Moving without proving safety
+
+Do not memorize “small sum means move left” without identifying the ordering property that makes it true.
+
+### Overwriting unread merge values
+
+An in-place merge into `nums1` must fill from the back unless extra storage or shifting is used.
+
+### Forgetting leftovers
+
+Remaining `nums2` values must be copied. Remaining `nums1` values are already in place.
+
+### Missing empty-input handling
+
+Operations such as `k %= len(nums)` and duplicate initialization need explicit guards.
+
+### Mishandling K-sum duplicates
+
+Skip duplicate anchors and duplicate pointer values after recording a match.
+
+### Hidden string allocations
+
+Python slicing creates new strings. Use index boundaries when O(1) auxiliary space matters.
+
+### Assuming two pointers always means O(n)
+
+Sorting, anchors, and nested scans affect total complexity. State the full cost.
 
 ---
 
 ## Decision Guide: Which Pointer Strategy?
 
-| Question | Answer |
+| Question | Strategy |
 |---|---|
-| Is the array/string sorted, and am I looking for a pair? | Opposite-ends converging |
-| Does the problem have mirror symmetry (palindrome)? | Converging with comparison, skip on mismatch |
-| "In-place" + "O(1) space" + reordering/filtering? | Write pointer (slow/fast) |
-| Two separate sorted inputs to combine? | Merge two pointers (fill from back if in-place) |
-| 3+ elements summing to target, deduplicated? | K-Sum: sort + outer loop + inner converge |
-| Height/elevation, water/area, running max from both sides? | Running max walls with left/right pointers |
+| Sorted input and a pair target? | Opposite-ends converging |
+| Mirror symmetry? | Converging comparison |
+| In-place filtering or compaction? | Read/write pointers |
+| Two sorted inputs to combine? | One pointer per input; back-fill if in place |
+| Three or more values summing to a target? | Sort, fix anchors, then converge |
+| Heights and boundaries on both sides? | Running maxima with left/right pointers |
+| Best contiguous range? | Sliding window |
 
 ---
 
 ## Complexity Reference
 
-| Pattern | Time | Space | Key constraint |
+| Pattern | Time | Extra space | Key requirement |
 |---|---|---|---|
-| Opposite-ends converging | O(n) | O(1) | Must be sorted |
-| Palindrome check | O(n) | O(1) | — |
-| Reverse in-place | O(n) | O(1) | — |
-| Merge two sorted (back-fill) | O(m+n) | O(1) | nums1 must have space |
-| Write pointer | O(n) | O(1) | Must be sorted (for dups) |
-| 3Sum | O(n²) | O(1) | Must be sorted |
-| 4Sum | O(n³) | O(1) | Must be sorted |
-| Trapping Rain Water | O(n) | O(1) | — |
+| Sorted pair convergence | O(n) | O(1) | Sorted input or another monotonic rule |
+| Palindrome check | O(n) | O(1) | Mirror comparison |
+| Reverse in place | O(n) | O(1) | Mutable sequence |
+| Merge sorted, back-fill | O(m+n) | O(1) | `nums1` has capacity `m+n` |
+| Read/write filtering | O(n) | O(1) | Local keep/reject rule |
+| 3Sum | O(n²) | Sorting-dependent | Sort + one anchor |
+| 4Sum | O(n³) | Sorting-dependent | Sort + two anchors |
+| Trapping Rain Water | O(n) | O(1) | Safe-side running-max invariant |
+
+For 3Sum and 4Sum, sorting may use O(log n) or O(n) auxiliary space depending on the language and implementation. Output storage is not included.
+
+---
+
+## Recall Checklist
+
+Before coding, explain:
+
+1. What does each pointer represent?
+2. Which region is already processed?
+3. What invariant remains true?
+4. Why is the next movement safe?
+5. Does every iteration make progress?
+6. Should the loop use `<` or `<=`?
+7. Do sorting, duplicates, empty inputs, or original indices need special handling?
+
+If these answers are clear, the code is usually the easy part.
