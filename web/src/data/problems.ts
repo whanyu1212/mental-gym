@@ -3510,6 +3510,111 @@ end`,
     sourceUrl: "https://leetcode.com/problems/3sum/",
   },
   {
+    id: "26",
+    slug: "26-remove-duplicates-from-sorted-array",
+    leetcodeSlug: "remove-duplicates-from-sorted-array",
+    title: "Remove Duplicates from Sorted Array",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers"],
+    description: `<p>Given an integer array <code>nums</code> sorted in <strong>non-decreasing order</strong>, remove the duplicates <a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank"><strong>in-place</strong></a> such that each unique element appears only <strong>once</strong>. The <strong>relative order</strong> of the elements should be kept the <strong>same</strong>.</p>
+
+<p>Consider the number of <em>unique elements</em> in&nbsp;<code>nums</code> to be <code>k<strong>​​​​​​​</strong></code>​​​​​​​. <meta charset="UTF-8" />After removing duplicates, return the number of unique elements&nbsp;<code>k</code>.</p>
+
+<p><meta charset="UTF-8" />The first&nbsp;<code>k</code>&nbsp;elements of&nbsp;<code>nums</code>&nbsp;should contain the unique numbers in <strong>sorted order</strong>. The remaining elements beyond index&nbsp;<code>k - 1</code>&nbsp;can be ignored.</p>
+
+<p><strong>Custom Judge:</strong></p>
+
+<p>The judge will test your solution with the following code:</p>
+
+<pre>
+int[] nums = [...]; // Input array
+int[] expectedNums = [...]; // The expected answer with correct length
+
+int k = removeDuplicates(nums); // Calls your implementation
+
+assert k == expectedNums.length;
+for (int i = 0; i &lt; k; i++) {
+    assert nums[i] == expectedNums[i];
+}
+</pre>
+
+<p>If all assertions pass, then your solution will be <strong>accepted</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,1,2]
+<strong>Output:</strong> 2, nums = [1,2,_]
+<strong>Explanation:</strong> Your function should return k = 2, with the first two elements of nums being 1 and 2 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [0,0,1,1,1,2,2,3,3,4]
+<strong>Output:</strong> 5, nums = [0,1,2,3,4,_,_,_,_,_]
+<strong>Explanation:</strong> Your function should return k = 5, with the first five elements of nums being 0, 1, 2, 3, and 4 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>
+	<li><code>-100 &lt;= nums[i] &lt;= 100</code></li>
+	<li><code>nums</code> is sorted in <strong>non-decreasing</strong> order.</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def removeDuplicates(self, nums: List[int]) -> int:
+        """
+        Remove duplicates from sorted nums in place.
+
+        Return k, the number of unique values. After the function
+        finishes, nums[:k] should contain the unique values in sorted
+        order.
+        """
+        # There is no first unique value when nums is empty.
+        if not nums:
+            return 0
+
+        # slow points to the last unique value written so far.
+        # fast scans the next value in the sorted input.
+        #
+        # Example trace for nums = [1, 1, 2, 2, 3]:
+        #
+        # fast  nums[fast]  action                 slow  unique prefix
+        #   1       1       duplicate; skip          0    [1]
+        #   2       2       new; write at index 1    1    [1, 2]
+        #   3       2       duplicate; skip          1    [1, 2]
+        #   4       3       new; write at index 2    2    [1, 2, 3]
+        #
+        # Invariant: nums[:slow + 1] contains the unique values found so far.
+        slow = 0
+
+        for fast in range(1, len(nums)):
+            if nums[fast] != nums[slow]:
+                # Sorted order means a value differs from nums[slow] only when
+                # it is the next unique value. Extend the unique prefix first,
+                # then copy the value into its new position.
+                slow += 1
+                nums[slow] = nums[fast]
+
+        # slow is an index, so the number of unique values is slow + 1.
+        return slow + 1`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/",
+  },
+  {
     id: "42",
     slug: "42-trapping-rain-water",
     leetcodeSlug: "trapping-rain-water",
@@ -3691,6 +3796,168 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end`,
     },
     sourceUrl: "https://leetcode.com/problems/trapping-rain-water/",
+  },
+  {
+    id: "88",
+    slug: "88-merge-sorted-array",
+    leetcodeSlug: "merge-sorted-array",
+    title: "Merge Sorted Array",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers", "sorting"],
+    description: `<p>You are given two integer arrays <code>nums1</code> and <code>nums2</code>, sorted in <strong>non-decreasing order</strong>, and two integers <code>m</code> and <code>n</code>, representing the number of elements in <code>nums1</code> and <code>nums2</code> respectively.</p>
+
+<p><strong>Merge</strong> <code>nums1</code> and <code>nums2</code> into a single array sorted in <strong>non-decreasing order</strong>.</p>
+
+<p>The final sorted array should not be returned by the function, but instead be <em>stored inside the array </em><code>nums1</code>. To accommodate this, <code>nums1</code> has a length of <code>m + n</code>, where the first <code>m</code> elements denote the elements that should be merged, and the last <code>n</code> elements are set to <code>0</code> and should be ignored. <code>nums2</code> has a length of <code>n</code>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3
+<strong>Output:</strong> [1,2,2,3,5,6]
+<strong>Explanation:</strong> The arrays we are merging are [1,2,3] and [2,5,6].
+The result of the merge is [<u>1</u>,<u>2</u>,2,<u>3</u>,5,6] with the underlined elements coming from nums1.
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums1 = [1], m = 1, nums2 = [], n = 0
+<strong>Output:</strong> [1]
+<strong>Explanation:</strong> The arrays we are merging are [1] and [].
+The result of the merge is [1].
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums1 = [0], m = 0, nums2 = [1], n = 1
+<strong>Output:</strong> [1]
+<strong>Explanation:</strong> The arrays we are merging are [] and [1].
+The result of the merge is [1].
+Note that because m = 0, there are no elements in nums1. The 0 is only there to ensure the merge result can fit in nums1.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>nums1.length == m + n</code></li>
+	<li><code>nums2.length == n</code></li>
+	<li><code>0 &lt;= m, n &lt;= 200</code></li>
+	<li><code>1 &lt;= m + n &lt;= 200</code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums1[i], nums2[j] &lt;= 10<sup>9</sup></code></li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up: </strong>Can you come up with an algorithm that runs in <code>O(m + n)</code> time?</p>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def merge(self, nums1: List[int], m: int, nums2: List[int], n: int) -> None:
+        """
+        Do not return anything, modify nums1 in-place instead.
+
+        This is a read/write version of the fast-and-slow pointer
+        pattern. The read pointers inspect values that have not been
+        merged, while the write pointer marks the next position to fill.
+        Working right to left prevents nums1's unmerged values from
+        being overwritten.
+        """
+        # i reads the largest remaining value from nums1's original elements.
+        i = m - 1
+
+        # j reads the largest remaining value from nums2.
+        j = n - 1
+
+        # k writes the larger value into nums1's next open slot. We need a
+        # separate write pointer because that slot may differ from both i and j.
+        k = m + n - 1
+
+        while i >= 0 and j >= 0:
+            if nums1[i] > nums2[j]:
+                nums1[k] = nums1[i]
+                i -= 1
+                k -= 1
+            else:
+                nums1[k] = nums2[j]
+                j -= 1
+                k -= 1
+
+        # When the main merge loop ends, at least one input has been exhausted.
+        #
+        # If j < 0, nums2 has no values left. Any values still pointed to by i
+        # are already in nums1, and because we merged from right to left, they
+        # are already in their correct positions. No copying is necessary.
+        #
+        # If i < 0 but j >= 0, nums1's original values were consumed first.
+        # The remaining nums2 values still need to be copied into nums1, which
+        # is why the cleanup loop checks while j >= 0.
+        #
+        # We do not need a matching while i >= 0 loop: those values already
+        # live in nums1, and merging from right to left has left them sorted.
+        while j >= 0:
+            nums1[k] = nums2[j]
+            j -= 1
+            k -= 1`,
+      julia: `"""
+    merge(nums1::Vector{Int}, m::Int, nums2::Vector{Int}, n::Int)
+
+Merge the first \`m\` values of \`nums1\` with all \`n\` values of \`nums2\`.
+Store the sorted result in \`nums1\` in place.
+
+Julia uses 1-based indexing. Because we merge from right to left:
+
+- \`i\` reads the last unmerged value from the original part of \`nums1\`.
+- \`j\` reads the last unmerged value from \`nums2\`.
+- \`k\` points to the next position to write in \`nums1\`.
+"""
+function merge(nums1::Vector{Int}, m::Int, nums2::Vector{Int}, n::Int)::Nothing
+    # In Julia, the last element of the first m values is at index m.
+    i = m
+    j = n
+    k = m + n
+
+    # Compare values while both input sections still have unread values.
+    # Place the larger value at nums1[k], then move the pointer that supplied it.
+    while i >= 1 && j >= 1
+        if nums1[i] > nums2[j]
+            nums1[k] = nums1[i]
+            i -= 1
+            k -= 1
+        else
+            nums1[k] = nums2[j]
+            j -= 1
+            k -= 1
+        end
+    end
+
+    # If nums1's original values finish first, nums2 may still have values
+    # that must be copied into the remaining positions of nums1.
+    # If nums2 finishes first, nums1's remaining values are already in place.
+    while j >= 1
+        nums1[k] = nums2[j]
+        j -= 1
+        k -= 1
+    end
+
+    return nothing
+end
+
+# Example usage
+if abspath(PROGRAM_FILE) == @__FILE__
+    nums1 = [1, 2, 3, 0, 0, 0]
+    nums2 = [2, 5, 6]
+    merge(nums1, 3, nums2, 3)
+    println(nums1)  # Expected after completing the TODOs: [1, 2, 2, 3, 5, 6]
+end`,
+    },
+    sourceUrl: "https://leetcode.com/problems/merge-sorted-array/",
   },
   {
     id: "125",
