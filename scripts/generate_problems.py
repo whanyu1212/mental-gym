@@ -66,6 +66,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "xor_queries_subarray": "xor-queries-of-a-subarray",
     "trap": "trapping-rain-water",
     "min_stack": "min-stack",
+    "remove_duplicate": "remove-duplicates-from-sorted-array",
 }
 
 

@@ -3510,6 +3510,111 @@ end`,
     sourceUrl: "https://leetcode.com/problems/3sum/",
   },
   {
+    id: "26",
+    slug: "26-remove-duplicates-from-sorted-array",
+    leetcodeSlug: "remove-duplicates-from-sorted-array",
+    title: "Remove Duplicates from Sorted Array",
+    difficulty: "Easy",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers"],
+    description: `<p>Given an integer array <code>nums</code> sorted in <strong>non-decreasing order</strong>, remove the duplicates <a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank"><strong>in-place</strong></a> such that each unique element appears only <strong>once</strong>. The <strong>relative order</strong> of the elements should be kept the <strong>same</strong>.</p>
+
+<p>Consider the number of <em>unique elements</em> in&nbsp;<code>nums</code> to be <code>k<strong>​​​​​​​</strong></code>​​​​​​​. <meta charset="UTF-8" />After removing duplicates, return the number of unique elements&nbsp;<code>k</code>.</p>
+
+<p><meta charset="UTF-8" />The first&nbsp;<code>k</code>&nbsp;elements of&nbsp;<code>nums</code>&nbsp;should contain the unique numbers in <strong>sorted order</strong>. The remaining elements beyond index&nbsp;<code>k - 1</code>&nbsp;can be ignored.</p>
+
+<p><strong>Custom Judge:</strong></p>
+
+<p>The judge will test your solution with the following code:</p>
+
+<pre>
+int[] nums = [...]; // Input array
+int[] expectedNums = [...]; // The expected answer with correct length
+
+int k = removeDuplicates(nums); // Calls your implementation
+
+assert k == expectedNums.length;
+for (int i = 0; i &lt; k; i++) {
+    assert nums[i] == expectedNums[i];
+}
+</pre>
+
+<p>If all assertions pass, then your solution will be <strong>accepted</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,1,2]
+<strong>Output:</strong> 2, nums = [1,2,_]
+<strong>Explanation:</strong> Your function should return k = 2, with the first two elements of nums being 1 and 2 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [0,0,1,1,1,2,2,3,3,4]
+<strong>Output:</strong> 5, nums = [0,1,2,3,4,_,_,_,_,_]
+<strong>Explanation:</strong> Your function should return k = 5, with the first five elements of nums being 0, 1, 2, 3, and 4 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>
+	<li><code>-100 &lt;= nums[i] &lt;= 100</code></li>
+	<li><code>nums</code> is sorted in <strong>non-decreasing</strong> order.</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def removeDuplicates(self, nums: List[int]) -> int:
+        """
+        Remove duplicates from sorted nums in place.
+
+        Return k, the number of unique values. After the function
+        finishes, nums[:k] should contain the unique values in sorted
+        order.
+        """
+        # There is no first unique value when nums is empty.
+        if not nums:
+            return 0
+
+        # slow points to the last unique value written so far.
+        # fast scans the next value in the sorted input.
+        #
+        # Example trace for nums = [1, 1, 2, 2, 3]:
+        #
+        # fast  nums[fast]  action                 slow  unique prefix
+        #   1       1       duplicate; skip          0    [1]
+        #   2       2       new; write at index 1    1    [1, 2]
+        #   3       2       duplicate; skip          1    [1, 2]
+        #   4       3       new; write at index 2    2    [1, 2, 3]
+        #
+        # Invariant: nums[:slow + 1] contains the unique values found so far.
+        slow = 0
+
+        for fast in range(1, len(nums)):
+            if nums[fast] != nums[slow]:
+                # Sorted order means a value differs from nums[slow] only when
+                # it is the next unique value. Extend the unique prefix first,
+                # then copy the value into its new position.
+                slow += 1
+                nums[slow] = nums[fast]
+
+        # slow is an index, so the number of unique values is slow + 1.
+        return slow + 1`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/",
+  },
+  {
     id: "42",
     slug: "42-trapping-rain-water",
     leetcodeSlug: "trapping-rain-water",
@@ -3752,15 +3857,17 @@ Note that because m = 0, there are no elements in nums1. The 0 is only there to 
     solutions: {
       python: `from typing import List
 
+
 class Solution:
     def merge(self, nums1: List[int], m: int, nums2: List[int], n: int) -> None:
         """
         Do not return anything, modify nums1 in-place instead.
 
-        This is a read/write version of the fast-and-slow pointer pattern.
-        The read pointers inspect values that have not been merged, while the
-        write pointer marks the next position to fill. Working right to left
-        prevents nums1's unmerged values from being overwritten.
+        This is a read/write version of the fast-and-slow pointer
+        pattern. The read pointers inspect values that have not been
+        merged, while the write pointer marks the next position to fill.
+        Working right to left prevents nums1's unmerged values from
+        being overwritten.
         """
         # i reads the largest remaining value from nums1's original elements.
         i = m - 1
@@ -3779,8 +3886,8 @@ class Solution:
                 k -= 1
             else:
                 nums1[k] = nums2[j]
-                j -=1
-                k -=1
+                j -= 1
+                k -= 1
 
         # When the main merge loop ends, at least one input has been exhausted.
         #
