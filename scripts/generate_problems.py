@@ -41,6 +41,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "range_query_sum_2d_immutable": "range-sum-query-2d-immutable",
     "two_sum2": "two-sum-ii-input-array-is-sorted",
     "three_sum": "3sum",
+    "four_sum": "4sum",
     "max_area": "container-with-most-water",
     "max_profit": "best-time-to-buy-and-sell-stock",
     "longest_substring": "longest-substring-without-repeating-characters",
