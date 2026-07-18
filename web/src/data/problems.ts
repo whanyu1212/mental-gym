@@ -3510,6 +3510,100 @@ end`,
     sourceUrl: "https://leetcode.com/problems/3sum/",
   },
   {
+    id: "18",
+    slug: "18-4sum",
+    leetcodeSlug: "4sum",
+    title: "4Sum",
+    difficulty: "Medium",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers", "sorting"],
+    description: `<p>Given an array <code>nums</code> of <code>n</code> integers, return <em>an array of all the <strong>unique</strong> quadruplets</em> <code>[nums[a], nums[b], nums[c], nums[d]]</code> such that:</p>
+
+<ul>
+	<li><code>0 &lt;= a, b, c, d&nbsp;&lt; n</code></li>
+	<li><code>a</code>, <code>b</code>, <code>c</code>, and <code>d</code> are <strong>distinct</strong>.</li>
+	<li><code>nums[a] + nums[b] + nums[c] + nums[d] == target</code></li>
+</ul>
+
+<p>You may return the answer in <strong>any order</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,0,-1,0,-2,2], target = 0
+<strong>Output:</strong> [[-2,-1,1,2],[-2,0,0,2],[-1,0,0,1]]
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [2,2,2,2,2], target = 8
+<strong>Output:</strong> [[2,2,2,2]]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 200</code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= target &lt;= 10<sup>9</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def fourSum(self, nums: List[int], target: int) -> List[List[int]]:
+        result = []
+        # Sorting makes pointer movements predictable and puts duplicates together.
+        nums.sort()
+        n = len(nums)
+
+        # Fix the first value, leaving three later positions for j, left, and right.
+        for i in range(n - 3):
+            # The same first value would produce the same set of quadruplets.
+            if i > 0 and nums[i] == nums[i - 1]:
+                continue
+
+            # Fix the second value, leaving a pair for the two-pointer search.
+            for j in range(i + 1, n - 2):
+                # Skip only repeats at this j level; nums[j] may equal nums[i].
+                if j > i + 1 and nums[j] == nums[j - 1]:
+                    continue
+
+                left, right = j + 1, n - 1
+
+                while left < right:
+                    four_sum = nums[i] + nums[j] + nums[left] + nums[right]
+
+                    if four_sum < target:
+                        # A larger left value is the only way to increase this sum.
+                        left += 1
+                    elif four_sum > target:
+                        # A smaller right value is the only way to decrease this sum.
+                        right -= 1
+                    else:
+                        result.append([nums[i], nums[j], nums[left], nums[right]])
+
+                        # Move past this pair before skipping equal values to keep
+                        # every quadruplet unique.
+                        left += 1
+                        right -= 1
+
+                        while left < right and nums[left] == nums[left - 1]:
+                            left += 1
+                        while left < right and nums[right] == nums[right + 1]:
+                            right -= 1
+
+        return result`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/4sum/",
+  },
+  {
     id: "26",
     slug: "26-remove-duplicates-from-sorted-array",
     leetcodeSlug: "remove-duplicates-from-sorted-array",
