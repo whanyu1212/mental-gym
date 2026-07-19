@@ -72,5 +72,5 @@ test("summarizes recent activity, ratings, and domains", () => {
   assert.equal(stats.reviewsLast30Days, 3);
   assert.equal(stats.activeDaysLast30Days, 3);
   assert.deepEqual(stats.ratingCounts, { 0: 1, 1: 1, 2: 1, 3: 1 });
-  assert.deepEqual(stats.domainCounts, { algorithms: 2, ml: 2 });
+  assert.deepEqual(stats.domainCounts, { algorithms: 2, ml: 2, sql: 0 });
 });

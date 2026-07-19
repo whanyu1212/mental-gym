@@ -176,7 +176,9 @@ const { detailed = false } = Astro.props;
               const path =
                 record.domain === "algorithms"
                   ? `/algorithms/${encodeURIComponent(record.slug)}/`
-                  : `/machine-learning/${encodeURIComponent(record.slug)}/`;
+                  : record.domain === "ml"
+                    ? `/machine-learning/${encodeURIComponent(record.slug)}/`
+                    : `/sql/${encodeURIComponent(record.slug)}/`;
               const href = withBase(path);
               const state = record.dueDate < todayISO() ? "Overdue" : "Due today";
 

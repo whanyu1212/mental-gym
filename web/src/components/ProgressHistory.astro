@@ -73,7 +73,7 @@ import ActivityHeatmap from "./ActivityHeatmap.astro";
 
 				const domains = this.querySelector<HTMLElement>("[data-domains]");
 				if (domains) {
-					domains.innerHTML = `<div><span>Algorithms</span><strong>${history.domainCounts.algorithms}</strong></div><div><span>Machine Learning</span><strong>${history.domainCounts.ml}</strong></div>`;
+					domains.innerHTML = `<div><span>Algorithms</span><strong>${history.domainCounts.algorithms}</strong></div><div><span>Machine Learning</span><strong>${history.domainCounts.ml}</strong></div><div><span>SQL</span><strong>${history.domainCounts.sql}</strong></div>`;
 				}
 
 				await customElements.whenDefined("activity-heatmap");

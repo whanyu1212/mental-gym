@@ -1,9 +1,10 @@
 export type ReviewQuality = 0 | 1 | 2 | 3; // Again, Hard, Good, Easy
 export type ReviewStatus = "overdue" | "due" | "upcoming" | "new";
+export type ReviewDomain = "algorithms" | "ml" | "sql";
 
 export interface ReviewRecord {
   problemKey: string; // "algorithms:1-two-sum" or "ml:logistic-regression"
-  domain: "algorithms" | "ml";
+  domain: ReviewDomain;
   slug: string;
   title: string;
   difficulty: string;
@@ -23,7 +24,7 @@ export interface ReviewEvent {
   reviewedAt: string;
   reviewDate: string; // local "YYYY-MM-DD"
   problemKey: string;
-  domain: "algorithms" | "ml";
+  domain: ReviewDomain;
   group: string;
   rating: ReviewQuality;
   interval: number;

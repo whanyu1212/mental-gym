@@ -76,7 +76,11 @@ export function summarizeProgress(
   return {
     ...summarize(records, today),
     domains: groupRecords(reviewed, today, (record) =>
-      record.domain === "algorithms" ? "Algorithms" : "Machine Learning"
+      record.domain === "algorithms"
+        ? "Algorithms"
+        : record.domain === "ml"
+          ? "Machine Learning"
+          : "SQL"
     ),
     topics: groupRecords(reviewed, today, (record) => record.group),
     dueRecords,

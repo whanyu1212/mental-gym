@@ -1,0 +1,515 @@
+---
+title: Sliding Window
+description: A problem-first guide to fixed and variable sliding windows, their state invariants, and the practice problems that build each one.
+category: Patterns
+order: 4
+status: stable
+tags:
+  - dsa
+  - sliding-window
+  - arrays
+  - strings
+---
+
+import PatternVizModal from '../web/src/components/notes/PatternVizModal.astro';
+import BuySellStockAnimation from '../web/src/components/BuySellStockAnimation.astro';
+import LongestSubstringAnimation from '../web/src/components/LongestSubstringAnimation.astro';
+import CharacterReplacementAnimation from '../web/src/components/CharacterReplacementAnimation.astro';
+import PermutationInStringAnimation from '../web/src/components/PermutationInStringAnimation.astro';
+import SlidingWindowMaximumAnimation from '../web/src/components/SlidingWindowMaximumAnimation.astro';
+
+# Sliding Window
+
+A sliding window maintains a **contiguous** range while it moves through an array or string. Rather than recomputing every possible range, it updates a small amount of state as one value enters from the right and, when necessary, one value leaves from the left.
+
+The important idea is not two variables named `left` and `right`. It is this contract:
+
+> The state describes exactly the current window, and moving `left` restores the rule that makes the window useful.
+
+This note is a study path, not a catalogue. Learn the window's rule, solve its anchor problem, then change one constraint in the next problem.
+
+---
+
+## How To Use This Note
+
+For each family:
+
+1. Read the recognition signal before seeing the code.
+2. Say what `left`, `right`, and the window state represent.
+3. Decide whether the window has fixed width or is allowed to grow.
+4. State the condition that makes a window valid.
+5. Predict when and why `left` must move.
+6. Solve the anchor problem, then make the single change in its follow-up.
+
+If you get stuck, write the window invariant in one sentence. It usually tells you both what to store and when to shrink.
+
+---
+
+## Pattern Map
+
+Use the phrasing of the question to pick the right window family. The state is what makes each family different.
+
+| If the problem says... | Reach for... | State to maintain | Start with |
+|---|---|---|---|
+| Buy before sell; maximize a later-minus-earlier value | Forward-pair scan | Best eligible earlier value | [Best Time to Buy and Sell Stock](../../algorithms/121-best-time-to-buy-and-sell-stock) |
+| Check every substring of exactly length `k` | Fixed-size window | Counts, sum, or another rolling summary | [Permutation in String](../../algorithms/567-permutation-in-string) |
+| Longest or shortest valid substring/subarray | Variable-size window | State that says whether the current range is valid | [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters) |
+| Longest range after at most `k` changes, deletions, or replacements | Budgeted variable window | Cost needed to repair the current range | [Longest Repeating Character Replacement](../../algorithms/424-longest-repeating-character-replacement) |
+| Maximum or minimum for every fixed-size window | Window plus candidate structure | A monotonic deque of undominated candidates | [Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) |
+
+### Suggested Study Route
+
+This sequence starts with a single forward scan, then adds exactly one kind of window state at a time.
+
+| Step | Problem | New idea to own |
+|---|---|---|
+| 1 | [Best Time to Buy and Sell Stock](../../algorithms/121-best-time-to-buy-and-sell-stock) | Keep the best feasible left boundary while scanning right |
+| 2 | [Permutation in String](../../algorithms/567-permutation-in-string) | Slide a fixed-width frequency map |
+| 3 | [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters) | Grow, then shrink until the invariant is restored |
+| 4 | [Longest Repeating Character Replacement](../../algorithms/424-longest-repeating-character-replacement) | Express validity as a repair budget |
+| 5 | [Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) | Keep only candidates that can still win |
+
+The last two problems are currently filed in the Stack section of the practice bank, but their core technique belongs in this sliding-window progression.
+
+---
+
+## The Window Contract
+
+For a window `items[left:right + 1]`:
+
+```text
+left    first item still inside the current window
+right   most recently added item
+state   summary of exactly the items from left through right
+answer  best valid window seen so far, when the task asks for one
+```
+
+Most variable-window solutions follow this rhythm:
+
+```python
+left = 0
+state = empty_state()
+
+for right, value in enumerate(items):
+    add(state, value)
+
+    while window_is_invalid(state, left, right):
+        remove(state, items[left])
+        left += 1
+
+    update_answer(left, right)
+```
+
+The order matters:
+
+1. Add the new right value to state.
+2. Shrink until the window is valid again.
+3. Only then use the window as a candidate answer.
+
+For a fixed-size window, the rule is different: shrink whenever the width grows beyond the required size, then inspect only windows with exactly that size.
+
+---
+
+## 1. Forward-Pair Scan: Best Time To Buy And Sell Stock
+
+### Recognize It
+
+This is a useful entry point because it shares the forward-moving boundaries of sliding window, but it does not maintain a conventional range property. The question asks:
+
+- Choose an earlier buy and a later sell.
+- Maximize `sell - buy`.
+- Use one transaction only.
+
+The useful state is the best eligible **past** partner for the current day: the lowest price seen so far.
+
+<PatternVizModal label="Best Time to Buy and Sell Stock">
+  <BuySellStockAnimation />
+</PatternVizModal>
+
+### Anchor Problem: Best Time To Buy And Sell Stock
+
+```python
+def max_profit(prices: list[int]) -> int:
+    lowest_price = float("inf")
+    best_profit = 0
+
+    for price in prices:
+        lowest_price = min(lowest_price, price)
+        best_profit = max(best_profit, price - lowest_price)
+
+    return best_profit
+```
+
+### The Invariant
+
+After processing each price:
+
+```text
+lowest_price is the smallest price seen on this day or any earlier day.
+best_profit is the best legal buy-then-sell profit seen so far.
+```
+
+Every day is considered as a possible sell day exactly once. The only buy price worth pairing with it is the cheapest earlier price. Any more expensive earlier buy produces less profit and can be discarded forever.
+
+### Why This Is Related, But Not A Standard Window
+
+The code can be written with two pointers, but the key idea is a running minimum, not "make a range valid." Treat it as preparation for the broader pattern: compress all useful information from the left side into a small state instead of rescanning it.
+
+### Check Yourself
+
+- Why must the minimum price come from the current day or an earlier day?
+- Why does a lower buy price make every earlier, higher buy price irrelevant?
+- Why must the answer begin at `0`, not negative infinity?
+
+---
+
+## 2. Fixed-Size Windows: Permutation In String
+
+### Recognize It
+
+Use a fixed-size window when every candidate range must have the same width:
+
+- "contains a permutation/anagram"
+- "every substring of length `k`"
+- "average, sum, or count in every block of `k` values"
+
+The window does not choose its own width. It advances exactly one step at a time after it reaches the required size.
+
+### Anchor Problem: Permutation In String
+
+[Permutation in String](../../algorithms/567-permutation-in-string) asks whether `s2` contains a contiguous permutation of `s1`. A permutation has the same character frequencies, so only windows of length `len(s1)` can qualify.
+
+<PatternVizModal label="Fixed-Size Frequency Window">
+  <PermutationInStringAnimation />
+</PatternVizModal>
+
+```python
+def check_inclusion(pattern: str, text: str) -> bool:
+    if len(pattern) > len(text):
+        return False
+
+    needed = {}
+    window = {}
+
+    for char in pattern:
+        needed[char] = needed.get(char, 0) + 1
+
+    left = 0
+    for right, char in enumerate(text):
+        window[char] = window.get(char, 0) + 1
+
+        if right - left + 1 > len(pattern):
+            leaving = text[left]
+            window[leaving] -= 1
+            if window[leaving] == 0:
+                del window[leaving]
+            left += 1
+
+        if right - left + 1 == len(pattern) and window == needed:
+            return True
+
+    return False
+```
+
+### The Invariant
+
+After the optional shrink step:
+
+```text
+text[left:right + 1] has width at most len(pattern).
+window stores exactly that range's character frequencies.
+When the width equals len(pattern), it is one complete permutation candidate.
+```
+
+Deleting a key whose count becomes zero matters. `{ "a": 1 }` and `{ "a": 1, "b": 0 }` describe the same characters but are not equal dictionaries.
+
+### Why This Is O(n)
+
+Each slide performs constant rolling work: add one character and, once full, remove one character. It never recounts an entire substring. With the lowercase-English alphabet in this problem, map comparison is bounded by 26 keys, so it is constant per window.
+
+### Change One Rule
+
+If the question asks for **all** matching positions rather than a boolean, append `left` when the maps match instead of returning. The fixed-width invariant stays unchanged.
+
+### Check Yourself
+
+- Why can no window shorter or longer than `len(pattern)` be a permutation?
+- Why must the leaving character be removed before `left` moves?
+- What changes if the input alphabet is not bounded to a small constant?
+
+---
+
+## 3. Variable Windows: Longest Unique Substring
+
+### Recognize It
+
+Use a variable-size window for prompts such as:
+
+- "longest substring/subarray such that..."
+- "at most `k` distinct values"
+- "no duplicates"
+- "shortest range that contains..."
+
+The right edge tries to grow the answer. The left edge moves only when the new value breaks the validity rule.
+
+### Anchor Problem: Longest Substring Without Repeating Characters
+
+For [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters), the rule is simple: every character in the window must be unique.
+
+<PatternVizModal label="Variable-Size Unique Window">
+  <LongestSubstringAnimation />
+</PatternVizModal>
+
+```python
+def length_of_longest_substring(s: str) -> int:
+    seen = set()
+    left = 0
+    best = 0
+
+    for right, char in enumerate(s):
+        while char in seen:
+            seen.remove(s[left])
+            left += 1
+
+        seen.add(char)
+        best = max(best, right - left + 1)
+
+    return best
+```
+
+### The Invariant
+
+At the end of every iteration:
+
+```text
+s[left:right + 1] contains no duplicate characters.
+seen contains exactly the characters in that window.
+best is the length of the longest valid window seen so far.
+```
+
+The new `char` is not inserted until old characters have been removed far enough to make room for it. This keeps the set and the window in agreement.
+
+### Why The Inner Loop Is Still Linear
+
+The nested `while` does not make the algorithm O(n^2). `right` visits each character once. `left` only moves forward, and it removes each character at most once. Across the whole scan, there are at most `n` additions and `n` removals.
+
+### Do Not Reset The Window
+
+For `"abba"`, a duplicate does not mean discard everything and start over. When the second `b` arrives, shrink from the left just enough to remove the older `b`; the valid window is then `"ba"`. Resetting loses valid progress and breaks the invariant.
+
+### Check Yourself
+
+- Why must the invalidity repair use `while`, not one `if`?
+- Why update `best` only after the duplicate is gone?
+- What state would let you jump `left` directly to the last seen position?
+
+---
+
+## 4. Budgeted Windows: Character Replacement
+
+### Recognize It
+
+This family allows a limited number of repairs inside the window:
+
+- at most `k` replacements
+- at most `k` deletions or flips
+- longest range that can become valid after limited edits
+
+The central question becomes: **how many changes would make this window acceptable?**
+
+### Anchor Problem: Longest Repeating Character Replacement
+
+In [Longest Repeating Character Replacement](../../algorithms/424-longest-repeating-character-replacement), the cheapest way to make a window uniform is to preserve its most frequent character and replace every other character.
+
+```text
+replacements needed = window length - highest frequency in the window
+```
+
+<PatternVizModal label="Budgeted Character Window">
+  <CharacterReplacementAnimation />
+</PatternVizModal>
+
+```python
+def character_replacement(s: str, k: int) -> int:
+    counts = {}
+    left = 0
+    best = 0
+
+    for right, char in enumerate(s):
+        counts[char] = counts.get(char, 0) + 1
+
+        while (right - left + 1) - max(counts.values()) > k:
+            leaving = s[left]
+            counts[leaving] -= 1
+            left += 1
+
+        best = max(best, right - left + 1)
+
+    return best
+```
+
+### The Invariant
+
+After shrinking:
+
+```text
+window length - max frequency in counts <= k.
+The current window can be made entirely one character using at most k replacements.
+best is the largest such window seen so far.
+```
+
+The code recomputes the maximum frequency from the map so the invariant directly describes the actual current window. Because this problem has only 26 uppercase letters, that is still O(n). A common optimization keeps a non-decreasing historical maximum frequency, but learn the direct proof before using that shortcut.
+
+### Why Shrink Instead Of Restarting
+
+When a window costs too many replacements, removing its leftmost value is the only way to reduce its width while preserving the newest right value. Keeping the right edge matters because it may belong to the next longest valid window.
+
+### Check Yourself
+
+- Why is the number of replacements `length - most_frequent_count`?
+- Why is a window with cost exactly `k` still valid?
+- What goes wrong if you decrement the count after incrementing `left`?
+
+---
+
+## 5. Fixed-Size Extremes: Sliding Window Maximum
+
+### Recognize It
+
+The normal fixed-size recipe is not enough when every window asks for an extreme value:
+
+- maximum or minimum of every window of width `k`
+- repeated max/min queries as the window slides
+- recomputing each window's extreme would cost O(n * k)
+
+[Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) adds a monotonic deque that stores only candidates that could still become a future maximum.
+
+<PatternVizModal label="Monotonic Deque Window">
+  <SlidingWindowMaximumAnimation />
+</PatternVizModal>
+
+### The Candidate Rule
+
+Store indices in a deque so the values decrease from front to back:
+
+```text
+front                                            back
+largest candidate -> smaller backup candidates -> smallest candidate
+```
+
+When a new value arrives, remove smaller or equal values from the back. The new value is at least as good and is newer, so it will remain in every future window that the smaller value could occupy.
+
+```python
+from collections import deque
+
+
+def max_sliding_window(nums: list[int], k: int) -> list[int]:
+    candidates = deque()
+    result = []
+
+    for right, value in enumerate(nums):
+        window_start = right - k + 1
+
+        while candidates and candidates[0] < window_start:
+            candidates.popleft()
+
+        while candidates and nums[candidates[-1]] <= value:
+            candidates.pop()
+
+        candidates.append(right)
+
+        if right >= k - 1:
+            result.append(nums[candidates[0]])
+
+    return result
+```
+
+### The Invariant
+
+After processing index `right`:
+
+```text
+Every deque index is inside the current window.
+Deque values decrease from front to back.
+The front index therefore points to the current window maximum.
+```
+
+Each index enters the deque once and leaves it once, either because it expires at the front or a newer value dominates it at the back. That makes the total time O(n), not O(n * k).
+
+### A Useful Progression
+
+| Approach | Time | What it teaches |
+|---|---|---|
+| Recompute `max(window)` | O(n * k) | The baseline cost to beat |
+| Heap with lazy eviction | O(n log n) | Track indices so stale values can be rejected |
+| Monotonic deque | O(n) | Discard permanently dominated candidates |
+
+The saved implementation for this problem currently uses the heap approach. The deque above is the next optimization to master; its animation already shows the candidate invariant.
+
+### Check Yourself
+
+- Why store indices instead of values in the deque?
+- Why can a newer value remove a smaller value from the back permanently?
+- Why must expired indices be removed from the front before reading the maximum?
+
+---
+
+## Sliding Window Vs. General Two Pointers
+
+Both techniques use boundaries that move forward, but they answer different questions.
+
+| Sliding window | General two pointers |
+|---|---|
+| Maintains state for every value in one contiguous range | Eliminates candidates, compares endpoints, merges inputs, or builds output |
+| `right` usually expands; `left` restores a window rule or fixed width | Movement follows a sorted-order proof, greedy bound, mirror rule, or output invariant |
+| Signals: longest, shortest, at most, substring, subarray, every block of `k` | Signals: pair, symmetry, sorted endpoints, two inputs, in-place filtering |
+| State might be counts, sum, a set, or a deque | State might be none beyond the pointers, or a small problem-specific summary |
+
+If the task asks about a **contiguous range** and a condition that can be updated as endpoints move, investigate sliding window first.
+
+---
+
+## Debugging Checklist
+
+When a window solution is wrong, inspect these contracts before changing conditions at random:
+
+| Symptom | Question to ask |
+|---|---|
+| The map or set disagrees with the displayed window | Did I remove `items[left]` from state before advancing `left`? |
+| The window grows past a fixed width | Did I shrink whenever `right - left + 1 > k`? |
+| An invalid window updates the answer | Am I updating after validity is restored? |
+| A duplicate still remains | Does this problem require a `while` loop rather than a single `if`? |
+| Frequency maps never match | Did I delete a key after its count reached zero? |
+| Character Replacement is off by one | Is validity `window length - max frequency <= k`? |
+| Sliding Window Maximum reports an expired value | Are deque entries indices, and do I evict entries before the current window start? |
+| A stock answer buys after it sells | Does the tracked minimum come only from current or earlier days? |
+
+---
+
+## Complexity Reference
+
+| Family | Time | Extra space | Main reason |
+|---|---|---|---|
+| Best Time to Buy and Sell Stock | O(n) | O(1) | Keep only the best prior buy price |
+| Fixed-size frequency window | O(n) for a bounded alphabet | O(alphabet) | One value enters and leaves per slide |
+| Longest unique substring | O(n) | O(min(n, alphabet)) | Each character enters and leaves the set at most once |
+| Budgeted character window | O(n) for a bounded alphabet | O(alphabet) | Window state changes incrementally; alphabet has 26 letters |
+| Sliding Window Maximum with heap | O(n log n) | O(n) | Heap operations and lazy stale entries |
+| Sliding Window Maximum with deque | O(n) | O(k) | Each index enters and leaves the deque once |
+
+For arbitrary, unbounded alphabets, comparing whole frequency maps can cost O(alphabet) per comparison. Use a match counter when strict O(n) behavior is required.
+
+---
+
+## Final Recall
+
+Before coding a sliding-window problem, say these answers out loud:
+
+1. Is the window fixed-size or variable-size?
+2. What does the state represent exactly?
+3. What makes a window valid, and how do I repair invalidity?
+4. When is it safe to update the answer?
+5. Does each item enter and leave the state at most once?
+6. Do I need all window values, or only undominated candidates?
+
+If those answers are clear, the implementation is usually a short loop. If not, solve the earlier problem in the same family before moving on.

@@ -8,7 +8,7 @@ export interface HistoricalProgress {
   longestStreak: number;
   ratingCounts: Record<ReviewQuality, number>;
   dailyCounts: Map<string, number>;
-  domainCounts: { algorithms: number; ml: number };
+  domainCounts: { algorithms: number; ml: number; sql: number };
 }
 
 function addDays(date: string, days: number): string {
@@ -76,7 +76,7 @@ export function summarizeHistory(
     2: 0,
     3: 0,
   };
-  const domainCounts = { algorithms: 0, ml: 0 };
+  const domainCounts = { algorithms: 0, ml: 0, sql: 0 };
 
   for (const event of recent) {
     ratingCounts[event.rating] += 1;
