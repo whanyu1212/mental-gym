@@ -14,7 +14,7 @@ function isReviewRecord(value: unknown): value is ReviewRecord {
   return (
     isObject(value) &&
     typeof value.problemKey === "string" &&
-    (value.domain === "algorithms" || value.domain === "ml") &&
+    (value.domain === "algorithms" || value.domain === "ml" || value.domain === "sql") &&
     typeof value.slug === "string" &&
     typeof value.title === "string" &&
     typeof value.difficulty === "string" &&
@@ -39,7 +39,7 @@ function isReviewEvent(value: unknown): value is ReviewEvent {
     typeof value.reviewedAt === "string" &&
     typeof value.reviewDate === "string" &&
     typeof value.problemKey === "string" &&
-    (value.domain === "algorithms" || value.domain === "ml") &&
+    (value.domain === "algorithms" || value.domain === "ml" || value.domain === "sql") &&
     typeof value.group === "string" &&
     (value.rating === 0 ||
       value.rating === 1 ||

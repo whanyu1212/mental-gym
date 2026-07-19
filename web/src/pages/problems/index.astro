@@ -1,6 +1,7 @@
 ---
 import { problems } from "../../data/problems";
 import { mlProblems } from "../../data/mlProblems";
+import { sqlProblems } from "../../data/sqlProblems";
 import DueForReview from "../../components/DueForReview.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
 import ResumeRow from "../../components/ResumeRow.astro";
@@ -28,13 +29,22 @@ const mlByCategory = Object.fromEntries(
 		mlProblems.filter((problem) => problem.category === category),
 	]),
 );
+
+// SQL
+const sqlCategories = [...new Set(sqlProblems.map((problem) => problem.category))];
+const sqlByCategory = Object.fromEntries(
+	sqlCategories.map((category) => [
+		category,
+		sqlProblems.filter((problem) => problem.category === category),
+	]),
+);
 ---
 
 <Layout title="Problems | Mental Gym">
 	<div class="page-header">
 		<h1>Problems Bank</h1>
 		<p class="subtitle">
-			{problems.length} algorithms and {mlProblems.length} ML interview questions
+			{problems.length} algorithms, {mlProblems.length} ML, and {sqlProblems.length} SQL interview questions
 		</p>
 	</div>
 
@@ -45,6 +55,7 @@ const mlByCategory = Object.fromEntries(
 	<div class="section-tabs">
 		<button class="section-tab active" data-target="algo-section">Algorithms</button>
 		<button class="section-tab" data-target="ml-section">Machine Learning</button>
+		<button class="section-tab" data-target="sql-section">SQL</button>
 		<button class="section-tab" data-target="sd-section">System Design</button>
 	</div>
 
@@ -192,6 +203,62 @@ const mlByCategory = Object.fromEntries(
 			))
 		}
 	</div>
+
+	<div id="sql-section" class="problem-section hidden">
+		<div class="ml-intro">
+			<p>
+				Reference answers are tracked as <code>.sql</code> files and rendered here. Run
+				fixtures locally with PostgreSQL 17 or <code>sqlite3</code> for SQLite.
+			</p>
+		</div>
+
+		{
+			sqlCategories.map((category) => (
+				<section
+					class="group"
+					id={`sql-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
+				>
+					<h2 class="group-title">{category}</h2>
+					<table class="problem-table">
+						<thead>
+							<tr>
+								<th class="col-id">#</th>
+								<th class="col-title">Problem</th>
+								<th class="col-diff">Difficulty</th>
+								<th class="col-review">Review</th>
+								<th class="col-tags">Topics</th>
+							</tr>
+						</thead>
+						<tbody>
+							{sqlByCategory[category].map((problem) => (
+								<tr data-sr-key={`sql:${problem.slug}`}>
+									<td class="col-id muted">{problem.id}</td>
+									<td class="col-title">
+										<div class="problem-copy">
+											<a class="problem-name" href={withBase(`/sql/${problem.slug}/`)}>
+												{problem.title}
+											</a>
+											<span class="problem-summary">{problem.summary}</span>
+										</div>
+									</td>
+									<td class="col-diff">
+										<span class={`badge ${problem.difficulty.toLowerCase()}`}>
+											{problem.difficulty}
+										</span>
+									</td>
+									<td class="col-review" data-sr-pill />
+									<td class="col-tags">
+										<span class="tag">{problem.dialect === "postgres" ? "PostgreSQL" : "SQLite"}</span>
+										{problem.tags.slice(0, 2).map((tag) => <span class="tag">{tag}</span>)}
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</section>
+			))
+		}
+	</div>
 </Layout>
 
 <script>
@@ -223,8 +290,10 @@ const mlByCategory = Object.fromEntries(
 	sessionStorage.removeItem("problems-tab");
 
 	const target = hash.startsWith("#ml-") || requestedTab === "ml" ? "ml-section"
+		: hash.startsWith("#sql-") || requestedTab === "sql" ? "sql-section"
 		: hash.startsWith("#sd-") || requestedTab === "system-design" ? "sd-section"
 		: stored === "ml" ? "ml-section"
+		: stored === "sql" ? "sql-section"
 		: stored === "system-design" ? "sd-section"
 		: null;
 

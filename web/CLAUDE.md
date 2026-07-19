@@ -28,15 +28,26 @@ The script reads `src/leetcode/<category>/<problem>.py`, fetches problem metadat
 
 ### Content sources
 
-The site has three content sources that feed different pages:
+The site has four content sources that feed different pages:
 
 | Source | How it's used |
 |---|---|
 | `src/data/problems.ts` | Auto-generated. Drives all algorithm problem pages via `getStaticPaths()`. |
 | `src/data/mlProblems.ts` | Hand-authored. ML coding interview problems with prompts, hints, and follow-ups. |
+| `src/data/sqlProblems.ts` | Hand-authored SQL exercise metadata. Each imports its reference answer from `src/sql/`. |
 | `../notes/` (outside `web/`) | Markdown files collected via Astro content collections. Rendered with KaTeX math support. |
 
 The notes loader globs `**/*.{md,mdx}`, so both extensions are valid. Use `.mdx` **only** when a note imports an Astro component (e.g. `arrays_and_hashing.mdx`, `two_pointers.mdx` embed the `notes/*Viz.astro` visualizations); keep prose-only notes as `.md` so they stay on the lighter Markdown pipeline. Frontmatter is identical for both: `title`, `description`, `category`, optional `order`.
+
+### SQL practice
+
+SQL answers live in `src/sql/`, next to deterministic fixtures and test harnesses:
+
+- `<problem>.sql` is the reference answer rendered on the Astro site.
+- `<problem>.fixture.sql` creates local test tables and data.
+- `<problem>.test.sql` runs the fixture, then the answer.
+
+PostgreSQL exercises run locally with Homebrew PostgreSQL 17 through `scripts/run_postgres_sql.sh`; SQLite exercises run with `sqlite3`. The PostgreSQL service must be started with `brew services start postgresql@17`. See `src/sql/README.md` for commands. Add a problem to `src/data/sqlProblems.ts`; the `/sql/[slug]` routes and Problems Bank SQL tab are generated from that data.
 
 ### Teaching motion framework
 
@@ -64,8 +75,9 @@ Client-side only — no server. State is stored in **IndexedDB** (`mental-gym-sr
 | Route pattern | File | What it renders |
 |---|---|---|
 | `/` | `src/pages/index.astro` | Home dashboard with stats |
-| `/problems` | `src/pages/problems/index.astro` | Problem list (tabs: algorithms / ML) |
+| `/problems` | `src/pages/problems/index.astro` | Problem list (tabs: algorithms / ML / SQL) |
 | `/algorithms/[slug]` | `src/pages/algorithms/[slug].astro` | Individual algorithm problem + optional animation |
 | `/machine-learning/[slug]` | `src/pages/machine-learning/[slug].astro` | ML problem with prompt/hints |
+| `/sql/[slug]` | `src/pages/sql/[slug].astro` | SQL prompt, local runner command, and source-file answer |
 | `/notes` | `src/pages/notes/index.astro` | Notes index |
 | `/notes/[slug]` | `src/pages/notes/[slug].astro` | Individual note (markdown + KaTeX) |
