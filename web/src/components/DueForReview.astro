@@ -14,6 +14,7 @@
 <script>
   import { getDueRecords } from "../scripts/sr-db";
   import { statusOf, daysUntilDue, todayISO } from "../scripts/sr-scheduler";
+  import { withBase } from "../lib/url";
 
   class DueForReviewElement extends HTMLElement {
     connectedCallback() {
@@ -40,10 +41,13 @@
         .map((r) => {
           const status = statusOf(r, today);
           const days = daysUntilDue(r, today);
-          const href =
+          const path =
             r.domain === "algorithms"
               ? `/algorithms/${r.slug}/`
-              : `/machine-learning/${r.slug}/`;
+              : r.domain === "ml"
+                ? `/machine-learning/${r.slug}/`
+                : `/sql/${r.slug}/`;
+          const href = withBase(path);
           const overdueDays = Math.abs(days);
           const statusText =
             status === "overdue"

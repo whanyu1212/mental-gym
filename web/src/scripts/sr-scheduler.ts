@@ -1,4 +1,4 @@
-import type { ReviewRecord, ReviewQuality, ReviewStatus } from "./sr-types";
+import type { ReviewDomain, ReviewRecord, ReviewQuality, ReviewStatus } from "./sr-types";
 
 export function localDateISO(date = new Date()): string {
   const year = date.getFullYear();
@@ -12,7 +12,7 @@ export function todayISO(): string {
 }
 
 export function createNewRecord(
-  domain: "algorithms" | "ml",
+  domain: ReviewDomain,
   slug: string,
   title: string,
   difficulty: string,

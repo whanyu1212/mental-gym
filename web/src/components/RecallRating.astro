@@ -1,6 +1,6 @@
 ---
 interface Props {
-  domain: "algorithms" | "ml";
+  domain: "algorithms" | "ml" | "sql";
   slug: string;
   title: string;
   difficulty: string;
@@ -60,7 +60,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 
   class RecallRatingElement extends HTMLElement {
     connectedCallback() {
-      const domain = this.dataset.domain as "algorithms" | "ml";
+      const domain = this.dataset.domain as "algorithms" | "ml" | "sql";
       const slug = this.dataset.slug!;
       const title = this.dataset.title!;
       const difficulty = this.dataset.difficulty!;
