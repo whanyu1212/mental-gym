@@ -1,18 +1,27 @@
 ---
-title: Python Built-in Functions & Operators for LeetCode
-description: A comprehensive reference of Python built-in functions, data structures, and libraries commonly used in LeetCode problems.
+title: Python Standard Library for DSA
+description: A module-oriented reference for Python core types, built-in functions, and standard-library APIs commonly used in DSA problems.
 category: Languages
 order: 2
 status: stable
 tags:
   - python
-  - leetcode
+  - dsa
+  - standard-library
   - reference
 ---
 
-# Python Built-in Functions & Operators for LeetCode
+# Python Standard Library for DSA
 
-A comprehensive reference of Python built-ins commonly used in competitive programming and LeetCode problems.
+Use this note when you already know which Python tool you need and want its syntax, methods, return behavior, or important gotchas.
+
+> **Choose your reference**
+>
+> - Choosing a tool → [Python DSA Quick Reference](../python-dsa-toolkit/)
+> - Looking up syntax and APIs → **Python Standard Library for DSA** (this note)
+> - Checking operation costs → [Python Big O Cheatsheet](../python-big-o-cheatsheet/)
+
+This reference is organized by Python type and standard-library module. Algorithm templates and pattern recognition live in the quick reference and dedicated Pattern notes.
 
 ---
 
@@ -254,104 +263,48 @@ sorted(items, key=cmp_to_key(func)) # Custom comparator
 
 ---
 
-## Common Patterns
+## Core Python Idioms
 
-### Grid Traversal (Direction Arrays)
-Crucial for BFS/DFS on 2D grids (matrices).
-
-```python
-rows, cols = len(grid), len(grid[0])
-# Directions: Right, Down, Left, Up
-directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-
-for r in range(rows):
-    for c in range(cols):
-        for dr, dc in directions:
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < rows and 0 <= nc < cols:
-                # Process neighbor (nr, nc)
-                pass
-```
+These are language features rather than algorithm patterns.
 
 ### Recursion & Scoping
-**`nonlocal`**: Required to modify a variable from the enclosing scope (outer function) inside a nested function (helper).
+
+Use `nonlocal` to rebind a variable from an enclosing function:
 
 ```python
-def maxDepth(root):
-    max_d = 0
+def max_depth(root):
+    maximum = 0
+
     def dfs(node, depth):
-        nonlocal max_d        # Declare intention to modify outer variable
-        if not node: return
-        max_d = max(max_d, depth)
+        nonlocal maximum
+        if node is None:
+            return
+        maximum = max(maximum, depth)
         dfs(node.left, depth + 1)
         dfs(node.right, depth + 1)
 
     dfs(root, 1)
-    return max_d
-```
-
-### Frequency Counter
-```python
-from collections import Counter
-freq = Counter(nums)
-```
-
-### Two Pointers
-```python
-left, right = 0, len(arr) - 1
-while left < right:
-    # process
-    left += 1
-    right -= 1
-```
-
-### Sliding Window
-```python
-window = set()
-left = 0
-for right in range(len(arr)):
-    while arr[right] in window:
-        window.remove(arr[left])
-        left += 1
-    window.add(arr[right])
-```
-
-### Prefix Sum
-```python
-prefix = [0] * (n + 1)
-for i in range(n):
-    prefix[i + 1] = prefix[i] + arr[i]
-# Sum of arr[i:j] = prefix[j] - prefix[i]
-```
-
-### Dictionary Default Value
-```python
-from collections import defaultdict
-graph = defaultdict(list)           # Auto-initialize with []
-count = defaultdict(int)            # Auto-initialize with 0
+    return maximum
 ```
 
 ### Multiple Assignment
+
 ```python
 a, b = b, a                         # Swap
-x, y, z = [1, 2, 3]                 # Unpack
-*rest, last = [1, 2, 3, 4]          # rest = [1, 2, 3], last = 4
+x, y, z = [1, 2, 3]                # Unpack
+*rest, last = [1, 2, 3, 4]         # rest = [1, 2, 3], last = 4
 ```
 
-### Comprehensions
+### Comprehensions and Generators
+
 ```python
-# List comprehension
 [x**2 for x in range(10) if x % 2 == 0]
-
-# Dict comprehension
 {x: x**2 for x in range(5)}
-
-# Set comprehension
 {x % 3 for x in range(10)}
-
-# Generator expression (memory efficient)
-sum(x**2 for x in range(1000000))
+sum(x**2 for x in range(1_000_000))
 ```
+
+For task-to-tool choices and compact DSA idioms, use [Python DSA Quick Reference](../python-dsa-toolkit/).
 
 ---
 
@@ -403,36 +356,11 @@ print(f"{x:.2f}")                   # Formatted output
 
 ---
 
-## Performance Tips
+## See Also
 
-1. **Use `in` with sets, not lists** - O(1) vs O(n) lookup
-2. **Use `collections.Counter`** instead of manual dict counting
-3. **Use `collections.deque`** for queue operations (not list)
-4. **Use `bisect`** for binary search in sorted lists
-5. **Use generators** for large sequences to save memory
-6. **Use `str.join()`** instead of `+=` for string concatenation
-7. **Use `tuple` as dict keys** when you need hashable sequences
-8. **Cache recursive functions** with `@lru_cache`
-
----
-
-## Quick Reference Card
-
-| Task | Built-in/Method |
-|------|----------------|
-| Sort list in-place | `list.sort()` |
-| Return sorted copy | `sorted(iterable)` |
-| Reverse in-place | `list.reverse()` |
-| Reverse copy | `list[::-1]` or `reversed()` |
-| Count occurrences | `list.count(x)` or `Counter(list)` |
-| Find index | `list.index(x)` |
-| Remove duplicates | `list(set(iterable))` |
-| Flatten 2D list | `sum(list2d, [])` or `chain.from_iterable()` |
-| Check if all/any | `all(iterable)` / `any(iterable)` |
-| Running sum | `itertools.accumulate()` |
-| Pairwise iteration | `zip(lst, lst[1:])` |
-| Cartesian product | `itertools.product()` |
-| Binary search | `bisect.bisect_left()` |
-| Min/max with key | `min(iter, key=func)` |
+- [Python DSA Quick Reference](../python-dsa-toolkit/) — task-to-tool decisions and minimal idioms
+- [Python Big O Cheatsheet](../python-big-o-cheatsheet/) — operation costs and performance trade-offs
+- [Two Pointers](../two_pointers/) — pointer invariants and movement rules
+- [Arrays & Hashing](../arrays_and_hashing/) — lookup, counting, and grouping patterns
 
 ---
