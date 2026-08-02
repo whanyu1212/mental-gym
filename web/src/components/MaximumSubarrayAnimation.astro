@@ -1,0 +1,437 @@
+---
+import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
+
+const nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4];
+
+const steps = [
+	{
+		phase: "init",
+		i: -1,
+		cur: null,
+		best: null,
+		currentStart: -1,
+		currentEnd: -1,
+		bestStart: -1,
+		bestEnd: -1,
+		choice: "Initialize",
+		action: "write",
+		exp: "Kadane's algorithm keeps two facts: the best subarray ending at this index (current) and the best subarray seen anywhere (best).",
+		reason: "A future subarray can only be helped or hurt by the sum that ends immediately before it.",
+		invariant: "Before scanning an element, current is the best sum ending at the previous index; best is the maximum answer seen so far.",
+		formula: "current = max(previous current + n, n)",
+		highlights: [
+			{ target: "rule-box", kind: "write" },
+			{ target: "current-box", kind: "write" },
+			{ target: "best-box", kind: "write" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 0,
+		cur: -2,
+		best: -2,
+		currentStart: 0,
+		currentEnd: 0,
+		bestStart: 0,
+		bestEnd: 0,
+		choice: "Start at -2",
+		action: "write",
+		exp: "At index 0, there is no earlier segment to extend. The best segment ending here is [-2], and it is also our best answer so far.",
+		reason: "Every non-empty answer must start somewhere, even when the first value is negative.",
+		invariant: "current is the maximum sum among all non-empty subarrays ending at index 0.",
+		formula: "current = -2; best = -2",
+		highlights: [
+			{ target: "cell-0", kind: "write" },
+			{ target: "current-box", kind: "write" },
+			{ target: "best-box", kind: "write" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 1,
+		cur: 1,
+		best: 1,
+		currentStart: 1,
+		currentEnd: 1,
+		bestStart: 1,
+		bestEnd: 1,
+		choice: "Restart at 1",
+		action: "discard",
+		exp: "Extending [-2] gives -1, but starting fresh at 1 gives 1. Drop the harmful prefix and restart.",
+		reason: "A negative running sum can only make every future extension worse.",
+		invariant: "If the previous current sum is negative, the optimal segment ending here starts at the current element.",
+		formula: "max(-2 + 1, 1) = 1",
+		highlights: [
+			{ target: "cell-0", kind: "discard" },
+			{ target: "cell-1", kind: "write" },
+			{ target: "current-box", kind: "write" },
+			{ target: "best-box", kind: "write" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 2,
+		cur: -2,
+		best: 1,
+		currentStart: 1,
+		currentEnd: 2,
+		bestStart: 1,
+		bestEnd: 1,
+		choice: "Extend [1]",
+		action: "compare",
+		exp: "At -3, extending [1] gives -2, which is better than restarting at -3. Keep the less-bad running segment, but best stays 1.",
+		reason: "current answers only 'what is best ending here'; it does not have to beat the global best.",
+		invariant: "best never decreases, while current is allowed to become negative.",
+		formula: "max(1 + -3, -3) = -2",
+		highlights: [
+			{ target: "cell-1", kind: "compare" },
+			{ target: "cell-2", kind: "compare" },
+			{ target: "current-box", kind: "compare" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 3,
+		cur: 4,
+		best: 4,
+		currentStart: 3,
+		currentEnd: 3,
+		bestStart: 3,
+		bestEnd: 3,
+		choice: "Restart at 4",
+		action: "discard",
+		exp: "Extending the negative current sum gives 2, while starting at 4 gives 4. Reset, and 4 becomes the new global best.",
+		reason: "This is the central Kadane decision: carry forward only a prefix that helps.",
+		invariant: "current holds the best subarray that must end at index 3; best holds the best one anywhere through index 3.",
+		formula: "max(-2 + 4, 4) = 4",
+		highlights: [
+			{ target: "cell-1", kind: "discard" },
+			{ target: "cell-2", kind: "discard" },
+			{ target: "cell-3", kind: "confirmed" },
+			{ target: "current-box", kind: "confirmed" },
+			{ target: "best-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 4,
+		cur: 3,
+		best: 4,
+		currentStart: 3,
+		currentEnd: 4,
+		bestStart: 3,
+		bestEnd: 3,
+		choice: "Extend [4]",
+		action: "expand",
+		exp: "Adding -1 leaves a positive running sum of 3, so keep [4, -1] alive for later elements.",
+		reason: "Although -1 lowers the sum, the prefix is still helpful rather than harmful.",
+		invariant: "A positive current sum remains a useful prefix for the next index.",
+		formula: "max(4 + -1, -1) = 3",
+		highlights: [
+			{ target: "cell-3", kind: "region-add" },
+			{ target: "cell-4", kind: "region-add" },
+			{ target: "current-box", kind: "region-add" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 5,
+		cur: 5,
+		best: 5,
+		currentStart: 3,
+		currentEnd: 5,
+		bestStart: 3,
+		bestEnd: 5,
+		choice: "Extend [4, -1]",
+		action: "confirm",
+		exp: "Adding 2 grows the running segment to 5, which beats the previous global best of 4.",
+		reason: "The candidate ending here now becomes the best answer anywhere.",
+		invariant: "Whenever current exceeds best, the current range becomes the global-best range.",
+		formula: "current = 3 + 2 = 5; best = 5",
+		highlights: [
+			{ target: "cell-3", kind: "confirmed" },
+			{ target: "cell-4", kind: "confirmed" },
+			{ target: "cell-5", kind: "confirmed" },
+			{ target: "best-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 6,
+		cur: 6,
+		best: 6,
+		currentStart: 3,
+		currentEnd: 6,
+		bestStart: 3,
+		bestEnd: 6,
+		choice: "Extend [4, -1, 2]",
+		action: "confirm",
+		exp: "Adding 1 grows the same segment to 6. This is the final best range: [4, -1, 2, 1].",
+		reason: "Every useful positive-running prefix is carried forward one element at a time.",
+		invariant: "best is now 6, achieved by indices 3 through 6.",
+		formula: "current = 5 + 1 = 6; best = 6",
+		highlights: [
+			{ target: "cell-3", kind: "confirmed" },
+			{ target: "cell-4", kind: "confirmed" },
+			{ target: "cell-5", kind: "confirmed" },
+			{ target: "cell-6", kind: "confirmed" },
+			{ target: "best-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 7,
+		cur: 1,
+		best: 6,
+		currentStart: 3,
+		currentEnd: 7,
+		bestStart: 3,
+		bestEnd: 6,
+		choice: "Extend [4, -1, 2, 1]",
+		action: "compare",
+		exp: "Adding -5 drops current to 1. It is still non-negative, so keep it, but it cannot improve best = 6.",
+		reason: "Only reset after a running sum becomes harmful; being smaller than best is not enough to reset.",
+		invariant: "current and best answer different questions: ending-here versus anywhere-so-far.",
+		formula: "max(6 + -5, -5) = 1",
+		highlights: [
+			{ target: "cell-7", kind: "compare" },
+			{ target: "current-box", kind: "compare" },
+			{ target: "best-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 8,
+		cur: 5,
+		best: 6,
+		currentStart: 3,
+		currentEnd: 8,
+		bestStart: 3,
+		bestEnd: 6,
+		choice: "Extend the positive prefix",
+		action: "compare",
+		exp: "Adding 4 produces 5, still below best = 6. The scan is complete, so the earlier range remains the answer.",
+		reason: "Kadane considers every possible ending position once; no candidate ending at index 8 wins.",
+		invariant: "After the last index, best is the maximum subarray sum over the whole array.",
+		formula: "max(1 + 4, 4) = 5; best stays 6",
+		highlights: [
+			{ target: "cell-8", kind: "compare" },
+			{ target: "best-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "done",
+		i: 8,
+		cur: 5,
+		best: 6,
+		currentStart: 3,
+		currentEnd: 8,
+		bestStart: 3,
+		bestEnd: 6,
+		choice: "Return the global best",
+		action: "confirm",
+		exp: "Done: the maximum subarray is [4, -1, 2, 1], whose sum is 6.",
+		reason: "best kept the strongest candidate even after later elements weakened the running sum.",
+		invariant: "best is the maximum sum of every non-empty subarray processed.",
+		formula: "answer = best = 6",
+		highlights: [
+			{ target: "cell-3", kind: "confirmed" },
+			{ target: "cell-4", kind: "confirmed" },
+			{ target: "cell-5", kind: "confirmed" },
+			{ target: "cell-6", kind: "confirmed" },
+			{ target: "result-box", kind: "confirmed" },
+		],
+	},
+];
+---
+
+<maximum-subarray-visuals>
+	<AlgorithmPlayer title="nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]" steps={steps}>
+		<div class="stats-row msa-stats">
+			<div class="stat-box msa-rule-box" data-teach-target="rule-box">
+				<span class="stat-label">Decision</span>
+				<span class="stat-val msa-decision">Initialize</span>
+			</div>
+			<div class="stat-box msa-current-box" data-teach-target="current-box">
+				<span class="stat-label">Best Ending Here</span>
+				<span class="stat-val msa-current">—</span>
+			</div>
+			<div class="stat-box msa-best-box" data-teach-target="best-box">
+				<span class="stat-label">Global Best</span>
+				<span class="stat-val msa-best">—</span>
+			</div>
+			<div class="stat-box msa-result-box" data-teach-target="result-box">
+				<span class="stat-label">Status</span>
+				<span class="stat-val msa-status">Ready</span>
+			</div>
+		</div>
+
+		<div class="anim-row">
+			<p class="anim-label">Array scan — blue is the current ending-here segment; green is the best answer</p>
+			<div class="array-row msa-array">
+				{
+					nums.map((num, index) => (
+						<div class="array-col">
+							<div class="array-cell msa-cell" data-index={index} data-teach-target={`cell-${index}`}>
+								<span class="cell-val">{num}</span>
+							</div>
+							<span class="cell-idx">{index}</span>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<div class="msa-candidate">
+			<span class="stat-label">Current candidate</span>
+			<code class="msa-candidate-value">Choose a step to begin.</code>
+		</div>
+	</AlgorithmPlayer>
+</maximum-subarray-visuals>
+
+<script>
+	class MaximumSubarrayVisuals extends HTMLElement {
+		connectedCallback() {
+			this.currentEl = this.querySelector(".msa-current");
+			this.bestEl = this.querySelector(".msa-best");
+			this.decisionEl = this.querySelector(".msa-decision");
+			this.statusEl = this.querySelector(".msa-status");
+			this.candidateEl = this.querySelector(".msa-candidate-value");
+			this.cells = Array.from(this.querySelectorAll(".msa-cell"));
+			this.resultBox = this.querySelector(".msa-result-box");
+
+			this.addEventListener("step-change", (event) => {
+				const step = event.detail.step;
+
+				if (this.currentEl) this.currentEl.textContent = step.cur ?? "—";
+				if (this.bestEl) this.bestEl.textContent = step.best ?? "—";
+				if (this.decisionEl) this.decisionEl.textContent = step.choice;
+				if (this.statusEl) {
+					this.statusEl.textContent =
+						step.phase === "done" ? "Complete" : step.phase === "init" ? "Ready" : "Scanning";
+				}
+
+				this.resultBox?.classList.toggle("is-complete", step.phase === "done");
+
+				this.cells.forEach((cell, index) => {
+					cell.classList.remove("is-active", "is-visited", "is-current", "is-best");
+
+					if (index <= step.i) cell.classList.add("is-visited");
+					if (index === step.i) cell.classList.add("is-active");
+					if (index >= step.currentStart && index <= step.currentEnd) {
+						cell.classList.add("is-current");
+					}
+					if (index >= step.bestStart && index <= step.bestEnd) {
+						cell.classList.add("is-best");
+					}
+				});
+
+				if (step.currentStart >= 0) {
+					const segment = nums.slice(step.currentStart, step.currentEnd + 1).join(", ");
+					this.candidateEl.textContent = `[${segment}] = ${step.cur}`;
+				} else {
+					this.candidateEl.textContent = "current = max(previous current + n, n)";
+				}
+			});
+		}
+	}
+
+	if (!customElements.get("maximum-subarray-visuals")) {
+		customElements.define("maximum-subarray-visuals", MaximumSubarrayVisuals);
+	}
+</script>
+
+<style>
+	maximum-subarray-visuals {
+		display: block;
+	}
+
+	.msa-stats {
+		flex-wrap: wrap;
+	}
+
+	.msa-rule-box {
+		flex: 1 1 12rem;
+		align-items: flex-start;
+	}
+
+	.msa-rule-box .stat-val {
+		color: var(--muted);
+		font-size: var(--fs-fine);
+	}
+
+	.msa-current-box {
+		border-color: color-mix(in srgb, var(--status-info) 45%, var(--border));
+	}
+
+	.msa-current-box .stat-val {
+		color: var(--status-info);
+	}
+
+	.msa-best-box,
+	.msa-result-box.is-complete {
+		border-color: color-mix(in srgb, var(--status-easy) 50%, var(--border));
+		background: color-mix(in srgb, var(--status-easy) 9%, transparent);
+	}
+
+	.msa-best-box .stat-val,
+	.msa-result-box.is-complete .stat-val {
+		color: var(--status-easy);
+	}
+
+	.msa-array {
+		padding: 0.4rem 0 0.8rem;
+	}
+
+	.msa-cell {
+		opacity: 0.42;
+	}
+
+	.msa-cell.is-visited {
+		opacity: 1;
+	}
+
+	.msa-cell.is-active .cell-val {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+		transform: translateY(-3px);
+	}
+
+	.msa-cell.is-current .cell-val {
+		border-color: var(--status-info);
+		background: color-mix(in srgb, var(--status-info) 14%, transparent);
+	}
+
+	.msa-cell.is-best .cell-val {
+		border-color: var(--status-easy);
+		background: color-mix(in srgb, var(--status-easy) 16%, transparent);
+		color: var(--status-easy);
+	}
+
+	.msa-candidate {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-xs);
+		background: var(--surface-base);
+	}
+
+	.msa-candidate-value {
+		color: var(--text);
+		font-family: var(--font-mono);
+		font-size: var(--fs-fine);
+	}
+
+	@media (max-width: 600px) {
+		.msa-stats {
+			gap: 0.5rem;
+		}
+
+		.msa-stats .stat-box {
+			min-width: calc(50% - 0.5rem);
+			flex: 1;
+		}
+	}
+</style>

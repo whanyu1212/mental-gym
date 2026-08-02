@@ -2,7 +2,7 @@
 title: Python Big O Cheatsheet
 description: A quick reference for the time complexity of common Python operations across Lists, Dictionaries, Sets, Strings, Deques, and Heaps.
 category: Languages
-order: 1
+order: 3
 status: stable
 tags:
   - python
@@ -12,7 +12,13 @@ tags:
 
 # Python Big O Cheatsheet
 
-A quick reference for the time complexity of common Python operations. Knowing these by heart is essential for writing efficient algorithms and passing technical interviews.
+Use this note to check the time and space cost of Python operations. It is the performance reference—not an API guide or algorithm-pattern tutorial.
+
+> **Choose your reference**
+>
+> - Choosing a tool → [Python DSA Quick Reference](../python-dsa-toolkit/)
+> - Looking up syntax and APIs → [Python Standard Library for DSA](../python_builtins_for_leetcode/)
+> - Checking operation costs → **Python Big O Cheatsheet** (this note)
 
 ## List Operations
 
