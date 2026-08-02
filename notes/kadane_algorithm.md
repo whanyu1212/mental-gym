@@ -147,7 +147,7 @@ nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
 
 The answer is `6`, from `[4, -1, 2, 1]`.
 
-Practice the complete walkthrough in [Maximum Subarray](/algorithms/53-maximum-subarray/).
+Practice the complete walkthrough in [Maximum Subarray](../../algorithms/53-maximum-subarray/).
 
 ## Common Mistakes
 
@@ -228,7 +228,7 @@ Kadane is a foundation for several later patterns:
 
 | Variant | What changes | Why it matters |
 |---|---|---|
-| [Maximum Sum Circular Subarray](/algorithms/918-maximum-sum-circular-subarray/) | Track both maximum and minimum subarrays; a wrapped maximum is `total - minimumGap` | Introduces complement reasoning without manual index wrapping |
+| [Maximum Sum Circular Subarray](../../algorithms/918-maximum-sum-circular-subarray/) | Track both maximum and minimum subarrays; a wrapped maximum is `total - minimumGap` | Introduces complement reasoning without manual index wrapping |
 | Maximum Product Subarray | Track both a running maximum and minimum product | A negative can turn a small negative product into the largest positive product |
 | Maximum Sum Rectangle | Compress pairs of matrix rows into a 1D array, then run Kadane | Shows how a 1D pattern becomes a 2D algorithm |
 | Stock-price differences | Apply Kadane to consecutive daily price changes | Connects array transformations to stock-profit questions |
@@ -237,8 +237,8 @@ Kadane is a foundation for several later patterns:
 
 ## Practice Path
 
-1. [Maximum Subarray](/algorithms/53-maximum-subarray/) — learn the extend-or-restart state.
-2. [Maximum Sum Circular Subarray](/algorithms/918-maximum-sum-circular-subarray/) — combine maximum and minimum Kadane passes.
+1. [Maximum Subarray](../../algorithms/53-maximum-subarray/) — learn the extend-or-restart state.
+2. [Maximum Sum Circular Subarray](../../algorithms/918-maximum-sum-circular-subarray/) — combine maximum and minimum Kadane passes.
 3. Maximum Product Subarray — learn why one state is no longer enough.
 4. Maximum Sum Rectangle — reuse Kadane after reducing a matrix to one dimension.
 
