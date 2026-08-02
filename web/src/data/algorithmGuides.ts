@@ -1700,6 +1700,146 @@ export const guides = {
 		],
 		relatedNotes: ["python_builtins_for_leetcode", "time-complexity", "space-complexity"],
 	},
+	"53-maximum-subarray": {
+		slug: "53-maximum-subarray",
+		pattern: "Kadane's algorithm — extend a helpful prefix or restart",
+		recognitionSignals: [
+			"maximize the sum of one non-empty contiguous subarray",
+			"the answer is a sum, not the elements or their indices",
+			"a quadratic scan of every start/end pair becomes too expensive as n grows",
+		],
+		dissection:
+			"Scan left to right while tracking two values: current, the best sum of a subarray that must end at this index, and globalMax, the best sum seen anywhere. For each number, either extend current or start a new subarray at this number — choose whichever is larger.",
+		intuition:
+			"A negative running sum is baggage: adding it to any future number only makes that future candidate worse. So retain a prefix only while it helps. This local extend-or-restart decision is enough because every possible subarray has one final index, and current represents the best candidate for that exact ending point.",
+		invariant:
+			"After processing index i, curSum is the maximum sum of every non-empty subarray ending exactly at i, and maxSum is the maximum sum of every non-empty subarray ending at or before i.",
+		bruteForce: {
+			approach:
+				"Try every start index and extend an end index to its right, accumulating the sum for every contiguous subarray and recording the largest.",
+			complexity: {
+				time: "O(n²)",
+				space: "O(1)",
+				note: "There are O(n²) start/end ranges even when each range sum is updated incrementally.",
+			},
+		},
+		constraintReasoning:
+			"With n up to 10⁵, O(n²) can mean about 10¹⁰ candidate ranges, which is not viable. The key improvement is to summarize every prior range relevant to the next element in one number: the best sum ending immediately before it.",
+		approachSteps: [
+			"Initialize maxSum = nums[0] so an all-negative input still returns its largest element rather than 0.",
+			"Initialize curSum = 0; it represents the running candidate that may be extended.",
+			"For each n, set curSum = max(curSum + n, n): either extend the previous candidate or restart at n.",
+			"Update maxSum = max(maxSum, curSum).",
+			"After the scan, return maxSum.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "One constant-time decision per element; only two running sums are stored.",
+		},
+		pitfalls: [
+			"Resetting curSum to 0 and returning 0 for an all-negative array; the subarray must be non-empty, so initialize maxSum from nums[0].",
+			"Tracking only curSum: it can fall after the true best range has already occurred, so keep a separate global maximum.",
+			"Using max(0, n), which ignores the previous current sum and finds only the largest single element. The equivalent rewrite is max(curSum, 0) + n.",
+			"Confusing a subarray (contiguous) with a subsequence (elements may be skipped).",
+		],
+		testCases: [
+			{
+				kind: "canonical",
+				input: "nums = [-2,1,-3,4,-1,2,1,-5,4]",
+				expected: "6",
+				note: "The winning range [4,-1,2,1] shows that a small negative can be worth keeping inside a larger positive run.",
+			},
+			{
+				kind: "boundary",
+				input: "nums = [5]",
+				expected: "5",
+				note: "A one-element input must return that element; no empty subarray is allowed.",
+			},
+			{
+				kind: "trap",
+				input: "nums = [-3,-2,-5]",
+				expected: "-2",
+				note: "Breaks implementations that reset negative sums to 0 and accidentally allow an empty answer.",
+			},
+		],
+		followUps: [
+			"Return the start and end indices too: what extra state records the current restart point and the best range?",
+			"Maximum Sum Circular Subarray (#918): why is a wrapped answer equal to total minus a minimum-sum middle gap?",
+			"Can you divide and conquer the array while tracking prefix, suffix, and total sums?",
+		],
+		relatedNotes: ["arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
+	},
+	"918-maximum-sum-circular-subarray": {
+		slug: "918-maximum-sum-circular-subarray",
+		pattern: "Dual Kadane — maximum arc versus total minus minimum gap",
+		recognitionSignals: [
+			"the array is circular: the final element connects back to the first",
+			"maximize a non-empty contiguous subarray that may wrap across that seam",
+			"the wrapped choice is a suffix plus a prefix, leaving one contiguous middle gap",
+		],
+		dissection:
+			"Compute the usual maximum subarray sum and the minimum subarray sum while accumulating the total. The answer either does not wrap, in which case it is globalMax, or it wraps, in which case it is the whole array minus the minimum-sum contiguous gap: total - globalMin.",
+		intuition:
+			"Do not try to manually wrap indices. A wrapped arc keeps a suffix and a prefix; its complement is exactly one ordinary, non-wrapping middle block. The whole-array total is fixed, so the largest kept arc comes from removing the smallest block. A mirrored Kadane pass finds that block in the same scan.",
+		invariant:
+			"After processing index i, curMax and curMin are respectively the largest and smallest non-empty subarray sums ending at i; globalMax and globalMin are the best such values anywhere through i; total is the sum of nums[0..i].",
+		bruteForce: {
+			approach:
+				"Choose every starting position and extend a circular subarray up to n elements, adding one number at a time and recording the best non-empty sum.",
+			complexity: {
+				time: "O(n²)",
+				space: "O(1)",
+				note: "There are n starts and up to n legal lengths; an element may not be selected twice.",
+			},
+		},
+		constraintReasoning:
+			"n reaches roughly 3 × 10⁴, so enumerating all circular arcs can require about 9 × 10⁸ checks. The two Kadane recurrences make one constant-time max decision and one constant-time min decision per element, reducing the scan to O(n).",
+		approachSteps: [
+			"Initialize globalMax and globalMin from nums[0], and curMax = curMin = total = 0.",
+			"For each n, update curMax = max(curMax + n, n) and globalMax = max(globalMax, curMax). This is the best non-wrapping candidate.",
+			"In the same iteration, update curMin = min(curMin + n, n) and globalMin = min(globalMin, curMin). This identifies the worst contiguous gap to remove.",
+			"Accumulate total += n, then compute the wrapped candidate as total - globalMin.",
+			"If globalMax <= 0, return globalMax because removing the entire array would produce an invalid empty subarray; otherwise return max(globalMax, total - globalMin).",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "A single scan maintains five scalar values; no duplicate array or modulo index arithmetic is required.",
+		},
+		pitfalls: [
+			"Using only total - globalMin: the winning subarray may not wrap, so always compare it with globalMax.",
+			"For all-negative inputs, globalMin is the whole array and total - globalMin is 0, which represents an invalid empty subarray. Return globalMax instead.",
+			"Flipping only the global comparison but not the recurrence: the min pass needs min(curMin + n, n), equivalently min(curMin, 0) + n.",
+			"Duplicating the array and allowing a candidate longer than n, which illegally reuses elements.",
+		],
+		testCases: [
+			{
+				kind: "canonical",
+				input: "nums = [5,-3,5]",
+				expected: "10",
+				note: "Skip the minimum gap [-3], then the last 5 wraps to the first 5.",
+			},
+			{
+				kind: "boundary",
+				input: "nums = [5]",
+				expected: "5",
+				note: "A single element is both the only linear subarray and the only valid circular arc.",
+			},
+			{
+				kind: "trap",
+				input: "nums = [-3,-2,-3]",
+				expected: "-2",
+				note: "The complement formula would produce 0 by removing the whole array; the non-empty guard must return the least-negative element.",
+			},
+		],
+		followUps: [
+			"Return the actual circular indices: how would you store start/end indices for both the max and min Kadane passes?",
+			"Why is every wrapped arc the complement of exactly one non-wrapping contiguous gap?",
+			"Compare this O(n)/O(1) approach with the doubled-array + monotonic-deque formulation.",
+		],
+		relatedNotes: ["arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
+	},
 } satisfies AlgorithmGuides;
 
 export function getGuide(slug: string): AlgorithmGuide | undefined {

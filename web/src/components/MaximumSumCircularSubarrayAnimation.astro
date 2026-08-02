@@ -1,0 +1,396 @@
+---
+import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
+
+const nums = [5, -3, 5];
+
+const steps = [
+	{
+		phase: "init",
+		i: -1,
+		curMax: 0,
+		curMin: 0,
+		globalMax: null,
+		globalMin: null,
+		total: 0,
+		straight: null,
+		wrapped: null,
+		choice: "Initialize both Kadane passes",
+		action: "write",
+		exp: "Track a maximum subarray and a minimum subarray in the same pass. The maximum gives the usual answer; the minimum becomes the gap removed from a wrapped answer.",
+		reason: "A circular maximum has two possible shapes: it stays linear, or it crosses the end-to-start seam.",
+		invariant: "Before scanning, total is the prefix sum; curMax and curMin describe the best and worst subarrays ending at the previous index.",
+		formula: "wrapped candidate = total − globalMin",
+		highlights: [
+			{ target: "rule-box", kind: "write" },
+			{ target: "max-box", kind: "write" },
+			{ target: "min-box", kind: "write" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 0,
+		curMax: 5,
+		curMin: 5,
+		globalMax: 5,
+		globalMin: 5,
+		total: 5,
+		straight: null,
+		wrapped: null,
+		choice: "Start both at 5",
+		action: "write",
+		exp: "At the first value, both the best and worst subarrays ending here are simply [5].",
+		reason: "There is no prior subarray to extend yet.",
+		invariant: "globalMax = 5 and globalMin = 5 after index 0.",
+		formula: "curMax = curMin = total = 5",
+		highlights: [
+			{ target: "cell-0", kind: "write" },
+			{ target: "max-box", kind: "write" },
+			{ target: "min-box", kind: "write" },
+			{ target: "total-box", kind: "write" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 1,
+		curMax: 2,
+		curMin: -3,
+		globalMax: 5,
+		globalMin: -3,
+		total: 2,
+		straight: null,
+		wrapped: null,
+		choice: "Extend max; restart min",
+		action: "compare",
+		exp: "For the max pass, 5 + (-3) = 2 beats restarting at -3. For the min pass, restarting at -3 is smaller than extending to 2, so [-3] becomes the worst gap seen.",
+		reason: "The max and min recurrences are mirror images: one preserves helpful prefixes, the other preserves harmful prefixes.",
+		invariant: "globalMin identifies the most negative contiguous block available to exclude later.",
+		formula: "curMax = max(5−3, −3) = 2; curMin = min(5−3, −3) = −3",
+		highlights: [
+			{ target: "cell-0", kind: "compare" },
+			{ target: "cell-1", kind: "region-subtract" },
+			{ target: "max-box", kind: "compare" },
+			{ target: "min-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "scan",
+		i: 2,
+		curMax: 7,
+		curMin: 2,
+		globalMax: 7,
+		globalMin: -3,
+		total: 7,
+		straight: null,
+		wrapped: null,
+		choice: "Extend max; extend min",
+		action: "confirm",
+		exp: "Adding the final 5 gives a normal maximum of 7 for [5, -3, 5]. The minimum gap remains [-3], and total is now 7.",
+		reason: "The linear candidate can include every element; the wrapping candidate will exclude the worst middle gap.",
+		invariant: "After the scan, globalMax is the best non-wrapping sum, while globalMin is the smallest block to skip.",
+		formula: "globalMax = 7; globalMin = −3; total = 7",
+		highlights: [
+			{ target: "cell-2", kind: "confirmed" },
+			{ target: "max-box", kind: "confirmed" },
+			{ target: "min-box", kind: "confirmed" },
+			{ target: "total-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "compare",
+		i: 2,
+		curMax: 7,
+		curMin: 2,
+		globalMax: 7,
+		globalMin: -3,
+		total: 7,
+		straight: 7,
+		wrapped: 10,
+		gap: [1],
+		kept: [0, 2],
+		choice: "Compare linear vs. wrapped",
+		action: "derive",
+		exp: "A wrapped arc is the entire ring minus one contiguous gap. Exclude the minimum gap [-3], leaving the final 5 connected to the first 5: 5 + 5 = 10.",
+		reason: "Because total is fixed, maximizing what remains is equivalent to minimizing what is removed.",
+		invariant: "Every valid wrapped answer is a suffix plus prefix, which is exactly total minus one non-wrapping middle gap.",
+		formula: "wrapped = total − globalMin = 7 − (−3) = 10",
+		highlights: [
+			{ target: "cell-1", kind: "region-subtract" },
+			{ target: "cell-0", kind: "region-add" },
+			{ target: "cell-2", kind: "region-add" },
+			{ target: "wrapped-box", kind: "confirmed" },
+		],
+	},
+	{
+		phase: "done",
+		i: 2,
+		curMax: 7,
+		curMin: 2,
+		globalMax: 7,
+		globalMin: -3,
+		total: 7,
+		straight: 7,
+		wrapped: 10,
+		gap: [1],
+		kept: [0, 2],
+		choice: "Return 10",
+		action: "confirm",
+		exp: "Choose max(7, 10) = 10. The all-negative guard matters in general: if globalMax is not positive, total − globalMin would mean taking an invalid empty arc.",
+		reason: "With at least one positive value, removing globalMin leaves a non-empty valid wrapped arc.",
+		invariant: "The final answer is the larger of the non-wrapping maximum and the wrapped complement candidate.",
+		formula: "globalMax > 0 ? max(7, 10) : globalMax = 10",
+		highlights: [
+			{ target: "cell-1", kind: "region-subtract" },
+			{ target: "cell-0", kind: "confirmed" },
+			{ target: "cell-2", kind: "confirmed" },
+			{ target: "result-box", kind: "confirmed" },
+		],
+	},
+];
+---
+
+<maximum-circular-visuals>
+	<AlgorithmPlayer title="nums = [5, -3, 5]" steps={steps}>
+		<div class="stats-row mcs-stats">
+			<div class="stat-box mcs-rule-box" data-teach-target="rule-box">
+				<span class="stat-label">Two Shapes</span>
+				<span class="stat-val mcs-decision">Initialize</span>
+			</div>
+			<div class="stat-box mcs-max-box" data-teach-target="max-box">
+				<span class="stat-label">Global Max</span>
+				<span class="stat-val mcs-global-max">—</span>
+			</div>
+			<div class="stat-box mcs-min-box" data-teach-target="min-box">
+				<span class="stat-label">Global Min Gap</span>
+				<span class="stat-val mcs-global-min">—</span>
+			</div>
+			<div class="stat-box" data-teach-target="total-box">
+				<span class="stat-label">Total</span>
+				<span class="stat-val mcs-total">0</span>
+			</div>
+			<div class="stat-box mcs-result-box" data-teach-target="result-box">
+				<span class="stat-label">Status</span>
+				<span class="stat-val mcs-status">Ready</span>
+			</div>
+		</div>
+
+		<div class="anim-row">
+			<p class="anim-label">Linear scan — the red cell is the minimum gap to remove</p>
+			<div class="array-row mcs-array">
+				{
+					nums.map((num, index) => (
+						<div class="array-col">
+							<div class="array-cell mcs-cell" data-index={index} data-teach-target={`cell-${index}`}>
+								<span class="cell-val">{num}</span>
+							</div>
+							<span class="cell-idx">{index}</span>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<div class="mcs-candidates">
+			<div class="mcs-candidate mcs-straight" data-teach-target="straight-box">
+				<span class="stat-label">Non-wrapping candidate</span>
+				<code class="mcs-straight-value">Scan to calculate.</code>
+			</div>
+			<div class="mcs-candidate mcs-wrapped" data-teach-target="wrapped-box">
+				<span class="stat-label">Wrapped candidate</span>
+				<code class="mcs-wrapped-value">total − globalMin</code>
+			</div>
+		</div>
+
+		<p class="mcs-seam">
+			<span class="mcs-seam-arrow">index 2</span>
+			<span>wraps to</span>
+			<span class="mcs-seam-arrow">index 0</span>
+		</p>
+	</AlgorithmPlayer>
+</maximum-circular-visuals>
+
+<script>
+	class MaximumCircularVisuals extends HTMLElement {
+		connectedCallback() {
+			this.globalMaxEl = this.querySelector(".mcs-global-max");
+			this.globalMinEl = this.querySelector(".mcs-global-min");
+			this.totalEl = this.querySelector(".mcs-total");
+			this.decisionEl = this.querySelector(".mcs-decision");
+			this.statusEl = this.querySelector(".mcs-status");
+			this.straightEl = this.querySelector(".mcs-straight-value");
+			this.wrappedEl = this.querySelector(".mcs-wrapped-value");
+			this.cells = Array.from(this.querySelectorAll(".mcs-cell"));
+			this.resultBox = this.querySelector(".mcs-result-box");
+
+			this.addEventListener("step-change", (event) => {
+				const step = event.detail.step;
+
+				if (this.globalMaxEl) this.globalMaxEl.textContent = step.globalMax ?? "—";
+				if (this.globalMinEl) this.globalMinEl.textContent = step.globalMin ?? "—";
+				if (this.totalEl) this.totalEl.textContent = step.total;
+				if (this.decisionEl) this.decisionEl.textContent = step.choice;
+				if (this.statusEl) {
+					this.statusEl.textContent =
+						step.phase === "done" ? "Complete" : step.phase === "init" ? "Ready" : "Scanning";
+				}
+				if (this.straightEl) {
+					this.straightEl.textContent =
+						step.straight === null || step.straight === undefined
+							? "Scan to calculate."
+							: `globalMax = ${step.straight}`;
+				}
+				if (this.wrappedEl) {
+					this.wrappedEl.textContent =
+						step.wrapped === null || step.wrapped === undefined
+							? "total − globalMin"
+							: `${step.total} − (${step.globalMin}) = ${step.wrapped}`;
+				}
+
+				this.resultBox?.classList.toggle("is-complete", step.phase === "done");
+
+				this.cells.forEach((cell, index) => {
+					cell.classList.remove("is-active", "is-visited", "is-gap", "is-kept");
+
+					if (index <= step.i) cell.classList.add("is-visited");
+					if (index === step.i && step.phase === "scan") cell.classList.add("is-active");
+					if (step.gap?.includes(index)) cell.classList.add("is-gap");
+					if (step.kept?.includes(index)) cell.classList.add("is-kept");
+				});
+			});
+		}
+	}
+
+	if (!customElements.get("maximum-circular-visuals")) {
+		customElements.define("maximum-circular-visuals", MaximumCircularVisuals);
+	}
+</script>
+
+<style>
+	maximum-circular-visuals {
+		display: block;
+	}
+
+	.mcs-stats {
+		flex-wrap: wrap;
+	}
+
+	.mcs-rule-box {
+		flex: 1 1 13rem;
+		align-items: flex-start;
+	}
+
+	.mcs-rule-box .stat-val {
+		color: var(--muted);
+		font-size: var(--fs-fine);
+	}
+
+	.mcs-max-box .stat-val,
+	.mcs-wrapped code {
+		color: var(--status-easy);
+	}
+
+	.mcs-min-box {
+		border-color: color-mix(in srgb, var(--status-hard) 45%, var(--border));
+	}
+
+	.mcs-min-box .stat-val {
+		color: var(--status-hard);
+	}
+
+	.mcs-result-box.is-complete {
+		border-color: color-mix(in srgb, var(--status-easy) 55%, var(--border));
+		background: color-mix(in srgb, var(--status-easy) 9%, transparent);
+	}
+
+	.mcs-result-box.is-complete .stat-val {
+		color: var(--status-easy);
+	}
+
+	.mcs-cell {
+		opacity: 0.42;
+	}
+
+	.mcs-cell.is-visited {
+		opacity: 1;
+	}
+
+	.mcs-cell.is-active .cell-val {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+		transform: translateY(-3px);
+	}
+
+	.mcs-cell.is-gap .cell-val {
+		border-color: var(--status-hard);
+		background: color-mix(in srgb, var(--status-hard) 17%, transparent);
+		color: var(--status-hard);
+		text-decoration: line-through;
+	}
+
+	.mcs-cell.is-kept .cell-val {
+		border-color: var(--status-easy);
+		background: color-mix(in srgb, var(--status-easy) 16%, transparent);
+		color: var(--status-easy);
+	}
+
+	.mcs-candidates {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.8rem;
+	}
+
+	.mcs-candidate {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		min-height: 3.7rem;
+		padding: 0.8rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-xs);
+		background: var(--surface-base);
+	}
+
+	.mcs-candidate code {
+		font-family: var(--font-mono);
+		font-size: var(--fs-fine);
+	}
+
+	.mcs-straight code {
+		color: var(--status-info);
+	}
+
+	.mcs-wrapped {
+		border-color: color-mix(in srgb, var(--status-easy) 42%, var(--border));
+	}
+
+	.mcs-seam {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.55rem;
+		margin: 1rem 0 0;
+		color: var(--muted);
+		font-size: var(--fs-fine);
+		font-family: var(--font-sans);
+	}
+
+	.mcs-seam-arrow {
+		color: var(--accent);
+		font-family: var(--font-mono);
+		font-weight: 700;
+	}
+
+	@media (max-width: 600px) {
+		.mcs-stats {
+			gap: 0.5rem;
+		}
+
+		.mcs-stats .stat-box {
+			min-width: calc(50% - 0.5rem);
+			flex: 1;
+		}
+
+		.mcs-candidates {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
