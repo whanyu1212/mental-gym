@@ -20,12 +20,12 @@ npm run astro check  # type-check .astro files
 | Route | Source | Notes |
 | --- | --- | --- |
 | `/problems` | `src/data/problems.ts`, `mlProblems.ts`, `sqlProblems.ts` | Tabbed bank across algorithms, ML, and SQL |
-| `/algorithms/[slug]` | `src/data/problems.ts` + `src/leetcode/` | Auto-generated from the LeetCode API, paired with the local solution; some problems include a step-by-step animation |
+| `/algorithms/[slug]` | `src/data/problems.ts` + `../src/leetcode/` | Auto-generated from the LeetCode API, paired with the local solution; some problems include a step-by-step animation |
 | `/machine-learning/[slug]` | `src/data/mlProblems.ts` | Hand-authored ML interview prompts and hints |
-| `/sql/[slug]` | `src/data/sqlProblems.ts` + `src/sql/` | Prompt, local runner command, and reference answer |
+| `/sql/[slug]` | `src/data/sqlProblems.ts` + `../src/sql/` | Prompt, local runner command, and reference answer |
 | `/notes/[slug]` | `../notes/` | Markdown/MDX notes with KaTeX math support |
 
-`problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a solution in `src/leetcode/`, regenerate it from the repo root:
+`problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a solution in `../src/leetcode/`, regenerate it from the repo root:
 
 ```bash
 poetry run python scripts/generate_problems.py
