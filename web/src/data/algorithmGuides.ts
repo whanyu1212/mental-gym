@@ -1768,7 +1768,7 @@ export const guides = {
 			"Maximum Sum Circular Subarray (#918): why is a wrapped answer equal to total minus a minimum-sum middle gap?",
 			"Can you divide and conquer the array while tracking prefix, suffix, and total sums?",
 		],
-		relatedNotes: ["arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
+		relatedNotes: ["kadane_algorithm", "arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
 	},
 	"918-maximum-sum-circular-subarray": {
 		slug: "918-maximum-sum-circular-subarray",
@@ -1838,7 +1838,7 @@ export const guides = {
 			"Why is every wrapped arc the complement of exactly one non-wrapping contiguous gap?",
 			"Compare this O(n)/O(1) approach with the doubled-array + monotonic-deque formulation.",
 		],
-		relatedNotes: ["arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
+		relatedNotes: ["kadane_algorithm", "arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
 	},
 } satisfies AlgorithmGuides;
 
