@@ -44,6 +44,14 @@
   letter-spacing: 0.3px;
 }
 
+/* h2 already carries its own section divider via border-bottom + top margin
+   above. A markdown `---` placed right before a heading (common in the notes
+   source, left over from before that border-bottom existed) would double it
+   up, so collapse that specific case rather than hiding <hr> everywhere. */
+.prose :where(hr:has(+ h2)) {
+  display: none;
+}
+
 .prose :where(h3) {
   font-size: var(--fs-eyebrow);
   margin: var(--space-5) 0 var(--space-2);

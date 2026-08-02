@@ -62,6 +62,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "majority_element_2": "majority-element-ii",
     "longest_common_prefix": "longest-common-prefix",
     "contains_duplicate": "contains-duplicate",
+    "contains_duplicate_2": "contains-duplicate-ii",
     "two_sum": "two-sum",
     "subarray_sum_equals_k": "subarray-sum-equals-k",
     "xor_queries_subarray": "xor-queries-of-a-subarray",
