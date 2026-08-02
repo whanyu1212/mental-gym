@@ -77,7 +77,10 @@ Client-side only — no server. State is stored in **IndexedDB** (`mental-gym-sr
 | `/` | `src/pages/index.astro` | Home dashboard with stats |
 | `/problems` | `src/pages/problems/index.astro` | Problem list (tabs: algorithms / ML / SQL) |
 | `/algorithms/[slug]` | `src/pages/algorithms/[slug].astro` | Individual algorithm problem + optional animation |
+| `/machine-learning` | `src/pages/machine-learning/index.astro` | ML engineering landing page |
 | `/machine-learning/[slug]` | `src/pages/machine-learning/[slug].astro` | ML problem with prompt/hints |
 | `/sql/[slug]` | `src/pages/sql/[slug].astro` | SQL prompt, local runner command, and source-file answer |
 | `/notes` | `src/pages/notes/index.astro` | Notes index |
 | `/notes/[slug]` | `src/pages/notes/[slug].astro` | Individual note (markdown + KaTeX) |
+| `/progress` | `src/pages/progress/index.astro` | Local SR dashboard (history, summary, import/export) |
+| `/system-design` | `src/pages/system-design/index.astro` | ML/AI systems design landing page and lifecycle overview |
