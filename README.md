@@ -71,7 +71,7 @@ poetry run pytest tests/kattis/ -v
 cd web && npm install && npm run dev
 ```
 
-**Regenerate problem data** after adding or editing a LeetCode solution:
+**Regenerate problem data** after adding or editing a Python LeetCode solution (the generator collects `.py` files only; a Julia-only addition needs a matching Python file before it will appear):
 
 ```bash
 poetry run python scripts/generate_problems.py
