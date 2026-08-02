@@ -25,7 +25,7 @@ npm run astro check  # type-check .astro files
 | `/sql/[slug]` | `src/data/sqlProblems.ts` + `../src/sql/` | Prompt, local runner command, and reference answer |
 | `/notes/[slug]` | `../notes/` | Markdown/MDX notes with KaTeX math support |
 
-`problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a solution in `../src/leetcode/`, regenerate it from the repo root:
+`problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a Python solution in `../src/leetcode/` (the generator collects `.py` files; a Julia file only gets attached as a port to an existing Python-backed entry, so a Julia-only addition needs a matching Python file to appear at all), regenerate it from the repo root:
 
 ```bash
 poetry run python scripts/generate_problems.py
