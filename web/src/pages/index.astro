@@ -20,7 +20,17 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 		<p class="description">
 			A workspace for deliberate practice, first-principles implementation, and durable technical knowledge.
 		</p>
-		<p class="learning-loop">Learn <span>→</span> implement <span>→</span> practice <span>→</span> review <span>→</span> retain</p>
+		<p class="learning-loop">
+			<span class="loop-step">Learn</span>
+			<span class="loop-sep" aria-hidden="true">→</span>
+			<span class="loop-step">implement</span>
+			<span class="loop-sep" aria-hidden="true">→</span>
+			<span class="loop-step">practice</span>
+			<span class="loop-sep" aria-hidden="true">→</span>
+			<span class="loop-step">review</span>
+			<span class="loop-sep" aria-hidden="true">→</span>
+			<span class="loop-step is-accent">retain</span>
+		</p>
 	</section>
 
 	<ResumeRow />
@@ -131,8 +141,50 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
 	h1 { font-size: var(--fs-mega); line-height: .95; letter-spacing: -.02em; margin: 0; }
 	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0; max-width: 620px; }
-	.learning-loop { color: var(--text); font: 500 var(--fs-fine) var(--font-sans); letter-spacing: .04em; margin: 0; text-transform: uppercase; }
-	.learning-loop span { color: var(--accent); margin: 0 .25rem; }
+	.learning-loop {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: .4rem .35rem;
+		margin: .25rem 0 0;
+		padding: .35rem .5rem .35rem .35rem;
+		border: 1px solid var(--glass-border);
+		background: var(--glass-surface);
+		border-radius: 999px;
+		backdrop-filter: blur(var(--glass-blur));
+		-webkit-backdrop-filter: blur(var(--glass-blur));
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+	}
+	.loop-step {
+		display: inline-flex;
+		align-items: center;
+		padding: .32em .68em;
+		border-radius: 999px;
+		font: 600 var(--fs-micro) var(--font-sans);
+		letter-spacing: .08em;
+		text-transform: uppercase;
+		color: var(--muted);
+		border: 1px solid transparent;
+		line-height: 1;
+		transition: color .2s, border-color .2s, background .2s;
+	}
+	.loop-step.is-accent {
+		color: var(--bg);
+		background: var(--accent);
+		border-color: var(--accent);
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+	}
+	.loop-sep {
+		color: var(--accent);
+		font: 500 var(--fs-micro) var(--font-sans);
+		opacity: .9;
+		margin: 0 .05rem;
+		user-select: none;
+	}
+	/* subtle hover polish */
+	.learning-loop:hover .loop-step { color: var(--text); }
+	.learning-loop:hover .loop-step.is-accent { color: var(--bg); }
+	.learning-loop:hover .loop-sep { opacity: 1; }
 	.workflow, .domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
 	.workflow { margin: 1rem 0 3rem; }
 	.workflow-card, .domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
