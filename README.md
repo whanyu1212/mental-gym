@@ -14,14 +14,14 @@ Most interview prep is either flashcards with no depth, or solved problems that 
 
 > **Learn the pattern → implement it from scratch → solve the problem → review on a schedule → retain it**
 
-Every problem is solved with an explicit invariant and complexity justification, not just a passing test. Every review is scheduled with a simplified SM-2 algorithm rather than left to chance.
+Most problems are solved with an explicit invariant and complexity justification, not just a passing test — a guide-content validator (`scripts/validate_algorithm_guides.py`) checks this, and currently flags a handful of recent additions still missing one. Every review is scheduled with a simplified SM-2 algorithm rather than left to chance.
 
 ## What's in it
 
 | Area | Scope | Where |
 | --- | --- | --- |
-| DSA (LeetCode) | 44 solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution and most with a Julia port | `src/leetcode/` |
-| Competitive programming (Kattis) | 28 solved problems with pytest coverage | `src/kattis/`, `tests/kattis/` |
+| DSA (LeetCode) | 44 solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution; 17 also have a Julia port | `src/leetcode/` |
+| Competitive programming (Kattis) | 27 solved problems, 11 with pytest coverage in CI | `src/kattis/`, `tests/kattis/` |
 | ML from scratch | NumPy-only implementations (e.g. logistic regression with vectorized forward pass, BCE loss, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
 | Technical notes | 15 long-form guides on complexity analysis, algorithmic patterns, ML foundations, and system design, rendered with KaTeX math support | `notes/` |
@@ -81,7 +81,7 @@ poetry run python scripts/generate_problems.py
 
 ## CI
 
-Two GitHub Actions workflows run on every push/PR: a test workflow (`pytest` over the Kattis suite, a guide-content validator, and the Julia test suite) and a deploy workflow that builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`.
+Two GitHub Actions workflows: a test workflow (`pytest` over the Kattis suite, a guide-content validator, and the Julia test suite) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
 
 ## Tooling
 
