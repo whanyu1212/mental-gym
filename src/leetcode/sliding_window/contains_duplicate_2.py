@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # Expected: True (nums[0] == nums[3] == 1, |0 - 3| = 3 <= k)
     print(solution.containsNearbyDuplicate([1, 2, 3, 1], 3))
 
-    # Expected: True (nums[0] == nums[2] == 1, |0 - 2| = 2 <= k)
+    # Expected: True (nums[2] == nums[3] == 1, |2 - 3| = 1 <= k)
     print(solution.containsNearbyDuplicate([1, 0, 1, 1], 1))
 
     # Expected: False (only matching pair is farther apart than k)
