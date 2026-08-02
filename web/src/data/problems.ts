@@ -822,6 +822,99 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/group-anagrams/",
   },
   {
+    id: "53",
+    slug: "53-maximum-subarray",
+    leetcodeSlug: "maximum-subarray",
+    title: "Maximum Subarray",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "divide-and-conquer", "dynamic-programming"],
+    description: `<p>Given an integer array <code>nums</code>, find the <span data-keyword="subarray-nonempty">subarray</span> with the largest sum, and return <em>its sum</em>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [-2,1,-3,4,-1,2,1,-5,4]
+<strong>Output:</strong> 6
+<strong>Explanation:</strong> The subarray [4,-1,2,1] has the largest sum 6.
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1]
+<strong>Output:</strong> 1
+<strong>Explanation:</strong> The subarray [1] has the largest sum 1.
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [5,4,-1,7,8]
+<strong>Output:</strong> 23
+<strong>Explanation:</strong> The subarray [5,4,-1,7,8] has the largest sum 23.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> If you have figured out the <code>O(n)</code> solution, try coding another solution using the <strong>divide and conquer</strong> approach, which is more subtle.</p>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        """Return the largest sum of a contiguous subarray.
+
+        Args:
+            nums: A non-empty list of integers.
+
+        Returns:
+            The maximum sum among all contiguous subarrays.
+        """
+        # Start from the first value so all-negative inputs return their
+        # largest element instead of incorrectly returning 0.
+        #
+        # setting it to 0 might run into an edge case
+        # where all the numbers in the array are neegative
+        maxSum = nums[0]
+
+        curSum = 0
+
+        for n in nums:
+            # Discard a negative running sum; it can only reduce a future sum.
+            # Equivalently: choose between extending the current subarray
+            # (curSum + n) or starting a new one at n: max(curSum + n, n).
+            curSum = max(curSum, 0) + n
+
+            # Keep the best contiguous-subarray sum seen anywhere so far.
+            maxSum = max(curSum, maxSum)
+
+        return maxSum
+
+
+if __name__ == "__main__":
+    solution = Solution()
+
+    assert solution.maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4]) == 6
+    assert solution.maxSubArray([-3, -2, -5]) == -2
+    assert solution.maxSubArray([5]) == 5
+
+    print("All Maximum Subarray tests passed.")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/maximum-subarray/",
+  },
+  {
     id: "75",
     slug: "75-sort-colors",
     leetcodeSlug: "sort-colors",
@@ -2226,6 +2319,130 @@ if __name__ == "__main__":
       julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/sort-an-array/",
+  },
+  {
+    id: "918",
+    slug: "918-maximum-sum-circular-subarray",
+    leetcodeSlug: "maximum-sum-circular-subarray",
+    title: "Maximum Sum Circular Subarray",
+    difficulty: "Medium",
+    group: "Arrays & Hashing",
+    topics: ["array", "divide-and-conquer", "dynamic-programming", "queue", "monotonic-queue"],
+    description: `<p>Given a <strong>circular integer array</strong> <code>nums</code> of length <code>n</code>, return <em>the maximum possible sum of a non-empty <strong>subarray</strong> of </em><code>nums</code>.</p>
+
+<p>A <strong>circular array</strong> means the end of the array connects to the beginning of the array. Formally, the next element of <code>nums[i]</code> is <code>nums[(i + 1) % n]</code> and the previous element of <code>nums[i]</code> is <code>nums[(i - 1 + n) % n]</code>.</p>
+
+<p>A <strong>subarray</strong> may only include each element of the fixed buffer <code>nums</code> at most once. Formally, for a subarray <code>nums[i], nums[i + 1], ..., nums[j]</code>, there does not exist <code>i &lt;= k1</code>, <code>k2 &lt;= j</code> with <code>k1 % n == k2 % n</code>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,-2,3,-2]
+<strong>Output:</strong> 3
+<strong>Explanation:</strong> Subarray [3] has maximum sum 3.
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [5,-3,5]
+<strong>Output:</strong> 10
+<strong>Explanation:</strong> Subarray [5,5] has maximum sum 5 + 5 = 10.
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [-3,-2,-3]
+<strong>Output:</strong> -2
+<strong>Explanation:</strong> Subarray [-2] has maximum sum -2.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>n == nums.length</code></li>
+	<li><code>1 &lt;= n &lt;= 3 * 10<sup>4</sup></code></li>
+	<li><code>-3 * 10<sup>4</sup> &lt;= nums[i] &lt;= 3 * 10<sup>4</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def maxSubarraySumCircular(self, nums: List[int]) -> int:
+        """Return the largest sum of a circular contiguous subarray.
+
+        The end of the array connects to its start, so a valid subarray
+        can wrap around the seam — it is any connected arc of the ring.
+
+        Args:
+            nums: A non-empty list of integers.
+
+        Returns:
+            The maximum sum among all circular contiguous subarrays.
+        """
+
+        # Intuition: on a circle, the best arc is one of two shapes.
+        #
+        #   (1) Non-wrapping: it lies entirely inside the array, so plain
+        #       Kadane handles it — that's \`globalMax\`.
+        #
+        #   (2) Wrapping: it crosses the seam (suffix + prefix). We never
+        #       compute this directly; instead we exploit the complement:
+        #       a wrapped arc is exactly "the whole array minus one
+        #       contiguous middle block" (the gap it leaves behind is also
+        #       one connected arc). Since \`total\` is fixed, maximizing the
+        #       kept arc == minimizing the skipped block. That's what
+        #       \`total - globalMin\` computes.
+
+        # State we need: best/worst subarray (current + global), and total.
+        # \`curMax\`/\`curMin\` seed at 0 so the first element either starts a
+        # fresh subarray or (for the min pass) is taken on its own terms.
+        globalMax, globalMin = nums[0], nums[0]
+        total = 0
+        curMax, curMin = 0, 0
+
+        # Single left-to-right pass, no index wrapping needed.
+        for n in nums:
+            # Kadane's recurrence, maximized and minimized:
+            # either EXTEND the best subarray ending at the previous index
+            # (cur + n), or START A NEW one at n. Equivalent forms:
+            #   max(curMax + n, n)  ==  max(curMax, 0) + n
+            #   min(curMin + n, n)  ==  min(curMin, 0) + n
+            # (Watch out: max(0, n) would drop \`cur\` entirely and only
+            # track the best single element — never a subarray.)
+            curMax = max(curMax + n, n)
+            curMin = min(curMin + n, n)
+            total += n
+            globalMax = max(globalMax, curMax)  # best NON-wrapping arc
+            globalMin = min(globalMin, curMin)  # worst middle block to skip
+
+        # Guard: globalMax > 0  <=>  at least one positive element.
+        # If everything is <= 0, the minimum subarray is the whole array,
+        # so total - globalMin == 0 — an EMPTY pick, which is invalid.
+        # Otherwise, answer = better of (best straight run) vs
+        # (whole ring minus its most negative chunk).
+        return max(globalMax, total - globalMin) if globalMax > 0 else globalMax
+
+
+
+if __name__ == "__main__":
+    solution = Solution()
+
+    assert solution.maxSubarraySumCircular([1, -2, 3, -2]) == 3
+    assert solution.maxSubarraySumCircular([5, -3, 5]) == 10
+    assert solution.maxSubarraySumCircular([-3, -2, -3]) == -2
+    assert solution.maxSubarraySumCircular([1, 2, 3]) == 6
+    assert solution.maxSubarraySumCircular([5]) == 5
+
+    print("All Maximum Sum Circular Subarray tests passed.")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/maximum-sum-circular-subarray/",
   },
   {
     id: "1310",
