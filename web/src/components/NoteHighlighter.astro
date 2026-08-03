@@ -68,6 +68,10 @@ const { noteId } = Astro.props;
     } | null = null;
     /** Existing highlight currently open in the popover. */
     private activeId: string | null = null;
+    /** The mark that opened the popover via keyboard, so closing can restore
+     * focus to it -- without this a keyboard user would land back at the top
+     * of the document instead of where they were reading. */
+    private returnFocusTo: HTMLElement | null = null;
 
     async connectedCallback() {
       this.noteId = this.dataset.noteId ?? "";
@@ -137,7 +141,7 @@ const { noteId } = Astro.props;
         ) as HTMLElement | null;
         if (!mark) return;
         event.preventDefault();
-        this.openForExisting(mark);
+        void this.openForExisting(mark, { moveFocusIn: true });
       });
 
       this.querySelectorAll<HTMLButtonElement>("[data-hl-color]").forEach(
@@ -203,7 +207,10 @@ const { noteId } = Astro.props;
       this.showPopoverAt(range.getBoundingClientRect());
     }
 
-    private async openForExisting(mark: HTMLElement) {
+    private async openForExisting(
+      mark: HTMLElement,
+      options: { moveFocusIn?: boolean } = {}
+    ) {
       const id = mark.dataset.highlightId;
       if (!id) return;
       const stored = await getHighlightsForNote(this.noteId);
@@ -215,16 +222,35 @@ const { noteId } = Astro.props;
       this.removeButton.hidden = false;
       this.noteInput.value = highlight.note ?? "";
       this.noteEditor.hidden = !highlight.note;
-      this.showPopoverAt(mark.getBoundingClientRect());
+      this.showPopoverAt(mark.getBoundingClientRect(), {
+        moveFocusIn: options.moveFocusIn,
+        returnFocusTo: options.moveFocusIn ? mark : null,
+      });
     }
 
-    private showPopoverAt(rect: DOMRect) {
+    private showPopoverAt(
+      rect: DOMRect,
+      options: { moveFocusIn?: boolean; returnFocusTo?: HTMLElement | null } = {}
+    ) {
       this.popover.hidden = false;
       // Position in document space so the popover scrolls with the text.
       const top = rect.bottom + window.scrollY + 8;
       const left = rect.left + window.scrollX + rect.width / 2;
       this.popover.style.top = `${top}px`;
       this.popover.style.left = `${left}px`;
+
+      this.returnFocusTo = options.returnFocusTo ?? null;
+      if (options.moveFocusIn) {
+        // <NoteHighlighter> renders after the whole article, so leaving focus
+        // on the triggering mark would send a subsequent Tab through every
+        // remaining link and highlight in the note before ever reaching this
+        // dialog. Only do this for keyboard activation -- a mouse selection
+        // should not have focus yanked away from wherever the user was.
+        const firstSwatch = this.popover.querySelector<HTMLElement>(
+          "[data-hl-color]"
+        );
+        firstSwatch?.focus();
+      }
     }
 
     private close() {
@@ -232,6 +258,8 @@ const { noteId } = Astro.props;
       this.noteEditor.hidden = true;
       this.pendingRange = null;
       this.activeId = null;
+      this.returnFocusTo?.focus();
+      this.returnFocusTo = null;
     }
 
     // ── Mutations ──────────────────────────────────────────────
