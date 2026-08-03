@@ -1,9 +1,10 @@
+import type { Highlight, HighlightColor } from "./highlight-types";
 import type {
   NormalizedSRExport,
   ReviewEvent,
   ReviewRecord,
   SRExport,
-  SRExportV2,
+  SRExportV3,
 } from "./sr-types";
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -49,6 +50,29 @@ function isReviewEvent(value: unknown): value is ReviewEvent {
   );
 }
 
+const HIGHLIGHT_COLOR_VALUES: HighlightColor[] = [
+  "yellow",
+  "green",
+  "blue",
+  "pink",
+];
+
+function isHighlight(value: unknown): value is Highlight {
+  return (
+    isObject(value) &&
+    typeof value.id === "string" &&
+    typeof value.noteId === "string" &&
+    typeof value.startOffset === "number" &&
+    typeof value.endOffset === "number" &&
+    value.startOffset >= 0 &&
+    value.endOffset > value.startOffset &&
+    typeof value.textSnippet === "string" &&
+    HIGHLIGHT_COLOR_VALUES.includes(value.color as HighlightColor) &&
+    (value.note === undefined || typeof value.note === "string") &&
+    typeof value.createdAt === "string"
+  );
+}
+
 export function normalizeExport(data: unknown): NormalizedSRExport {
   if (!isObject(data) || !Array.isArray(data.records)) {
     throw new Error("Invalid review-data export");
@@ -59,14 +83,32 @@ export function normalizeExport(data: unknown): NormalizedSRExport {
   }
 
   if (data.version === 1) {
-    return { records: data.records, events: [] };
+    return { records: data.records, events: [], highlights: [] };
   }
 
   if (data.version === 2 && Array.isArray(data.events)) {
     if (!data.events.every(isReviewEvent)) {
       throw new Error("Export contains invalid review events");
     }
-    return { records: data.records, events: data.events };
+    return { records: data.records, events: data.events, highlights: [] };
+  }
+
+  if (
+    data.version === 3 &&
+    Array.isArray(data.events) &&
+    Array.isArray(data.highlights)
+  ) {
+    if (!data.events.every(isReviewEvent)) {
+      throw new Error("Export contains invalid review events");
+    }
+    if (!data.highlights.every(isHighlight)) {
+      throw new Error("Export contains invalid highlights");
+    }
+    return {
+      records: data.records,
+      events: data.events,
+      highlights: data.highlights,
+    };
   }
 
   throw new Error("Unsupported review-data export version");
@@ -112,13 +154,24 @@ export function deduplicateImportedEvents(
 export function serializeExport(
   records: ReviewRecord[],
   events: ReviewEvent[],
+  highlights: Highlight[] = [],
   exportedAt = new Date().toISOString()
 ): string {
-  const data: SRExportV2 = {
-    version: 2,
+  const data: SRExportV3 = {
+    version: 3,
     exportedAt,
     records,
     events,
+    highlights,
   };
   return JSON.stringify(data satisfies SRExport, null, 2);
+}
+
+/** Imported highlights may collide by id; keep the existing one on conflict. */
+export function deduplicateImportedHighlights(
+  existing: Highlight[],
+  imported: Highlight[]
+): Highlight[] {
+  const known = new Set(existing.map((highlight) => highlight.id));
+  return imported.filter((highlight) => !known.has(highlight.id));
 }

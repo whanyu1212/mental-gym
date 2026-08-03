@@ -1,4 +1,5 @@
 ---
+import HighlightsIndex from "../../components/HighlightsIndex.astro";
 import ProgressHistory from "../../components/ProgressHistory.astro";
 import ProgressSummary from "../../components/ProgressSummary.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
@@ -23,6 +24,15 @@ import { withBase } from "../../lib/url";
 			<p>History begins with reviews recorded after this update; existing schedules are preserved without inventing past activity.</p>
 		</div>
 		<ProgressHistory />
+	</section>
+
+	<section class="history-section">
+		<div class="section-heading">
+			<p class="eyebrow">Highlights</p>
+			<h2>What you marked worth keeping.</h2>
+			<p>Every passage you highlighted while reading, grouped by note. Selecting text in any note saves it here.</p>
+		</div>
+		<HighlightsIndex />
 	</section>
 
 	<section class="data-section">

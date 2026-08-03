@@ -21,7 +21,7 @@
   <dialog class="sr-dialog">
     <div class="sr-dialog-body">
       <p class="sr-dialog-title">Reset all review progress?</p>
-      <p class="sr-dialog-text">This will permanently delete all spaced repetition data. This cannot be undone.</p>
+      <p class="sr-dialog-text">This will permanently delete all spaced repetition data <strong>and every note highlight</strong>. This cannot be undone.</p>
       <div class="sr-dialog-actions">
         <button class="sr-btn sr-dialog-cancel">Cancel</button>
         <button class="sr-btn sr-dialog-confirm">Reset</button>
@@ -33,6 +33,7 @@
 <script>
   import {
     exportAll,
+    getAllHighlightRecords,
     getAllRecords,
     getAllReviewEvents,
     importAll,
@@ -72,15 +73,20 @@
 
       // Export
       exportBtn.addEventListener("click", async () => {
-        const [records, events] = await Promise.all([
+        const [records, events, highlights] = await Promise.all([
           getAllRecords(),
           getAllReviewEvents(),
+          getAllHighlightRecords(),
         ]);
-        if (records.length === 0 && events.length === 0) {
+        if (
+          records.length === 0 &&
+          events.length === 0 &&
+          highlights.length === 0
+        ) {
           showFeedback("Nothing to export.");
           return;
         }
-        const json = exportAll(records, events);
+        const json = exportAll(records, events, highlights);
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -88,7 +94,9 @@
         a.download = `mental-gym-sr-${todayISO()}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        showFeedback(`Exported ${records.length} records and ${events.length} review events.`);
+        showFeedback(
+          `Exported ${records.length} records, ${events.length} review events, and ${highlights.length} highlights.`
+        );
       });
 
       // Import
@@ -99,7 +107,7 @@
           const text = await file.text();
           const result = await importAll(text);
           showFeedback(
-            `Imported ${result.recordCount} records and ${result.eventCount} review events.`
+            `Imported ${result.recordCount} records, ${result.eventCount} review events, and ${result.highlightCount} highlights.`
           );
           await updateSummary();
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));

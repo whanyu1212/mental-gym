@@ -45,6 +45,16 @@ const runCommand = problem.dialect === "postgres"
 		<p class="body-copy">{problem.prompt}</p>
 	</section>
 
+	<section class="panel">
+		<h2 class="section-title">Schema &amp; Sample Data</h2>
+		<p class="body-copy schema-copy">
+			The table(s) below are created and seeded exactly like this before your query runs.
+		</p>
+		<div class="code-wrapper">
+			<Code code={problem.fixture} lang="sql" theme="github-dark" />
+		</div>
+	</section>
+
 	<section class="panel local-run">
 		<h2 class="section-title">Run locally</h2>
 		<p class="body-copy">
@@ -62,12 +72,18 @@ const runCommand = problem.dialect === "postgres"
 		</ul>
 	</section>
 
-	<details class="solution">
-		<summary>Reveal reference query</summary>
-		<div class="code-wrapper">
+	<section class="solution" data-solution>
+		<div class="solution-header">
+			<h2 class="section-title">Solution</h2>
+			<p class="blur-hint">Hover to reveal, or tap — gives you a moment to think first.</p>
+			<button class="reveal-btn" type="button" data-reveal-toggle aria-pressed="false">
+				Reveal
+			</button>
+		</div>
+		<div class="code-wrapper blur-target" data-blur-target>
 			<Code code={problem.solution} lang="sql" theme="github-dark" />
 		</div>
-	</details>
+	</section>
 
 	<RecallRating
 		domain="sql"
@@ -78,6 +94,28 @@ const runCommand = problem.dialect === "postgres"
 	/>
 	<LastVisited title={problem.title} kind="SQL" />
 </Layout>
+
+<script>
+	const solution = document.querySelector<HTMLElement>("[data-solution]");
+	const toggle = solution?.querySelector<HTMLButtonElement>("[data-reveal-toggle]");
+
+	toggle?.addEventListener("click", () => {
+		const revealed = solution!.classList.toggle("revealed");
+		toggle.setAttribute("aria-pressed", String(revealed));
+		toggle.textContent = revealed ? "Hide" : "Reveal";
+		// Hiding while the toggle still holds keyboard focus would otherwise
+		// leave :focus-within blurring nothing, since focus never left the
+		// button. explicitly-hidden overrides that -- but its CSS selector
+		// has higher specificity than .solution:hover too, so it must be
+		// cleared on the next fresh pointer entry or it would keep defeating
+		// hover-to-reveal for the rest of that focus session.
+		solution!.classList.toggle("explicitly-hidden", !revealed);
+	});
+
+	solution?.addEventListener("pointerenter", () => {
+		solution.classList.remove("explicitly-hidden");
+	});
+</script>
 
 <style>
 	.breadcrumb {
@@ -202,7 +240,8 @@ const runCommand = problem.dialect === "postgres"
 		font: var(--fs-base) / var(--lh-prose) var(--font-sans);
 	}
 
-	.local-run .body-copy {
+	.local-run .body-copy,
+	.schema-copy {
 		margin-bottom: 1rem;
 		color: var(--muted);
 	}
@@ -219,16 +258,77 @@ const runCommand = problem.dialect === "postgres"
 		font: var(--fs-base) / var(--lh-prose) var(--font-sans);
 	}
 
-	.solution summary {
-		cursor: pointer;
-		color: var(--accent);
-		font: 600 var(--fs-eyebrow) var(--font-sans);
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
+	.solution-header {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
 	}
 
-	.solution[open] summary {
-		margin-bottom: 1rem;
+	.solution-header .section-title {
+		margin: 0;
+	}
+
+	.blur-hint {
+		margin: 0 auto 0 0;
+		font: italic var(--fs-eyebrow) var(--font-sans);
+		color: var(--muted);
+	}
+
+	.reveal-btn {
+		padding: 0.25rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--muted);
+		cursor: pointer;
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		transition: all 0.15s ease;
+	}
+
+	.reveal-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.reveal-btn:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.reveal-btn[aria-pressed="true"] {
+		color: var(--accent);
+		border-color: var(--accent-ring);
+		background: var(--accent-soft);
+	}
+
+	.blur-target {
+		filter: blur(5px);
+		transition: filter 0.2s ease;
+	}
+
+	/* Hover and keyboard focus reveal on pointer devices; the Reveal button
+	   is the only way in on touch, where neither :hover nor :focus-within
+	   (nothing inside the code block is focusable) can ever fire. */
+	.solution:hover .blur-target,
+	.solution:focus-within .blur-target,
+	.solution.revealed .blur-target {
+		filter: blur(0);
+	}
+
+	/* Tapping Hide after Reveal leaves focus on the toggle button itself, so
+	   :focus-within above would otherwise keep the code unblurred until focus
+	   moves elsewhere. This selector has the same specificity as the three
+	   rules above (three classes/pseudo-classes each), so being declared
+	   after them wins the cascade tie -- which means it would also defeat a
+	   fresh hover, not just the stale focus it targets, if left in place.
+	   The script clears explicitly-hidden on pointerenter specifically so
+	   this rule never has to coexist with a genuine :hover attempt. */
+	.solution.explicitly-hidden .blur-target {
+		filter: blur(5px);
 	}
 
 	.code-wrapper :global(pre) {
