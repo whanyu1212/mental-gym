@@ -76,6 +76,55 @@ test("a start boundary on an element resolves forward, not backward", () => {
   assert.equal(serialized?.textSnippet, "betagamma");
 });
 
+test("a selection ending inside inline code clamps to the prose before it", () => {
+  // A drag that starts in ordinary prose but overshoots into inline code
+  // must not be rejected outright — the valid prose portion is still real.
+  const root = mount("<p>before <code>inline</code> after</p>");
+  const p = root.querySelector("p")!;
+  const beforeText = p.firstChild!;
+  const codeText = p.querySelector("code")!.firstChild!;
+
+  const range = root.ownerDocument.createRange();
+  range.setStart(beforeText, 0);
+  range.setEnd(codeText, 3); // three characters into "inline"
+
+  // Text-space is "before  after" — the space before <code> is real prose.
+  assert.deepEqual(serializeRange(root, range), {
+    startOffset: 0,
+    endOffset: 7,
+    textSnippet: "before ",
+  });
+});
+
+test("a selection starting inside inline code clamps to the prose after it", () => {
+  const root = mount("<p>before <code>inline</code> after</p>");
+  const p = root.querySelector("p")!;
+  const codeText = p.querySelector("code")!.firstChild!;
+  const afterText = p.lastChild!;
+
+  const range = root.ownerDocument.createRange();
+  range.setStart(codeText, 2); // two characters into "inline"
+  range.setEnd(afterText, afterText.nodeValue!.length); // through " after"
+
+  // Text-space is "before  after" — clamps forward to the space + "after".
+  assert.deepEqual(serializeRange(root, range), {
+    startOffset: 7,
+    endOffset: 13,
+    textSnippet: " after",
+  });
+});
+
+test("a selection entirely inside an excluded zone is still rejected", () => {
+  const root = mount("<p>before <code>inline</code> after</p>");
+  const codeText = root.querySelector("code")!.firstChild!;
+
+  const range = root.ownerDocument.createRange();
+  range.setStart(codeText, 0);
+  range.setEnd(codeText, 6);
+
+  assert.equal(serializeRange(root, range), null);
+});
+
 test("a whitespace-only selection is rejected", () => {
   const root = mount("<p>a   b</p>");
   const textNode = root.querySelector("p")!.firstChild!;

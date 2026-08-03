@@ -72,12 +72,15 @@ const runCommand = problem.dialect === "postgres"
 		</ul>
 	</section>
 
-	<section class="solution">
+	<section class="solution" data-solution>
 		<div class="solution-header">
 			<h2 class="section-title">Solution</h2>
-			<p class="blur-hint">Hover to reveal — gives you a moment to think first.</p>
+			<p class="blur-hint">Hover to reveal, or tap — gives you a moment to think first.</p>
+			<button class="reveal-btn" type="button" data-reveal-toggle aria-pressed="false">
+				Reveal
+			</button>
 		</div>
-		<div class="code-wrapper blur-target">
+		<div class="code-wrapper blur-target" data-blur-target>
 			<Code code={problem.solution} lang="sql" theme="github-dark" />
 		</div>
 	</section>
@@ -91,6 +94,17 @@ const runCommand = problem.dialect === "postgres"
 	/>
 	<LastVisited title={problem.title} kind="SQL" />
 </Layout>
+
+<script>
+	const solution = document.querySelector<HTMLElement>("[data-solution]");
+	const toggle = solution?.querySelector<HTMLButtonElement>("[data-reveal-toggle]");
+
+	toggle?.addEventListener("click", () => {
+		const revealed = solution!.classList.toggle("revealed");
+		toggle.setAttribute("aria-pressed", String(revealed));
+		toggle.textContent = revealed ? "Hide" : "Reveal";
+	});
+</script>
 
 <style>
 	.breadcrumb {
@@ -246,9 +260,38 @@ const runCommand = problem.dialect === "postgres"
 	}
 
 	.blur-hint {
-		margin: 0;
+		margin: 0 auto 0 0;
 		font: italic var(--fs-eyebrow) var(--font-sans);
 		color: var(--muted);
+	}
+
+	.reveal-btn {
+		padding: 0.25rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--muted);
+		cursor: pointer;
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		transition: all 0.15s ease;
+	}
+
+	.reveal-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.reveal-btn:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.reveal-btn[aria-pressed="true"] {
+		color: var(--accent);
+		border-color: var(--accent-ring);
+		background: var(--accent-soft);
 	}
 
 	.blur-target {
@@ -256,8 +299,12 @@ const runCommand = problem.dialect === "postgres"
 		transition: filter 0.2s ease;
 	}
 
+	/* Hover and keyboard focus reveal on pointer devices; the Reveal button
+	   is the only way in on touch, where neither :hover nor :focus-within
+	   (nothing inside the code block is focusable) can ever fire. */
 	.solution:hover .blur-target,
-	.solution:focus-within .blur-target {
+	.solution:focus-within .blur-target,
+	.solution.revealed .blur-target {
 		filter: blur(0);
 	}
 

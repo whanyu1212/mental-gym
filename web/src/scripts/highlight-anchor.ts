@@ -26,6 +26,21 @@ function isExcluded(node: Node, root: HTMLElement): boolean {
   return match !== null && root.contains(match);
 }
 
+/**
+ * The outermost excluded element containing `node`, e.g. the <code> itself
+ * for text buried inside it. Null if `node` isn't inside an excluded zone
+ * under `root`.
+ */
+function excludedSubtreeRoot(node: Node, root: HTMLElement): Element | null {
+  const element =
+    node.nodeType === Node.ELEMENT_NODE
+      ? (node as Element)
+      : node.parentElement;
+  if (!element) return null;
+  const match = element.closest(EXCLUDED_SELECTOR);
+  return match && root.contains(match) ? match : null;
+}
+
 /** Text nodes of `root` in document order, skipping excluded zones. */
 export function highlightableTextNodes(root: HTMLElement): Text[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -73,18 +88,36 @@ function nodeSpans(root: HTMLElement): NodeSpan[] {
 /**
  * Text-space offset of a (node, offset) DOM position. Null if not highlightable.
  * `edge` disambiguates boundaries that land on an element rather than text.
+ * `root` and `excludedAncestor` let a boundary that lands inside an excluded
+ * zone (e.g. a drag that ends mid-way through inline code) clamp to that
+ * zone's nearest edge instead of rejecting the whole selection.
  */
 function positionToOffset(
   spans: NodeSpan[],
   node: Node,
   offset: number,
-  edge: "start" | "end"
+  edge: "start" | "end",
+  root: HTMLElement
 ): number | null {
-  // On a text node, `offset` counts characters directly.
+  // On a text node inside an excluded zone, there is no span for it — treat
+  // the boundary as landing just outside the excluded subtree, at whichever
+  // edge is on the "keep" side of the drag.
   if (node.nodeType === Node.TEXT_NODE) {
     const span = spans.find((s) => s.node === node);
-    if (!span) return null;
-    return span.start + Math.min(offset, span.end - span.start);
+    if (span) {
+      return span.start + Math.min(offset, span.end - span.start);
+    }
+    const excludedRoot = excludedSubtreeRoot(node, root);
+    if (!excludedRoot || !excludedRoot.parentNode) return null;
+    const siblings = Array.from(excludedRoot.parentNode.childNodes);
+    const indexInParent = siblings.indexOf(excludedRoot as ChildNode);
+    return positionToOffset(
+      spans,
+      excludedRoot.parentNode,
+      edge === "start" ? indexInParent + 1 : indexInParent,
+      edge,
+      root
+    );
   }
 
   // On an element, `offset` is a *child index*, not a character offset. The
@@ -139,8 +172,13 @@ export interface SerializedRange {
 }
 
 /**
- * Convert a live selection Range into persistable offsets.
- * Returns null when the selection is empty or falls entirely in excluded zones.
+ * Convert a live selection Range into persistable offsets. A boundary that
+ * lands inside an excluded zone (math, code, a viz component) clamps to that
+ * zone's nearest edge rather than rejecting the whole selection, so a drag
+ * that merely ends a character too far into inline code still highlights the
+ * ordinary prose before it. Returns null when the selection is empty or both
+ * boundaries collapse into the same excluded zone with nothing keepable
+ * between them.
  */
 export function serializeRange(
   root: HTMLElement,
@@ -153,13 +191,15 @@ export function serializeRange(
     spans,
     range.startContainer,
     range.startOffset,
-    "start"
+    "start",
+    root
   );
   const end = positionToOffset(
     spans,
     range.endContainer,
     range.endOffset,
-    "end"
+    "end",
+    root
   );
   if (start === null || end === null) return null;
 
