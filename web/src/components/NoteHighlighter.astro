@@ -262,8 +262,13 @@ const { noteId } = Astro.props;
      * removed from the document. */
     private restoreFocusAfterRepaint() {
       if (!this.returnFocusToId || !this.root) return;
+      // A multi-piece highlight only makes its first eligible piece
+      // focusable (see paint()); querying for that piece specifically,
+      // rather than just the first mark for this id, matters when the
+      // highlight starts inside a link -- there the focusable piece is not
+      // the first one in document order.
       const mark = this.root.querySelector<HTMLElement>(
-        `mark[data-highlight-id="${this.returnFocusToId}"]`
+        `mark[data-highlight-id="${this.returnFocusToId}"][tabindex]`
       );
       mark?.focus();
       this.returnFocusToId = null;
@@ -416,6 +421,12 @@ const { noteId } = Astro.props;
     private paint(highlight: Highlight, start: number, end: number) {
       if (!this.root) return;
       const pieces = rangePieces(this.root, start, end);
+      // A highlight crossing paragraphs or inline formatting paints as
+      // several <mark> pieces (one per text node), but it is one logical
+      // highlight -- only the first eligible piece becomes a tab stop, or a
+      // keyboard/screen-reader user would hit the same highlight, and hear
+      // the same full snippet read out, once per piece.
+      let tabStopAssigned = false;
 
       for (const piece of pieces) {
         const range = document.createRange();
@@ -428,6 +439,8 @@ const { noteId } = Astro.props;
         // opening the editor — so making the mark itself focusable here would
         // add a redundant, dead stop in the tab order and nest one
         // interactive role inside another, which assistive tech disallows.
+        // Such a piece is also not eligible to carry the highlight's single
+        // tab stop, since the link already provides one.
         const insideControl = piece.node.parentElement?.closest(
           "a[href], button, [role='button']"
         );
@@ -439,7 +452,8 @@ const { noteId } = Astro.props;
           mark.classList.add("hl-has-note");
           mark.title = highlight.note;
         }
-        if (!insideControl) {
+        if (!insideControl && !tabStopAssigned) {
+          tabStopAssigned = true;
           mark.tabIndex = 0;
           mark.setAttribute("role", "button");
           mark.setAttribute(
