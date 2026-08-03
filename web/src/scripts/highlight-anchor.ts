@@ -27,9 +27,12 @@ function isExcluded(node: Node, root: HTMLElement): boolean {
 }
 
 /**
- * The outermost excluded element containing `node`, e.g. the <code> itself
- * for text buried inside it. Null if `node` isn't inside an excluded zone
- * under `root`.
+ * The outermost excluded element containing `node`, e.g. <pre> rather than
+ * the inner <code> for a fenced code block. `closest()` alone would stop at
+ * the innermost match (<code>) and, resolving from there, land back inside
+ * another excluded ancestor (<pre>) with nothing highlightable in it — so
+ * this keeps climbing past every excluded ancestor in a row. Null if `node`
+ * isn't inside an excluded zone under `root`.
  */
 function excludedSubtreeRoot(node: Node, root: HTMLElement): Element | null {
   const element =
@@ -37,8 +40,19 @@ function excludedSubtreeRoot(node: Node, root: HTMLElement): Element | null {
       ? (node as Element)
       : node.parentElement;
   if (!element) return null;
-  const match = element.closest(EXCLUDED_SELECTOR);
-  return match && root.contains(match) ? match : null;
+
+  const innermost = element.closest(EXCLUDED_SELECTOR);
+  if (!innermost || !root.contains(innermost)) return null;
+
+  let outermost: Element = innermost;
+  for (
+    let candidate = outermost.parentElement?.closest(EXCLUDED_SELECTOR) ?? null;
+    candidate && root.contains(candidate);
+    candidate = outermost.parentElement?.closest(EXCLUDED_SELECTOR) ?? null
+  ) {
+    outermost = candidate;
+  }
+  return outermost;
 }
 
 /** Text nodes of `root` in document order, skipping excluded zones. */

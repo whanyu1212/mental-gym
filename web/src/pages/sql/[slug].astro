@@ -103,6 +103,11 @@ const runCommand = problem.dialect === "postgres"
 		const revealed = solution!.classList.toggle("revealed");
 		toggle.setAttribute("aria-pressed", String(revealed));
 		toggle.textContent = revealed ? "Hide" : "Reveal";
+		// Hiding while the toggle still holds keyboard focus would otherwise
+		// leave :focus-within blurring nothing, since focus never left the
+		// button. explicitly-hidden overrides that until a fresh :hover or a
+		// later Reveal click clears it again.
+		solution!.classList.toggle("explicitly-hidden", !revealed);
 	});
 </script>
 
@@ -306,6 +311,16 @@ const runCommand = problem.dialect === "postgres"
 	.solution:focus-within .blur-target,
 	.solution.revealed .blur-target {
 		filter: blur(0);
+	}
+
+	/* Tapping Hide after Reveal leaves focus on the toggle button itself, so
+	   :focus-within above would otherwise keep the code unblurred until focus
+	   moves elsewhere. This overrides focus specifically -- declared after the
+	   :focus-within rule with equal specificity, so the cascade favours "the
+	   user just said hide" -- while leaving a fresh :hover free to reveal
+	   again, since hovering is new intent rather than stale focus. */
+	.solution.explicitly-hidden:focus-within .blur-target {
+		filter: blur(5px);
 	}
 
 	.code-wrapper :global(pre) {

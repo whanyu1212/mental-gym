@@ -114,6 +114,42 @@ test("a selection starting inside inline code clamps to the prose after it", () 
   });
 });
 
+test("a selection overshooting into a nested pre>code block still clamps", () => {
+  // <pre><code> is two excluded ancestors deep. closest() alone stops at the
+  // inner <code>, and resolving from there lands back inside the outer
+  // <pre> with nothing highlightable — so the outermost excluded ancestor
+  // must be used, not just the nearest one.
+  const root = mount("<p>before</p><pre><code>fenced text</code></pre><p>after</p>");
+  const beforeText = root.querySelectorAll("p")[0].firstChild!;
+  const codeText = root.querySelector("code")!.firstChild!;
+
+  const range = root.ownerDocument.createRange();
+  range.setStart(beforeText, 0);
+  range.setEnd(codeText, 3);
+
+  assert.deepEqual(serializeRange(root, range), {
+    startOffset: 0,
+    endOffset: 6,
+    textSnippet: "before",
+  });
+});
+
+test("a selection starting inside a nested pre>code block clamps forward", () => {
+  const root = mount("<p>before</p><pre><code>fenced text</code></pre><p>after</p>");
+  const codeText = root.querySelector("code")!.firstChild!;
+  const afterText = root.querySelectorAll("p")[1].firstChild!;
+
+  const range = root.ownerDocument.createRange();
+  range.setStart(codeText, 2);
+  range.setEnd(afterText, afterText.nodeValue!.length);
+
+  assert.deepEqual(serializeRange(root, range), {
+    startOffset: 6,
+    endOffset: 11,
+    textSnippet: "after",
+  });
+});
+
 test("a selection entirely inside an excluded zone is still rejected", () => {
   const root = mount("<p>before <code>inline</code> after</p>");
   const codeText = root.querySelector("code")!.firstChild!;
