@@ -125,7 +125,19 @@ const { noteId } = Astro.props;
         this.close();
       });
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !this.popover.hidden) this.close();
+        if (event.key === "Escape" && !this.popover.hidden) {
+          this.close();
+          return;
+        }
+        // role="button" does not get free Enter/Space activation the way a
+        // native <button> does, so a focused mark needs it wired explicitly.
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const mark = (event.target as HTMLElement | null)?.closest?.(
+          "mark[data-highlight-id][role='button']"
+        ) as HTMLElement | null;
+        if (!mark) return;
+        event.preventDefault();
+        this.openForExisting(mark);
       });
 
       this.querySelectorAll<HTMLButtonElement>("[data-hl-color]").forEach(
@@ -355,12 +367,32 @@ const { noteId } = Astro.props;
         range.setStart(piece.node, piece.startOffset);
         range.setEnd(piece.node, piece.endOffset);
 
+        // A mark inside a link or button is already keyboard-reachable via
+        // that control, and its own click handler already lets the control's
+        // default action through (see the click listener above) rather than
+        // opening the editor — so making the mark itself focusable here would
+        // add a redundant, dead stop in the tab order and nest one
+        // interactive role inside another, which assistive tech disallows.
+        const insideControl = piece.node.parentElement?.closest(
+          "a[href], button, [role='button']"
+        );
+
         const mark = document.createElement("mark");
         mark.dataset.highlightId = highlight.id;
         mark.className = `hl hl-${highlight.color}`;
         if (highlight.note) {
           mark.classList.add("hl-has-note");
           mark.title = highlight.note;
+        }
+        if (!insideControl) {
+          mark.tabIndex = 0;
+          mark.setAttribute("role", "button");
+          mark.setAttribute(
+            "aria-label",
+            highlight.note
+              ? `Highlighted: "${highlight.textSnippet}". Note: ${highlight.note}. Activate to edit.`
+              : `Highlighted: "${highlight.textSnippet}". Activate to edit.`
+          );
         }
         try {
           range.surroundContents(mark);
@@ -415,6 +447,11 @@ const { noteId } = Astro.props;
   .prose mark.hl:hover {
     background: var(--hl-fill);
     filter: brightness(1.15);
+  }
+
+  .prose mark.hl:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
   }
 
   /* A highlight carrying a note gets a subtle underline marker. */
