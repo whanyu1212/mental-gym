@@ -45,6 +45,16 @@ const runCommand = problem.dialect === "postgres"
 		<p class="body-copy">{problem.prompt}</p>
 	</section>
 
+	<section class="panel">
+		<h2 class="section-title">Schema &amp; Sample Data</h2>
+		<p class="body-copy schema-copy">
+			The table(s) below are created and seeded exactly like this before your query runs.
+		</p>
+		<div class="code-wrapper">
+			<Code code={problem.fixture} lang="sql" theme="github-dark" />
+		</div>
+	</section>
+
 	<section class="panel local-run">
 		<h2 class="section-title">Run locally</h2>
 		<p class="body-copy">
@@ -62,12 +72,15 @@ const runCommand = problem.dialect === "postgres"
 		</ul>
 	</section>
 
-	<details class="solution">
-		<summary>Reveal reference query</summary>
-		<div class="code-wrapper">
+	<section class="solution">
+		<div class="solution-header">
+			<h2 class="section-title">Solution</h2>
+			<p class="blur-hint">Hover to reveal — gives you a moment to think first.</p>
+		</div>
+		<div class="code-wrapper blur-target">
 			<Code code={problem.solution} lang="sql" theme="github-dark" />
 		</div>
-	</details>
+	</section>
 
 	<RecallRating
 		domain="sql"
@@ -202,7 +215,8 @@ const runCommand = problem.dialect === "postgres"
 		font: var(--fs-base) / var(--lh-prose) var(--font-sans);
 	}
 
-	.local-run .body-copy {
+	.local-run .body-copy,
+	.schema-copy {
 		margin-bottom: 1rem;
 		color: var(--muted);
 	}
@@ -219,16 +233,32 @@ const runCommand = problem.dialect === "postgres"
 		font: var(--fs-base) / var(--lh-prose) var(--font-sans);
 	}
 
-	.solution summary {
-		cursor: pointer;
-		color: var(--accent);
-		font: 600 var(--fs-eyebrow) var(--font-sans);
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
+	.solution-header {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+		margin-bottom: 0.75rem;
+		flex-wrap: wrap;
 	}
 
-	.solution[open] summary {
-		margin-bottom: 1rem;
+	.solution-header .section-title {
+		margin: 0;
+	}
+
+	.blur-hint {
+		margin: 0;
+		font: italic var(--fs-eyebrow) var(--font-sans);
+		color: var(--muted);
+	}
+
+	.blur-target {
+		filter: blur(5px);
+		transition: filter 0.2s ease;
+	}
+
+	.solution:hover .blur-target,
+	.solution:focus-within .blur-target {
+		filter: blur(0);
 	}
 
 	.code-wrapper :global(pre) {
