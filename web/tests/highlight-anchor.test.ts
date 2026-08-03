@@ -114,6 +114,16 @@ test("pieces skip excluded zones that fall inside the span", () => {
   assert.equal(pieces[1].node.nodeValue, "keep2");
 });
 
+test("link text stays highlightable", () => {
+  // Notes cross-link to problem pages, so anchor text must remain selectable.
+  // The click handler is what protects navigation, not an exclusion here.
+  const root = mount('<p>see <a href="/x">Maximum Subarray</a> next</p>');
+  assert.equal(highlightableText(root), "see Maximum Subarray next");
+
+  const pieces = rangePieces(root, 4, 20);
+  assert.equal(pieces.map((p) => p.node.nodeValue).join(""), "Maximum Subarray");
+});
+
 test("an anchor is valid while the underlying text is unchanged", () => {
   const root = mount("<p>constant factors drop out</p>");
   assert.equal(isAnchorValid(root, 0, 8, "constant"), true);

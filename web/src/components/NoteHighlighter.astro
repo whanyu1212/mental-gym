@@ -94,12 +94,24 @@ const { noteId } = Astro.props;
       // Selecting text opens the create popover.
       document.addEventListener("selectionchange", () => this.onSelectionChange());
 
-      // Clicking an existing highlight opens the edit popover.
+      // Clicking an existing highlight opens the edit popover. Notes contain
+      // links, and a highlight can sit inside one — suppressing the default
+      // unconditionally would break navigation for any marked link text, so
+      // only cancel it when the mark is not inside an interactive control.
       this.root?.addEventListener("click", (event) => {
-        const mark = (event.target as HTMLElement)?.closest?.(
+        const target = event.target as HTMLElement | null;
+        const mark = target?.closest?.(
           "mark[data-highlight-id]"
         ) as HTMLElement | null;
         if (!mark) return;
+
+        const control = target?.closest?.("a[href], button, [role='button']");
+        if (control && this.root?.contains(control)) {
+          // Let the link or button do its job; the popover stays closed so the
+          // click is not ambiguous.
+          return;
+        }
+
         event.preventDefault();
         this.openForExisting(mark);
       });

@@ -153,9 +153,10 @@ export const sqlProblems: SQLProblem[] = [
 		summary:
 			"Detect runs of 3+ consecutive calendar days per user using the gaps-and-islands technique.",
 		prompt:
-			"Given a log of login dates per user, return the distinct user_id values that logged in on at least 3 consecutive calendar days at some point. Non-consecutive logins do not count, even if there are 3 or more of them overall. Order the result by user_id.",
+			"Given a log of login dates per user, return the distinct user_id values that logged in on at least 3 consecutive calendar days at some point. A user can log in more than once on the same day; that still counts as one day. Non-consecutive logins do not count, even if there are 3 or more of them overall. Order the result by user_id.",
 		hints: [
-			"Number each user's logins in date order with ROW_NUMBER.",
+			"The table can hold several rows for the same user and day — collapse those first, or they will shift the numbering.",
+			"Number each user's distinct login dates in order with ROW_NUMBER.",
 			"For consecutive dates, (date - row number) is constant — that's the gaps-and-islands trick.",
 			"Group by that constant per user and keep groups with at least 3 rows.",
 		],

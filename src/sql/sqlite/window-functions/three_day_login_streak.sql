@@ -1,4 +1,10 @@
-WITH numbered AS (
+WITH distinct_logins AS (
+  -- Two logins on the same day are still one day of the streak. Without this,
+  -- the duplicate shifts every later row number and splits a genuine run.
+  SELECT DISTINCT user_id, login_date
+  FROM logins
+),
+numbered AS (
   SELECT
     user_id,
     login_date,
@@ -6,7 +12,7 @@ WITH numbered AS (
       PARTITION BY user_id
       ORDER BY login_date
     ) AS rn
-  FROM logins
+  FROM distinct_logins
 ),
 islands AS (
   SELECT
