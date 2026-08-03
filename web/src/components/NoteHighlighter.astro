@@ -68,10 +68,12 @@ const { noteId } = Astro.props;
     } | null = null;
     /** Existing highlight currently open in the popover. */
     private activeId: string | null = null;
-    /** The mark that opened the popover via keyboard, so closing can restore
-     * focus to it -- without this a keyboard user would land back at the top
-     * of the document instead of where they were reading. */
-    private returnFocusTo: HTMLElement | null = null;
+    /** The highlight whose mark opened the popover via keyboard, so closing
+     * can restore focus to it. Tracked by id rather than the DOM element
+     * itself: applyColor/saveNote repaint the note after closing, which
+     * destroys and recreates every <mark>, so a stale element reference
+     * would already be detached from the document by the time it mattered. */
+    private returnFocusToId: string | null = null;
 
     async connectedCallback() {
       this.noteId = this.dataset.noteId ?? "";
@@ -224,13 +226,13 @@ const { noteId } = Astro.props;
       this.noteEditor.hidden = !highlight.note;
       this.showPopoverAt(mark.getBoundingClientRect(), {
         moveFocusIn: options.moveFocusIn,
-        returnFocusTo: options.moveFocusIn ? mark : null,
+        returnFocusToId: options.moveFocusIn ? id : null,
       });
     }
 
     private showPopoverAt(
       rect: DOMRect,
-      options: { moveFocusIn?: boolean; returnFocusTo?: HTMLElement | null } = {}
+      options: { moveFocusIn?: boolean; returnFocusToId?: string | null } = {}
     ) {
       this.popover.hidden = false;
       // Position in document space so the popover scrolls with the text.
@@ -239,7 +241,7 @@ const { noteId } = Astro.props;
       this.popover.style.top = `${top}px`;
       this.popover.style.left = `${left}px`;
 
-      this.returnFocusTo = options.returnFocusTo ?? null;
+      this.returnFocusToId = options.returnFocusToId ?? null;
       if (options.moveFocusIn) {
         // <NoteHighlighter> renders after the whole article, so leaving focus
         // on the triggering mark would send a subsequent Tab through every
@@ -253,13 +255,34 @@ const { noteId } = Astro.props;
       }
     }
 
-    private close() {
+    /** Focus the mark for `returnFocusToId`, if the popover was opened via
+     * keyboard. Called after renderStored() finishes repainting, since a
+     * colour change or note save destroys and recreates every <mark> --
+     * focusing a pre-repaint element reference would target a node already
+     * removed from the document. */
+    private restoreFocusAfterRepaint() {
+      if (!this.returnFocusToId || !this.root) return;
+      const mark = this.root.querySelector<HTMLElement>(
+        `mark[data-highlight-id="${this.returnFocusToId}"]`
+      );
+      mark?.focus();
+      this.returnFocusToId = null;
+    }
+
+    /**
+     * Hides the popover. By default also restores focus immediately, which
+     * is correct for Escape / click-away since no repaint follows. Callers
+     * that are about to repaint (applyColor, saveNote) pass
+     * deferFocusRestore so the stale, about-to-be-removed mark isn't
+     * targeted -- they call restoreFocusAfterRepaint() themselves once
+     * renderStored() has painted the replacement mark.
+     */
+    private close(options: { deferFocusRestore?: boolean } = {}) {
       this.popover.hidden = true;
       this.noteEditor.hidden = true;
       this.pendingRange = null;
       this.activeId = null;
-      this.returnFocusTo?.focus();
-      this.returnFocusTo = null;
+      if (!options.deferFocusRestore) this.restoreFocusAfterRepaint();
     }
 
     // ── Mutations ──────────────────────────────────────────────
@@ -287,8 +310,9 @@ const { noteId } = Astro.props;
         return;
       }
 
-      this.close();
+      this.close({ deferFocusRestore: true });
       await this.renderStored();
+      this.restoreFocusAfterRepaint();
     }
 
     private async saveNote() {
@@ -317,13 +341,16 @@ const { noteId } = Astro.props;
         document.getSelection()?.removeAllRanges();
       }
 
-      this.close();
+      this.close({ deferFocusRestore: true });
       await this.renderStored();
+      this.restoreFocusAfterRepaint();
     }
 
     private async removeActive() {
       if (!this.activeId) return;
       await deleteHighlight(this.activeId);
+      // The highlight (and its mark) are gone, so there is nothing to
+      // restore focus to after repainting -- a plain close is correct here.
       this.close();
       await this.renderStored();
     }
