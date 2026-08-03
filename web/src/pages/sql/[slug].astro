@@ -105,9 +105,15 @@ const runCommand = problem.dialect === "postgres"
 		toggle.textContent = revealed ? "Hide" : "Reveal";
 		// Hiding while the toggle still holds keyboard focus would otherwise
 		// leave :focus-within blurring nothing, since focus never left the
-		// button. explicitly-hidden overrides that until a fresh :hover or a
-		// later Reveal click clears it again.
+		// button. explicitly-hidden overrides that -- but its CSS selector
+		// has higher specificity than .solution:hover too, so it must be
+		// cleared on the next fresh pointer entry or it would keep defeating
+		// hover-to-reveal for the rest of that focus session.
 		solution!.classList.toggle("explicitly-hidden", !revealed);
+	});
+
+	solution?.addEventListener("pointerenter", () => {
+		solution.classList.remove("explicitly-hidden");
 	});
 </script>
 
@@ -315,11 +321,13 @@ const runCommand = problem.dialect === "postgres"
 
 	/* Tapping Hide after Reveal leaves focus on the toggle button itself, so
 	   :focus-within above would otherwise keep the code unblurred until focus
-	   moves elsewhere. This overrides focus specifically -- declared after the
-	   :focus-within rule with equal specificity, so the cascade favours "the
-	   user just said hide" -- while leaving a fresh :hover free to reveal
-	   again, since hovering is new intent rather than stale focus. */
-	.solution.explicitly-hidden:focus-within .blur-target {
+	   moves elsewhere. This selector has the same specificity as the three
+	   rules above (three classes/pseudo-classes each), so being declared
+	   after them wins the cascade tie -- which means it would also defeat a
+	   fresh hover, not just the stale focus it targets, if left in place.
+	   The script clears explicitly-hidden on pointerenter specifically so
+	   this rule never has to coexist with a genuine :hover attempt. */
+	.solution.explicitly-hidden .blur-target {
 		filter: blur(5px);
 	}
 

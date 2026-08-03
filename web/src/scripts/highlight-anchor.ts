@@ -11,28 +11,50 @@
 
 /**
  * Regions users must not highlight into: rendered math and code would have
- * their DOM corrupted by wrapping <mark> elements, and the interactive viz
- * components manage their own subtree.
+ * their DOM corrupted by wrapping <mark> elements. Interactive viz components
+ * are excluded by convention rather than by name (see isCustomElement) —
+ * dozens of them are embedded across the notes (pattern-viz-modal, pc-viz,
+ * mt-viz, ...) and new ones are added regularly, so enumerating each by tag
+ * name here would silently miss every future one.
  */
-const EXCLUDED_SELECTOR = ".katex, pre, code, algo-player, [data-no-highlight]";
+const EXCLUDED_SELECTOR = ".katex, pre, code, [data-no-highlight]";
+
+/** Custom elements (hyphenated tag names) manage their own subtree and are
+ * excluded on that basis alone, without needing to be named individually. */
+function isCustomElement(element: Element): boolean {
+  return element.tagName.includes("-");
+}
+
+/** The nearest ancestor of `element` (inclusive) that is excluded, or null. */
+function nearestExcludedAncestor(
+  element: Element,
+  root: HTMLElement
+): Element | null {
+  for (let el: Element | null = element; el && el !== root.parentElement; el = el.parentElement) {
+    if (el.matches(EXCLUDED_SELECTOR) || isCustomElement(el)) {
+      return root.contains(el) ? el : null;
+    }
+    if (el === root) break;
+  }
+  return null;
+}
 
 function isExcluded(node: Node, root: HTMLElement): boolean {
   const element =
     node.nodeType === Node.ELEMENT_NODE
-      ? (node as HTMLElement)
+      ? (node as Element)
       : node.parentElement;
   if (!element) return true;
-  const match = element.closest(EXCLUDED_SELECTOR);
-  return match !== null && root.contains(match);
+  return nearestExcludedAncestor(element, root) !== null;
 }
 
 /**
  * The outermost excluded element containing `node`, e.g. <pre> rather than
- * the inner <code> for a fenced code block. `closest()` alone would stop at
- * the innermost match (<code>) and, resolving from there, land back inside
- * another excluded ancestor (<pre>) with nothing highlightable in it — so
- * this keeps climbing past every excluded ancestor in a row. Null if `node`
- * isn't inside an excluded zone under `root`.
+ * the inner <code> for a fenced code block, or the outer <pattern-viz-modal>
+ * rather than a <button> nested inside it. Resolving from only the innermost
+ * excluded ancestor can land back inside another excluded ancestor with
+ * nothing highlightable in it, so this keeps climbing past every excluded
+ * ancestor in a row. Null if `node` isn't inside an excluded zone under `root`.
  */
 function excludedSubtreeRoot(node: Node, root: HTMLElement): Element | null {
   const element =
@@ -41,14 +63,18 @@ function excludedSubtreeRoot(node: Node, root: HTMLElement): Element | null {
       : node.parentElement;
   if (!element) return null;
 
-  const innermost = element.closest(EXCLUDED_SELECTOR);
-  if (!innermost || !root.contains(innermost)) return null;
+  const innermost = nearestExcludedAncestor(element, root);
+  if (!innermost) return null;
 
-  let outermost: Element = innermost;
+  let outermost = innermost;
   for (
-    let candidate = outermost.parentElement?.closest(EXCLUDED_SELECTOR) ?? null;
-    candidate && root.contains(candidate);
-    candidate = outermost.parentElement?.closest(EXCLUDED_SELECTOR) ?? null
+    let candidate = outermost.parentElement
+      ? nearestExcludedAncestor(outermost.parentElement, root)
+      : null;
+    candidate;
+    candidate = outermost.parentElement
+      ? nearestExcludedAncestor(outermost.parentElement, root)
+      : null
   ) {
     outermost = candidate;
   }

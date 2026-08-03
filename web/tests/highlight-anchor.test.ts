@@ -36,6 +36,28 @@ test("code, math, and viz subtrees are excluded from text-space", () => {
   assert.equal(highlightableText(root), "before  after");
 });
 
+test("any custom element is excluded, not just algo-player by name", () => {
+  // ~25 interactive viz components are embedded across the notes and new
+  // ones are added regularly; excluding them by convention (hyphenated tag
+  // name, the platform's own rule for custom elements) rather than an
+  // enumerated list means a brand-new, never-listed tag is still excluded.
+  const root = mount("<p>before</p><totally-unlisted-widget>hidden</totally-unlisted-widget><p>after</p>");
+  assert.equal(highlightableText(root), "beforeafter");
+});
+
+test("interactive controls nested inside a custom element stay excluded", () => {
+  // Mirrors <pattern-viz-modal><button>...</button><dialog>...</dialog></pattern-viz-modal>:
+  // a trigger label and a close button, both plain HTML, inside a component
+  // that manages its own subtree. Their text must not leak into highlights.
+  const root = mount(
+    "<p>before</p>" +
+      "<pattern-viz-modal><button>▶ Two Pointers</button>" +
+      '<dialog><div class="inner"><button>✕</button><algo-player>steps</algo-player></div></dialog>' +
+      "</pattern-viz-modal><p>after</p>"
+  );
+  assert.equal(highlightableText(root), "beforeafter");
+});
+
 test("a selection inside one paragraph serializes to its offsets", () => {
   const root = mount("<p>Big-O hides constants</p>");
   const textNode = root.querySelector("p")!.firstChild!;
@@ -147,6 +169,24 @@ test("a selection starting inside a nested pre>code block clamps forward", () =>
     startOffset: 6,
     endOffset: 11,
     textSnippet: "after",
+  });
+});
+
+test("a selection overshooting into a custom element's button clamps to the prose before it", () => {
+  const root = mount(
+    '<p>before</p><pattern-viz-modal><button>Two Pointers</button></pattern-viz-modal><p>after</p>'
+  );
+  const beforeText = root.querySelectorAll("p")[0].firstChild!;
+  const buttonText = root.querySelector("button")!.firstChild!;
+
+  const range = root.ownerDocument.createRange();
+  range.setStart(beforeText, 0);
+  range.setEnd(buttonText, 3);
+
+  assert.deepEqual(serializeRange(root, range), {
+    startOffset: 0,
+    endOffset: 6,
+    textSnippet: "before",
   });
 });
 
