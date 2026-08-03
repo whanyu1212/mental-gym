@@ -111,7 +111,14 @@ const { noteId } = Astro.props;
         ) as HTMLElement | null;
         if (!mark) return;
 
-        const control = target?.closest?.("a[href], button, [role='button']");
+        // paint() gives the mark itself role="button" for keyboard access,
+        // so closest() run from a click on the mark matches the mark against
+        // its own [role='button'] selector -- closest() includes the
+        // starting element. Searching from the mark's *parent* excludes the
+        // mark itself, leaving only a genuine enclosing link or button.
+        const control = mark.parentElement?.closest(
+          "a[href], button, [role='button']"
+        );
         if (control && this.root?.contains(control)) {
           // Let the link or button do its job; the popover stays closed so the
           // click is not ambiguous.
