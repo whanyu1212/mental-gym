@@ -13,7 +13,7 @@ A/B Testing 是工业推荐系统评估新模型、新策略和新产品功能�
 - **对照组｜Control Group**：使用当前线上基准策略
 - **实验组｜Treatment Group**：使用新的模型或策略
 - **实验单位｜Experiment Unit**：被随机分组的对象
-- **目标指标｜Primary Metric**：实验希望改善的核心指标
+- **主要指标｜Primary Metric**：实验希望改善的核心指标
 - **护栏指标｜Guardrail Metrics**：不允许显著恶化的指标
 - **实验周期｜Experiment Duration**：从实验开始到作出结论的时间窗口
 
@@ -62,7 +62,7 @@ Negative Feedback ↑
     ↓
 全量发布
     ↓
-长期 Holdout 监控
+长期 Holdout 监控（可选）
 ```
 
 A/B Testing 是判断因果增量效果的主要方法，而不仅仅是观察策略上线前后的指标变化。
@@ -89,23 +89,23 @@ A/B Testing 是判断因果增量效果的主要方法，而不仅仅是观察�
 | 实验放量 | Ramp-up | 逐步提高实验组流量比例 |
 | 回滚 | Rollback | 停止新策略并恢复旧策略 |
 | 长期保留组 | Holdout Group | 长期不接收某类新策略的对照流量 |
-| 反转实验 | Reverse Experiment | 新策略全量后，保留少量旧策略流量继续比较 |
+| 反转实验 | Reverse Experiment | 新策略成为默认策略后，保留少量旧策略流量继续比较 |
 
 ---
 
 ## 4. 实验单位｜Experiment Unit
 
-实验单位决定了随机化发生在哪个粒度。
+实验单位决定随机化发生在哪个粒度。
 
 ### 4.1 常见实验单位
 
 | 实验单位 | English | 适用场景 | 主要风险 |
 |---|---|---|---|
-| 用户 | User-level | 推荐、搜索、产品功能、大多数长期行为实验 | 多设备用户可能被重复识别 |
+| 用户 | User-level | 推荐、搜索、产品功能和大多数长期行为实验 | 多设备用户可能被重复识别 |
 | 设备 | Device-level | 未登录流量、移动端功能实验 | 用户换设备后可能进入不同组 |
 | 会话 | Session-level | 短期 UI、会话内交互策略 | 用户可能在不同会话进入不同组 |
 | 请求 | Request-level | 服务性能、低耦合模型策略 | 用户体验可能不一致，容易产生污染 |
-| 内容 | Item-level | 内容策略、创作者实验 | 用户之间可能互相影响 |
+| 内容 | Item-level | 内容策略、内容分发实验 | 用户之间可能互相影响 |
 | 创作者 | Creator-level | 创作者激励、流量分配策略 | 创作者与消费者双边影响复杂 |
 | 地区或时间段 | Geo / Time-level | 网络效应、市场、调度或供需实验 | 样本数量较少，方差较高 |
 
@@ -157,11 +157,29 @@ Bucket
   mod 10,000
 ```
 
-如果 Bucket 总数为 10,000：
+这段逻辑可以拆成五步：
 
-- Bucket 0–499：5% 流量
-- Bucket 500–999：另外 5% 流量
-- Bucket 1,000–9,999：剩余 90% 流量
+```text
+User ID
+    ↓
+拼接 Experiment Salt
+    ↓
+计算稳定 Hash
+    ↓
+对 10,000 取余
+    ↓
+得到 Bucket 0–9,999
+```
+
+到这里还没有决定用户属于 Control 还是 Treatment。实验平台还需要根据 Bucket 区间分配实验组。
+
+例如：
+
+```text
+Bucket 0–499       → Treatment，5%
+Bucket 500–999     → Control，5%
+Bucket 1,000–9,999 → Not in Experiment，90%
+```
 
 ### 5.1 为什么不能直接使用随机数
 
@@ -193,7 +211,25 @@ group = random.choice(["control", "treatment"])
 | 可扩展性 | Scalable | 不需要保存所有用户的分组结果 |
 | 可复现性 | Reproducible | 离线分析和线上服务可以复现相同分组 |
 
-### 5.3 为什么需要 Salt
+### 5.3 Bucket 与实验组的关系
+
+Bucket 只是用户的稳定“座位号”，实验组由 Bucket 区间决定。
+
+| User | Bucket | Group |
+|---|---:|---|
+| User A | 123 | Treatment |
+| User B | 845 | Control |
+| User C | 3,827 | Not in Experiment |
+
+因此：
+
+```text
+Hash 负责稳定随机化
+Bucket 负责离散化流量
+Traffic Range 负责分配实验组
+```
+
+### 5.4 为什么需要 Salt
 
 如果所有实验都只使用：
 
@@ -230,7 +266,9 @@ Randomization Unit Type
 recommendation-ranking:exp-102:v1:user
 ```
 
-### 5.4 常见哈希函数
+Salt 的作用不是加密，而是让不同实验拥有独立的随机映射。
+
+### 5.5 常见哈希函数
 
 | 哈希函数 | 特点 | 适用性 |
 |---|---|---|
@@ -271,6 +309,9 @@ class ExperimentConfig:
     num_buckets: int = 10_000
 
     def __post_init__(self) -> None:
+        if not self.experiment_id:
+            raise ValueError("experiment_id must not be empty")
+
         if self.num_buckets <= 0:
             raise ValueError("num_buckets must be positive")
 
@@ -292,7 +333,11 @@ def stable_bucket(
     digest = hashlib.sha256(hash_input).digest()
 
     # 取前 8 个字节转换为无符号整数
-    hash_value = int.from_bytes(digest[:8], byteorder="big", signed=False)
+    hash_value = int.from_bytes(
+        digest[:8],
+        byteorder="big",
+        signed=False,
+    )
 
     return hash_value % config.num_buckets
 ```
@@ -309,6 +354,8 @@ bucket = stable_bucket("user_1001", config)
 print(bucket)
 ```
 
+示例中使用 SHA-256 是因为 Python 标准库原生支持，便于演示稳定哈希思想。高吞吐生产系统通常会根据性能、跨语言一致性和已有基础设施选择具体哈希算法。
+
 ### 6.2 根据 Bucket 分配实验组
 
 ```python
@@ -321,6 +368,18 @@ class TrafficRange:
     start_bucket: int
     end_bucket: int
 
+    def __post_init__(self) -> None:
+        if not self.group_name:
+            raise ValueError("group_name must not be empty")
+
+        if self.start_bucket < 0:
+            raise ValueError("start_bucket must be non-negative")
+
+        if self.end_bucket <= self.start_bucket:
+            raise ValueError(
+                "end_bucket must be greater than start_bucket"
+            )
+
     def contains(self, bucket: int) -> bool:
         return self.start_bucket <= bucket < self.end_bucket
 
@@ -332,6 +391,9 @@ TRAFFIC_RANGES = (
 
 
 def assign_group(bucket: int) -> str:
+    if bucket < 0:
+        raise ValueError("bucket must be non-negative")
+
     for traffic_range in TRAFFIC_RANGES:
         if traffic_range.contains(bucket):
             return traffic_range.group_name
@@ -369,14 +431,14 @@ Treatment: Bucket 0–499
 Control:   Bucket 500–999
 ```
 
-从 5% 扩大到 10% 时，可以修改为：
+从 5% 扩大到 10% 时，如果改为：
 
 ```text
 Treatment: Bucket 0–999
 Control:   Bucket 1,000–1,999
 ```
 
-但这种方式会改变部分原有 Control 用户的分组。
+原有部分 Control 用户会转入 Treatment。
 
 更稳定的方式是提前规划固定对照区间：
 
@@ -516,39 +578,7 @@ New Ranking Model
 
 ---
 
-## 9. A/A Testing
-
-### 9.1 什么是 A/A Testing
-
-A/A Testing 并不是验证模型，而是验证实验平台。
-
-它用于回答：
-
-> 实验平台是否能够在没有策略变化的情况下，保持两组数据统计一致？
-
-### 9.2 A/A Testing 的目标
-
-- 验证 Hash Bucketing 是否均匀
-- 验证 Sample Ratio 是否正确
-- 验证 Logging 是否一致
-- 验证 Dashboard 是否正确
-- 验证 Metrics Pipeline 是否正确
-- 验证统计检验是否正常工作
-
-### 9.3 A/A 与 A/B 的区别
-
-| 对比项 | A/A Testing | A/B Testing |
-|--------|-------------|-------------|
-| 是否修改策略 | 否 | 是 |
-| Control | Old | Old |
-| Treatment | Old | New |
-| 目的 | 验证实验平台 | 验证产品策略 |
-| 理论结果 | 两组应无显著差异 | 两组可能存在真实差异 |
-| 发现显著意味着 | 实验平台可能存在问题 | 新策略可能产生效果 |
-
----
-
-## 10. 样本比例失配｜Sample Ratio Mismatch
+## 9. 样本比例失配｜Sample Ratio Mismatch
 
 Sample Ratio Mismatch，简称 SRM，表示实际实验组比例与设计比例存在无法由随机波动解释的差异。
 
@@ -568,7 +598,7 @@ Treatment = 46%
 
 当样本量很大时，这种偏差通常不是普通随机波动，而可能意味着实验系统存在问题。
 
-### 10.1 SRM 常见原因
+### 9.1 SRM 常见原因
 
 - 哈希或分桶实现不一致
 - 某个实验组请求失败率更高
@@ -579,7 +609,7 @@ Treatment = 46%
 - Bot 或内部流量分布不均
 - 实验组产生更高 Crash，导致后续事件缺失
 
-### 10.2 SRM 检查代码
+### 9.2 SRM 检查代码
 
 ```python
 from __future__ import annotations
@@ -601,6 +631,9 @@ def check_srm(
     if len(observed_counts) != len(expected_ratios):
         raise ValueError("counts and ratios must have the same length")
 
+    if not observed_counts:
+        raise ValueError("observed_counts must not be empty")
+
     if any(count < 0 for count in observed_counts):
         raise ValueError("observed counts must be non-negative")
 
@@ -608,9 +641,15 @@ def check_srm(
         raise ValueError("expected ratios must be positive")
 
     ratio_sum = sum(expected_ratios)
-    normalized_ratios = [ratio / ratio_sum for ratio in expected_ratios]
+    normalized_ratios = [
+        ratio / ratio_sum
+        for ratio in expected_ratios
+    ]
 
     total_count = sum(observed_counts)
+    if total_count <= 0:
+        raise ValueError("total observed count must be positive")
+
     expected_counts = [
         total_count * ratio
         for ratio in normalized_ratios
@@ -641,13 +680,13 @@ print(
 )
 ```
 
-SRM 检查应在分析实验效果之前完成。
+SRM 检查应在分析实验效果之前完成，并且需要在实验运行期间持续执行。
 
 如果存在严重 SRM，不应直接解释业务指标差异。
 
 ---
 
-## 11. 实验前平衡检查｜Pre-experiment Balance Check
+## 10. 实验前平衡检查｜Pre-experiment Balance Check
 
 随机化后，两组的用户属性在期望上应接近，但有限样本中仍可能存在差异。
 
@@ -680,7 +719,7 @@ SRM 检查应在分析实验效果之前完成。
 
 ---
 
-## 12. 分层随机化｜Stratified Randomization
+## 11. 分层随机化｜Stratified Randomization
 
 当某些关键特征强烈影响实验指标时，可以先分层，再在层内随机。
 
@@ -714,7 +753,7 @@ High Activity Users
 
 ---
 
-## 13. 样本量与统计功效｜Sample Size and Statistical Power
+## 12. 样本量与统计功效｜Sample Size and Statistical Power
 
 实验样本量取决于：
 
@@ -727,7 +766,7 @@ High Activity Users
 | 指标方差 | Variance | 指标自然波动程度 |
 | 流量比例 | Allocation Ratio | Control 与 Treatment 的样本分配比例 |
 
-### 13.1 MDE 的两种表达
+### 12.1 MDE 的两种表达
 
 绝对提升：
 
@@ -751,7 +790,7 @@ Relative Lift
 - Percentage Point Change
 - Relative Percentage Change
 
-### 13.2 二项指标样本量代码
+### 12.2 二项指标样本量代码
 
 以下示例适用于 CTR、CVR、Retention 等比例指标。
 
@@ -779,6 +818,11 @@ def sample_size_for_two_proportions(
     }.items():
         if not 0 < value < 1:
             raise ValueError(f"{name} must be between 0 and 1")
+
+    if baseline_rate == treatment_rate:
+        raise ValueError(
+            "baseline_rate and treatment_rate must be different"
+        )
 
     if not 0 < alpha < 1:
         raise ValueError("alpha must be between 0 and 1")
@@ -824,7 +868,7 @@ print(control_n)
 
 ---
 
-## 14. 实验周期｜Experiment Duration
+## 13. 实验周期｜Experiment Duration
 
 即使样本量已经足够，也不应在极短时间内结束实验。
 
@@ -852,11 +896,11 @@ print(control_n)
 
 ---
 
-## 15. 统计检验方法｜Statistical Testing
+## 14. 统计检验方法｜Statistical Testing
 
 不同类型指标适合不同统计方法。
 
-### 15.1 常见方法
+### 14.1 常见方法
 
 | 指标类型 | 示例 | 常见方法 |
 |---|---|---|
@@ -867,7 +911,7 @@ print(control_n)
 | 时间或地区随机实验 | Switchback、Geo Experiment | Cluster-robust Inference、Time-series Analysis |
 | 多次中途查看 | Sequential Experiment | Sequential Test、Always-valid Inference |
 
-### 15.2 两比例检验代码
+### 14.2 两比例检验代码
 
 ```python
 from __future__ import annotations
@@ -891,6 +935,9 @@ def compare_two_rates(
         treatment_total,
     ) < 0:
         raise ValueError("counts must be non-negative")
+
+    if control_total <= 0 or treatment_total <= 0:
+        raise ValueError("group totals must be positive")
 
     if control_successes > control_total:
         raise ValueError("control successes cannot exceed total")
@@ -940,7 +987,7 @@ result = compare_two_rates(
 print(result)
 ```
 
-### 15.3 显著不等于重要
+### 14.3 显著不等于重要
 
 一个实验可能：
 
@@ -961,7 +1008,7 @@ p-value < 0.001
 
 ---
 
-## 16. 置信区间｜Confidence Interval
+## 15. 置信区间｜Confidence Interval
 
 只报告 p-value 不足以表达实验结果。
 
@@ -997,7 +1044,7 @@ Lower Bound above Business Threshold
 
 ---
 
-## 17. 多重检验｜Multiple Testing
+## 16. 多重检验｜Multiple Testing
 
 一个实验同时观察大量指标或用户分群时，偶然显著的概率会增加。
 
@@ -1022,7 +1069,7 @@ Lower Bound above Business Threshold
 
 ---
 
-## 18. 中途查看与提前停止｜Peeking and Early Stopping
+## 17. 中途查看与提前停止｜Peeking and Early Stopping
 
 如果每天使用普通固定样本检验查看 p-value，并在首次显著时停止实验，会提高假阳性率。
 
@@ -1049,7 +1096,7 @@ Day 3: p = 0.03 → Stop and Ship
 
 ---
 
-## 19. 方差降低｜Variance Reduction
+## 18. 方差降低｜Variance Reduction
 
 指标方差越低，在相同样本量下越容易检测到真实效应。
 
@@ -1063,7 +1110,7 @@ Day 3: p = 0.03 → Stop and Ship
 - 使用 CUPED
 - 使用更稳定的指标定义
 
-### 19.1 CUPED
+### 18.1 CUPED
 
 CUPED 使用实验前与实验指标高度相关的变量降低方差。
 
@@ -1088,11 +1135,9 @@ Pre-experiment Watch Time
 
 ---
 
-## 20. 用户污染与网络效应｜Contamination and Network Effects
+## 19. 用户污染与网络效应｜Contamination and Network Effects
 
-标准 A/B Testing 假设一个用户的处理不会影响另一个用户的结果。
-
-这通常称为 SUTVA 假设的一部分。
+标准 A/B Testing 通常依赖一个重要假设：一个实验单位接受的处理不会改变另一个实验单位的结果。
 
 但在以下场景中可能不成立：
 
@@ -1106,7 +1151,7 @@ Pre-experiment Watch Time
 
 例如，一部分用户获得新的创作者推荐策略后，可能改变创作者供给，进而影响 Control 用户。
 
-### 20.1 常见解决方案
+### 19.1 常见解决方案
 
 - Cluster Randomization
 - Geo Experiment
@@ -1119,7 +1164,7 @@ Pre-experiment Watch Time
 
 ---
 
-## 21. Switchback Experiment
+## 20. Switchback Experiment
 
 Switchback 适合具有强网络效应、资源共享或供需耦合的系统。
 
@@ -1155,7 +1200,7 @@ Switchback 的关键风险：
 
 ---
 
-## 22. Ramp-up 与灰度发布｜Gradual Rollout
+## 21. Ramp-up 与灰度发布｜Gradual Rollout
 
 实验通过初步检查后，通常不会直接从 5% 跳到 100%。
 
@@ -1189,14 +1234,14 @@ Internal Traffic
 - 用户分群表现
 - 内容或商品分布变化
 
-### 22.1 放量的两个目标
+### 21.1 放量的两个目标
 
 1. **实验推断**：获得足够样本判断策略效果
 2. **工程风险控制**：限制 Bug 或异常策略的影响范围
 
 二者不能混为一谈。
 
-### 22.2 自动停止条件
+### 21.2 自动停止条件
 
 可以为严重风险设置自动停止规则，例如：
 
@@ -1211,7 +1256,7 @@ Severe Negative Feedback increase > threshold
 
 ---
 
-## 23. 回滚｜Rollback
+## 22. 回滚｜Rollback
 
 如果实验出现严重异常，应迅速恢复旧策略。
 
@@ -1238,9 +1283,9 @@ Severe Negative Feedback increase > threshold
 
 ---
 
-## 24. Holdout 与反转实验｜Holdout and Reverse Experiment
+## 23. Holdout 与反转实验｜Holdout and Reverse Experiment
 
-### 24.1 Global Holdout
+### 23.1 Global Holdout
 
 Global Holdout 长期不接收某一系列实验策略。
 
@@ -1258,7 +1303,7 @@ Global Holdout 长期不接收某一系列实验策略。
 - 长期留存和生态影响
 - 季节性变化与算法变化的区别
 
-### 24.2 Layer Holdout
+### 23.2 Layer Holdout
 
 只针对某一个实验层保留旧策略，例如：
 
@@ -1268,9 +1313,9 @@ Ads Layer Holdout
 Creator Ecosystem Holdout
 ```
 
-### 24.3 Reverse Experiment
+### 23.3 Reverse Experiment
 
-当新策略已经全量时，可以保留少量旧策略流量：
+当新策略已经成为默认策略时，可以保留少量旧策略流量：
 
 ```text
 95% → New Strategy
@@ -1279,7 +1324,7 @@ Creator Ecosystem Holdout
 
 用于继续观察长期差异。
 
-### 24.4 Holdout 风险
+### 23.4 Holdout 风险
 
 - 长期保留旧策略可能损害这部分用户体验
 - Holdout 用户可能逐渐不再具有代表性
@@ -1287,11 +1332,13 @@ Creator Ecosystem Holdout
 - 其他产品变化可能使旧策略无法兼容
 - 需要定期评估是否重置 Holdout
 
+Holdout 是可选的长期测量机制，不是每个模型上线后的必经步骤。
+
 ---
 
-## 25. 实验案例：推荐排序模型｜Case Study: Ranking Model
+## 24. 实验案例：推荐排序模型｜Case Study: Ranking Model
 
-### 25.1 背景
+### 24.1 背景
 
 当前模型主要优化 CTR，导致用户点击增加，但平均观看时长增长有限。
 
@@ -1304,7 +1351,7 @@ Creator Ecosystem Holdout
 
 目标是提高深度消费，而不是只提高点击。
 
-### 25.2 实验假设
+### 24.2 实验假设
 
 ```text
 新排序模型将提高人均有效观看时长，
@@ -1312,7 +1359,7 @@ Creator Ecosystem Holdout
 负反馈率和系统延迟保持稳定。
 ```
 
-### 25.3 实验设计
+### 24.3 实验设计
 
 | 项目 | 设计 |
 |---|---|
@@ -1327,16 +1374,16 @@ Creator Ecosystem Holdout
 | Duration | At least 14 days |
 | Randomization | Hash(User ID + Experiment Salt) |
 
-### 25.4 实验前检查
+### 24.4 实验前检查
 
-- A/A Test 正常
+- 实验平台和随机化链路处于正常状态
 - 无 SRM
-- 用户历史 Watch Time 平衡
-- App Version 分布平衡
+- 用户历史 Watch Time 基本平衡
+- App Version 分布基本平衡
 - 日志完整率正常
 - Control 与 Treatment 模型服务延迟稳定
 
-### 25.5 假设结果
+### 24.5 假设结果
 
 | 指标 | Relative Lift | 结果 |
 |---|---:|---|
@@ -1348,7 +1395,7 @@ Creator Ecosystem Holdout
 | D1 Retention | +0.2% | 无明确结论 |
 | P95 Latency | +3 ms | 在护栏范围内 |
 
-### 25.6 结果解释
+### 24.6 结果解释
 
 虽然 CTR 小幅下降，但：
 
@@ -1361,7 +1408,7 @@ Creator Ecosystem Holdout
 
 如果业务目标是长期内容消费，该实验可以继续放量。
 
-### 25.7 放量计划
+### 24.7 放量计划
 
 ```text
 5%
@@ -1387,13 +1434,13 @@ Creator Ecosystem Holdout
 
 ---
 
-## 26. 实验案例：电商排序与 GMV｜Case Study: Commerce Ranking
+## 25. 实验案例：电商排序与 GMV｜Case Study: Commerce Ranking
 
-### 26.1 背景
+### 25.1 背景
 
 新商品排序模型提高了商品 CTR，但无法确认是否提高最终商业价值。
 
-### 26.2 指标设计
+### 25.2 指标设计
 
 | 指标类型 | 指标 |
 |---|---|
@@ -1402,7 +1449,7 @@ Creator Ecosystem Holdout
 | Guardrails | Refund Rate, Cancellation Rate, Complaint Rate, Latency |
 | Diagnostic | Category Mix, Price Distribution, Seller Exposure Share |
 
-### 26.3 假设结果
+### 25.3 假设结果
 
 ```text
 Product CTR            +3.0%
@@ -1414,7 +1461,7 @@ Net GMV per User       -0.8%
 Refund Rate            +1.1%
 ```
 
-### 26.4 结果解释
+### 25.4 结果解释
 
 虽然 CTR 和加购率提升，但：
 
@@ -1445,7 +1492,7 @@ Do not roll out.
 
 ---
 
-## 27. 实验分析代码示例｜Experiment Analysis Example
+## 26. 实验分析代码示例｜Experiment Analysis Example
 
 下面是一个简化的用户级实验分析示例。
 
@@ -1473,7 +1520,9 @@ def validate_experiment_data(data: pd.DataFrame) -> None:
             f"Missing required columns: {sorted(missing_columns)}"
         )
 
-    invalid_groups = set(data["experiment_group"].dropna().unique()) - {
+    invalid_groups = set(
+        data["experiment_group"].dropna().unique()
+    ) - {
         "control",
         "treatment",
     }
@@ -1486,7 +1535,8 @@ def validate_experiment_data(data: pd.DataFrame) -> None:
 
 def aggregate_to_user_level(data: pd.DataFrame) -> pd.DataFrame:
     """
-    将事件级数据聚合到用户级，确保分析粒度与用户级随机化一致。
+    将事件级数据聚合到用户级，
+    确保分析粒度与用户级随机化一致。
     """
     validate_experiment_data(data)
 
@@ -1569,7 +1619,7 @@ def compare_watch_time(
 
 ---
 
-## 28. 实验平台架构｜Experimentation Platform Architecture
+## 27. 实验平台架构｜Experimentation Platform Architecture
 
 典型在线实验链路：
 
@@ -1619,9 +1669,9 @@ Ramp-up or Rollback
 
 ---
 
-## 29. 实验上线清单｜Experiment Launch Checklist
+## 28. 实验上线清单｜Experiment Launch Checklist
 
-### 29.1 实验前
+### 28.1 实验前
 
 - [ ] 明确实验假设
 - [ ] 确定 Experiment Unit
@@ -1633,10 +1683,11 @@ Ramp-up or Rollback
 - [ ] 检查实验层冲突
 - [ ] 确定 Salt 和 Bucket 范围
 - [ ] 验证线上与离线分桶一致
+- [ ] 确认实验平台和随机化链路处于正常状态
 - [ ] 检查埋点和数据链路
 - [ ] 确定回滚方案
 
-### 29.2 实验运行中
+### 28.2 实验运行中
 
 - [ ] 检查 SRM
 - [ ] 检查组间样本和用户属性
@@ -1646,7 +1697,7 @@ Ramp-up or Rollback
 - [ ] 避免使用普通 p-value 频繁提前停止
 - [ ] 关注重大活动和系统故障
 
-### 29.3 实验结束后
+### 28.3 实验结束后
 
 - [ ] 按预设方法计算实验效果
 - [ ] 同时报告 Lift、Confidence Interval 和 p-value
@@ -1661,57 +1712,57 @@ Ramp-up or Rollback
 
 ---
 
-## 30. 常见实验陷阱｜Common Experiment Pitfalls
+## 29. 常见实验陷阱｜Common Experiment Pitfalls
 
-### 30.1 使用不稳定随机数
+### 29.1 使用不稳定随机数
 
 同一用户在实验期间切换组，导致实验污染。
 
-### 30.2 使用 Python 内置 `hash()`
+### 29.2 使用 Python 内置 `hash()`
 
 不同进程、版本或环境下结果可能不一致，不适合作为跨系统稳定分桶方案。
 
-### 30.3 分析粒度与随机化粒度不一致
+### 29.3 分析粒度与随机化粒度不一致
 
 用户级随机化却按事件级进行普通独立样本检验，会低估标准误。
 
-### 30.4 忽略 SRM
+### 29.4 忽略 SRM
 
 在分流或数据链路异常时直接解释实验结果。
 
-### 30.5 实验开始后更换主指标
+### 29.5 实验开始后更换主指标
 
 根据结果选择最显著的指标，增加假阳性风险。
 
-### 30.6 样本量不足
+### 29.6 样本量不足
 
 实验没有显著结果，不代表策略没有效果，可能只是统计功效不足。
 
-### 30.7 只看 p-value
+### 29.7 只看 p-value
 
 统计显著不代表业务收益足够大。
 
-### 30.8 频繁查看并提前停止
+### 29.8 频繁查看并提前停止
 
 使用普通固定样本检验反复查看结果，会提高假阳性率。
 
-### 30.9 忽略多重检验
+### 29.9 忽略多重检验
 
 大量指标和分群中容易出现偶然显著。
 
-### 30.10 忽略长期效果
+### 29.10 忽略长期效果
 
 CTR 提升不代表留存、生态或商业价值长期改善。
 
-### 30.11 忽略网络效应
+### 29.11 忽略网络效应
 
 用户、创作者、广告主和供给侧之间可能相互影响。
 
-### 30.12 直接从小流量推到全量
+### 29.12 直接从小流量推到全量
 
 小流量下未暴露的问题可能在大流量下放大。
 
-### 30.13 将未显著理解为完全相同
+### 29.13 将未显著理解为完全相同
 
 `p-value > 0.05` 只表示证据不足，不表示两组完全等价。
 
@@ -1719,7 +1770,7 @@ CTR 提升不代表留存、生态或商业价值长期改善。
 
 ---
 
-## 31. 总结｜Summary
+## 30. 总结｜Summary
 
 一个完整的工业 A/B Testing 流程包括：
 
@@ -1732,23 +1783,25 @@ CTR 提升不代表留存、生态或商业价值长期改善。
     ↓
 设计指标体系
     ↓
-计算样本量和周期
+计算样本量和实验周期
     ↓
-使用稳定哈希随机分流
+配置 Experiment Layer、Salt 和 Bucket
     ↓
-运行 A/A 和数据质量检查
+确认实验平台和数据链路可靠
     ↓
-小流量启动实验
+小流量启动 A/B Test
     ↓
-检查 SRM 和护栏指标
+持续检查 SRM、数据质量和护栏指标
     ↓
 完成统计分析
     ↓
 评估业务意义和长期风险
     ↓
-逐步放量或回滚
+逐步 Ramp-up 或 Rollback
     ↓
-使用 Holdout 观察长期价值
+Full Rollout
+    ↓
+使用 Holdout 观察长期价值（可选）
 ```
 
 核心原则：
