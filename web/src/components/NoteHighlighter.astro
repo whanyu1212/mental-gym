@@ -169,6 +169,9 @@ const { noteId } = Astro.props;
       ).addEventListener("click", () => {
         this.noteEditor.hidden = !this.noteEditor.hidden;
         if (!this.noteEditor.hidden) this.noteInput.focus();
+        // The note editor changes the popover's width after it was already
+        // positioned and clamped for the collapsed state.
+        this.clampPopoverToViewport();
       });
 
       (
@@ -244,9 +247,10 @@ const { noteId } = Astro.props;
       this.popover.hidden = false;
       // Position in document space so the popover scrolls with the text.
       const top = rect.bottom + window.scrollY + 8;
-      const left = rect.left + window.scrollX + rect.width / 2;
+      const centeredLeft = rect.left + window.scrollX + rect.width / 2;
       this.popover.style.top = `${top}px`;
-      this.popover.style.left = `${left}px`;
+      this.popover.style.left = `${centeredLeft}px`;
+      this.clampPopoverToViewport();
 
       this.returnFocusToId = options.returnFocusToId ?? null;
       if (options.moveFocusIn) {
@@ -259,6 +263,38 @@ const { noteId } = Astro.props;
           "[data-hl-color]"
         );
         firstSwatch?.focus();
+      }
+    }
+
+    /**
+     * The popover is centred on the selection via `left` + CSS
+     * translateX(-50%), with no bounds check -- a selection near either
+     * viewport edge, especially on a narrow screen, can leave it partly
+     * off-screen and its controls unreachable. This nudges `left` back
+     * inside the viewport (with a small margin) after layout, so it must
+     * run after the popover is unhidden and sized for its current content
+     * -- toggling the note editor open changes that width, so callers that
+     * change popover content after showing it should re-run this too.
+     */
+    private clampPopoverToViewport() {
+      const margin = 8;
+      const width = this.popover.offsetWidth;
+      const currentLeft = parseFloat(this.popover.style.left || "0");
+      // translateX(-50%) means the rendered box spans
+      // [currentLeft - width/2, currentLeft + width/2] in viewport space,
+      // offset by however far the page has scrolled horizontally.
+      const viewportLeft = currentLeft - window.scrollX - width / 2;
+      const viewportRight = viewportLeft + width;
+      const viewportWidth = window.innerWidth;
+
+      let shift = 0;
+      if (viewportLeft < margin) {
+        shift = margin - viewportLeft;
+      } else if (viewportRight > viewportWidth - margin) {
+        shift = viewportWidth - margin - viewportRight;
+      }
+      if (shift !== 0) {
+        this.popover.style.left = `${currentLeft + shift}px`;
       }
     }
 
