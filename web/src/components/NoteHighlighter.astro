@@ -1,0 +1,552 @@
+---
+interface Props {
+  noteId: string;
+}
+const { noteId } = Astro.props;
+---
+
+<note-highlighter data-note-id={noteId}>
+  <div class="hl-popover" data-hl-popover hidden role="dialog" aria-label="Highlight options">
+    <div class="hl-swatches" role="group" aria-label="Highlight colour">
+      <button class="hl-swatch hl-yellow" data-hl-color="yellow" type="button" aria-label="Yellow"></button>
+      <button class="hl-swatch hl-green" data-hl-color="green" type="button" aria-label="Green"></button>
+      <button class="hl-swatch hl-blue" data-hl-color="blue" type="button" aria-label="Blue"></button>
+      <button class="hl-swatch hl-pink" data-hl-color="pink" type="button" aria-label="Pink"></button>
+      <span class="hl-divider" aria-hidden="true"></span>
+      <button class="hl-action" data-hl-toggle-note type="button">Note</button>
+      <button class="hl-action hl-remove" data-hl-remove type="button" hidden>Remove</button>
+    </div>
+    <div class="hl-note-editor" data-hl-note-editor hidden>
+      <textarea
+        class="hl-note-input"
+        data-hl-note-input
+        id="hl-note-input"
+        name="highlight-note"
+        rows="3"
+        placeholder="Add a note…"
+        aria-label="Highlight note"></textarea>
+      <div class="hl-note-actions">
+        <button class="hl-action" data-hl-note-save type="button">Save</button>
+        <button class="hl-action hl-muted" data-hl-note-cancel type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="hl-status" data-hl-status role="status" aria-live="polite" hidden></p>
+</note-highlighter>
+
+<script>
+  import {
+    isAnchorValid,
+    rangePieces,
+    recoverAnchor,
+    serializeRange,
+  } from "../scripts/highlight-anchor";
+  import {
+    deleteHighlight,
+    getHighlightsForNote,
+    putHighlight,
+  } from "../scripts/highlight-db";
+  import type { Highlight, HighlightColor } from "../scripts/highlight-types";
+
+  class NoteHighlighter extends HTMLElement {
+    private noteId = "";
+    private root: HTMLElement | null = null;
+    private popover!: HTMLElement;
+    private noteEditor!: HTMLElement;
+    private noteInput!: HTMLTextAreaElement;
+    private removeButton!: HTMLButtonElement;
+    private statusEl!: HTMLElement;
+
+    /** Highlights that could not be re-anchored, surfaced to the reader. */
+    private orphanCount = 0;
+    /** Pending selection awaiting a colour choice. */
+    private pendingRange: {
+      startOffset: number;
+      endOffset: number;
+      textSnippet: string;
+    } | null = null;
+    /** Existing highlight currently open in the popover. */
+    private activeId: string | null = null;
+
+    async connectedCallback() {
+      this.noteId = this.dataset.noteId ?? "";
+      this.root = document.querySelector<HTMLElement>("article.prose");
+      this.popover = this.querySelector("[data-hl-popover]") as HTMLElement;
+      this.noteEditor = this.querySelector(
+        "[data-hl-note-editor]"
+      ) as HTMLElement;
+      this.noteInput = this.querySelector(
+        "[data-hl-note-input]"
+      ) as HTMLTextAreaElement;
+      this.removeButton = this.querySelector(
+        "[data-hl-remove]"
+      ) as HTMLButtonElement;
+      this.statusEl = this.querySelector("[data-hl-status]") as HTMLElement;
+
+      if (!this.root) return;
+
+      this.bindEvents();
+      await this.renderStored();
+    }
+
+    private bindEvents() {
+      // Selecting text opens the create popover.
+      document.addEventListener("selectionchange", () => this.onSelectionChange());
+
+      // Clicking an existing highlight opens the edit popover.
+      this.root?.addEventListener("click", (event) => {
+        const mark = (event.target as HTMLElement)?.closest?.(
+          "mark[data-highlight-id]"
+        ) as HTMLElement | null;
+        if (!mark) return;
+        event.preventDefault();
+        this.openForExisting(mark);
+      });
+
+      // Dismiss when clicking away or pressing Escape.
+      document.addEventListener("pointerdown", (event) => {
+        if (this.popover.hidden) return;
+        if (this.popover.contains(event.target as Node)) return;
+        if ((event.target as HTMLElement)?.closest?.("mark[data-highlight-id]"))
+          return;
+        this.close();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !this.popover.hidden) this.close();
+      });
+
+      this.querySelectorAll<HTMLButtonElement>("[data-hl-color]").forEach(
+        (button) => {
+          button.addEventListener("click", () => {
+            const color = button.dataset.hlColor as HighlightColor;
+            void this.applyColor(color);
+          });
+        }
+      );
+
+      this.removeButton.addEventListener("click", () => void this.removeActive());
+
+      (
+        this.querySelector("[data-hl-toggle-note]") as HTMLButtonElement
+      ).addEventListener("click", () => {
+        this.noteEditor.hidden = !this.noteEditor.hidden;
+        if (!this.noteEditor.hidden) this.noteInput.focus();
+      });
+
+      (
+        this.querySelector("[data-hl-note-save]") as HTMLButtonElement
+      ).addEventListener("click", () => void this.saveNote());
+
+      (
+        this.querySelector("[data-hl-note-cancel]") as HTMLButtonElement
+      ).addEventListener("click", () => {
+        this.noteEditor.hidden = true;
+      });
+    }
+
+    // ── Selection → popover ────────────────────────────────────
+
+    private onSelectionChange() {
+      const selection = document.getSelection();
+      if (!selection || selection.isCollapsed || !this.root) return;
+
+      const range = selection.getRangeAt(0);
+      // Ignore selections that start or end outside the note body.
+      if (
+        !this.root.contains(range.startContainer) ||
+        !this.root.contains(range.endContainer)
+      ) {
+        return;
+      }
+      // Don't hijack a click on an existing highlight.
+      if (
+        (range.startContainer.parentElement as HTMLElement | null)?.closest?.(
+          "mark[data-highlight-id]"
+        )
+      ) {
+        return;
+      }
+
+      const serialized = serializeRange(this.root, range);
+      if (!serialized) return;
+
+      this.pendingRange = serialized;
+      this.activeId = null;
+      this.removeButton.hidden = true;
+      this.noteEditor.hidden = true;
+      this.noteInput.value = "";
+      this.showPopoverAt(range.getBoundingClientRect());
+    }
+
+    private async openForExisting(mark: HTMLElement) {
+      const id = mark.dataset.highlightId;
+      if (!id) return;
+      const stored = await getHighlightsForNote(this.noteId);
+      const highlight = stored.find((item) => item.id === id);
+      if (!highlight) return;
+
+      this.activeId = id;
+      this.pendingRange = null;
+      this.removeButton.hidden = false;
+      this.noteInput.value = highlight.note ?? "";
+      this.noteEditor.hidden = !highlight.note;
+      this.showPopoverAt(mark.getBoundingClientRect());
+    }
+
+    private showPopoverAt(rect: DOMRect) {
+      this.popover.hidden = false;
+      // Position in document space so the popover scrolls with the text.
+      const top = rect.bottom + window.scrollY + 8;
+      const left = rect.left + window.scrollX + rect.width / 2;
+      this.popover.style.top = `${top}px`;
+      this.popover.style.left = `${left}px`;
+    }
+
+    private close() {
+      this.popover.hidden = true;
+      this.noteEditor.hidden = true;
+      this.pendingRange = null;
+      this.activeId = null;
+    }
+
+    // ── Mutations ──────────────────────────────────────────────
+
+    private async applyColor(color: HighlightColor) {
+      if (this.activeId) {
+        const stored = await getHighlightsForNote(this.noteId);
+        const existing = stored.find((item) => item.id === this.activeId);
+        if (existing) {
+          await putHighlight({ ...existing, color });
+        }
+      } else if (this.pendingRange) {
+        const highlight: Highlight = {
+          id: crypto.randomUUID(),
+          noteId: this.noteId,
+          startOffset: this.pendingRange.startOffset,
+          endOffset: this.pendingRange.endOffset,
+          textSnippet: this.pendingRange.textSnippet,
+          color,
+          createdAt: new Date().toISOString(),
+        };
+        await putHighlight(highlight);
+        document.getSelection()?.removeAllRanges();
+      } else {
+        return;
+      }
+
+      this.close();
+      await this.renderStored();
+    }
+
+    private async saveNote() {
+      const text = this.noteInput.value.trim();
+      const stored = await getHighlightsForNote(this.noteId);
+
+      if (this.activeId) {
+        const existing = stored.find((item) => item.id === this.activeId);
+        if (existing) {
+          const { note: _previous, ...rest } = existing;
+          await putHighlight(text ? { ...rest, note: text } : rest);
+        }
+      } else if (this.pendingRange) {
+        // Saving a note on a fresh selection creates the highlight too.
+        const highlight: Highlight = {
+          id: crypto.randomUUID(),
+          noteId: this.noteId,
+          startOffset: this.pendingRange.startOffset,
+          endOffset: this.pendingRange.endOffset,
+          textSnippet: this.pendingRange.textSnippet,
+          color: "yellow",
+          createdAt: new Date().toISOString(),
+          ...(text ? { note: text } : {}),
+        };
+        await putHighlight(highlight);
+        document.getSelection()?.removeAllRanges();
+      }
+
+      this.close();
+      await this.renderStored();
+    }
+
+    private async removeActive() {
+      if (!this.activeId) return;
+      await deleteHighlight(this.activeId);
+      this.close();
+      await this.renderStored();
+    }
+
+    // ── Rendering ──────────────────────────────────────────────
+
+    /** Remove every <mark> we added, restoring the original text nodes. */
+    private clearMarks() {
+      if (!this.root) return;
+      this.root
+        .querySelectorAll<HTMLElement>("mark[data-highlight-id]")
+        .forEach((mark) => {
+          const parent = mark.parentNode;
+          if (!parent) return;
+          while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+          parent.removeChild(mark);
+        });
+      this.root.normalize();
+    }
+
+    private async renderStored() {
+      if (!this.root) return;
+      this.clearMarks();
+
+      const highlights = await getHighlightsForNote(this.noteId);
+      this.orphanCount = 0;
+
+      // Paint from the end backwards so earlier offsets stay valid while the
+      // DOM is being split by wrapRange.
+      const ordered = [...highlights].sort(
+        (a, b) => b.startOffset - a.startOffset
+      );
+
+      for (const highlight of ordered) {
+        let { startOffset, endOffset } = highlight;
+
+        if (
+          !isAnchorValid(
+            this.root,
+            startOffset,
+            endOffset,
+            highlight.textSnippet
+          )
+        ) {
+          const recovered = recoverAnchor(this.root, highlight.textSnippet);
+          if (!recovered) {
+            this.orphanCount += 1;
+            continue;
+          }
+          startOffset = recovered.startOffset;
+          endOffset = recovered.endOffset;
+          // Persist the repaired anchor so the next load is a clean hit.
+          await putHighlight({ ...highlight, startOffset, endOffset });
+        }
+
+        this.paint(highlight, startOffset, endOffset);
+      }
+
+      this.reportOrphans();
+    }
+
+    /** Wrap each text-node piece of the highlight in its own <mark>. */
+    private paint(highlight: Highlight, start: number, end: number) {
+      if (!this.root) return;
+      const pieces = rangePieces(this.root, start, end);
+
+      for (const piece of pieces) {
+        const range = document.createRange();
+        range.setStart(piece.node, piece.startOffset);
+        range.setEnd(piece.node, piece.endOffset);
+
+        const mark = document.createElement("mark");
+        mark.dataset.highlightId = highlight.id;
+        mark.className = `hl hl-${highlight.color}`;
+        if (highlight.note) {
+          mark.classList.add("hl-has-note");
+          mark.title = highlight.note;
+        }
+        try {
+          range.surroundContents(mark);
+        } catch {
+          // surroundContents throws on partially-selected non-text nodes;
+          // those pieces are skipped rather than corrupting the DOM.
+        }
+      }
+    }
+
+    private reportOrphans() {
+      if (this.orphanCount === 0) {
+        this.statusEl.hidden = true;
+        this.statusEl.textContent = "";
+        return;
+      }
+      const plural = this.orphanCount === 1 ? "highlight" : "highlights";
+      this.statusEl.hidden = false;
+      this.statusEl.textContent = `${this.orphanCount} ${plural} could not be placed — the note text has changed since they were made.`;
+    }
+  }
+
+  if (!customElements.get("note-highlighter")) {
+    customElements.define("note-highlighter", NoteHighlighter);
+  }
+</script>
+
+<style is:global>
+  /* Marks live inside .prose, so these rules must not be scoped away. */
+  .prose mark.hl {
+    background: var(--hl-fill, color-mix(in srgb, gold 35%, transparent));
+    color: inherit;
+    padding: 0.05em 0;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .prose mark.hl-yellow {
+    --hl-fill: color-mix(in srgb, #f6c945 38%, transparent);
+  }
+  .prose mark.hl-green {
+    --hl-fill: color-mix(in srgb, #4ac97e 32%, transparent);
+  }
+  .prose mark.hl-blue {
+    --hl-fill: color-mix(in srgb, #4aa8f0 32%, transparent);
+  }
+  .prose mark.hl-pink {
+    --hl-fill: color-mix(in srgb, #f07aa8 32%, transparent);
+  }
+
+  .prose mark.hl:hover {
+    background: var(--hl-fill);
+    filter: brightness(1.15);
+  }
+
+  /* A highlight carrying a note gets a subtle underline marker. */
+  .prose mark.hl-has-note {
+    border-bottom: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+</style>
+
+<style>
+  .hl-popover {
+    position: absolute;
+    z-index: 50;
+    transform: translateX(-50%);
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-lg);
+  }
+
+  .hl-popover[hidden] {
+    display: none;
+  }
+
+  .hl-swatches {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .hl-swatch {
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--glass-border-strong);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease;
+  }
+
+  .hl-swatch:hover {
+    transform: scale(1.15);
+  }
+
+  .hl-swatch:focus-visible,
+  .hl-action:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .hl-yellow {
+    background: #f6c945;
+  }
+  .hl-green {
+    background: #4ac97e;
+  }
+  .hl-blue {
+    background: #4aa8f0;
+  }
+  .hl-pink {
+    background: #f07aa8;
+  }
+
+  .hl-divider {
+    width: 1px;
+    height: 1.2rem;
+    background: var(--border);
+    margin: 0 0.15rem;
+  }
+
+  .hl-action {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--text);
+    cursor: pointer;
+    font: var(--fs-micro) var(--font-sans);
+    letter-spacing: 0.04em;
+    padding: 0.25rem 0.6rem;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+  }
+
+  .hl-action:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .hl-remove:hover {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+  }
+
+  .hl-muted {
+    color: var(--muted);
+  }
+
+  .hl-note-editor {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 15rem;
+  }
+
+  .hl-note-editor[hidden] {
+    display: none;
+  }
+
+  .hl-note-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    background: var(--glass-surface);
+    color: var(--text);
+    font: var(--fs-fine) var(--font-sans);
+    resize: vertical;
+  }
+
+  .hl-note-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  .hl-note-actions {
+    display: flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
+  }
+
+  .hl-status {
+    margin: 1rem 0 0;
+    padding: 0.6rem 0.85rem;
+    border-left: 3px solid var(--status-medium);
+    background: var(--accent-soft);
+    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+    color: var(--muted);
+    font: var(--fs-fine) var(--font-sans);
+  }
+
+  .hl-status[hidden] {
+    display: none;
+  }
+</style>

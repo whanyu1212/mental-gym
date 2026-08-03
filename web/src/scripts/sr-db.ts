@@ -1,8 +1,10 @@
 import {
   deduplicateImportedEvents,
+  deduplicateImportedHighlights,
   parseExport,
   serializeExport,
 } from "./sr-export";
+import type { Highlight } from "./highlight-types";
 import type {
   ImportResult,
   ReviewEvent,
@@ -10,9 +12,10 @@ import type {
 } from "./sr-types";
 
 const DB_NAME = "mental-gym-sr";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const REVIEWS_STORE = "reviews";
 const EVENTS_STORE = "reviewEvents";
+const HIGHLIGHTS_STORE = "highlights";
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -38,6 +41,14 @@ function open(): Promise<IDBDatabase> {
         events.createIndex("reviewDate", "reviewDate", { unique: false });
         events.createIndex("problemKey", "problemKey", { unique: false });
         events.createIndex("domain", "domain", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(HIGHLIGHTS_STORE)) {
+        const highlights = db.createObjectStore(HIGHLIGHTS_STORE, {
+          keyPath: "id",
+        });
+        highlights.createIndex("noteId", "noteId", { unique: false });
+        highlights.createIndex("createdAt", "createdAt", { unique: false });
       }
     };
 
@@ -156,22 +167,38 @@ export async function getDueRecords(
 
 export function exportAll(
   records: ReviewRecord[],
-  events: ReviewEvent[]
+  events: ReviewEvent[],
+  highlights: Highlight[] = []
 ): string {
-  return serializeExport(records, events);
+  return serializeExport(records, events, highlights);
+}
+
+export async function getAllHighlightRecords(): Promise<Highlight[]> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const request = store(db, HIGHLIGHTS_STORE, "readonly").getAll();
+    request.onsuccess = () => resolve(request.result as Highlight[]);
+    request.onerror = () => reject(request.error);
+  });
 }
 
 export async function importAll(json: string): Promise<ImportResult> {
-  const { records, events } = parseExport(json);
+  const { records, events, highlights } = parseExport(json);
   const existingEvents = await getAllReviewEvents();
   const newEvents = deduplicateImportedEvents(existingEvents, events);
+  const existingHighlights = await getAllHighlightRecords();
+  const newHighlights = deduplicateImportedHighlights(
+    existingHighlights,
+    highlights
+  );
   const db = await open();
   const transaction = db.transaction(
-    [REVIEWS_STORE, EVENTS_STORE],
+    [REVIEWS_STORE, EVENTS_STORE, HIGHLIGHTS_STORE],
     "readwrite"
   );
   const reviewsStore = transaction.objectStore(REVIEWS_STORE);
   const eventsStore = transaction.objectStore(EVENTS_STORE);
+  const highlightsStore = transaction.objectStore(HIGHLIGHTS_STORE);
 
   for (const record of records) {
     reviewsStore.put(record);
@@ -179,21 +206,26 @@ export async function importAll(json: string): Promise<ImportResult> {
   for (const event of newEvents) {
     eventsStore.add(event);
   }
+  for (const highlight of newHighlights) {
+    highlightsStore.put(highlight);
+  }
 
   await complete(transaction);
   return {
     recordCount: records.length,
     eventCount: newEvents.length,
+    highlightCount: newHighlights.length,
   };
 }
 
 export async function resetDatabase(): Promise<void> {
   const db = await open();
   const transaction = db.transaction(
-    [REVIEWS_STORE, EVENTS_STORE],
+    [REVIEWS_STORE, EVENTS_STORE, HIGHLIGHTS_STORE],
     "readwrite"
   );
   transaction.objectStore(REVIEWS_STORE).clear();
   transaction.objectStore(EVENTS_STORE).clear();
+  transaction.objectStore(HIGHLIGHTS_STORE).clear();
   await complete(transaction);
 }
