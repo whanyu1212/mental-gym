@@ -190,7 +190,7 @@ const steps = [
 ];
 ---
 
-<subarray-avg-threshold-visuals>
+<subarray-avg-threshold-visuals data-k={k}>
   <AlgorithmPlayer
     title={`arr = [${arr.join(',')}], k = ${k}, threshold = ${threshold}`}
     steps={steps}
@@ -250,6 +250,10 @@ const steps = [
       this.ptrs = Array.from(this.querySelectorAll(".sat-ptr-col"));
 
       this.target = Number(this.querySelector(".sat-target")?.textContent ?? 0);
+      // n - k + 1 full windows exist; derived from the rendered cells and k
+      // so it stays correct if the sample array or k ever change.
+      const k = Number(this.dataset.k ?? 0);
+      this.totalWindows = Math.max(0, this.cells.length - k + 1);
 
       let lastStep = null;
 
@@ -320,6 +324,14 @@ const steps = [
           if (!step.full) {
             this.verdictEl.innerHTML =
               "<span class='hashmap-empty'>window still filling — no test yet</span>";
+          } else if (step.phase === "done") {
+            // The scan is over, so there is no window under test. Rendering
+            // the usual comparison here would print `sum 18 < target 12`,
+            // which is both false and at odds with the final count.
+            this.verdictEl.innerHTML =
+              `<span class='hashmap-entry highlight-entry'>${step.count} of ${
+                this.totalWindows
+              } windows cleared the bar</span>`;
           } else {
             const symbol = step.qualifies ? "&ge;" : "&lt;";
             const cls = step.qualifies ? "highlight-entry" : "";

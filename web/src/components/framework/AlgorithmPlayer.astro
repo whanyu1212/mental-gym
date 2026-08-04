@@ -515,6 +515,21 @@ const stepsJson = JSON.stringify(steps);
     background: color-mix(in srgb, var(--status-info) 15%, transparent);
   }
 
+  /* State classes animations toggle on stat boxes and map entries. Global for
+     the same reason as the overlay above: a scoped copy only matches its own
+     component, so a new animation toggling these classes would get no visual
+     change at all. */
+  algo-player .conflict-box {
+    border-color: var(--status-hard) !important;
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent) !important;
+  }
+  algo-player .highlight-entry {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: var(--accent-dim) !important;
+    box-shadow: var(--shadow-sm);
+  }
+
   /* Pointers */
   algo-player .pointers-row {
     display: flex;

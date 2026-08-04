@@ -44,7 +44,8 @@ class Solution:
 if __name__ == "__main__":
     solution = Solution()
 
-    # Expected: 3 ([2,5,5,7,8] windows: [2,5,5]->4, [5,5,7]->5.67, [5,7,8]->6.67, ...)
+    # Expected: 3 (qualifying windows are [2,5,5]->4, [5,5,5]->5, [5,5,8]->6;
+    # the four windows before them average 2 or 3, below the threshold of 4)
     print(solution.numOfSubarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4))
 
     # Expected: 6
