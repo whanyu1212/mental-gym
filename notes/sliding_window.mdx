@@ -231,11 +231,78 @@ Each slide performs constant rolling work: add one character and, once full, rem
 
 If the question asks for **all** matching positions rather than a boolean, append `left` when the maps match instead of returning. The fixed-width invariant stays unchanged.
 
+### Three Ways To Write The Same Fixed Window
+
+A fixed-size window is the one case where `left` is *predictable*: it is always exactly `right - k + 1`. That closed form means the left edge can be written down explicitly, computed on the fly, or dropped entirely. All three forms below are the same algorithm — same O(n) time, same O(1) extra state, same number of additions and subtractions. They differ only in how much of the window's position is stored versus re-derived.
+
+Using [Number of Sub-arrays of Size K and Average >= Threshold](../../algorithms/1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold) as the example, where `target = threshold * k` so the comparison stays in integers:
+
+**Form A — explicit two pointers.** `left` is a real variable; `right - left + 1` is the window width.
+
+```python
+left = 0
+window_sum = 0
+count = 0
+
+for right in range(len(arr)):
+    window_sum += arr[right]
+
+    if right - left + 1 > k:          # overshot by one; evict one
+        window_sum -= arr[left]
+        left += 1
+
+    if right - left + 1 == k and window_sum >= target:
+        count += 1
+```
+
+**Form B — implicit left.** `left` is never stored; the element leaving is `arr[right - k]`, derived from the closed form.
+
+```python
+window_sum = 0
+count = 0
+
+for right in range(len(arr)):
+    window_sum += arr[right]
+
+    if right >= k:                    # same test as `right - left + 1 > k`
+        window_sum -= arr[right - k]
+
+    if right >= k - 1 and window_sum >= target:
+        count += 1
+```
+
+**Form C — left as the loop variable.** Seed the first window, then each step swaps one element for another.
+
+```python
+window_sum = sum(arr[:k])
+count = 1 if window_sum >= target else 0
+
+for left in range(len(arr) - k):
+    window_sum += arr[left + k] - arr[left]
+    if window_sum >= target:
+        count += 1
+```
+
+### Which To Reach For
+
+| | Form A: explicit | Form B: implicit | Form C: left-driven |
+|---|---|---|---|
+| Branches in the loop | 2 | 2 | 0 |
+| Setup before the loop | none | none | seed the first window |
+| Handles `k > len(arr)` | yes, no window ever reaches width `k` | yes, `right` never reaches `k - 1` | **no** — `sum(arr[:k])` silently sums fewer than `k` elements |
+| Generalizes to variable windows | yes | no | no |
+
+Form B's two guards, `right >= k` and `right >= k - 1`, are Form A's two conditions with `left` substituted away. Once you know `left = max(0, right - k + 1)`, the translation is mechanical — which is why the off-by-one between them looks arbitrary until you write `left` back in.
+
+Prefer **Form A** as the default. It is the only one that survives contact with a variable-size window, so learning it once means the skeleton in [The Window Contract](#the-window-contract) covers every problem in this note. Form B is a legitimate compression once the pattern is automatic, and it is what the saved solution for problem 1343 uses. Form C reads cleanly for a pure rolling sum but is the most fragile: it needs an explicit `if len(arr) < k: return 0` guard that the other two get for free.
+
 ### Check Yourself
 
 - Why can no window shorter or longer than `len(pattern)` be a permutation?
 - Why must the leaving character be removed before `left` moves?
 - What changes if the input alphabet is not bounded to a small constant?
+- In Form A, why is a single `if` enough to evict, when the variable-size families need a `while`?
+- In Form A, why must the eviction happen before the `== k` check, not after?
 
 ---
 
