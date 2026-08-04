@@ -35,37 +35,62 @@ Holdout
 
 ## 2. 推荐流程
 
-```text
-开发新模型
-    ↓
-离线评估
-    ↓
-实验准备检查
-    ↓
-实验平台是否已经验证？
-    │
-    ├── 否，或平台发生重大变更
-    │       ↓
-    │   A/A Testing
-    │       ↓
-    │   SRM、基线均衡性、埋点和指标校验
-    │
-    └── 是
-            ↓
-         跳过 A/A
-            ↓
-A/B Testing
-    ↓
-持续检查 SRM、数据质量和 Guardrail Metrics
-    ↓
-Ramp-up
-    ↓
-Full Rollout
-    ↓
-Long-term Holdout（可选）
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 45,
+    "rankSpacing": 55,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    DEV["开发新模型"] --> OFFLINE["离线评估"]
+    OFFLINE --> READY["实验准备检查"]
+    READY --> NEED_AA{"实验平台是否需要验证？"}
+
+    NEED_AA -->|是| AA_START["A/A Testing"]
+    NEED_AA -->|否| AB_START["A/B Testing"]
+
+    subgraph AA_PHASE["A/A 平台验证"]
+        direction TB
+        AA_START --> AA_SRM{"① SRM Check"}
+        AA_SRM -->|FAIL| AA_STOP["停止平台验证并排查"]
+        AA_SRM -->|PASS| PLATFORM["② Platform Validation<br/>Baseline Balance<br/>Logging Validation<br/>Metric Validation<br/>Statistical Calibration"]
+        PLATFORM --> PLATFORM_OK{"平台验证是否通过？"}
+        PLATFORM_OK -->|FAIL| AA_STOP
+    end
+
+    PLATFORM_OK -->|PASS| AB_START
+
+    subgraph AB_PHASE["A/B 在线实验"]
+        direction TB
+        AB_START --> AB_SRM{"① 持续 SRM Monitoring"}
+        AB_SRM -->|FAIL| AB_STOP["停止实验并排查"]
+        AB_SRM -->|PASS| QUALITY{"② 数据质量与<br/>系统稳定性是否通过？"}
+        QUALITY -->|FAIL| AB_STOP
+        QUALITY -->|PASS| METRICS["③ 分析 Primary Metrics<br/>与 Guardrail Metrics"]
+        METRICS --> GO{"达到放量条件？"}
+        GO -->|否| ITERATE["停止、回滚或迭代"]
+        GO -->|是| RAMP["Ramp-up"]
+        RAMP --> RAMP_SRM{"每次放量重新检查 SRM"}
+        RAMP_SRM -->|FAIL| ROLLBACK["回滚流量"]
+        RAMP_SRM -->|PASS| FULL["Full Rollout"]
+        FULL --> HOLDOUT["Long-term Holdout（可选）"]
+    end
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef phase fill:#f7f7f7,stroke:#555555,stroke-width:1px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class NEED_AA,AA_SRM,PLATFORM_OK,AB_SRM,QUALITY,GO,RAMP_SRM decision;
+    class AA_STOP,AB_STOP,ITERATE,ROLLBACK stop;
+    class FULL,HOLDOUT success;
 ```
 
-A/A Testing 属于实验平台验证流程；A/B Testing 属于模型和产品策略验证流程。
+A/A Testing 属于实验平台验证流程；A/B Testing 属于模型和产品策略验证流程。SRM Check 在 A/A 和 A/B 中都作为前置质量门槛，并在实验运行和每次 Ramp-up 后持续执行。
 
 ---
 
@@ -225,16 +250,51 @@ Control:   Existing Model
 Treatment: Existing Model
 ```
 
+A/A Testing 是实验平台（Experiment Platform）的验证流程，而不是验证新模型效果。
+
 主要验证：
 
-- 分流是否稳定
-- Bucket 是否均匀
-- 是否存在 SRM
-- 基线变量是否均衡
-- 曝光资格是否一致
-- 埋点是否完整
-- 指标口径是否正确
-- 统计检验是否校准
+- SRM（Sample Ratio Mismatch）
+- Baseline Balance（基线均衡性）
+- Exposure Qualification（一致的曝光资格）
+- Logging Validation（埋点完整性）
+- Metric Validation（指标计算正确性）
+- Statistical Calibration（统计检验校准）
+
+在分析顺序上，可以表示为：
+
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 55,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    START["开始 A/A Testing"] --> SRM{"① SRM Check"}
+
+    SRM -->|FAIL| STOP["停止平台验证并排查"]
+    SRM -->|PASS| VALIDATE["② Platform Validation<br/>Baseline Balance<br/>Logging Validation<br/>Metric Validation<br/>Statistical Calibration"]
+
+    VALIDATE --> OK{"平台验证是否通过？"}
+    OK -->|FAIL| FIX["修复平台后重新验证"]
+    OK -->|PASS| AB["可以进入正式 A/B Testing"]
+
+    FIX -.重新运行.-> START
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class SRM,OK decision;
+    class STOP,FIX stop;
+    class AB success;
+```
+
+工程上，这些检查可能同时计算；但在分析逻辑上，SRM 是前置质量门槛。SRM Fail 时，不应继续使用后续指标差异来证明平台有效。
 
 A/A Test 通过后，说明实验平台具备运行正式在线实验的基本条件，但并不意味着未来所有实验都不会出现数据问题。
 
@@ -245,6 +305,40 @@ A/A Test 通过后，说明实验平台具备运行正式在线实验的基本�
 ```text
 Control:   Existing Model
 Treatment: New Model
+```
+
+正式 A/B Testing 的分析流程可以表示为：
+
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 55,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    START["开始 A/B Testing"] --> SRM{"① SRM Check / Monitoring"}
+
+    SRM -->|FAIL| STOP["停止实验并排查"]
+    SRM -->|PASS| QUALITY{"② 数据质量与<br/>系统稳定性是否通过？"}
+
+    QUALITY -->|FAIL| ROLLBACK["停止或回滚实验"]
+    QUALITY -->|PASS| METRICS["③ 分析 Primary Metrics<br/>Secondary Metrics<br/>Guardrail Metrics"]
+
+    METRICS --> GOAL{"达到实验目标？"}
+    GOAL -->|否| ITERATE["停止、回滚或继续迭代"]
+    GOAL -->|是| RAMP["进入 Ramp-up"]
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class SRM,QUALITY,GOAL decision;
+    class STOP,ROLLBACK,ITERATE stop;
+    class RAMP success;
 ```
 
 ### 8.1 初始流量
@@ -286,9 +380,15 @@ Treatment = 50%
 
 ---
 
-## 9. SRM 不是一次性阶段
+## 9. SRM（Sample Ratio Mismatch）
 
 Sample Ratio Mismatch 用于判断实际分组比例是否符合预期。
+
+SRM 属于实验的数据质量检查（Data Quality Check），主要验证：
+
+> 实验流量是否按照预期随机分配。
+
+SRM 不分析 CTR、CVR 或 Watch Time，只关注实验样本数量是否符合设计比例。
 
 例如实验设计为：
 
@@ -322,6 +422,38 @@ SRM 应在以下阶段持续执行：
 - 每次 Ramp-up 后
 - 实验运行期间
 - 实验结束分析前
+
+SRM 与 A/A Testing 并不是两个独立的串行阶段。更准确地说，在一次 A/A Test 内部，应先把 SRM 作为质量门槛：
+
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 55,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    START["开始 A/A Testing"] --> SRM{"① SRM Check"}
+
+    SRM -->|FAIL| STOP["停止并排查"]
+    SRM -->|PASS| ANALYSIS["② A/A Metrics Analysis"]
+
+    ANALYSIS --> COMPARE["比较 CTR、CVR、Watch Time 等指标"]
+    COMPARE --> CALIBRATION["判断显著性检验是否正确校准"]
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class SRM decision;
+    class STOP stop;
+    class CALIBRATION success;
+```
+
+同样，在正式 A/B Testing 中，也需要持续执行 SRM 检查。
 
 因此，不建议把 SRM 画成 A/A 与 A/B 之间只执行一次的独立步骤。
 
@@ -470,47 +602,89 @@ Holdout 不是每个模型上线后的必选步骤。
 
 ## 14. 完整流程
 
-```text
-定义业务问题与实验假设
-        ↓
-开发新模型
-        ↓
-离线模型评估
-        ↓
-离线工程性能评估
-        ↓
-实验配置与指标定义
-        ↓
-平台是否需要重新验证？
-        │
-        ├── 是
-        │    ↓
-        │  A/A Testing
-        │    ↓
-        │  SRM、基线、埋点、指标校验
-        │
-        └── 否
-             ↓
-          A/B Testing
-             ↓
-持续检查 SRM、数据质量和 Guardrail Metrics
-             ↓
-结果达到放量条件？
-        │
-        ├── 否 → 停止、回滚或继续迭代
-        │
-        └── 是
-             ↓
-          Ramp-up
-             ↓
-每次放量后重新检查
-             ↓
-          Full Rollout
-             ↓
-Long-term Holdout（可选）
-             ↓
-长期监控与下一轮模型迭代
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 50,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    subgraph PREP["阶段一：开发与实验准备"]
+        direction TB
+        HYPOTHESIS["定义业务问题与实验假设"] --> DEV["开发新模型"]
+        DEV --> OFF_MODEL["离线模型评估"]
+        OFF_MODEL --> OFF_ENG["离线工程性能评估"]
+        OFF_ENG --> OFF_OK{"离线评估是否通过？"}
+        OFF_OK -->|否| IMPROVE["继续开发与优化"]
+        IMPROVE -.重新评估.-> DEV
+        OFF_OK -->|是| CONFIG["实验配置与指标定义"]
+        CONFIG --> READY{"实验准备检查通过？"}
+        READY -->|否| REPAIR["修复配置、埋点或回滚方案"]
+        REPAIR -.重新检查.-> CONFIG
+    end
+
+    READY -->|是| NEED_AA{"平台是否需要重新验证？"}
+
+    subgraph AA_PHASE["阶段二：A/A 平台验证（按需）"]
+        direction TB
+        AA["A/A Testing"] --> AA_SRM{"① SRM Check"}
+        AA_SRM -->|FAIL| AA_STOP["停止平台验证并排查"]
+        AA_SRM -->|PASS| PLATFORM["② Platform Validation<br/>Baseline Balance<br/>Logging Validation<br/>Metric Validation<br/>Statistical Calibration"]
+        PLATFORM --> PLATFORM_OK{"平台验证是否通过？"}
+        PLATFORM_OK -->|FAIL| PLATFORM_FIX["修复平台后重新验证"]
+        PLATFORM_FIX -.重新运行.-> AA
+    end
+
+    NEED_AA -->|是| AA
+    NEED_AA -->|否| AB
+    PLATFORM_OK -->|PASS| AB
+
+    subgraph AB_PHASE["阶段三：A/B 在线实验"]
+        direction TB
+        AB["A/B Testing"] --> AB_SRM{"① 持续 SRM Monitoring"}
+        AB_SRM -->|FAIL| AB_STOP["停止实验并排查"]
+        AB_SRM -->|PASS| QUALITY{"② 数据质量与<br/>系统稳定性是否通过？"}
+        QUALITY -->|FAIL| AB_ROLLBACK["停止或回滚"]
+        QUALITY -->|PASS| METRICS["③ 分析 Primary、Secondary<br/>与 Guardrail Metrics"]
+        METRICS --> RAMP_OK{"达到放量条件？"}
+        RAMP_OK -->|否| ITERATE["停止、回滚或继续迭代"]
+    end
+
+    RAMP_OK -->|是| RAMP
+
+    subgraph RAMP_PHASE["阶段四：Ramp-up"]
+        direction TB
+        RAMP["Ramp-up"] --> RAMP_CHECK{"每次放量后检查<br/>SRM、系统与 Guardrail"}
+        RAMP_CHECK -->|FAIL| RAMP_ROLLBACK["回滚流量"]
+        RAMP_CHECK -->|PASS| FULL_OK{"达到全量条件？"}
+        FULL_OK -->|否| OBSERVE["继续观察或调整放量计划"]
+        OBSERVE -.再次放量.-> RAMP
+    end
+
+    FULL_OK -->|是| FULL
+
+    subgraph ROLLOUT["阶段五：全量上线与长期验证"]
+        direction TB
+        FULL["Full Rollout"] --> NEED_HOLDOUT{"是否需要长期 Holdout？"}
+        NEED_HOLDOUT -->|否| MONITOR["长期监控与下一轮模型迭代"]
+        NEED_HOLDOUT -->|是| HOLDOUT["Long-term Holdout"]
+        HOLDOUT --> MONITOR
+    end
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class OFF_OK,READY,NEED_AA,AA_SRM,PLATFORM_OK,AB_SRM,QUALITY,RAMP_OK,RAMP_CHECK,FULL_OK,NEED_HOLDOUT decision;
+    class IMPROVE,REPAIR,AA_STOP,PLATFORM_FIX,AB_STOP,AB_ROLLBACK,ITERATE,RAMP_ROLLBACK stop;
+    class FULL,HOLDOUT,MONITOR success;
 ```
+
+在“平台是否需要重新验证？”这个节点中，“否”分支直接跳过 A/A Testing；“是”分支只有在 SRM 和平台验证均通过后，才与“跳过 A/A”分支汇合进入正式 A/B Testing。
 
 ---
 
