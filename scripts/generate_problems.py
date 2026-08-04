@@ -46,6 +46,9 @@ SLUG_OVERRIDES: dict[str, str] = {
     "max_profit": "best-time-to-buy-and-sell-stock",
     "longest_substring": "longest-substring-without-repeating-characters",
     "character_replacement": "longest-repeating-character-replacement",
+    "subarrays_with_avg_geq_threshold": (
+        "number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold"
+    ),
     "eval_rpn": "evaluate-reverse-polish-notation",
     "generate_parenthesis": "generate-parentheses",
     "max_sliding_window": "sliding-window-maximum",
@@ -62,6 +65,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "majority_element_2": "majority-element-ii",
     "longest_common_prefix": "longest-common-prefix",
     "contains_duplicate": "contains-duplicate",
+    "contains_duplicate_2": "contains-duplicate-ii",
     "two_sum": "two-sum",
     "subarray_sum_equals_k": "subarray-sum-equals-k",
     "xor_queries_subarray": "xor-queries-of-a-subarray",

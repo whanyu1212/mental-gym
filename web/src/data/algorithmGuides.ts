@@ -1323,7 +1323,7 @@ export const guides = {
 			"Longest Substring with At Most K Distinct Characters — how does the shrink condition change?",
 			"Could you swap the set for a last-seen-index map to jump left in one step instead of looping?",
 		],
-		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
 	},
 	"121-best-time-to-buy-and-sell-stock": {
 		slug: "121-best-time-to-buy-and-sell-stock",
@@ -1371,7 +1371,7 @@ export const guides = {
 			"Best Time to Buy and Sell Stock II: unlimited transactions — what greedy rule applies?",
 			"With a transaction fee or a cooldown, why does this become a DP problem?",
 		],
-		relatedNotes: ["arrays_and_hashing", "space-complexity", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "space-complexity", "time-complexity"],
 	},
 	"424-longest-repeating-character-replacement": {
 		slug: "424-longest-repeating-character-replacement",
@@ -1419,7 +1419,111 @@ export const guides = {
 			"Why is a single 'if' enough to shrink here, whereas other windows need a 'while'?",
 			"Max Consecutive Ones III is the same template on a binary array — can you map k flips to k replacements?",
 		],
-		relatedNotes: ["arrays_and_hashing", "time-complexity", "python_builtins_for_leetcode"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "time-complexity", "python_builtins_for_leetcode"],
+	},
+	"219-contains-duplicate-ii": {
+		slug: "219-contains-duplicate-ii",
+		pattern: "Fixed-size sliding window carrying a membership set",
+		recognitionSignals: [
+			"a duplicate only counts when the two indices are within distance k",
+			"the question is existence (true/false), not counting or locating",
+			"'nearby', 'within k positions', or an explicit abs(i - j) <= k bound",
+		],
+		dissection:
+			"Slide a window that holds at most the last k+1 values. Before looking at index R, drop anything that has fallen more than k positions behind it. Then the question 'is nums[R] a nearby duplicate?' reduces to 'is nums[R] already in the window?' — a single set lookup.",
+		intuition:
+			"The distance constraint is the whole problem. Rather than comparing index pairs, you let the window enforce distance structurally: if a value is in the set at all, it is by construction within k positions. That converts a two-dimensional condition (equal values AND close indices) into a one-dimensional membership test, because the window has already filtered out everything too far away.",
+		invariant:
+			"Just before testing index R, the set contains exactly the values at indices max(0, R−k) .. R−1 — every element still close enough to form a valid pair with R, and nothing else.",
+		bruteForce: {
+			approach:
+				"For each index i, scan forward up to k positions and compare nums[i] against each nums[j]. Correct, and fine for tiny k, but the inner scan repeats work for every element.",
+			complexity: { time: "O(n·k)", space: "O(1)", note: "Degrades to O(n²) when k is on the order of n." },
+		},
+		constraintReasoning:
+			"Both n and k reach 10⁵, so the O(n·k) pair scan approaches 10¹⁰ operations — a certain TLE. Since k can be as large as n, you cannot lean on 'k is small'. Trading O(k) space for O(1) membership lookups gives O(n) time, and the set never exceeds k+1 entries.",
+		approachSteps: [
+			"Create an empty set `window` and a left bound L = 0.",
+			"Iterate R over the array indices.",
+			"If R − L > k, the window has overgrown: remove nums[L] from the set FIRST, then increment L.",
+			"If nums[R] is already in the set, a valid nearby duplicate exists — return True.",
+			"Otherwise add nums[R] to the set and continue. Return False if the scan completes.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(min(n, k))",
+			note: "Each index is added and removed at most once; the set holds at most k+1 values.",
+		},
+		pitfalls: [
+			"Incrementing L before removing nums[L] — you then evict the WRONG element and the stale value lingers in the set forever, reporting duplicates that are actually farther apart than k. Remove first, then advance.",
+			"Using `>=` instead of `>` in the R − L > k test, which shrinks the window one element too early and misses pairs at exactly distance k.",
+			"Forgetting that k = 0 must always yield False: distinct indices can never satisfy abs(i − j) <= 0.",
+			"Reaching for a value → index hashmap and comparing R − lastIndex. That also works, but only if you overwrite the stored index on every sighting; keeping the first occurrence silently breaks on three-or-more repeats.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,2,3,1], k = 3", expected: "true", note: "The two 1s sit exactly k apart — the boundary case that must count." },
+			{ kind: "boundary", input: "nums = [1,1], k = 0", expected: "false", note: "k = 0 demands identical indices, which distinct i and j can never satisfy." },
+			{ kind: "trap", input: "nums = [1,2,3,1,2,3], k = 2", expected: "false", note: "Duplicates exist but every matching pair is 3 apart. Catches any solution that checks equality while ignoring distance — and catches the evict-after-increment bug, which leaves a stale 1 in the set and wrongly returns true." },
+		],
+		followUps: [
+			"Contains Duplicate III adds a value tolerance (abs(nums[i] − nums[j]) <= t). Why does a plain set stop working, and what ordered structure or bucketing replaces it?",
+			"How would you return the actual index pair instead of a boolean, and what changes in the set?",
+			"If the array streamed in and could not be stored, would this still work? (It would — note that the window only ever looks backward.)",
+		],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "space-complexity", "time-complexity"],
+	},
+	"1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold": {
+		slug: "1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold",
+		pattern: "Fixed-size sliding window carrying a running sum",
+		recognitionSignals: [
+			"every sub-array under consideration has the SAME given length k",
+			"the test is an aggregate over the window (average, sum, or count)",
+			"you are counting how many windows qualify, not finding a best one",
+		],
+		dissection:
+			"Every window has the same width k, so the window never grows or shrinks — it marches. Keep a running sum: add the element entering on the right, subtract the one falling off the left, and once the window is full, test whether its sum clears the bar.",
+		intuition:
+			"Recomputing each window's sum from scratch re-adds the k−1 elements the previous window already counted. Since consecutive windows overlap in all but two positions, one addition and one subtraction carry you from one sum to the next — the overlap is the savings. Because k is fixed, comparing averages is the same as comparing sums against threshold × k, so you can stay in integer arithmetic entirely.",
+		invariant:
+			"After processing index R, window_sum equals the sum of arr[max(0, R−k+1) .. R] — and once R >= k−1 that is exactly a full k-length window ending at R.",
+		bruteForce: {
+			approach:
+				"For each of the n−k+1 starting positions, loop over all k elements to total the window and compare its average against the threshold. Straightforward, but every window is summed from scratch.",
+			complexity: { time: "O(n·k)", space: "O(1)", note: "Each of ~n windows costs O(k) to re-sum." },
+		},
+		constraintReasoning:
+			"n reaches 10⁵ and k can be as large as n, so the re-summing approach tops out near 10¹⁰ operations and will TLE. The overlap between neighbouring windows is the lever: reusing the previous sum makes each step O(1), giving O(n) overall with no extra space.",
+		approachSteps: [
+			"Precompute target = threshold × k so you compare sums, never averages.",
+			"Initialize window_sum = 0 and count = 0.",
+			"For each index R: add arr[R] to window_sum.",
+			"If R >= k, subtract arr[R − k] — the element that just fell out of a k-wide window ending at R.",
+			"If R >= k − 1 and window_sum >= target, increment count.",
+			"Return count.",
+		],
+		complexity: {
+			time: "O(n)",
+			space: "O(1)",
+			note: "One pass; only a running sum and a counter are stored.",
+		},
+		pitfalls: [
+			"Dividing by k and comparing floats. Multiplying the threshold by k instead keeps everything in integers and sidesteps precision entirely.",
+			"Counting before the window is full — guard with R >= k − 1, otherwise the partial prefix sums masquerade as valid windows.",
+			"Evicting with the wrong offset. The element leaving is arr[R − k], not arr[R − k + 1]; the latter drops an element that is still inside the window.",
+			"Using `>` when the problem says 'greater than or equal to' — a window whose average lands exactly on the threshold must count.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "arr = [2,2,2,2,5,5,5,8], k = 3, threshold = 4", expected: "3", note: "Windows summing to at least 12: [2,5,5], [5,5,5], [5,5,8]." },
+			{ kind: "boundary", input: "arr = [1,1,1,1,1], k = 5, threshold = 5", expected: "0", note: "k equals the array length, so exactly one window exists and it falls short — verifies the loop still evaluates the single full window." },
+			{ kind: "trap", input: "arr = [11,13,17,23,29,31,7,5,2,3], k = 3, threshold = 5", expected: "6", note: "The threshold is low enough that most windows qualify, so an off-by-one in the fill guard (R >= k−1) or the eviction index changes the count without crashing — a silent miscount rather than an error." },
+		],
+		followUps: [
+			"Maximum Average Subarray I asks for the best window instead of a count — what single line changes?",
+			"If k were variable ('any sub-array with average >= threshold'), why does this fixed-window trick collapse, and what would you reach for instead?",
+			"Contains Duplicate II uses the same fixed-window skeleton but carries a set rather than a sum. What determines which accumulator a window needs?",
+			"The saved solution never stores the left edge — it evicts arr[R − k] instead. Rewrite it with an explicit `left` variable and `right − left + 1` as the width: both guards survive the translation, so what does each one become, and why is that same rewrite mandatory the moment the window stops being fixed-size?",
+		],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "time-complexity", "space-complexity"],
 	},
 	"150-evaluate-reverse-polish-notation": {
 		slug: "150-evaluate-reverse-polish-notation",
@@ -1649,7 +1753,7 @@ export const guides = {
 			"Find All Anagrams in a String (#438) collects every start index — same window, different output.",
 			"Could you replace the dict comparison with a single 'matches' counter for true O(1)-per-step updates?",
 		],
-		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
 	},
 	"239-sliding-window-maximum": {
 		slug: "239-sliding-window-maximum",
@@ -1698,7 +1802,7 @@ export const guides = {
 			"Implement the monotonic-deque version for true O(n) — how does it keep candidates in decreasing order?",
 			"When is the heap approach actually preferable despite the extra log factor?",
 		],
-		relatedNotes: ["python_builtins_for_leetcode", "time-complexity", "space-complexity"],
+		relatedNotes: ["sliding_window", "python_builtins_for_leetcode", "time-complexity", "space-complexity"],
 	},
 	"53-maximum-subarray": {
 		slug: "53-maximum-subarray",

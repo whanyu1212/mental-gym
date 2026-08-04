@@ -873,7 +873,8 @@ if __name__ == "__main__":
 
 class Solution:
     def maxSubArray(self, nums: List[int]) -> int:
-        """Return the largest sum of a contiguous subarray.
+        """
+        Return the largest sum of a contiguous subarray.
 
         Args:
             nums: A non-empty list of integers.
@@ -2374,7 +2375,8 @@ if __name__ == "__main__":
 
 class Solution:
     def maxSubarraySumCircular(self, nums: List[int]) -> int:
-        """Return the largest sum of a circular contiguous subarray.
+        """
+        Return the largest sum of a circular contiguous subarray.
 
         The end of the array connects to its start, so a valid subarray
         can wrap around the seam — it is any connected arc of the ring.
@@ -2427,7 +2429,6 @@ class Solution:
         # Otherwise, answer = better of (best straight run) vs
         # (whole ring minus its most negative chunk).
         return max(globalMax, total - globalMin) if globalMax > 0 else globalMax
-
 
 
 if __name__ == "__main__":
@@ -2801,6 +2802,115 @@ end`,
     sourceUrl: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
   },
   {
+    id: "219",
+    slug: "219-contains-duplicate-ii",
+    leetcodeSlug: "contains-duplicate-ii",
+    title: "Contains Duplicate II",
+    difficulty: "Easy",
+    group: "Sliding Window",
+    topics: ["array", "hash-table", "sliding-window"],
+    description: `<p>Given an integer array <code>nums</code> and an integer <code>k</code>, return <code>true</code> <em>if there are two <strong>distinct indices</strong> </em><code>i</code><em> and </em><code>j</code><em> in the array such that </em><code>nums[i] == nums[j]</code><em> and </em><code>abs(i - j) &lt;= k</code>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2,3,1], k = 3
+<strong>Output:</strong> true
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,0,1,1], k = 1
+<strong>Output:</strong> true
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2,3,1,2,3], k = 2
+<strong>Output:</strong> false
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>
+	<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def containsNearbyDuplicate(self, nums: List[int], k: int) -> bool:
+        """
+        Check whether nums has two equal values within index distance k.
+
+        Args:
+            nums: The list of integers to search.
+            k: The maximum allowed distance between the indices of a
+                matching pair, inclusive.
+
+        Returns:
+            True if there exist indices i and j such that nums[i] ==
+            nums[j] and abs(i - j) <= k, otherwise False.
+        """
+        # window holds at most the last k+1 values (indices L..R inclusive).
+        # Membership in window is exactly "have I seen this value within the
+        # last k positions", so a hit on nums[R] in window is a valid answer.
+        window = set()
+        L = 0  # left bound of the window
+        for R in range(len(nums)):
+            if R - L > k:
+                # The window grew to k+2 elements, so the value at the OLD
+                # left bound (L) just fell out of range and must leave first.
+                # Removing before advancing L is what keeps the set in sync
+                # with the window: nums[L] is still what's leaving, not
+                # nums[L+1]. Do the increment first and you evict the wrong
+                # element, and the truly-stale value lingers in the set
+                # forever, causing false positives against duplicates that
+                # are actually farther apart than k.
+                window.remove(nums[L])
+                L += 1  # left bound catches up to the shrunk window
+
+            if nums[R] in window:
+                return True
+
+            window.add(nums[R])
+
+        return False
+
+
+if __name__ == "__main__":
+    solution = Solution()
+
+    # Expected: True (nums[0] == nums[3] == 1, |0 - 3| = 3 <= k)
+    print(solution.containsNearbyDuplicate([1, 2, 3, 1], 3))
+
+    # Expected: True (nums[2] == nums[3] == 1, |2 - 3| = 1 <= k)
+    print(solution.containsNearbyDuplicate([1, 0, 1, 1], 1))
+
+    # Expected: False (only matching pair is farther apart than k)
+    print(solution.containsNearbyDuplicate([1, 2, 3, 1, 2, 3], 2))
+
+    # Expected: False (no duplicates at all)
+    print(solution.containsNearbyDuplicate([1, 2, 3, 4], 2))
+
+    # Expected: False (k = 0 means indices must be identical, impossible for i != j)
+    print(solution.containsNearbyDuplicate([1, 1], 0))
+
+    # Expected: False (empty input)
+    print(solution.containsNearbyDuplicate([], 1))`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/contains-duplicate-ii/",
+  },
+  {
     id: "424",
     slug: "424-longest-repeating-character-replacement",
     leetcodeSlug: "longest-repeating-character-replacement",
@@ -2905,6 +3015,106 @@ if abspath(PROGRAM_FILE) == @__FILE__
 end`,
     },
     sourceUrl: "https://leetcode.com/problems/longest-repeating-character-replacement/",
+  },
+  {
+    id: "1343",
+    slug: "1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold",
+    leetcodeSlug: "number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold",
+    title: "Number of Sub-arrays of Size K and Average Greater than or Equal to Threshold",
+    difficulty: "Medium",
+    group: "Sliding Window",
+    topics: ["array", "sliding-window"],
+    description: `<p>Given an array of integers <code>arr</code> and two integers <code>k</code> and <code>threshold</code>, return <em>the number of sub-arrays of size </em><code>k</code><em> and average greater than or equal to </em><code>threshold</code>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> arr = [2,2,2,2,5,5,5,8], k = 3, threshold = 4
+<strong>Output:</strong> 3
+<strong>Explanation:</strong> Sub-arrays [2,5,5],[5,5,5] and [5,5,8] have averages 4, 5 and 6 respectively. All other sub-arrays of size 3 have averages less than 4 (the threshold).
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> arr = [11,13,17,23,29,31,7,5,2,3], k = 3, threshold = 5
+<strong>Output:</strong> 6
+<strong>Explanation:</strong> The first 6 sub-arrays of size 3 have averages greater than 5. Note that averages are not integers.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= arr.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>1 &lt;= arr[i] &lt;= 10<sup>4</sup></code></li>
+	<li><code>1 &lt;= k &lt;= arr.length</code></li>
+	<li><code>0 &lt;= threshold &lt;= 10<sup>4</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def numOfSubarrays(self, arr: List[int], k: int, threshold: int) -> int:
+        """
+        Count sub-arrays of size k whose average is >= threshold.
+
+        Args:
+            arr: The list of integers to search.
+            k: The fixed sub-array length.
+            threshold: The minimum average a window must reach to count.
+
+        Returns:
+            The number of length-k windows whose average is >= threshold.
+        """
+        target = threshold * k  # compare sums directly, no float division
+        window_sum = 0
+        count = 0
+
+        # Single unified loop: every index is treated the same way, instead
+        # of special-casing the first window before the loop starts.
+        for right in range(len(arr)):
+            # Always add the incoming element first. This runs on every
+            # iteration, including the first k-1 ones where the window
+            # hasn't "filled up" yet.
+            window_sum += arr[right]
+
+            # Once the window would grow past size k, evict the element
+            # that's k positions behind \`right\` -- that's the one that no
+            # longer belongs in a size-k window ending at \`right\`.
+            if right >= k:
+                window_sum -= arr[right - k]
+
+            # Only check the sum once the window has actually reached size
+            # k for the first time (right == k - 1) or later. Before that,
+            # window_sum is a partial sum, not a valid k-length window.
+            if right >= k - 1 and window_sum >= target:
+                count += 1
+
+        return count
+
+
+if __name__ == "__main__":
+    solution = Solution()
+
+    # Expected: 3 (qualifying windows are [2,5,5]->4, [5,5,5]->5, [5,5,8]->6;
+    # the four windows before them average 2 or 3, below the threshold of 4)
+    print(solution.numOfSubarrays([2, 2, 2, 2, 5, 5, 5, 8], 3, 4))
+
+    # Expected: 6
+    print(solution.numOfSubarrays([11, 13, 17, 23, 29, 31, 7, 5, 2, 3], 3, 5))
+
+    # Expected: 5 (k=1, threshold=0 -> every single-element window passes)
+    print(solution.numOfSubarrays([1, 1, 1, 1, 1], 1, 0))
+
+    # Expected: 0 (no window reaches the threshold)
+    print(solution.numOfSubarrays([1, 1, 1, 1, 1], 5, 5))`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold/",
   },
   {
     id: "21",
