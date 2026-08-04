@@ -24,7 +24,11 @@ const steps = [
     invariant: 'window_sum holds the sum of the last (up to k) elements.',
     formula: `target = ${threshold} * ${k} = ${target}`,
     decision: 'Start with an empty running sum and a zero count.',
-    targets: ['sum-box', 'count-box', 'rule-box'],
+    highlights: [
+      { target: 'sum-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+      { target: 'rule-box', kind: 'focus' },
+    ],
     callout: {
       title: 'Why not just divide?',
       body: 'Comparing sum / k >= threshold with floats invites precision error. Comparing sum >= threshold * k is exactly equivalent for a fixed k, and stays in integers.',
@@ -45,7 +49,10 @@ const steps = [
     invariant: 'Only test once R >= k-1 = 2.',
     formula: 'window_sum = 0 + 2 = 2',
     decision: 'Accumulate only.',
-    targets: ['cell:0', 'sum-box'],
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'sum-box', kind: 'focus' },
+    ],
   },
   {
     l: 0,
@@ -62,7 +69,10 @@ const steps = [
     invariant: 'window_sum = sum of arr[0..1].',
     formula: 'window_sum = 2 + 2 = 4',
     decision: 'Accumulate only.',
-    targets: ['cell:1', 'sum-box'],
+    highlights: [
+      { target: 'cell:1', kind: 'write' },
+      { target: 'sum-box', kind: 'focus' },
+    ],
   },
   {
     l: 0,
@@ -79,7 +89,11 @@ const steps = [
     invariant: 'window_sum = sum of arr[0..2] = 6, average 2.',
     formula: '6 >= 12? No',
     decision: 'Does not qualify. count stays 0.',
-    targets: ['cell:2', 'sum-box', 'count-box'],
+    highlights: [
+      { target: 'cell:2', kind: 'compare' },
+      { target: 'sum-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+    ],
   },
   {
     l: 1,
@@ -96,7 +110,12 @@ const steps = [
     invariant: 'window_sum = sum of arr[1..3].',
     formula: 'sum = 6 + 2 - 2 = 6 -> 6 >= 12? No',
     decision: 'Does not qualify.',
-    targets: ['cell:3', 'cell:0', 'sum-box', 'evict-box'],
+    highlights: [
+      { target: 'cell:3', kind: 'compare' },
+      { target: 'cell:0', kind: 'compare' },
+      { target: 'sum-box', kind: 'focus' },
+      { target: 'evict-box', kind: 'focus' },
+    ],
   },
   {
     l: 2,
@@ -113,7 +132,11 @@ const steps = [
     invariant: 'window_sum = sum of arr[2..4] = 2+2+5 = 9.',
     formula: 'sum = 6 + 5 - 2 = 9 -> 9 >= 12? No',
     decision: 'Still short of the bar.',
-    targets: ['cell:4', 'cell:1', 'sum-box'],
+    highlights: [
+      { target: 'cell:4', kind: 'compare' },
+      { target: 'cell:1', kind: 'compare' },
+      { target: 'sum-box', kind: 'focus' },
+    ],
   },
   {
     l: 3,
@@ -130,7 +153,12 @@ const steps = [
     invariant: 'window arr[3..5] = [2,5,5], average exactly 4.',
     formula: 'sum = 9 + 5 - 2 = 12 -> 12 >= 12? Yes',
     decision: 'Qualifies. count = 1.',
-    targets: ['cell:5', 'cell:2', 'sum-box', 'count-box'],
+    highlights: [
+      { target: 'cell:5', kind: 'confirmed' },
+      { target: 'cell:2', kind: 'confirmed' },
+      { target: 'sum-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+    ],
     callout: {
       title: 'The inclusive boundary',
       body: 'This window is why the comparison must be >= and not >. Using a strict > here would silently undercount by one.',
@@ -151,7 +179,12 @@ const steps = [
     invariant: 'count tracks how many full windows have cleared the bar.',
     formula: 'sum = 12 + 5 - 2 = 15 -> 15 >= 12? Yes',
     decision: 'Qualifies. count = 2.',
-    targets: ['cell:6', 'cell:3', 'sum-box', 'count-box'],
+    highlights: [
+      { target: 'cell:6', kind: 'confirmed' },
+      { target: 'cell:3', kind: 'confirmed' },
+      { target: 'sum-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+    ],
   },
   {
     l: 5,
@@ -168,7 +201,12 @@ const steps = [
     invariant: 'This is the last full window in the array.',
     formula: 'sum = 15 + 8 - 5 = 18 -> 18 >= 12? Yes',
     decision: 'Qualifies. count = 3.',
-    targets: ['cell:7', 'cell:4', 'sum-box', 'count-box'],
+    highlights: [
+      { target: 'cell:7', kind: 'confirmed' },
+      { target: 'cell:4', kind: 'confirmed' },
+      { target: 'sum-box', kind: 'focus' },
+      { target: 'count-box', kind: 'focus' },
+    ],
   },
   {
     l: 5,
@@ -185,7 +223,10 @@ const steps = [
     invariant: 'O(n) time, O(1) space — no extra structure beyond a sum and a counter.',
     formula: 'return 3',
     decision: 'Answer: 3.',
-    targets: ['count-box', 'sum-box'],
+    highlights: [
+      { target: 'count-box', kind: 'focus' },
+      { target: 'sum-box', kind: 'focus' },
+    ],
   },
 ];
 ---
