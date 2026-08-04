@@ -281,6 +281,12 @@ const steps = [
       const arrayRow = this.querySelector(".sat-cells");
       if (arrayRow) {
         arrayRow.addEventListener("scroll", this.updateHighlight);
+        // The animation starts inside a hidden tab, where every offsetLeft
+        // and offsetWidth reads 0 — measuring then leaves the overlay
+        // mispositioned and invisible. Re-measure once the row actually has
+        // dimensions, which is when the tab is revealed.
+        this.resizeObserver = new ResizeObserver(() => this.updateHighlight());
+        this.resizeObserver.observe(arrayRow);
       }
 
       this.addEventListener("step-change", (e) => {
@@ -333,6 +339,7 @@ const steps = [
           arrayRow.removeEventListener("scroll", this.updateHighlight);
         }
       }
+      this.resizeObserver?.disconnect();
     }
   }
 
