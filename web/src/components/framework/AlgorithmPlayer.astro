@@ -548,6 +548,17 @@ const stepsJson = JSON.stringify(steps);
   algo-player .ptr.hidden {
     opacity: 0;
   }
+  /* Left/right pointer colouring. Global for the same reason as the window
+     state classes: without it both bounds render as identical plain text and
+     the reader loses the L-vs-R distinction. */
+  algo-player .ptr-l {
+    background: color-mix(in srgb, var(--status-info) 20%, transparent);
+    color: var(--status-info);
+  }
+  algo-player .ptr-r {
+    background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+    color: var(--status-easy);
+  }
 
   /* Hash Maps / Sets */
   algo-player .hashmap-row {
