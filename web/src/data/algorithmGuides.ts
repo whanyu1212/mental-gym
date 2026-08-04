@@ -1521,7 +1521,7 @@ export const guides = {
 			"Maximum Average Subarray I asks for the best window instead of a count — what single line changes?",
 			"If k were variable ('any sub-array with average >= threshold'), why does this fixed-window trick collapse, and what would you reach for instead?",
 			"Contains Duplicate II uses the same fixed-window skeleton but carries a set rather than a sum. What determines which accumulator a window needs?",
-			"The saved solution never stores the left edge — it evicts arr[R − k] instead. Rewrite it with an explicit `left` variable and `right − left + 1` as the width: which of the two guards disappears, and why is that same rewrite mandatory the moment the window stops being fixed-size?",
+			"The saved solution never stores the left edge — it evicts arr[R − k] instead. Rewrite it with an explicit `left` variable and `right − left + 1` as the width: both guards survive the translation, so what does each one become, and why is that same rewrite mandatory the moment the window stops being fixed-size?",
 		],
 		relatedNotes: ["sliding_window", "arrays_and_hashing", "time-complexity", "space-complexity"],
 	},
