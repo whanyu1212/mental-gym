@@ -1,0 +1,406 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+// [1,2,3,1,2,3] with k=2 is the trap case from the guide: duplicates exist,
+// but every matching pair is 3 apart, so the answer is false. It also exposes
+// the evict-before-increment bug — get that ordering wrong and a stale 1
+// lingers in the set and this walkthrough wrongly reports a hit.
+const nums = [1, 2, 3, 1, 2, 3];
+const k = 2;
+
+const steps = [
+  {
+    l: 0,
+    r: -1,
+    set: [],
+    evicted: null,
+    hit: false,
+    phase: 'init',
+    action: 'write',
+    exp: 'Start with an empty window. L marks the oldest index still in range.',
+    reason: 'The set will hold only values within k positions of the current index.',
+    invariant: 'window == values at indices max(0, R-k) .. R-1.',
+    formula: 'window = set(), L = 0',
+    decision: 'Nothing seen yet, so nothing can be a nearby duplicate.',
+    highlights: [
+      { target: 'set-box', kind: 'focus' },
+      { target: 'width-box', kind: 'focus' },
+      { target: 'result-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 0,
+    r: 0,
+    set: [1],
+    evicted: null,
+    hit: false,
+    phase: 'add',
+    action: 'write',
+    exp: 'R=0, value 1. Window is not over-wide (0 - 0 = 0 <= k), so nothing leaves.',
+    reason: 'The set is empty, so 1 cannot already be present.',
+    invariant: 'Window spans indices 0..0 — width 1, within the k+1 = 3 limit.',
+    formula: '1 not in window -> window.add(1)',
+    decision: 'Record 1 and move on.',
+    highlights: [
+      { target: 'cell:0', kind: 'write' },
+      { target: 'set-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 0,
+    r: 1,
+    set: [1, 2],
+    evicted: null,
+    hit: false,
+    phase: 'add',
+    action: 'write',
+    exp: 'R=1, value 2. R - L = 1, still within k, so the window just grows.',
+    reason: '2 is absent from the set, so no nearby duplicate ends here.',
+    invariant: 'Window spans 0..1 — the set mirrors it exactly.',
+    formula: '2 not in window -> window.add(2)',
+    decision: 'Record 2.',
+    highlights: [
+      { target: 'cell:1', kind: 'write' },
+      { target: 'set-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 0,
+    r: 2,
+    set: [1, 2, 3],
+    evicted: null,
+    hit: false,
+    phase: 'add',
+    action: 'write',
+    exp: 'R=2, value 3. R - L = 2 = k, the largest gap still allowed.',
+    reason: 'The window is now at its maximum width of k+1 = 3 elements.',
+    invariant: 'Any pair inside this window is at most k apart by construction.',
+    formula: '3 not in window -> window.add(3)',
+    decision: 'Record 3. The window is now full.',
+    highlights: [
+      { target: 'cell:2', kind: 'write' },
+      { target: 'set-box', kind: 'focus' },
+      { target: 'width-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 1,
+    r: 3,
+    set: [2, 3],
+    evicted: 1,
+    hit: false,
+    phase: 'evict',
+    action: 'discard',
+    exp: 'R=3. Now R - L = 3 > k, so index 0 has fallen out of range. Remove nums[0] = 1 FIRST, then advance L to 1.',
+    reason: 'Index 0 is 3 positions from index 3 — too far to form a valid pair.',
+    invariant: 'Remove before incrementing L, or you evict the wrong element.',
+    formula: 'window.remove(nums[L]) -> L += 1',
+    decision: 'Drop the stale 1 from the set.',
+    highlights: [
+      { target: 'cell:0', kind: 'discard' },
+      { target: 'set-box', kind: 'focus' },
+      { target: 'evict-box', kind: 'focus' },
+    ],
+    callout: {
+      title: 'The ordering that matters',
+      body: 'Increment L first and you would remove nums[1] = 2 instead, leaving the out-of-range 1 in the set forever. The very next check would then match it and wrongly return true.',
+    },
+  },
+  {
+    l: 1,
+    r: 3,
+    set: [2, 3, 1],
+    evicted: null,
+    hit: false,
+    phase: 'add',
+    action: 'compare',
+    exp: 'Now test value 1 at R=3. The set holds {2,3} — the stale 1 is gone, so there is no match.',
+    reason: 'The earlier 1 sat at index 0, which is 3 apart from index 3. Correctly not a hit.',
+    invariant: 'Membership in the set now means "seen within the last k positions".',
+    formula: '1 not in {2,3} -> no duplicate, window.add(1)',
+    decision: 'No hit. Record this 1 at its new index.',
+    highlights: [
+      { target: 'cell:3', kind: 'compare' },
+      { target: 'set-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 2,
+    r: 4,
+    set: [1, 3],
+    evicted: 2,
+    hit: false,
+    phase: 'evict',
+    action: 'discard',
+    exp: 'R=4. Window over-wide again: remove nums[1] = 2, then L becomes 2.',
+    reason: 'Index 1 is now 3 positions behind index 4.',
+    invariant: 'Each index is added once and removed at most once — hence O(n).',
+    formula: 'window.remove(2) -> L = 2',
+    decision: 'Drop the out-of-range 2, then test the incoming value.',
+    highlights: [
+      { target: 'cell:1', kind: 'discard' },
+      { target: 'set-box', kind: 'focus' },
+      { target: 'evict-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 2,
+    r: 4,
+    set: [3, 1, 2],
+    evicted: null,
+    hit: false,
+    phase: 'add',
+    action: 'compare',
+    exp: 'Test value 2 at R=4 against {3,1}. No match — the previous 2 was just evicted.',
+    reason: 'The only other 2 sits at index 1, which is 3 apart. Correctly rejected.',
+    invariant: 'The window keeps distance-checking implicit.',
+    formula: '2 not in {3,1} -> window.add(2)',
+    decision: 'No hit. Record 2.',
+    highlights: [
+      { target: 'cell:4', kind: 'compare' },
+      { target: 'set-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 3,
+    r: 5,
+    set: [1, 2],
+    evicted: 3,
+    hit: false,
+    phase: 'evict',
+    action: 'discard',
+    exp: 'R=5, the final index. Remove nums[2] = 3, then advance L to 3.',
+    reason: 'Index 2 is 3 positions behind index 5 — out of range.',
+    invariant: 'Window will span 3..5 once the eviction completes.',
+    formula: 'window.remove(3) -> L = 3',
+    decision: 'Drop the stale 3.',
+    highlights: [
+      { target: 'cell:2', kind: 'discard' },
+      { target: 'set-box', kind: 'focus' },
+      { target: 'evict-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 3,
+    r: 5,
+    set: [1, 2, 3],
+    evicted: null,
+    hit: false,
+    phase: 'add',
+    action: 'compare',
+    exp: 'Test value 3 at R=5 against {1,2}. No match again.',
+    reason: 'Every duplicate pair in this array is exactly 3 apart, and k is only 2.',
+    invariant: 'Scan complete with no hit ever recorded.',
+    formula: '3 not in {1,2} -> no duplicate',
+    decision: 'Loop ends.',
+    highlights: [
+      { target: 'cell:5', kind: 'compare' },
+      { target: 'set-box', kind: 'focus' },
+    ],
+  },
+  {
+    l: 3,
+    r: 5,
+    set: [1, 2, 3],
+    evicted: null,
+    hit: false,
+    phase: 'done',
+    action: 'confirmed',
+    exp: 'Return false. The array does contain duplicates, but never within k = 2 positions.',
+    reason: 'Existence of a duplicate is not enough — the distance constraint governs.',
+    invariant: 'Each index entered and left the set at most once: O(n) time, O(k) space.',
+    formula: 'return False',
+    decision: 'Answer: false.',
+    highlights: [
+      { target: 'set-box', kind: 'focus' },
+      { target: 'result-box', kind: 'focus' },
+    ],
+  },
+];
+---
+
+<contains-duplicate2-visuals>
+  <AlgorithmPlayer title={`nums = [${nums.join(',')}], k = ${k}`} steps={steps}>
+    <div class="stats-row cd2-stats">
+      <div class="stat-box" data-teach-target="width-box">
+        <span class="stat-label">Window Width (max k+1 = {k + 1})</span>
+        <span class="stat-val cd2-width">0</span>
+      </div>
+      <div class="stat-box cd2-evict-box" data-teach-target="evict-box">
+        <span class="stat-label">Evicted This Step</span>
+        <span class="stat-val cd2-evicted">—</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="result-box">
+        <span class="stat-label">Nearby Duplicate?</span>
+        <span class="stat-val cd2-result">false</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array (Sliding Window)</p>
+      <div class="string-container" data-teach-target="window-track">
+        <div class="window-highlight cd2-window" data-teach-target="window"></div>
+        <div class="array-row cd2-cells" style="position: relative; z-index: 1;">
+          {nums.map((val, i) => (
+            <div class="array-col">
+              <div class="array-cell cd2-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+                <span class="cell-val">{val}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+              <div class="pointers-row cd2-ptr-col" data-idx={i}>
+                <span class="ptr ptr-l hidden">L</span>
+                <span class="ptr ptr-r hidden">R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-row cd2-set-row">
+      <p class="anim-label">Window Set (values within k of R)</p>
+      <div class="hashmap-row cd2-set" data-teach-target="set-box"></div>
+    </div>
+  </AlgorithmPlayer>
+</contains-duplicate2-visuals>
+
+<script>
+  class ContainsDuplicate2Visuals extends HTMLElement {
+    connectedCallback() {
+      this.widthEl = this.querySelector(".cd2-width");
+      this.evictedEl = this.querySelector(".cd2-evicted");
+      this.resultEl = this.querySelector(".cd2-result");
+
+      this.windowEl = this.querySelector(".cd2-window");
+      this.cells = Array.from(this.querySelectorAll(".cd2-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".cd2-ptr-col"));
+      this.setEl = this.querySelector(".cd2-set");
+
+      let lastStep = null;
+
+      this.updateHighlight = () => {
+        if (!lastStep || !this.windowEl) return;
+
+        if (lastStep.r >= lastStep.l && this.cells.length > 0) {
+          const arrayRow = this.querySelector(".cd2-cells");
+          const leftCell = this.cells[lastStep.l];
+          const rightCell = this.cells[lastStep.r];
+
+          if (arrayRow && leftCell && rightCell) {
+            const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+            const width =
+              rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft + 8;
+            this.windowEl.style.left = `${left}px`;
+            this.windowEl.style.width = `${width}px`;
+            this.windowEl.style.opacity = "1";
+          }
+        } else {
+          this.windowEl.style.opacity = "0";
+        }
+      };
+
+      window.addEventListener("resize", this.updateHighlight);
+      const arrayRow = this.querySelector(".cd2-cells");
+      if (arrayRow) {
+        arrayRow.addEventListener("scroll", this.updateHighlight);
+        // The animation starts inside a hidden tab, where every offsetLeft
+        // and offsetWidth reads 0 — measuring then leaves the overlay
+        // mispositioned and invisible. Re-measure once the row actually has
+        // dimensions, which is when the tab is revealed.
+        this.resizeObserver = new ResizeObserver(() => this.updateHighlight());
+        this.resizeObserver.observe(arrayRow);
+      }
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+        lastStep = step;
+
+        const width = step.r >= step.l ? step.r - step.l + 1 : 0;
+        if (this.widthEl) this.widthEl.textContent = width.toString();
+
+        if (this.evictedEl) {
+          this.evictedEl.textContent =
+            step.evicted === null ? "—" : step.evicted.toString();
+          this.evictedEl.parentElement?.classList.toggle(
+            "conflict-box",
+            step.evicted !== null,
+          );
+        }
+
+        if (this.resultEl) {
+          this.resultEl.textContent = step.hit ? "true" : "false";
+        }
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i >= step.l && i <= step.r) {
+            valSpan.classList.add("in-window");
+          }
+          // The element being dropped this step is the one at the OLD left
+          // bound, which now sits just before the current window.
+          if (step.phase === "evict" && i === step.l - 1) {
+            valSpan.classList.add("evicting");
+          }
+        });
+
+        this.ptrs.forEach((col, i) => {
+          const lPtr = col.querySelector(".ptr-l");
+          const rPtr = col.querySelector(".ptr-r");
+
+          if (lPtr) lPtr.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (rPtr) rPtr.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
+        });
+
+        this.updateHighlight();
+
+        if (this.setEl) {
+          const values = step.set;
+          if (values.length === 0) {
+            this.setEl.innerHTML = "<span class='hashmap-empty'>empty</span>";
+          } else {
+            this.setEl.innerHTML = values
+              .map((v) => `<span class='hashmap-entry'>${v}</span>`)
+              .join("");
+          }
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this.updateHighlight) {
+        window.removeEventListener("resize", this.updateHighlight);
+        const arrayRow = this.querySelector(".cd2-cells");
+        if (arrayRow) {
+          arrayRow.removeEventListener("scroll", this.updateHighlight);
+        }
+      }
+      this.resizeObserver?.disconnect();
+    }
+  }
+
+  if (!customElements.get('contains-duplicate2-visuals')) {
+    customElements.define('contains-duplicate2-visuals', ContainsDuplicate2Visuals);
+  }
+</script>
+
+<style>
+  contains-duplicate2-visuals {
+    display: block;
+  }
+
+  .cd2-stats {
+    margin-bottom: 2rem;
+  }
+
+  .cd2-set-row {
+    margin-top: 1.5rem;
+  }
+
+  .cell-val.evicting {
+    opacity: 0.35;
+    text-decoration: line-through;
+  }
+</style>
