@@ -1323,7 +1323,7 @@ export const guides = {
 			"Longest Substring with At Most K Distinct Characters — how does the shrink condition change?",
 			"Could you swap the set for a last-seen-index map to jump left in one step instead of looping?",
 		],
-		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
 	},
 	"121-best-time-to-buy-and-sell-stock": {
 		slug: "121-best-time-to-buy-and-sell-stock",
@@ -1371,7 +1371,7 @@ export const guides = {
 			"Best Time to Buy and Sell Stock II: unlimited transactions — what greedy rule applies?",
 			"With a transaction fee or a cooldown, why does this become a DP problem?",
 		],
-		relatedNotes: ["arrays_and_hashing", "space-complexity", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "space-complexity", "time-complexity"],
 	},
 	"424-longest-repeating-character-replacement": {
 		slug: "424-longest-repeating-character-replacement",
@@ -1419,7 +1419,7 @@ export const guides = {
 			"Why is a single 'if' enough to shrink here, whereas other windows need a 'while'?",
 			"Max Consecutive Ones III is the same template on a binary array — can you map k flips to k replacements?",
 		],
-		relatedNotes: ["arrays_and_hashing", "time-complexity", "python_builtins_for_leetcode"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "time-complexity", "python_builtins_for_leetcode"],
 	},
 	"219-contains-duplicate-ii": {
 		slug: "219-contains-duplicate-ii",
@@ -1470,7 +1470,7 @@ export const guides = {
 			"How would you return the actual index pair instead of a boolean, and what changes in the set?",
 			"If the array streamed in and could not be stored, would this still work? (It would — note that the window only ever looks backward.)",
 		],
-		relatedNotes: ["arrays_and_hashing", "space-complexity", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "space-complexity", "time-complexity"],
 	},
 	"1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold": {
 		slug: "1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold",
@@ -1521,8 +1521,9 @@ export const guides = {
 			"Maximum Average Subarray I asks for the best window instead of a count — what single line changes?",
 			"If k were variable ('any sub-array with average >= threshold'), why does this fixed-window trick collapse, and what would you reach for instead?",
 			"Contains Duplicate II uses the same fixed-window skeleton but carries a set rather than a sum. What determines which accumulator a window needs?",
+			"The saved solution never stores the left edge — it evicts arr[R − k] instead. Rewrite it with an explicit `left` variable and `right − left + 1` as the width: both guards survive the translation, so what does each one become, and why is that same rewrite mandatory the moment the window stops being fixed-size?",
 		],
-		relatedNotes: ["arrays_and_hashing", "time-complexity", "space-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "time-complexity", "space-complexity"],
 	},
 	"150-evaluate-reverse-polish-notation": {
 		slug: "150-evaluate-reverse-polish-notation",
@@ -1752,7 +1753,7 @@ export const guides = {
 			"Find All Anagrams in a String (#438) collects every start index — same window, different output.",
 			"Could you replace the dict comparison with a single 'matches' counter for true O(1)-per-step updates?",
 		],
-		relatedNotes: ["arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
+		relatedNotes: ["sliding_window", "arrays_and_hashing", "python_builtins_for_leetcode", "time-complexity"],
 	},
 	"239-sliding-window-maximum": {
 		slug: "239-sliding-window-maximum",
@@ -1801,7 +1802,7 @@ export const guides = {
 			"Implement the monotonic-deque version for true O(n) — how does it keep candidates in decreasing order?",
 			"When is the heap approach actually preferable despite the extra log factor?",
 		],
-		relatedNotes: ["python_builtins_for_leetcode", "time-complexity", "space-complexity"],
+		relatedNotes: ["sliding_window", "python_builtins_for_leetcode", "time-complexity", "space-complexity"],
 	},
 	"53-maximum-subarray": {
 		slug: "53-maximum-subarray",
