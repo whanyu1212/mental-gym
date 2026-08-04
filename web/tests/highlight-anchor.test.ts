@@ -6,6 +6,7 @@ import {
   highlightableText,
   isAnchorValid,
   rangePieces,
+  rangeTouchesHighlight,
   recoverAnchor,
   serializeRange,
 } from "../src/scripts/highlight-anchor.ts";
@@ -280,4 +281,87 @@ test("an ambiguous snippet refuses to re-anchor", () => {
 test("a snippet that no longer exists refuses to re-anchor", () => {
   const root = mount("<p>rewritten entirely</p>");
   assert.equal(recoverAnchor(root, "constant"), null);
+});
+
+/**
+ * Overlap rejection needs real Range objects, so these tests mount their own
+ * document rather than reusing mount(), which only returns the root element.
+ */
+function mountWithDoc(html: string) {
+  const dom = new JSDOM(`<article class="prose">${html}</article>`);
+  const g = globalThis as Record<string, unknown>;
+  g.document = dom.window.document;
+  g.Node = dom.window.Node;
+  g.NodeFilter = dom.window.NodeFilter;
+  const doc = dom.window.document;
+  const root = doc.querySelector(".prose") as HTMLElement;
+  const range = (
+    startNode: Node,
+    startOffset: number,
+    endNode: Node,
+    endOffset: number
+  ) => {
+    const r = doc.createRange();
+    r.setStart(startNode, startOffset);
+    r.setEnd(endNode, endOffset);
+    return r;
+  };
+  return { doc, root, range };
+}
+
+/** "alpha " + <mark>beta</mark> + " gamma delta" */
+function mountHighlighted() {
+  const ctx = mountWithDoc(
+    '<p>alpha <mark data-highlight-id="h1" role="button" tabindex="0">beta</mark> gamma delta</p>'
+  );
+  const p = ctx.doc.querySelector("p") as HTMLElement;
+  return {
+    ...ctx,
+    before: p.firstChild as Text,
+    inMark: (ctx.doc.querySelector("mark") as HTMLElement).firstChild as Text,
+    after: p.lastChild as Text,
+  };
+}
+
+test("a selection enclosing an existing highlight is rejected", () => {
+  // The regression: both endpoints sit in clean text, so an endpoint-only
+  // check passes and paint() nests one mark[role=button] inside another,
+  // leaving the enclosed highlight unreachable by mouse and keyboard.
+  const { root, range, before, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(before, 0, after, 6)), true);
+});
+
+test("selections crossing either edge of a highlight are rejected", () => {
+  const { root, range, before, inMark, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(inMark, 1, after, 4)), true);
+  assert.equal(rangeTouchesHighlight(root, range(before, 1, inMark, 2)), true);
+});
+
+test("a selection entirely inside a highlight is rejected", () => {
+  const { root, range, inMark } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(inMark, 0, inMark, 4)), true);
+});
+
+test("selections in clean text are still allowed", () => {
+  const { root, range, before, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(before, 0, before, 5)), false);
+  assert.equal(rangeTouchesHighlight(root, range(after, 1, after, 6)), false);
+});
+
+test("a selection merely adjacent to a highlight is allowed", () => {
+  // Ending exactly where a mark begins (or starting exactly where it ends) is
+  // not an overlap; rejecting these would make text beside a highlight
+  // un-highlightable.
+  const { root, range, before, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(before, 0, before, 6)), false);
+  assert.equal(rangeTouchesHighlight(root, range(after, 0, after, 6)), false);
+});
+
+test("any selection is allowed when the note has no highlights", () => {
+  const ctx = mountWithDoc("<p>alpha beta gamma</p>");
+  const text = (ctx.doc.querySelector("p") as HTMLElement).firstChild as Text;
+  assert.equal(
+    rangeTouchesHighlight(ctx.root, ctx.range(text, 0, text, 10)),
+    false
+  );
 });
