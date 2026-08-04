@@ -39,6 +39,7 @@ const { noteId } = Astro.props;
   import {
     isAnchorValid,
     rangePieces,
+    rangeTouchesHighlight,
     recoverAnchor,
     serializeRange,
   } from "../scripts/highlight-anchor";
@@ -199,12 +200,22 @@ const { noteId } = Astro.props;
       ) {
         return;
       }
-      // Don't hijack a click on an existing highlight.
-      if (
-        (range.startContainer.parentElement as HTMLElement | null)?.closest?.(
-          "mark[data-highlight-id]"
-        )
-      ) {
+      // Don't hijack a click on an existing highlight, and don't let a new
+      // one overlap a saved one. Checking only the start point would still
+      // admit a selection that begins in clean text and then crosses or
+      // encloses an existing mark; paint() would nest one
+      // mark[role="button"] inside another, and the click handler -- which
+      // looks for an enclosing control from the mark's parent -- would treat
+      // the outer mark as that control and open neither editor, stranding the
+      // enclosed highlight. Reject the whole range instead.
+      //
+      // close() rather than a bare return: selectionchange fires throughout a
+      // drag, so an earlier frame may already have stored a valid prefix in
+      // pendingRange and opened the popover. Returning would leave that
+      // popover live over a rejected selection, and picking a colour would
+      // silently highlight the prefix the user dragged past.
+      if (rangeTouchesHighlight(this.root, range)) {
+        if (!this.popover.hidden) this.close();
         return;
       }
 

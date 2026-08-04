@@ -282,6 +282,42 @@ export function rangePieces(
 }
 
 /**
+ * Whether `range` starts in, ends in, or spans any existing highlight.
+ *
+ * Overlapping highlights are rejected rather than rendered. Painting one
+ * would nest `<mark>` elements, and a nested mark is unreachable by both
+ * mouse and keyboard: the click handler searches from a mark's parent for an
+ * enclosing interactive control and finds the outer `mark[role="button"]`,
+ * so it opens neither editor, while paint() skips the tab stop for the same
+ * reason. Supporting overlap properly would mean splitting ranges and
+ * deciding which highlight a click refers to -- a feature, not a guard.
+ *
+ * Endpoint checks alone are not enough: a selection can begin and end in
+ * clean text while fully enclosing a mark. `intersectsNode` covers that case.
+ * Ranges merely adjacent to a mark (ending exactly where it starts, or
+ * starting exactly where it ends) do not overlap and stay allowed.
+ */
+export function rangeTouchesHighlight(root: HTMLElement, range: Range): boolean {
+  const endpointInside = (node: Node | null) =>
+    Boolean(
+      (node?.parentElement as HTMLElement | null)?.closest?.(
+        "mark[data-highlight-id]"
+      )
+    );
+  if (
+    endpointInside(range.startContainer) ||
+    endpointInside(range.endContainer)
+  ) {
+    return true;
+  }
+
+  for (const mark of root.querySelectorAll("mark[data-highlight-id]")) {
+    if (range.intersectsNode?.(mark)) return true;
+  }
+  return false;
+}
+
+/**
  * Whether stored offsets still point at the text they were created from.
  * Guards against silently painting the wrong words after a note is edited.
  */

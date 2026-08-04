@@ -6,6 +6,7 @@ import {
   highlightableText,
   isAnchorValid,
   rangePieces,
+  rangeTouchesHighlight,
   recoverAnchor,
   serializeRange,
 } from "../src/scripts/highlight-anchor.ts";
@@ -280,4 +281,155 @@ test("an ambiguous snippet refuses to re-anchor", () => {
 test("a snippet that no longer exists refuses to re-anchor", () => {
   const root = mount("<p>rewritten entirely</p>");
   assert.equal(recoverAnchor(root, "constant"), null);
+});
+
+/**
+ * Overlap rejection needs real Range objects, so these tests mount their own
+ * document rather than reusing mount(), which only returns the root element.
+ */
+function mountWithDoc(html: string) {
+  const dom = new JSDOM(`<article class="prose">${html}</article>`);
+  const g = globalThis as Record<string, unknown>;
+  g.document = dom.window.document;
+  g.Node = dom.window.Node;
+  g.NodeFilter = dom.window.NodeFilter;
+  const doc = dom.window.document;
+  const root = doc.querySelector(".prose") as HTMLElement;
+  const range = (
+    startNode: Node,
+    startOffset: number,
+    endNode: Node,
+    endOffset: number
+  ) => {
+    const r = doc.createRange();
+    r.setStart(startNode, startOffset);
+    r.setEnd(endNode, endOffset);
+    return r;
+  };
+  return { doc, root, range };
+}
+
+/** "alpha " + <mark>beta</mark> + " gamma delta" */
+function mountHighlighted() {
+  const ctx = mountWithDoc(
+    '<p>alpha <mark data-highlight-id="h1" role="button" tabindex="0">beta</mark> gamma delta</p>'
+  );
+  const p = ctx.doc.querySelector("p") as HTMLElement;
+  return {
+    ...ctx,
+    before: p.firstChild as Text,
+    inMark: (ctx.doc.querySelector("mark") as HTMLElement).firstChild as Text,
+    after: p.lastChild as Text,
+  };
+}
+
+test("a selection enclosing an existing highlight is rejected", () => {
+  // The regression: both endpoints sit in clean text, so an endpoint-only
+  // check passes and paint() nests one mark[role=button] inside another,
+  // leaving the enclosed highlight unreachable by mouse and keyboard.
+  const { root, range, before, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(before, 0, after, 6)), true);
+});
+
+test("selections crossing either edge of a highlight are rejected", () => {
+  const { root, range, before, inMark, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(inMark, 1, after, 4)), true);
+  assert.equal(rangeTouchesHighlight(root, range(before, 1, inMark, 2)), true);
+});
+
+test("a selection entirely inside a highlight is rejected", () => {
+  const { root, range, inMark } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(inMark, 0, inMark, 4)), true);
+});
+
+test("selections in clean text are still allowed", () => {
+  const { root, range, before, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(before, 0, before, 5)), false);
+  assert.equal(rangeTouchesHighlight(root, range(after, 1, after, 6)), false);
+});
+
+test("a selection merely adjacent to a highlight is allowed", () => {
+  // Ending exactly where a mark begins (or starting exactly where it ends) is
+  // not an overlap; rejecting these would make text beside a highlight
+  // un-highlightable.
+  const { root, range, before, after } = mountHighlighted();
+  assert.equal(rangeTouchesHighlight(root, range(before, 0, before, 6)), false);
+  assert.equal(rangeTouchesHighlight(root, range(after, 0, after, 6)), false);
+});
+
+test("any selection is allowed when the note has no highlights", () => {
+  const ctx = mountWithDoc("<p>alpha beta gamma</p>");
+  const text = (ctx.doc.querySelector("p") as HTMLElement).firstChild as Text;
+  assert.equal(
+    rangeTouchesHighlight(ctx.root, ctx.range(text, 0, text, 10)),
+    false
+  );
+});
+
+/**
+ * The overlap guard runs inside NoteHighlighter's selectionchange handler,
+ * which is not importable from a .astro component. This models the handler's
+ * state machine around rangeTouchesHighlight so the drag sequence that
+ * strands a stale pendingRange stays covered.
+ */
+function selectionMachine(root: HTMLElement) {
+  const state = { pendingRange: null as string | null, popoverHidden: true };
+  return {
+    state,
+    /** Mirrors onSelectionChange: reject-and-close, or store-and-open. */
+    onSelectionChange(range: Range) {
+      if (rangeTouchesHighlight(root, range)) {
+        // close() clears pendingRange and hides the popover.
+        if (!state.popoverHidden) {
+          state.pendingRange = null;
+          state.popoverHidden = true;
+        }
+        return;
+      }
+      state.pendingRange = range.toString();
+      state.popoverHidden = false;
+    },
+    /** Mirrors applyColor's pendingRange branch. */
+    applyColor() {
+      if (state.popoverHidden || !state.pendingRange) return null;
+      return state.pendingRange;
+    },
+  };
+}
+
+test("a drag extended across a highlight discards the earlier valid prefix", () => {
+  // selectionchange fires per frame. An early frame stores a valid prefix and
+  // opens the popover; when the drag then crosses a highlight the guard must
+  // close it, or picking a colour silently highlights the prefix instead of
+  // the rejected selection the user actually made.
+  const { root, range, before, after } = mountHighlighted();
+  const machine = selectionMachine(root);
+
+  machine.onSelectionChange(range(before, 0, before, 4)); // "alph" — accepted
+  assert.equal(machine.state.pendingRange, "alph");
+  assert.equal(machine.state.popoverHidden, false);
+
+  machine.onSelectionChange(range(before, 0, after, 6)); // crosses the mark
+  assert.equal(machine.state.pendingRange, null);
+  assert.equal(machine.state.popoverHidden, true);
+  assert.equal(machine.applyColor(), null);
+});
+
+test("a rejected selection with no popover open leaves state untouched", () => {
+  const { root, range, inMark } = mountHighlighted();
+  const machine = selectionMachine(root);
+
+  machine.onSelectionChange(range(inMark, 0, inMark, 4)); // starts in the mark
+  assert.equal(machine.state.pendingRange, null);
+  assert.equal(machine.state.popoverHidden, true);
+});
+
+test("a drag that stays in clean text keeps its pending range", () => {
+  const { root, range, before } = mountHighlighted();
+  const machine = selectionMachine(root);
+
+  machine.onSelectionChange(range(before, 0, before, 3));
+  machine.onSelectionChange(range(before, 0, before, 5));
+  assert.equal(machine.state.pendingRange, "alpha");
+  assert.equal(machine.applyColor(), "alpha");
 });
