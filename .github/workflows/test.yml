@@ -93,11 +93,11 @@ jobs:
             echo "Running $test_file..."
             if julia --project=. "$test_file" 2>&1; then
               echo "✓ $test_file passed"
-              ((test_count++))
+              test_count=$((test_count + 1))
             else
               echo "✗ $test_file failed"
-              ((test_count++))
-              ((failed_count++))
+              test_count=$((test_count + 1))
+              failed_count=$((failed_count + 1))
             fi
           done
           echo "Total: $test_count tests, $failed_count failed"

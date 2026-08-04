@@ -1,3 +1,5 @@
+import type { Highlight } from "./highlight-types";
+
 export type ReviewQuality = 0 | 1 | 2 | 3; // Again, Hard, Good, Easy
 export type ReviewStatus = "overdue" | "due" | "upcoming" | "new";
 export type ReviewDomain = "algorithms" | "ml" | "sql";
@@ -43,14 +45,24 @@ export interface SRExportV2 {
   events: ReviewEvent[];
 }
 
-export type SRExport = SRExportV1 | SRExportV2;
+export interface SRExportV3 {
+  version: 3;
+  exportedAt: string;
+  records: ReviewRecord[];
+  events: ReviewEvent[];
+  highlights: Highlight[];
+}
+
+export type SRExport = SRExportV1 | SRExportV2 | SRExportV3;
 
 export interface NormalizedSRExport {
   records: ReviewRecord[];
   events: ReviewEvent[];
+  highlights: Highlight[];
 }
 
 export interface ImportResult {
   recordCount: number;
   eventCount: number;
+  highlightCount: number;
 }

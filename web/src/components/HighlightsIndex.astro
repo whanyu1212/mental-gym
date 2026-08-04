@@ -1,0 +1,238 @@
+---
+import { getCollection } from "astro:content";
+import { withBase } from "../lib/url";
+
+// Titles are resolved at build time so the client only needs the note id.
+const notes = await getCollection("notes");
+const noteTitles = Object.fromEntries(
+  notes.map((note) => [note.id, note.data.title])
+);
+---
+
+<highlights-index data-note-titles={JSON.stringify(noteTitles)}>
+  <p class="hi-empty" data-hi-empty>No highlights yet. Select text in any note to save one.</p>
+  <div class="hi-groups" data-hi-groups></div>
+</highlights-index>
+
+<script>
+  import { getAllHighlights, deleteHighlight } from "../scripts/highlight-db";
+  import { withBase } from "../lib/url";
+  import type { Highlight } from "../scripts/highlight-types";
+
+  class HighlightsIndex extends HTMLElement {
+    private titles: Record<string, string> = {};
+
+    async connectedCallback() {
+      try {
+        this.titles = JSON.parse(this.dataset.noteTitles ?? "{}");
+      } catch {
+        this.titles = {};
+      }
+      await this.render();
+      window.addEventListener("mental-gym:progress-updated", () =>
+        void this.render()
+      );
+    }
+
+    private async render() {
+      const groupsEl = this.querySelector("[data-hi-groups]") as HTMLElement;
+      const emptyEl = this.querySelector("[data-hi-empty]") as HTMLElement;
+      const highlights = await getAllHighlights();
+
+      if (highlights.length === 0) {
+        emptyEl.hidden = false;
+        groupsEl.replaceChildren();
+        return;
+      }
+      emptyEl.hidden = true;
+
+      // Group by note, newest highlight first within each.
+      const byNote = new Map<string, Highlight[]>();
+      for (const highlight of highlights) {
+        const list = byNote.get(highlight.noteId) ?? [];
+        list.push(highlight);
+        byNote.set(highlight.noteId, list);
+      }
+
+      const fragment = document.createDocumentFragment();
+      const noteIds = [...byNote.keys()].sort((a, b) =>
+        (this.titles[a] ?? a).localeCompare(this.titles[b] ?? b)
+      );
+
+      for (const noteId of noteIds) {
+        const items = (byNote.get(noteId) ?? []).sort(
+          (a, b) => b.createdAt.localeCompare(a.createdAt)
+        );
+
+        const group = document.createElement("section");
+        group.className = "hi-group";
+
+        const head = document.createElement("div");
+        head.className = "hi-group-head";
+
+        const heading = document.createElement("a");
+        heading.className = "hi-note-link";
+        heading.href = withBase(`/notes/${noteId}`);
+        heading.textContent = this.titles[noteId] ?? noteId;
+        head.appendChild(heading);
+
+        const count = document.createElement("span");
+        count.className = "hi-count";
+        count.textContent = `${items.length} highlight${items.length === 1 ? "" : "s"}`;
+        head.appendChild(count);
+        group.appendChild(head);
+
+        for (const highlight of items) {
+          group.appendChild(this.renderItem(highlight));
+        }
+        fragment.appendChild(group);
+      }
+
+      groupsEl.replaceChildren(fragment);
+    }
+
+    private renderItem(highlight: Highlight): HTMLElement {
+      const item = document.createElement("article");
+      item.className = `hi-item hi-${highlight.color}`;
+
+      const quote = document.createElement("blockquote");
+      quote.className = "hi-quote";
+      quote.textContent = highlight.textSnippet;
+      item.appendChild(quote);
+
+      if (highlight.note) {
+        const note = document.createElement("p");
+        note.className = "hi-note";
+        note.textContent = highlight.note;
+        item.appendChild(note);
+      }
+
+      const remove = document.createElement("button");
+      remove.className = "hi-remove";
+      remove.type = "button";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", async () => {
+        await deleteHighlight(highlight.id);
+        await this.render();
+      });
+      item.appendChild(remove);
+
+      return item;
+    }
+  }
+
+  if (!customElements.get("highlights-index")) {
+    customElements.define("highlights-index", HighlightsIndex);
+  }
+</script>
+
+<!-- Scoped styles cannot reach nodes built at runtime by createElement, so the
+     index styles are global and namespaced under the custom element instead. -->
+<style is:global>
+  highlights-index .hi-empty {
+    margin: 0;
+    color: var(--muted);
+    font: var(--fs-fine) var(--font-sans);
+  }
+
+  highlights-index .hi-empty[hidden] {
+    display: none;
+  }
+
+  highlights-index .hi-groups {
+    display: grid;
+    gap: 2rem;
+  }
+
+  highlights-index .hi-group {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  /* Title and count share a row; the items below stack full width. */
+  highlights-index .hi-group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  highlights-index .hi-note-link {
+    color: var(--text);
+    font: 600 var(--fs-lg) var(--font-serif);
+    text-decoration: none;
+  }
+
+  highlights-index .hi-note-link:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  highlights-index .hi-count {
+    color: var(--muted);
+    font: var(--fs-micro) var(--font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  highlights-index .hi-item {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.85rem 1.1rem;
+    border: 1px solid var(--glass-border);
+    border-left-width: 3px;
+    border-radius: var(--radius-xs);
+    background: var(--glass-surface);
+  }
+
+  highlights-index .hi-yellow {
+    border-left-color: #f6c945;
+  }
+  highlights-index .hi-green {
+    border-left-color: #4ac97e;
+  }
+  highlights-index .hi-blue {
+    border-left-color: #4aa8f0;
+  }
+  highlights-index .hi-pink {
+    border-left-color: #f07aa8;
+  }
+
+  highlights-index .hi-quote {
+    margin: 0;
+    color: var(--text);
+    font: var(--fs-fine) / var(--lh-prose) var(--font-sans);
+  }
+
+  highlights-index .hi-note {
+    margin: 0;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--accent-ring);
+    color: var(--muted);
+    font: italic var(--fs-fine) var(--font-sans);
+  }
+
+  highlights-index .hi-remove {
+    justify-self: start;
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font: var(--fs-micro) var(--font-sans);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.15s ease;
+  }
+
+  highlights-index .hi-remove:hover {
+    border-color: var(--status-hard);
+    color: var(--status-hard);
+  }
+
+  highlights-index .hi-remove:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>

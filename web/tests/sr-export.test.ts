@@ -3,11 +3,13 @@ import test from "node:test";
 
 import {
   deduplicateImportedEvents,
+  deduplicateImportedHighlights,
   normalizeExport,
   parseExport,
   serializeExport,
   withoutEventIds,
 } from "../src/scripts/sr-export.ts";
+import type { Highlight } from "../src/scripts/highlight-types.ts";
 import type { ReviewEvent, ReviewRecord } from "../src/scripts/sr-types.ts";
 
 const record: ReviewRecord = {
@@ -36,6 +38,16 @@ const event: ReviewEvent = {
   interval: 3,
 };
 
+const highlight: Highlight = {
+  id: "11111111-2222-3333-4444-555555555555",
+  noteId: "time-complexity",
+  startOffset: 120,
+  endOffset: 168,
+  textSnippet: "constant factors are dropped in Big-O notation",
+  color: "yellow",
+  createdAt: "2026-07-13T12:00:00.000Z",
+};
+
 test("version 1 imports with empty history", () => {
   assert.deepEqual(
     normalizeExport({
@@ -43,20 +55,45 @@ test("version 1 imports with empty history", () => {
       exportedAt: "2026-07-13T12:00:00.000Z",
       records: [record],
     }),
-    { records: [record], events: [] }
+    { records: [record], events: [], highlights: [] }
   );
 });
 
-test("version 2 round trip preserves records and events", () => {
+test("version 2 imports with no highlights", () => {
+  assert.deepEqual(
+    normalizeExport({
+      version: 2,
+      exportedAt: "2026-07-13T12:00:00.000Z",
+      records: [record],
+      events: [event],
+    }),
+    { records: [record], events: [event], highlights: [] }
+  );
+});
+
+test("version 3 round trip preserves records, events, and highlights", () => {
   const json = serializeExport(
     [record],
     [event],
+    [highlight],
     "2026-07-13T12:00:00.000Z"
   );
   assert.deepEqual(parseExport(json), {
     records: [record],
     events: [event],
+    highlights: [highlight],
   });
+});
+
+test("highlights with an attached note survive a round trip", () => {
+  const annotated: Highlight = { ...highlight, note: "revisit before mocks" };
+  const json = serializeExport(
+    [record],
+    [event],
+    [annotated],
+    "2026-07-13T12:00:00.000Z"
+  );
+  assert.deepEqual(parseExport(json).highlights, [annotated]);
 });
 
 test("imported events discard browser-local auto-increment ids", () => {
@@ -97,9 +134,21 @@ test("distinct events are preserved when imported", () => {
   );
 });
 
+test("re-importing the same highlight does not duplicate it", () => {
+  assert.deepEqual(deduplicateImportedHighlights([highlight], [highlight]), []);
+});
+
+test("distinct highlights are preserved when imported", () => {
+  const other: Highlight = { ...highlight, id: "other-id", color: "green" };
+  assert.deepEqual(
+    deduplicateImportedHighlights([highlight], [highlight, other]),
+    [other]
+  );
+});
+
 test("invalid versions and malformed events are rejected", () => {
   assert.throws(
-    () => normalizeExport({ version: 3, records: [] }),
+    () => normalizeExport({ version: 4, records: [] }),
     /Unsupported/
   );
   assert.throws(
@@ -110,5 +159,15 @@ test("invalid versions and malformed events are rejected", () => {
         events: [{ reviewDate: "2026-07-13" }],
       }),
     /invalid review events/
+  );
+  assert.throws(
+    () =>
+      normalizeExport({
+        version: 3,
+        records: [record],
+        events: [event],
+        highlights: [{ id: "x", noteId: "n" }],
+      }),
+    /invalid highlights/
   );
 });
