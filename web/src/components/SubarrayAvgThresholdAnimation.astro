@@ -1,0 +1,356 @@
+---
+import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
+
+// The canonical case from the guide: three windows clear the bar.
+// target = threshold * k = 4 * 3 = 12, so we compare sums and never divide.
+const arr = [2, 2, 2, 2, 5, 5, 5, 8];
+const k = 3;
+const threshold = 4;
+const target = threshold * k;
+
+const steps = [
+  {
+    l: 0,
+    r: -1,
+    sum: 0,
+    count: 0,
+    full: false,
+    evicted: null,
+    qualifies: false,
+    phase: 'init',
+    action: 'write',
+    exp: `Precompute target = threshold × k = ${threshold} × ${k} = ${target}. Now we compare sums, never averages.`,
+    reason: 'Multiplying the threshold by k keeps every comparison in integer arithmetic.',
+    invariant: 'window_sum holds the sum of the last (up to k) elements.',
+    formula: `target = ${threshold} * ${k} = ${target}`,
+    decision: 'Start with an empty running sum and a zero count.',
+    targets: ['sum-box', 'count-box', 'rule-box'],
+    callout: {
+      title: 'Why not just divide?',
+      body: 'Comparing sum / k >= threshold with floats invites precision error. Comparing sum >= threshold * k is exactly equivalent for a fixed k, and stays in integers.',
+    },
+  },
+  {
+    l: 0,
+    r: 0,
+    sum: 2,
+    count: 0,
+    full: false,
+    evicted: null,
+    qualifies: false,
+    phase: 'fill',
+    action: 'write',
+    exp: 'R=0: add 2. The window is not yet k wide, so there is nothing to test.',
+    reason: 'A partial prefix is not a valid k-length window.',
+    invariant: 'Only test once R >= k-1 = 2.',
+    formula: 'window_sum = 0 + 2 = 2',
+    decision: 'Accumulate only.',
+    targets: ['cell:0', 'sum-box'],
+  },
+  {
+    l: 0,
+    r: 1,
+    sum: 4,
+    count: 0,
+    full: false,
+    evicted: null,
+    qualifies: false,
+    phase: 'fill',
+    action: 'write',
+    exp: 'R=1: add 2. Still filling — width is 2, we need 3.',
+    reason: 'Testing now would count a 2-element window as if it were valid.',
+    invariant: 'window_sum = sum of arr[0..1].',
+    formula: 'window_sum = 2 + 2 = 4',
+    decision: 'Accumulate only.',
+    targets: ['cell:1', 'sum-box'],
+  },
+  {
+    l: 0,
+    r: 2,
+    sum: 6,
+    count: 0,
+    full: true,
+    evicted: null,
+    qualifies: false,
+    phase: 'test',
+    action: 'compare',
+    exp: 'R=2: add 2. The window is now full (indices 0..2). First real test: is 6 >= 12?',
+    reason: 'R has reached k-1, so this is a genuine k-length window.',
+    invariant: 'window_sum = sum of arr[0..2] = 6, average 2.',
+    formula: '6 >= 12? No',
+    decision: 'Does not qualify. count stays 0.',
+    targets: ['cell:2', 'sum-box', 'count-box'],
+  },
+  {
+    l: 1,
+    r: 3,
+    sum: 6,
+    count: 0,
+    full: true,
+    evicted: 2,
+    qualifies: false,
+    phase: 'test',
+    action: 'compare',
+    exp: 'R=3: add arr[3]=2, then evict arr[R-k]=arr[0]=2. Sum stays 6. Test: 6 >= 12?',
+    reason: 'One addition and one subtraction slide the window in O(1) — no re-summing.',
+    invariant: 'window_sum = sum of arr[1..3].',
+    formula: 'sum = 6 + 2 - 2 = 6 -> 6 >= 12? No',
+    decision: 'Does not qualify.',
+    targets: ['cell:3', 'cell:0', 'sum-box', 'evict-box'],
+  },
+  {
+    l: 2,
+    r: 4,
+    sum: 9,
+    count: 0,
+    full: true,
+    evicted: 2,
+    qualifies: false,
+    phase: 'test',
+    action: 'compare',
+    exp: 'R=4: add 5, evict arr[1]=2. Sum climbs to 9. Test: 9 >= 12?',
+    reason: 'The eviction index is R-k = 1, not R-k+1 — that off-by-one is a classic slip.',
+    invariant: 'window_sum = sum of arr[2..4] = 2+2+5 = 9.',
+    formula: 'sum = 6 + 5 - 2 = 9 -> 9 >= 12? No',
+    decision: 'Still short of the bar.',
+    targets: ['cell:4', 'cell:1', 'sum-box'],
+  },
+  {
+    l: 3,
+    r: 5,
+    sum: 12,
+    count: 1,
+    full: true,
+    evicted: 2,
+    qualifies: true,
+    phase: 'test',
+    action: 'confirmed',
+    exp: 'R=5: add 5, evict arr[2]=2. Sum is exactly 12. Test: 12 >= 12?',
+    reason: 'The bound is inclusive — an average landing exactly on the threshold counts.',
+    invariant: 'window arr[3..5] = [2,5,5], average exactly 4.',
+    formula: 'sum = 9 + 5 - 2 = 12 -> 12 >= 12? Yes',
+    decision: 'Qualifies. count = 1.',
+    targets: ['cell:5', 'cell:2', 'sum-box', 'count-box'],
+    callout: {
+      title: 'The inclusive boundary',
+      body: 'This window is why the comparison must be >= and not >. Using a strict > here would silently undercount by one.',
+    },
+  },
+  {
+    l: 4,
+    r: 6,
+    sum: 15,
+    count: 2,
+    full: true,
+    evicted: 2,
+    qualifies: true,
+    phase: 'test',
+    action: 'confirmed',
+    exp: 'R=6: add 5, evict arr[3]=2. Sum is 15. Test: 15 >= 12?',
+    reason: 'Window arr[4..6] = [5,5,5], average 5.',
+    invariant: 'count tracks how many full windows have cleared the bar.',
+    formula: 'sum = 12 + 5 - 2 = 15 -> 15 >= 12? Yes',
+    decision: 'Qualifies. count = 2.',
+    targets: ['cell:6', 'cell:3', 'sum-box', 'count-box'],
+  },
+  {
+    l: 5,
+    r: 7,
+    sum: 18,
+    count: 3,
+    full: true,
+    evicted: 5,
+    qualifies: true,
+    phase: 'test',
+    action: 'confirmed',
+    exp: 'R=7: add 8, evict arr[4]=5. Sum is 18. Test: 18 >= 12?',
+    reason: 'Window arr[5..7] = [5,5,8], average 6.',
+    invariant: 'This is the last full window in the array.',
+    formula: 'sum = 15 + 8 - 5 = 18 -> 18 >= 12? Yes',
+    decision: 'Qualifies. count = 3.',
+    targets: ['cell:7', 'cell:4', 'sum-box', 'count-box'],
+  },
+  {
+    l: 5,
+    r: 7,
+    sum: 18,
+    count: 3,
+    full: true,
+    evicted: null,
+    qualifies: false,
+    phase: 'done',
+    action: 'confirmed',
+    exp: 'Scan complete. Three windows cleared the threshold: [2,5,5], [5,5,5], and [5,5,8].',
+    reason: 'Every element was added once and subtracted at most once.',
+    invariant: 'O(n) time, O(1) space — no extra structure beyond a sum and a counter.',
+    formula: 'return 3',
+    decision: 'Answer: 3.',
+    targets: ['count-box', 'sum-box'],
+  },
+];
+---
+
+<subarray-avg-threshold-visuals>
+  <AlgorithmPlayer
+    title={`arr = [${arr.join(',')}], k = ${k}, threshold = ${threshold}`}
+    steps={steps}
+  >
+    <div class="stats-row sat-stats">
+      <div class="stat-box" data-teach-target="sum-box">
+        <span class="stat-label">Window Sum</span>
+        <span class="stat-val sat-sum">0</span>
+      </div>
+      <div class="stat-box" data-teach-target="rule-box">
+        <span class="stat-label">Target (threshold × k)</span>
+        <span class="stat-val sat-target">{target}</span>
+      </div>
+      <div class="stat-box highlight" data-teach-target="count-box">
+        <span class="stat-label">Qualifying Windows</span>
+        <span class="stat-val sat-count">0</span>
+      </div>
+    </div>
+
+    <div class="anim-row">
+      <p class="anim-label">Array (Fixed-Size Window)</p>
+      <div class="string-container" data-teach-target="window-track">
+        <div class="window-highlight sat-window" data-teach-target="window"></div>
+        <div class="array-row sat-cells" style="position: relative; z-index: 1;">
+          {arr.map((val, i) => (
+            <div class="array-col">
+              <div class="array-cell sat-cell" data-idx={i} data-teach-target={`cell:${i}`}>
+                <span class="cell-val">{val}</span>
+                <span class="cell-idx">{i}</span>
+              </div>
+              <div class="pointers-row sat-ptr-col" data-idx={i}>
+                <span class="ptr ptr-l hidden">L</span>
+                <span class="ptr ptr-r hidden">R</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-row sat-verdict-row">
+      <p class="anim-label">Comparison</p>
+      <div class="hashmap-row sat-verdict" data-teach-target="evict-box"></div>
+    </div>
+  </AlgorithmPlayer>
+</subarray-avg-threshold-visuals>
+
+<script>
+  class SubarrayAvgThresholdVisuals extends HTMLElement {
+    connectedCallback() {
+      this.sumEl = this.querySelector(".sat-sum");
+      this.countEl = this.querySelector(".sat-count");
+      this.verdictEl = this.querySelector(".sat-verdict");
+
+      this.windowEl = this.querySelector(".sat-window");
+      this.cells = Array.from(this.querySelectorAll(".sat-cell"));
+      this.ptrs = Array.from(this.querySelectorAll(".sat-ptr-col"));
+
+      this.target = Number(this.querySelector(".sat-target")?.textContent ?? 0);
+
+      let lastStep = null;
+
+      this.updateHighlight = () => {
+        if (!lastStep || !this.windowEl) return;
+
+        if (lastStep.r >= lastStep.l && this.cells.length > 0) {
+          const arrayRow = this.querySelector(".sat-cells");
+          const leftCell = this.cells[lastStep.l];
+          const rightCell = this.cells[lastStep.r];
+
+          if (arrayRow && leftCell && rightCell) {
+            const left = leftCell.offsetLeft - arrayRow.scrollLeft - 4;
+            const width =
+              rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft + 8;
+            this.windowEl.style.left = `${left}px`;
+            this.windowEl.style.width = `${width}px`;
+            this.windowEl.style.opacity = "1";
+            // Only a full k-wide window is eligible to be counted; while the
+            // window is still filling we render it as provisional.
+            this.windowEl.classList.toggle("conflict-window", !lastStep.full);
+          }
+        } else {
+          this.windowEl.style.opacity = "0";
+        }
+      };
+
+      window.addEventListener("resize", this.updateHighlight);
+      const arrayRow = this.querySelector(".sat-cells");
+      if (arrayRow) {
+        arrayRow.addEventListener("scroll", this.updateHighlight);
+      }
+
+      this.addEventListener("step-change", (e) => {
+        const step = e.detail.step;
+        lastStep = step;
+
+        if (this.sumEl) this.sumEl.textContent = step.sum.toString();
+        if (this.countEl) this.countEl.textContent = step.count.toString();
+
+        this.cells.forEach((cell, i) => {
+          const valSpan = cell.querySelector(".cell-val");
+          if (!valSpan) return;
+
+          valSpan.className = "cell-val";
+          if (i >= step.l && i <= step.r) {
+            valSpan.classList.add("in-window");
+          }
+        });
+
+        this.ptrs.forEach((col, i) => {
+          const lPtr = col.querySelector(".ptr-l");
+          const rPtr = col.querySelector(".ptr-r");
+
+          if (lPtr) lPtr.className = `ptr ptr-l ${i === step.l ? "" : "hidden"}`;
+          if (rPtr) rPtr.className = `ptr ptr-r ${i === step.r ? "" : "hidden"}`;
+        });
+
+        this.updateHighlight();
+
+        if (this.verdictEl) {
+          if (!step.full) {
+            this.verdictEl.innerHTML =
+              "<span class='hashmap-empty'>window still filling — no test yet</span>";
+          } else {
+            const symbol = step.qualifies ? "&ge;" : "&lt;";
+            const cls = step.qualifies ? "highlight-entry" : "";
+            this.verdictEl.innerHTML =
+              `<span class='hashmap-entry ${cls}'>sum ${step.sum} ${symbol} target ${this.target}</span>` +
+              `<span class='hashmap-entry ${cls}'>${step.qualifies ? "counts" : "skipped"}</span>`;
+          }
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this.updateHighlight) {
+        window.removeEventListener("resize", this.updateHighlight);
+        const arrayRow = this.querySelector(".sat-cells");
+        if (arrayRow) {
+          arrayRow.removeEventListener("scroll", this.updateHighlight);
+        }
+      }
+    }
+  }
+
+  if (!customElements.get('subarray-avg-threshold-visuals')) {
+    customElements.define('subarray-avg-threshold-visuals', SubarrayAvgThresholdVisuals);
+  }
+</script>
+
+<style>
+  subarray-avg-threshold-visuals {
+    display: block;
+  }
+
+  .sat-stats {
+    margin-bottom: 2rem;
+  }
+
+  .sat-verdict-row {
+    margin-top: 1.5rem;
+  }
+</style>

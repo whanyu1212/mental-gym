@@ -113,7 +113,10 @@ const stepsJson = JSON.stringify(steps);
         (step?.action
           ? `${step.action.charAt(0).toUpperCase()}${step.action.slice(1)}`
           : "Decision");
-      const body = step?.reason ?? step?.callout?.body ?? "";
+      // Mirror the title's precedence: when a step supplies an explicit
+      // callout, its body belongs with its title. Falling back to `reason`
+      // first would pair a callout title with unrelated body text.
+      const body = step?.callout?.body ?? step?.reason ?? "";
       const tone = step?.callout?.tone ?? "info";
       return { title, body, tone };
     }
