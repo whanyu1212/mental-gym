@@ -208,7 +208,16 @@ const { noteId } = Astro.props;
       // looks for an enclosing control from the mark's parent -- would treat
       // the outer mark as that control and open neither editor, stranding the
       // enclosed highlight. Reject the whole range instead.
-      if (rangeTouchesHighlight(this.root, range)) return;
+      //
+      // close() rather than a bare return: selectionchange fires throughout a
+      // drag, so an earlier frame may already have stored a valid prefix in
+      // pendingRange and opened the popover. Returning would leave that
+      // popover live over a rejected selection, and picking a colour would
+      // silently highlight the prefix the user dragged past.
+      if (rangeTouchesHighlight(this.root, range)) {
+        if (!this.popover.hidden) this.close();
+        return;
+      }
 
       const serialized = serializeRange(this.root, range);
       if (!serialized) return;

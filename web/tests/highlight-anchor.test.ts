@@ -365,3 +365,71 @@ test("any selection is allowed when the note has no highlights", () => {
     false
   );
 });
+
+/**
+ * The overlap guard runs inside NoteHighlighter's selectionchange handler,
+ * which is not importable from a .astro component. This models the handler's
+ * state machine around rangeTouchesHighlight so the drag sequence that
+ * strands a stale pendingRange stays covered.
+ */
+function selectionMachine(root: HTMLElement) {
+  const state = { pendingRange: null as string | null, popoverHidden: true };
+  return {
+    state,
+    /** Mirrors onSelectionChange: reject-and-close, or store-and-open. */
+    onSelectionChange(range: Range) {
+      if (rangeTouchesHighlight(root, range)) {
+        // close() clears pendingRange and hides the popover.
+        if (!state.popoverHidden) {
+          state.pendingRange = null;
+          state.popoverHidden = true;
+        }
+        return;
+      }
+      state.pendingRange = range.toString();
+      state.popoverHidden = false;
+    },
+    /** Mirrors applyColor's pendingRange branch. */
+    applyColor() {
+      if (state.popoverHidden || !state.pendingRange) return null;
+      return state.pendingRange;
+    },
+  };
+}
+
+test("a drag extended across a highlight discards the earlier valid prefix", () => {
+  // selectionchange fires per frame. An early frame stores a valid prefix and
+  // opens the popover; when the drag then crosses a highlight the guard must
+  // close it, or picking a colour silently highlights the prefix instead of
+  // the rejected selection the user actually made.
+  const { root, range, before, after } = mountHighlighted();
+  const machine = selectionMachine(root);
+
+  machine.onSelectionChange(range(before, 0, before, 4)); // "alph" — accepted
+  assert.equal(machine.state.pendingRange, "alph");
+  assert.equal(machine.state.popoverHidden, false);
+
+  machine.onSelectionChange(range(before, 0, after, 6)); // crosses the mark
+  assert.equal(machine.state.pendingRange, null);
+  assert.equal(machine.state.popoverHidden, true);
+  assert.equal(machine.applyColor(), null);
+});
+
+test("a rejected selection with no popover open leaves state untouched", () => {
+  const { root, range, inMark } = mountHighlighted();
+  const machine = selectionMachine(root);
+
+  machine.onSelectionChange(range(inMark, 0, inMark, 4)); // starts in the mark
+  assert.equal(machine.state.pendingRange, null);
+  assert.equal(machine.state.popoverHidden, true);
+});
+
+test("a drag that stays in clean text keeps its pending range", () => {
+  const { root, range, before } = mountHighlighted();
+  const machine = selectionMachine(root);
+
+  machine.onSelectionChange(range(before, 0, before, 3));
+  machine.onSelectionChange(range(before, 0, before, 5));
+  assert.equal(machine.state.pendingRange, "alpha");
+  assert.equal(machine.applyColor(), "alpha");
+});
