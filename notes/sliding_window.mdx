@@ -274,6 +274,9 @@ for right in range(len(arr)):
 **Form C — left as the loop variable.** Seed the first window, then each step swaps one element for another.
 
 ```python
+if len(arr) < k:                             # mandatory here — see below
+    return 0
+
 window_sum = sum(arr[i] for i in range(k))   # not sum(arr[:k]) — see below
 count = 1 if window_sum >= target else 0
 
@@ -283,7 +286,7 @@ for left in range(len(arr) - k):
         count += 1
 ```
 
-The seed is written as a generator expression on purpose. `sum(arr[:k])` reads better but allocates a fresh `k`-element list first, which costs O(k) auxiliary space and quietly breaks the O(1) claim whenever `k` grows with the input. Iterating indices keeps the seed O(1).
+Two details in that seed are deliberate. The generator expression avoids `sum(arr[:k])`, which reads better but allocates a fresh `k`-element list first — O(k) auxiliary space, which would quietly break the O(1) claim whenever `k` grows with the input. And the length guard is not optional: seeding assumes `k` elements exist, so without it the generator walks off the end and raises `IndexError`. Forms A and B need no such guard because their loops simply never reach a full window.
 
 ### Which To Reach For
 
@@ -291,7 +294,7 @@ The seed is written as a generator expression on purpose. `sum(arr[:k])` reads b
 |---|---|---|---|
 | Branches in the loop | 2 — evict + qualify | 2 — evict + qualify | 1 — qualify only |
 | Setup before the loop | none | none | seed the first window |
-| Handles `k > len(arr)` | yes, no window ever reaches width `k` | yes, `right` never reaches `k - 1` | **no** — the seed silently totals fewer than `k` elements |
+| Handles `k > len(arr)` | yes, for free — no window ever reaches width `k` | yes, for free — `right` never reaches `k - 1` | **only with the explicit guard**; without it the seed raises `IndexError` |
 | Generalizes to variable windows | yes | no | no |
 
 Every form pays for the qualification check; what Form C avoids is the *warm-up* branch, because seeding the first window means it never runs on a partial one.
