@@ -1,5 +1,56 @@
 # 推荐系统在线实验流程｜Online Experiment Lifecycle
 
+<a name="top"></a>
+
+## 目录
+
+- [1. 概述](#sec-1)
+- [2. 完整流程](#sec-2)
+- [3. 开发新模型](#sec-3)
+  - [3.1 定义业务问题](#sec-3)
+  - [3.2 定义实验假设](#sec-3)
+  - [3.3 明确策略变化范围](#sec-3)
+- [4. 离线评估｜Offline Evaluation](#sec-4)
+  - [4.1 模型效果指标](#sec-4)
+  - [4.2 工程性能指标](#sec-4)
+  - [4.3 离线评估的限制](#sec-4)
+- [5. 实验准备检查｜Experiment Readiness Check](#sec-5)
+  - [5.1 实验单位](#sec-5)
+  - [5.2 实验指标](#sec-5)
+  - [5.3 实验配置](#sec-5)
+- [6. A/A Testing](#sec-6)
+  - [6.1 什么时候需要 A/A Testing](#sec-6)
+  - [6.2 验证内容](#sec-6)
+- [7. A/B Testing](#sec-7)
+  - [7.1 分析流程](#sec-7)
+  - [7.2 初始流量](#sec-7)
+  - [7.3 实验期间持续监控](#sec-7)
+- [8. SRM｜Sample Ratio Mismatch](#sec-8)
+  - [8.1 检查时机](#sec-8)
+- [9. Ramp-up](#sec-9)
+  - [9.1 Ramp-up 的目的](#sec-9)
+  - [9.2 每次放量前的检查](#sec-9)
+  - [9.3 Ramp-up 不等于重新随机](#sec-9)
+- [10. Full Rollout](#sec-10)
+  - [10.1 Full Rollout 与 Holdout](#sec-10)
+- [11. Long-term Holdout](#sec-11)
+  - [11.1 Holdout 可以回答什么](#sec-11)
+  - [11.2 Holdout 的适用场景](#sec-11)
+  - [11.3 Holdout 的成本](#sec-11)
+- [12. Go / No-Go 决策门槛](#sec-12)
+- [13. 常见误区](#sec-13)
+  - [13.1 每个 A/B Test 前都必须运行 A/A Test](#sec-13)
+  - [13.2 SRM 只需要在实验开始时检查一次](#sec-13)
+  - [13.3 离线指标提升就可以直接上线](#sec-13)
+  - [13.4 Ramp-up 只是扩大流量](#sec-13)
+  - [13.5 100% 上线后仍然天然存在 Control](#sec-13)
+  - [13.6 所有实验都必须保留 Holdout](#sec-13)
+
+---
+
+
+<a name="sec-1"></a>
+
 ## 1. 概述
 
 推荐系统的新模型通常经过模型开发、离线评估、实验准备、在线实验、逐步放量和长期效果验证。
@@ -12,6 +63,8 @@
 - Ramp-up、Full Rollout 和 Long-term Holdout 分别承担风险控制、正式上线和长期测量的职责。
 
 ---
+
+<a name="sec-2"></a>
 
 ## 2. 完整流程
 
@@ -74,9 +127,13 @@ flowchart TB
 
 ---
 
+<a name="sec-3"></a>
+
 ## 3. 开发新模型
 
 模型开发应从明确的业务问题开始，而不是只追求离线指标提升。
+
+<a name="sec-3"></a>
 
 ### 3.1 定义业务问题
 
@@ -87,6 +144,8 @@ flowchart TB
 - 提升新用户次日留存
 - 降低低质量内容曝光
 - 提升长尾内容覆盖率
+
+<a name="sec-3"></a>
 
 ### 3.2 定义实验假设
 
@@ -102,6 +161,8 @@ flowchart TB
 
 > 在精排模型中加入长期兴趣特征，可以提升人均有效观看时长，同时不显著损害内容多样性和系统延迟。
 
+<a name="sec-3"></a>
+
 ### 3.3 明确策略变化范围
 
 需要记录：
@@ -116,9 +177,13 @@ flowchart TB
 
 ---
 
+<a name="sec-4"></a>
+
 ## 4. 离线评估｜Offline Evaluation
 
 离线评估用于过滤明显无效或高风险的方案，但不能替代在线 A/B Testing。
+
+<a name="sec-4"></a>
 
 ### 4.1 模型效果指标
 
@@ -133,6 +198,8 @@ flowchart TB
 - Coverage
 - Diversity
 
+<a name="sec-4"></a>
+
 ### 4.2 工程性能指标
 
 还需要评估：
@@ -144,6 +211,8 @@ flowchart TB
 - Feature Freshness
 - Timeout Rate
 - Fallback Rate
+
+<a name="sec-4"></a>
 
 ### 4.3 离线评估的限制
 
@@ -161,7 +230,11 @@ flowchart TB
 
 ---
 
+<a name="sec-5"></a>
+
 ## 5. 实验准备检查｜Experiment Readiness Check
+
+<a name="sec-5"></a>
 
 ### 5.1 实验单位
 
@@ -174,6 +247,8 @@ flowchart TB
 | Region | 地区级运营策略 |
 | Time Window | Switchback Experiment |
 
+<a name="sec-5"></a>
+
 ### 5.2 实验指标
 
 | 类型 | 作用 |
@@ -181,6 +256,8 @@ flowchart TB
 | Primary Metric | 决定实验是否成功 |
 | Secondary Metrics | 帮助解释用户行为变化 |
 | Guardrail Metrics | 防止局部优化损害系统健康 |
+
+<a name="sec-5"></a>
 
 ### 5.3 实验配置
 
@@ -198,9 +275,13 @@ flowchart TB
 
 ---
 
+<a name="sec-6"></a>
+
 ## 6. A/A Testing
 
 A/A Testing 用于验证实验平台，而不是评估新模型效果。
+
+<a name="sec-6"></a>
 
 ### 6.1 什么时候需要 A/A Testing
 
@@ -227,6 +308,8 @@ A/A Testing 用于验证实验平台，而不是评估新模型效果。
 Control:   Existing Model
 Treatment: Existing Model
 ```
+
+<a name="sec-6"></a>
 
 ### 6.2 验证内容
 
@@ -275,6 +358,8 @@ flowchart TB
 
 ---
 
+<a name="sec-7"></a>
+
 ## 7. A/B Testing
 
 ```text
@@ -283,6 +368,8 @@ Treatment: New Model
 ```
 
 A/B Testing 用于判断新模型或新策略是否优于当前线上方案。
+
+<a name="sec-7"></a>
 
 ### 7.1 分析流程
 
@@ -318,6 +405,8 @@ flowchart TB
     class RAMP success;
 ```
 
+<a name="sec-7"></a>
+
 ### 7.2 初始流量
 
 高风险模型通常从较小流量开始：
@@ -343,6 +432,8 @@ Treatment = 50%
 - 用户影响范围
 - 回滚能力
 
+<a name="sec-7"></a>
+
 ### 7.3 实验期间持续监控
 
 - SRM
@@ -356,6 +447,8 @@ Treatment = 50%
 - 核心业务指标
 
 ---
+
+<a name="sec-8"></a>
 
 ## 8. SRM｜Sample Ratio Mismatch
 
@@ -386,6 +479,8 @@ Treatment = 55%
 
 则需要立即排查。
 
+<a name="sec-8"></a>
+
 ### 8.1 检查时机
 
 SRM 应在以下阶段持续执行：
@@ -400,6 +495,8 @@ SRM 不是 A/A 与 A/B 之间的独立阶段，而是两类实验都必须执行
 
 ---
 
+<a name="sec-9"></a>
+
 ## 9. Ramp-up
 
 Ramp-up 是逐步扩大 Treatment 流量的过程。
@@ -408,6 +505,8 @@ Ramp-up 是逐步扩大 Treatment 流量的过程。
 1% → 5% → 10% → 25% → 50% → 100%
 ```
 
+<a name="sec-9"></a>
+
 ### 9.1 Ramp-up 的目的
 
 - 降低线上事故影响范围
@@ -415,6 +514,8 @@ Ramp-up 是逐步扩大 Treatment 流量的过程。
 - 观察延迟和错误率
 - 提前发现边缘用户问题
 - 验证效果是否随流量扩大保持稳定
+
+<a name="sec-9"></a>
 
 ### 9.2 每次放量前的检查
 
@@ -426,6 +527,8 @@ Ramp-up 是逐步扩大 Treatment 流量的过程。
 | Guardrail Metrics | 未超过风险阈值 |
 | 分群结果 | 关键国家、设备和用户群无严重负向 |
 | 回滚能力 | 能够快速恢复旧策略 |
+
+<a name="sec-9"></a>
 
 ### 9.3 Ramp-up 不等于重新随机
 
@@ -443,6 +546,8 @@ Bucket 0–2499
 稳定的 Hash Bucketing 可以保留原有 Treatment 用户，并加入新的 Bucket。
 
 ---
+
+<a name="sec-10"></a>
 
 ## 10. Full Rollout
 
@@ -462,6 +567,8 @@ Bucket 0–2499
 - 工程成本
 - 模型维护成本
 - 业务风险
+
+<a name="sec-10"></a>
 
 ### 10.1 Full Rollout 与 Holdout
 
@@ -488,6 +595,8 @@ Bucket 0–2499
 
 ---
 
+<a name="sec-11"></a>
+
 ## 11. Long-term Holdout
 
 Holdout 是长期保留旧策略或基础策略的一小部分用户，用于衡量累计效果和长期副作用。
@@ -496,6 +605,8 @@ Holdout 是长期保留旧策略或基础策略的一小部分用户，用于衡
 New Model          = 98%
 Long-term Holdout  = 2%
 ```
+
+<a name="sec-11"></a>
 
 ### 11.1 Holdout 可以回答什么
 
@@ -506,6 +617,8 @@ Long-term Holdout  = 2%
 - 创作者生态是否受到影响
 - 多个已上线策略的累计效果是多少
 
+<a name="sec-11"></a>
+
 ### 11.2 Holdout 的适用场景
 
 - 长期推荐目标优化
@@ -514,6 +627,8 @@ Long-term Holdout  = 2%
 - 创作者激励
 - 多项策略叠加上线
 - 难以通过短期实验观测的指标
+
+<a name="sec-11"></a>
 
 ### 11.3 Holdout 的成本
 
@@ -526,6 +641,8 @@ Long-term Holdout  = 2%
 Holdout 不是每个模型上线后的必选步骤。
 
 ---
+
+<a name="sec-12"></a>
 
 ## 12. Go / No-Go 决策门槛
 
@@ -541,29 +658,42 @@ Holdout 不是每个模型上线后的必选步骤。
 
 ---
 
+<a name="sec-13"></a>
+
 ## 13. 常见误区
+
+<a name="sec-13"></a>
 
 ### 13.1 每个 A/B Test 前都必须运行 A/A Test
 
 错误。A/A Test 主要验证实验平台，不是每个业务实验的固定步骤。
 
+<a name="sec-13"></a>
+
 ### 13.2 SRM 只需要在实验开始时检查一次
 
 错误。SRM 应在实验运行期间和每次流量调整后持续检查。
+
+<a name="sec-13"></a>
 
 ### 13.3 离线指标提升就可以直接上线
 
 错误。离线指标无法完整反映真实用户行为和长期生态影响。
 
+<a name="sec-13"></a>
+
 ### 13.4 Ramp-up 只是扩大流量
 
 不完整。每次扩大流量都应重新验证数据质量、系统稳定性和业务指标。
+
+<a name="sec-13"></a>
 
 ### 13.5 100% 上线后仍然天然存在 Control
 
 错误。除非平台单独保留长期 Holdout，否则全量上线后没有同期 Control。
 
+<a name="sec-13"></a>
+
 ### 13.6 所有实验都必须保留 Holdout
 
 错误。Holdout 适合长期、高影响和累计效应明显的策略，但会带来机会成本。
-
