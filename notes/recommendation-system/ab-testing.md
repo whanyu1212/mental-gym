@@ -1,6 +1,90 @@
 # A/B 测试与在线实验｜A/B Testing and Online Experimentation
 
+<a name="top"></a>
+
+## 目录
+
+- [1. 实验定义与目标｜Definition and Goal](#sec-1)
+- [2. 核心术语｜Core Terminology](#sec-2)
+- [3. 实验单位｜Experiment Unit](#sec-3)
+  - [3.1 常见实验单位](#sec-3-1)
+  - [3.2 如何选择实验单位](#sec-3-2)
+- [4. 随机分流与哈希分桶｜Randomization and Hash Bucketing](#sec-4)
+  - [4.1 为什么不能直接使用随机数](#sec-4-1)
+  - [4.2 哈希分桶的核心性质](#sec-4-2)
+  - [4.3 Bucket 与实验组的关系](#sec-4-3)
+  - [4.4 为什么需要 Salt](#sec-4-4)
+  - [4.5 常见哈希函数](#sec-4-5)
+- [5. 哈希分桶代码实现｜Hash Bucketing Implementation](#sec-5)
+  - [5.1 使用 SHA-256 的可复现实现](#sec-5-1)
+  - [5.2 根据 Bucket 分配实验组](#sec-5-2)
+  - [5.3 放量时如何保持用户稳定](#sec-5-3)
+- [6. 实验层与正交设计｜Experiment Layers and Orthogonality](#sec-6)
+  - [6.1 同层互斥｜Mutual Exclusion](#sec-6-1)
+  - [6.2 跨层正交｜Orthogonality](#sec-6-2)
+  - [6.3 正交不代表没有交互作用](#sec-6-3)
+- [7. 实验假设与指标设计｜Hypothesis and Metric Design](#sec-7)
+  - [7.1 指标角色](#sec-7-1)
+  - [7.2 推荐排序实验示例](#sec-7-2)
+- [8. 实验有效性检查｜Experiment Validity Checks](#sec-8)
+  - [8.1 SRM 常见原因](#sec-8-1)
+  - [8.2 SRM 检查代码](#sec-8-2)
+  - [8.3 实验前平衡检查｜Pre-experiment Balance Check](#sec-8-3)
+  - [8.4 分层随机化｜Stratified Randomization](#sec-8-4)
+- [9. 样本量与实验周期｜Sample Size and Duration](#sec-9)
+  - [9.1 MDE 的两种表达](#sec-9-1)
+  - [9.2 二项指标样本量代码](#sec-9-2)
+  - [9.3 实验周期｜Experiment Duration](#sec-9-3)
+- [10. 统计推断｜Statistical Inference](#sec-10)
+  - [10.1 常见方法](#sec-10-1)
+  - [10.2 两比例检验代码](#sec-10-2)
+  - [10.3 显著不等于重要](#sec-10-3)
+  - [10.4 置信区间｜Confidence Interval](#sec-10-4)
+  - [10.5 多重检验｜Multiple Testing](#sec-10-5)
+  - [10.6 中途查看与提前停止｜Peeking and Early Stopping](#sec-10-6)
+  - [10.7 方差降低｜Variance Reduction](#sec-10-7)
+- [11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs](#sec-11)
+  - [11.1 常见解决方案](#sec-11-1)
+  - [11.2 Switchback Experiment](#sec-11-2)
+- [12. 放量、回滚与长期测量｜Ramp-up, Rollback, and Holdout](#sec-12)
+  - [12.1 Ramp-up 与灰度发布｜Gradual Rollout](#sec-12-1)
+  - [12.2 回滚｜Rollback](#sec-12-2)
+  - [12.3 Holdout 与反转实验｜Holdout and Reverse Experiment](#sec-12-3)
+- [13. 实验案例：推荐排序模型｜Case Study: Ranking Model](#sec-13)
+  - [13.1 背景](#sec-13-1)
+  - [13.2 实验假设](#sec-13-2)
+  - [13.3 实验设计](#sec-13-3)
+  - [13.4 实验前检查](#sec-13-4)
+  - [13.5 假设结果](#sec-13-5)
+  - [13.6 结果解释](#sec-13-6)
+  - [13.7 放量计划](#sec-13-7)
+- [14. 实验案例：电商排序与 GMV｜Case Study: Commerce Ranking](#sec-14)
+  - [14.1 背景](#sec-14-1)
+  - [14.2 指标设计](#sec-14-2)
+  - [14.3 假设结果](#sec-14-3)
+  - [14.4 结果解释](#sec-14-4)
+- [15. 实验分析代码示例｜Experiment Analysis Example](#sec-15)
+- [16. 实验平台与上线检查｜Platform and Launch Checklist](#sec-16)
+  - [16.1 实验平台架构｜Experimentation Platform Architecture](#sec-16-1)
+  - [16.2 实验上线清单｜Experiment Launch Checklist](#sec-16-2)
+- [17. 常见实验陷阱｜Common Experiment Pitfalls](#sec-17)
+  - [17.1 使用不稳定随机数](#sec-17-1)
+  - [17.2 使用 Python 内置 `hash()`](#sec-17-2)
+  - [17.3 分析粒度与随机化粒度不一致](#sec-17-3)
+  - [17.4 忽略 SRM](#sec-17-4)
+  - [17.5 实验开始后更换主指标](#sec-17-5)
+  - [17.6 样本量不足](#sec-17-6)
+  - [17.7 只看 p-value](#sec-17-7)
+  - [17.8 频繁查看并提前停止](#sec-17-8)
+  - [17.9 忽略多重检验](#sec-17-9)
+  - [17.10 忽略长期效果](#sec-17-10)
+  - [17.11 忽略网络效应](#sec-17-11)
+  - [17.12 直接从小流量推到全量](#sec-17-12)
+  - [17.13 将未显著理解为完全相同](#sec-17-13)
+
 ---
+
+<a name="sec-1"></a>
 
 ## 1. 实验定义与目标｜Definition and Goal
 
@@ -23,6 +107,8 @@ Negative Feedback ↑
 因此，实验结论不能只依赖离线指标或上线前后的时间序列对比。
 
 ---
+
+<a name="sec-2"></a>
 
 ## 2. 核心术语｜Core Terminology
 
@@ -48,11 +134,13 @@ Negative Feedback ↑
 
 ---
 
----
+<a name="sec-3"></a>
 
 ## 3. 实验单位｜Experiment Unit
 
 实验单位决定随机化发生在哪个粒度。
+
+<a name="sec-3-1"></a>
 
 ### 3.1 常见实验单位
 
@@ -65,6 +153,8 @@ Negative Feedback ↑
 | 内容 | Item-level | 内容策略、内容分发实验 | 用户之间可能互相影响 |
 | 创作者 | Creator-level | 创作者激励、流量分配策略 | 创作者与消费者双边影响复杂 |
 | 地区或时间段 | Geo / Time-level | 网络效应、市场、调度或供需实验 | 样本数量较少，方差较高 |
+
+<a name="sec-3-2"></a>
 
 ### 3.2 如何选择实验单位
 
@@ -94,7 +184,7 @@ Request 3 → Control
 
 ---
 
----
+<a name="sec-4"></a>
 
 ## 4. 随机分流与哈希分桶｜Randomization and Hash Bucketing
 
@@ -140,6 +230,8 @@ Bucket 500–999     → Control，5%
 Bucket 1,000–9,999 → Not in Experiment，90%
 ```
 
+<a name="sec-4-1"></a>
+
 ### 4.1 为什么不能直接使用随机数
 
 错误示例：
@@ -160,6 +252,8 @@ group = random.choice(["control", "treatment"])
 
 这会破坏实验稳定性。
 
+<a name="sec-4-2"></a>
+
 ### 4.2 哈希分桶的核心性质
 
 | 性质 | English | 说明 |
@@ -169,6 +263,8 @@ group = random.choice(["control", "treatment"])
 | 均匀性 | Uniform | 流量应近似均匀分布到各个 Bucket |
 | 可扩展性 | Scalable | 不需要保存所有用户的分组结果 |
 | 可复现性 | Reproducible | 离线分析和线上服务可以复现相同分组 |
+
+<a name="sec-4-3"></a>
 
 ### 4.3 Bucket 与实验组的关系
 
@@ -187,6 +283,8 @@ Hash 负责稳定随机化
 Bucket 负责离散化流量
 Traffic Range 负责分配实验组
 ```
+
+<a name="sec-4-4"></a>
 
 ### 4.4 为什么需要 Salt
 
@@ -227,6 +325,8 @@ recommendation-ranking:exp-102:v1:user
 
 Salt 的作用不是加密，而是让不同实验拥有独立的随机映射。
 
+<a name="sec-4-5"></a>
+
 ### 4.5 常见哈希函数
 
 | 哈希函数 | 特点 | 适用性 |
@@ -249,9 +349,11 @@ Salt 的作用不是加密，而是让不同实验拥有独立的随机映射。
 
 ---
 
----
+<a name="sec-5"></a>
 
 ## 5. 哈希分桶代码实现｜Hash Bucketing Implementation
+
+<a name="sec-5-1"></a>
 
 ### 5.1 使用 SHA-256 的可复现实现
 
@@ -316,6 +418,8 @@ print(bucket)
 ```
 
 示例中使用 SHA-256 是因为 Python 标准库原生支持，便于演示稳定哈希思想。高吞吐生产系统通常会根据性能、跨语言一致性和已有基础设施选择具体哈希算法。
+
+<a name="sec-5-2"></a>
 
 ### 5.2 根据 Bucket 分配实验组
 
@@ -383,6 +487,8 @@ print(
 )
 ```
 
+<a name="sec-5-3"></a>
+
 ### 5.3 放量时如何保持用户稳定
 
 初始实验：
@@ -421,7 +527,7 @@ Treatment Phase 3: Bucket 500–2,499
 
 ---
 
----
+<a name="sec-6"></a>
 
 ## 6. 实验层与正交设计｜Experiment Layers and Orthogonality
 
@@ -437,6 +543,8 @@ UI Layer
 Ads Layer
 Commerce Layer
 ```
+
+<a name="sec-6-1"></a>
 
 ### 6.1 同层互斥｜Mutual Exclusion
 
@@ -457,6 +565,8 @@ Ranking Layer
 └── Experiment C
 ```
 
+<a name="sec-6-2"></a>
+
 ### 6.2 跨层正交｜Orthogonality
 
 不同层可以使用不同 Salt 重新分桶。
@@ -472,6 +582,8 @@ UI Treatment
 ```
 
 这样可以提高流量复用效率。
+
+<a name="sec-6-3"></a>
 
 ### 6.3 正交不代表没有交互作用
 
@@ -504,7 +616,7 @@ New Ranking Model
 
 ---
 
----
+<a name="sec-7"></a>
 
 ## 7. 实验假设与指标设计｜Hypothesis and Metric Design
 
@@ -519,6 +631,8 @@ New Ranking Model
 同时负反馈率和 P95 Latency 不应显著恶化。
 ```
 
+<a name="sec-7-1"></a>
+
 ### 7.1 指标角色
 
 | 指标角色 | English | 作用 |
@@ -528,6 +642,8 @@ New Ranking Model
 | 护栏指标 | Guardrail Metrics | 防止实验损害系统或长期价值 |
 | 诊断指标 | Diagnostic Metrics | 定位实验影响发生在哪个环节 |
 | 数据质量指标 | Data Quality Metrics | 检查日志、分流和样本是否正常 |
+
+<a name="sec-7-2"></a>
 
 ### 7.2 推荐排序实验示例
 
@@ -543,7 +659,7 @@ New Ranking Model
 
 ---
 
----
+<a name="sec-8"></a>
 
 ## 8. 实验有效性检查｜Experiment Validity Checks
 
@@ -565,6 +681,8 @@ Treatment = 46%
 
 当样本量很大时，这种偏差通常不是普通随机波动，而可能意味着实验系统存在问题。
 
+<a name="sec-8-1"></a>
+
 ### 8.1 SRM 常见原因
 
 - 哈希或分桶实现不一致
@@ -575,6 +693,8 @@ Treatment = 46%
 - 用户进入实验后被错误过滤
 - Bot 或内部流量分布不均
 - 实验组产生更高 Crash，导致后续事件缺失
+
+<a name="sec-8-2"></a>
 
 ### 8.2 SRM 检查代码
 
@@ -653,6 +773,8 @@ SRM 检查应在分析实验效果之前完成，并且需要在实验运行期�
 
 ---
 
+<a name="sec-8-3"></a>
+
 ### 8.3 实验前平衡检查｜Pre-experiment Balance Check
 
 随机化后，两组的用户属性在期望上应接近，但有限样本中仍可能存在差异。
@@ -685,6 +807,8 @@ SRM 检查应在分析实验效果之前完成，并且需要在实验运行期�
 - 对关键分层变量进行预分层随机化
 
 ---
+
+<a name="sec-8-4"></a>
 
 ### 8.4 分层随机化｜Stratified Randomization
 
@@ -720,7 +844,7 @@ High Activity Users
 
 ---
 
----
+<a name="sec-9"></a>
 
 ## 9. 样本量与实验周期｜Sample Size and Duration
 
@@ -734,6 +858,8 @@ High Activity Users
 | 最小可检测效应 | Minimum Detectable Effect | 希望检测到的最小变化 |
 | 指标方差 | Variance | 指标自然波动程度 |
 | 流量比例 | Allocation Ratio | Control 与 Treatment 的样本分配比例 |
+
+<a name="sec-9-1"></a>
 
 ### 9.1 MDE 的两种表达
 
@@ -758,6 +884,8 @@ Relative Lift
 
 - Percentage Point Change
 - Relative Percentage Change
+
+<a name="sec-9-2"></a>
 
 ### 9.2 二项指标样本量代码
 
@@ -837,6 +965,8 @@ print(control_n)
 
 ---
 
+<a name="sec-9-3"></a>
+
 ### 9.3 实验周期｜Experiment Duration
 
 即使样本量已经足够，也不应在极短时间内结束实验。
@@ -865,11 +995,13 @@ print(control_n)
 
 ---
 
----
+<a name="sec-10"></a>
 
 ## 10. 统计推断｜Statistical Inference
 
 不同类型指标适合不同统计方法。
+
+<a name="sec-10-1"></a>
 
 ### 10.1 常见方法
 
@@ -881,6 +1013,8 @@ print(control_n)
 | 用户级比率 | User CTR、Orders per User | User-level Aggregation + T-test / Bootstrap |
 | 时间或地区随机实验 | Switchback、Geo Experiment | Cluster-robust Inference、Time-series Analysis |
 | 多次中途查看 | Sequential Experiment | Sequential Test、Always-valid Inference |
+
+<a name="sec-10-2"></a>
 
 ### 10.2 两比例检验代码
 
@@ -958,6 +1092,8 @@ result = compare_two_rates(
 print(result)
 ```
 
+<a name="sec-10-3"></a>
+
 ### 10.3 显著不等于重要
 
 一个实验可能：
@@ -978,6 +1114,8 @@ p-value < 0.001
 - Long-term Risk
 
 ---
+
+<a name="sec-10-4"></a>
 
 ### 10.4 置信区间｜Confidence Interval
 
@@ -1015,6 +1153,8 @@ Lower Bound above Business Threshold
 
 ---
 
+<a name="sec-10-5"></a>
+
 ### 10.5 多重检验｜Multiple Testing
 
 一个实验同时观察大量指标或用户分群时，偶然显著的概率会增加。
@@ -1039,6 +1179,8 @@ Lower Bound above Business Threshold
 - 不根据显著结果临时选择成功指标
 
 ---
+
+<a name="sec-10-6"></a>
 
 ### 10.6 中途查看与提前停止｜Peeking and Early Stopping
 
@@ -1066,6 +1208,8 @@ Day 3: p = 0.03 → Stop and Ship
 - 不应使用普通 p-value 随意提前宣布实验成功
 
 ---
+
+<a name="sec-10-7"></a>
 
 ### 10.7 方差降低｜Variance Reduction
 
@@ -1106,7 +1250,7 @@ Pre-experiment Watch Time
 
 ---
 
----
+<a name="sec-11"></a>
 
 ## 11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs
 
@@ -1124,6 +1268,8 @@ Pre-experiment Watch Time
 
 例如，一部分用户获得新的创作者推荐策略后，可能改变创作者供给，进而影响 Control 用户。
 
+<a name="sec-11-1"></a>
+
 ### 11.1 常见解决方案
 
 - Cluster Randomization
@@ -1136,6 +1282,8 @@ Pre-experiment Watch Time
 选择实验设计时，需要考虑策略是否会产生跨用户干扰。
 
 ---
+
+<a name="sec-11-2"></a>
 
 ### 11.2 Switchback Experiment
 
@@ -1173,9 +1321,11 @@ Switchback 的关键风险：
 
 ---
 
----
+<a name="sec-12"></a>
 
 ## 12. 放量、回滚与长期测量｜Ramp-up, Rollback, and Holdout
+
+<a name="sec-12-1"></a>
 
 ### 12.1 Ramp-up 与灰度发布｜Gradual Rollout
 
@@ -1233,6 +1383,8 @@ Severe Negative Feedback increase > threshold
 
 ---
 
+<a name="sec-12-2"></a>
+
 ### 12.2 回滚｜Rollback
 
 如果实验出现严重异常，应迅速恢复旧策略。
@@ -1259,6 +1411,8 @@ Severe Negative Feedback increase > threshold
 实验代码和生产代码应保持可逆，避免新逻辑上线后无法恢复旧行为。
 
 ---
+
+<a name="sec-12-3"></a>
 
 ### 12.3 Holdout 与反转实验｜Holdout and Reverse Experiment
 
@@ -1313,9 +1467,11 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 
 ---
 
----
+<a name="sec-13"></a>
 
 ## 13. 实验案例：推荐排序模型｜Case Study: Ranking Model
+
+<a name="sec-13-1"></a>
 
 ### 13.1 背景
 
@@ -1330,6 +1486,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 
 目标是提高深度消费，而不是只提高点击。
 
+<a name="sec-13-2"></a>
+
 ### 13.2 实验假设
 
 ```text
@@ -1337,6 +1495,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 同时 CTR 不显著下降，
 负反馈率和系统延迟保持稳定。
 ```
+
+<a name="sec-13-3"></a>
 
 ### 13.3 实验设计
 
@@ -1353,6 +1513,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 | Duration | At least 14 days |
 | Randomization | Hash(User ID + Experiment Salt) |
 
+<a name="sec-13-4"></a>
+
 ### 13.4 实验前检查
 
 - 实验平台和随机化链路处于正常状态
@@ -1361,6 +1523,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 - App Version 分布基本平衡
 - 日志完整率正常
 - Control 与 Treatment 模型服务延迟稳定
+
+<a name="sec-13-5"></a>
 
 ### 13.5 假设结果
 
@@ -1374,6 +1538,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 | D1 Retention | +0.2% | 无明确结论 |
 | P95 Latency | +3 ms | 在护栏范围内 |
 
+<a name="sec-13-6"></a>
+
 ### 13.6 结果解释
 
 虽然 CTR 小幅下降，但：
@@ -1386,6 +1552,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 这说明模型减少了部分低质量点击，提高了深度消费质量。
 
 如果业务目标是长期内容消费，该实验可以继续放量。
+
+<a name="sec-13-7"></a>
 
 ### 13.7 放量计划
 
@@ -1413,13 +1581,17 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 
 ---
 
----
+<a name="sec-14"></a>
 
 ## 14. 实验案例：电商排序与 GMV｜Case Study: Commerce Ranking
+
+<a name="sec-14-1"></a>
 
 ### 14.1 背景
 
 新商品排序模型提高了商品 CTR，但无法确认是否提高最终商业价值。
+
+<a name="sec-14-2"></a>
 
 ### 14.2 指标设计
 
@@ -1429,6 +1601,8 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 | Secondary | Product CTR, Add-to-Cart Rate, Order CVR, AOV, Orders per User |
 | Guardrails | Refund Rate, Cancellation Rate, Complaint Rate, Latency |
 | Diagnostic | Category Mix, Price Distribution, Seller Exposure Share |
+
+<a name="sec-14-3"></a>
 
 ### 14.3 假设结果
 
@@ -1441,6 +1615,8 @@ Gross GMV per User     +0.4%
 Net GMV per User       -0.8%
 Refund Rate            +1.1%
 ```
+
+<a name="sec-14-4"></a>
 
 ### 14.4 结果解释
 
@@ -1473,7 +1649,7 @@ Do not roll out.
 
 ---
 
----
+<a name="sec-15"></a>
 
 ## 15. 实验分析代码示例｜Experiment Analysis Example
 
@@ -1602,9 +1778,11 @@ def compare_watch_time(
 
 ---
 
----
+<a name="sec-16"></a>
 
 ## 16. 实验平台与上线检查｜Platform and Launch Checklist
+
+<a name="sec-16-1"></a>
 
 ### 16.1 实验平台架构｜Experimentation Platform Architecture
 
@@ -1656,6 +1834,8 @@ Ramp-up or Rollback
 
 ---
 
+<a name="sec-16-2"></a>
+
 ### 16.2 实验上线清单｜Experiment Launch Checklist
 
 #### 实验前
@@ -1699,62 +1879,86 @@ Ramp-up or Rollback
 
 ---
 
----
+<a name="sec-17"></a>
 
 ## 17. 常见实验陷阱｜Common Experiment Pitfalls
+
+<a name="sec-17-1"></a>
 
 ### 17.1 使用不稳定随机数
 
 同一用户在实验期间切换组，导致实验污染。
 
+<a name="sec-17-2"></a>
+
 ### 17.2 使用 Python 内置 `hash()`
 
 不同进程、版本或环境下结果可能不一致，不适合作为跨系统稳定分桶方案。
+
+<a name="sec-17-3"></a>
 
 ### 17.3 分析粒度与随机化粒度不一致
 
 用户级随机化却按事件级进行普通独立样本检验，会低估标准误。
 
+<a name="sec-17-4"></a>
+
 ### 17.4 忽略 SRM
 
 在分流或数据链路异常时直接解释实验结果。
+
+<a name="sec-17-5"></a>
 
 ### 17.5 实验开始后更换主指标
 
 根据结果选择最显著的指标，增加假阳性风险。
 
+<a name="sec-17-6"></a>
+
 ### 17.6 样本量不足
 
 实验没有显著结果，不代表策略没有效果，可能只是统计功效不足。
+
+<a name="sec-17-7"></a>
 
 ### 17.7 只看 p-value
 
 统计显著不代表业务收益足够大。
 
+<a name="sec-17-8"></a>
+
 ### 17.8 频繁查看并提前停止
 
 使用普通固定样本检验反复查看结果，会提高假阳性率。
+
+<a name="sec-17-9"></a>
 
 ### 17.9 忽略多重检验
 
 大量指标和分群中容易出现偶然显著。
 
+<a name="sec-17-10"></a>
+
 ### 17.10 忽略长期效果
 
 CTR 提升不代表留存、生态或商业价值长期改善。
+
+<a name="sec-17-11"></a>
 
 ### 17.11 忽略网络效应
 
 用户、创作者、广告主和供给侧之间可能相互影响。
 
+<a name="sec-17-12"></a>
+
 ### 17.12 直接从小流量推到全量
 
 小流量下未暴露的问题可能在大流量下放大。
+
+<a name="sec-17-13"></a>
 
 ### 17.13 将未显著理解为完全相同
 
 `p-value > 0.05` 只表示证据不足，不表示两组完全等价。
 
 如果目标是证明差异足够小，应考虑 Equivalence Test 或 Non-inferiority Test。
-
----
