@@ -1,6 +1,68 @@
 # 推荐系统指标体系｜Recommendation System Metrics
 
+<a name="top"></a>
+
+## 目录
+
+- [1. 指标定义原则｜Metric Definition Principles](#sec-1)
+- [2. 北极星指标｜North Star Metrics](#sec-2)
+  - [2.1 用户规模｜User Scale](#sec-2-1)
+  - [2.2 有效活跃行为｜Qualified Active Action](#sec-2-2)
+- [3. 用户消费指标｜User Consumption Metrics](#sec-3)
+  - [3.1 核心指标](#sec-3-1)
+  - [3.2 Session 定义](#sec-3-2)
+- [4. 内容供给指标｜Content Supply Metrics](#sec-4)
+  - [4.1 核心指标](#sec-4-1)
+  - [4.2 人均发布量的分母](#sec-4-2)
+- [5. 互动指标｜Engagement Metrics](#sec-5)
+  - [5.1 核心指标](#sec-5-1)
+  - [5.2 曝光定义｜Impression Definition](#sec-5-2)
+  - [5.3 互动行为的业务含义](#sec-5-3)
+  - [5.4 阅读完成率与内容长度](#sec-5-4)
+  - [5.5 用户消费漏斗｜User Engagement Funnel](#sec-5-5)
+- [6. 留存指标｜Retention Metrics](#sec-6)
+  - [6.1 核心指标](#sec-6-1)
+  - [6.2 点留存与滚动留存](#sec-6-2)
+  - [6.3 Cohort Analysis](#sec-6-3)
+- [7. 商业与转化指标｜Business and Conversion Metrics](#sec-7)
+  - [7.1 核心指标](#sec-7-1)
+  - [7.2 GMV、Revenue 与 Profit](#sec-7-2)
+  - [7.3 转化率的分母](#sec-7-3)
+  - [7.4 GMV 分解｜GMV Decomposition](#sec-7-4)
+  - [7.5 电商漏斗｜Commerce Funnel](#sec-7-5)
+- [8. 广告指标｜Advertising Metrics](#sec-8)
+  - [8.1 核心指标](#sec-8-1)
+  - [8.2 广告收入与用户体验的权衡](#sec-8-2)
+- [9. 推荐质量指标｜Recommendation Quality Metrics](#sec-9)
+  - [9.1 排序质量指标](#sec-9-1)
+  - [9.2 指标适用场景](#sec-9-2)
+  - [9.3 列表质量指标](#sec-9-3)
+- [10. 内容生态指标｜Content Ecosystem Metrics](#sec-10)
+  - [10.1 核心指标](#sec-10-1)
+  - [10.2 曝光公平性与流量效率](#sec-10-2)
+  - [10.3 创作者侧体验](#sec-10-3)
+- [11. 实验指标角色与时间范围｜Metric Roles and Time Horizons](#sec-11)
+  - [11.1 目标指标｜Primary Metric](#sec-11-1)
+  - [11.2 次要指标｜Secondary Metrics](#sec-11-2)
+  - [11.3 护栏指标｜Guardrail Metrics](#sec-11-3)
+  - [11.4 短期、中期与长期指标｜Short-term and Long-term Metrics](#sec-11-4)
+- [12. 指标聚合方式｜Metric Aggregation](#sec-12)
+  - [12.1 Ratio of Sums](#sec-12-1)
+  - [12.2 Average of User-level Ratios](#sec-12-2)
+  - [12.3 示例](#sec-12-3)
+- [13. 常见指标陷阱｜Common Metric Pitfalls](#sec-13)
+  - [13.1 分母不一致](#sec-13-1)
+  - [13.2 曝光定义变化](#sec-13-2)
+  - [13.3 重复事件](#sec-13-3)
+  - [13.4 延迟转化](#sec-13-4)
+  - [13.5 退款和取消](#sec-13-5)
+  - [13.6 幸存者偏差｜Survivorship Bias](#sec-13-6)
+  - [13.7 辛普森悖论｜Simpson's Paradox](#sec-13-7)
+  - [13.8 指标博弈｜Metric Gaming](#sec-13-8)
+
 ---
+
+<a name="sec-1"></a>
 
 ## 1. 指标定义原则｜Metric Definition Principles
 
@@ -32,13 +94,15 @@ Like User Rate = Users Who Liked / Users Who Viewed
 
 ---
 
----
+<a name="sec-2"></a>
 
 ## 2. 北极星指标｜North Star Metrics
 
 北极星指标用于衡量产品整体健康度和长期增长。
 
 它通常不是某个模型的直接优化目标，而是推荐系统、产品功能、运营策略和内容生态共同作用的结果。
+
+<a name="sec-2-1"></a>
 
 ### 2.1 用户规模｜User Scale
 
@@ -49,6 +113,8 @@ Like User Rate = Users Who Liked / Users Who Viewed
 | 月活跃用户数 | Monthly Active Users | MAU | 一个月内至少完成一次有效活跃行为的去重用户数 | `COUNT(DISTINCT user_id)` within one month |
 | 活跃率 | Active User Rate | - | 目标用户中产生活跃行为的用户占比 | `Active Users / Eligible Users` |
 | 用户粘性 | User Stickiness | DAU/MAU | 月活用户在平均一天内活跃的比例 | `DAU / MAU` |
+
+<a name="sec-2-2"></a>
 
 ### 2.2 有效活跃行为｜Qualified Active Action
 
@@ -80,11 +146,13 @@ User Stickiness
 
 ---
 
----
+<a name="sec-3"></a>
 
 ## 3. 用户消费指标｜User Consumption Metrics
 
 用户消费指标用于衡量用户使用推荐产品的频率、时长和消费深度。
+
+<a name="sec-3-1"></a>
 
 ### 3.1 核心指标
 
@@ -97,6 +165,8 @@ User Stickiness
 | 人均会话数 | Average Sessions per User | - | 每位活跃用户平均产生的会话数量 | `Total Sessions / Active Users` |
 | 平均会话时长 | Average Session Duration | - | 每次用户会话的平均持续时间 | `Total Session Duration / Total Sessions` |
 | 人均推荐请求数 | Average Requests per User | - | 每位活跃用户平均产生的推荐请求数量 | `Total Requests / Active Users` |
+
+<a name="sec-3-2"></a>
 
 ### 3.2 Session 定义
 
@@ -119,11 +189,13 @@ User Stickiness
 
 ---
 
----
+<a name="sec-4"></a>
 
 ## 4. 内容供给指标｜Content Supply Metrics
 
 推荐系统不仅需要用户消费，也需要稳定、丰富且高质量的内容供给。
+
+<a name="sec-4-1"></a>
 
 ### 4.1 核心指标
 
@@ -137,6 +209,8 @@ User Stickiness
 | 有效内容发布量 | Qualified Content Supply | - | 满足质量、合规或消费门槛的新内容数量 | `COUNT(Qualified New Content)` |
 | 内容审核通过率 | Content Approval Rate | - | 提交内容中通过审核的比例 | `Approved Content / Submitted Content` |
 | 内容冷启动成功率 | Content Cold-start Success Rate | - | 新内容中成功获得有效消费或进入后续流量池的比例 | `Successful New Content / New Content` |
+
+<a name="sec-4-2"></a>
 
 ### 4.2 人均发布量的分母
 
@@ -160,11 +234,13 @@ Average Posts per Posting User
 
 ---
 
----
+<a name="sec-5"></a>
 
 ## 5. 互动指标｜Engagement Metrics
 
 互动指标用于衡量用户是否愿意点击、阅读、观看以及进一步产生互动行为。
+
+<a name="sec-5-1"></a>
 
 ### 5.1 核心指标
 
@@ -183,6 +259,8 @@ Average Posts per Posting User
 | 平均停留时长 | Average Dwell Time | - | 每次有效内容消费的平均停留时间 | `Total Dwell Time / Valid Views` |
 | 跳出率 | Bounce Rate | - | 用户快速离开且未产生有效消费的比例 | `Bounced Visits / Total Visits` |
 
+<a name="sec-5-2"></a>
+
 ### 5.2 曝光定义｜Impression Definition
 
 不同系统可能采用不同曝光口径：
@@ -196,6 +274,8 @@ Average Posts per Posting User
 如果曝光定义改变，即使模型没有变化，CTR 也可能明显变化。
 
 因此，CTR 必须和曝光埋点口径一起解释。
+
+<a name="sec-5-3"></a>
 
 ### 5.3 互动行为的业务含义
 
@@ -216,6 +296,8 @@ Average Posts per Posting User
 Like Rate by Click
 Like Rate by Valid View
 ```
+
+<a name="sec-5-4"></a>
 
 ### 5.4 阅读完成率与内容长度
 
@@ -259,6 +341,8 @@ Normalized Completion Ratio
 - 预测相同长度下的期望完成率
 - 使用实际完成率与期望完成率的差值或比值
 
+<a name="sec-5-5"></a>
+
 ### 5.5 用户消费漏斗｜User Engagement Funnel
 
 ```text
@@ -287,11 +371,13 @@ Normalized Completion Ratio
 
 ---
 
----
+<a name="sec-6"></a>
 
 ## 6. 留存指标｜Retention Metrics
 
 留存指标衡量用户首次使用产品后，是否持续返回和活跃。
+
+<a name="sec-6-1"></a>
 
 ### 6.1 核心指标
 
@@ -305,6 +391,8 @@ Normalized Completion Ratio
 | 回访率 | Repeat Visit Rate | - | 首次访问后再次访问产品的用户比例 | `Returning Users / First-time Users` |
 | 复购率 | Repeat Purchase Rate | - | 首次购买后再次购买的用户比例 | `Repeat Purchasers / Purchasers` |
 | 创作者留存率 | Creator Retention Rate | - | 创作者在后续周期继续发布内容的比例 | `Retained Creators / Original Creators` |
+
+<a name="sec-6-2"></a>
 
 ### 6.2 点留存与滚动留存
 
@@ -328,6 +416,8 @@ Rolling D7 Retention
 Rolling D7 Retention >= D7 Retention
 ```
 
+<a name="sec-6-3"></a>
+
 ### 6.3 Cohort Analysis
 
 留存应按照用户首次注册、首次访问或首次完成关键行为的日期进行 Cohort 分析。
@@ -342,13 +432,15 @@ Cohort Analysis 可以避免新增用户规模变化掩盖真实留存趋势。
 
 ---
 
----
+<a name="sec-7"></a>
 
 ## 7. 商业与转化指标｜Business and Conversion Metrics
 
 商业指标用于衡量推荐系统对交易、收入和利润的贡献。
 
 这些指标在电商、直播电商、本地生活、付费内容和游戏内购场景中尤其重要。
+
+<a name="sec-7-1"></a>
 
 ### 7.1 核心指标
 
@@ -370,6 +462,8 @@ Cohort Analysis 可以避免新增用户规模变化掩盖真实留存趋势。
 | 取消率 | Cancellation Rate | - | 已提交订单中被取消的比例 | `Cancelled Orders / Submitted Orders` |
 | 投资回报率 | Return on Investment | ROI | 投入带来的增量利润与成本之比 | `Incremental Profit / Investment Cost` |
 | 用户生命周期价值 | Customer Lifetime Value | LTV / CLV | 用户生命周期内预计贡献的收入或利润 | 根据业务模型计算 |
+
+<a name="sec-7-2"></a>
 
 ### 7.2 GMV、Revenue 与 Profit
 
@@ -405,6 +499,8 @@ GMV 口径还需要明确是否包含：
 - Refund Rate
 - Cancellation Rate
 
+<a name="sec-7-3"></a>
+
 ### 7.3 转化率的分母
 
 CVR 可能存在多种定义：
@@ -425,6 +521,8 @@ User Conversion Rate
 ```
 
 这些指标不能直接混用。报告 CVR 时必须明确转化起点和分母。
+
+<a name="sec-7-4"></a>
 
 ### 7.4 GMV 分解｜GMV Decomposition
 
@@ -461,6 +559,8 @@ GMV unchanged or ↓
 
 因此，电商推荐不能只优化 CTR。
 
+<a name="sec-7-5"></a>
+
 ### 7.5 电商漏斗｜Commerce Funnel
 
 ```text
@@ -483,11 +583,13 @@ GMV unchanged or ↓
 
 ---
 
----
+<a name="sec-8"></a>
 
 ## 8. 广告指标｜Advertising Metrics
 
 广告推荐系统需要同时平衡用户体验、广告主收益和平台收入。
+
+<a name="sec-8-1"></a>
 
 ### 8.1 核心指标
 
@@ -502,6 +604,8 @@ GMV unchanged or ↓
 | 广告填充率 | Ad Fill Rate | Fill Rate | 广告请求中成功返回广告的比例 | `Filled Requests / Ad Requests` |
 | 广告负载 | Ad Load | - | 推荐内容中广告曝光所占比例 | `Ad Impressions / Total Feed Impressions` |
 | 广告投入产出比 | Return on Ad Spend | ROAS | 每单位广告成本产生的收入或 GMV | `Revenue or GMV / Ad Spend` |
+
+<a name="sec-8-2"></a>
 
 ### 8.2 广告收入与用户体验的权衡
 
@@ -532,11 +636,13 @@ eCPM ≈ CTR × CVR × CPA × 1,000
 
 ---
 
----
+<a name="sec-9"></a>
 
 ## 9. 推荐质量指标｜Recommendation Quality Metrics
 
 推荐质量指标用于衡量推荐结果的相关性、排序质量、覆盖率、多样性和新颖性。
+
+<a name="sec-9-1"></a>
 
 ### 9.1 排序质量指标
 
@@ -549,6 +655,8 @@ eCPM ≈ CTR × CVR × CPA × 1,000
 | 归一化折损累计增益 | Normalized Discounted Cumulative Gain | NDCG@K | 同时考虑相关性等级和排序位置 | `DCG@K / Ideal DCG@K` |
 | 平均精确率均值 | Mean Average Precision | MAP | 多个用户或 Query 的 Average Precision 平均值 | `Average(AP)` |
 
+<a name="sec-9-2"></a>
+
 ### 9.2 指标适用场景
 
 - **Precision@K**：关注推荐出来的内容有多少是相关的
@@ -557,6 +665,8 @@ eCPM ≈ CTR × CVR × CPA × 1,000
 - **MRR**：关注第一个相关结果是否足够靠前
 - **NDCG@K**：关注多级相关性和排序位置
 - **MAP**：关注多个相关结果在列表中的整体排序质量
+
+<a name="sec-9-3"></a>
 
 ### 9.3 列表质量指标
 
@@ -587,7 +697,7 @@ Novelty of Item
 
 ---
 
----
+<a name="sec-10"></a>
 
 ## 10. 内容生态指标｜Content Ecosystem Metrics
 
@@ -600,6 +710,8 @@ Novelty of Item
 - 内容同质化
 - 内容供给下降
 - 长期用户体验下降
+
+<a name="sec-10-1"></a>
 
 ### 10.1 核心指标
 
@@ -614,6 +726,8 @@ Novelty of Item
 | 新创作者冷启动成功率 | New Creator Cold-start Success Rate | - | 新创作者成功获得有效曝光或消费的比例 | `Successful New Creators / New Creators` |
 | 新内容冷启动成功率 | New Content Cold-start Success Rate | - | 新内容成功进入后续流量池的比例 | `Successful New Content / New Content` |
 | 创作者留存率 | Creator Retention Rate | - | 创作者在后续周期继续发布内容的比例 | `Retained Creators / Original Creators` |
+
+<a name="sec-10-2"></a>
 
 ### 10.2 曝光公平性与流量效率
 
@@ -634,6 +748,8 @@ Gini 通常在 0 到 1 之间：
 
 实际系统需要在内容质量、用户体验和创作者公平性之间寻找平衡。
 
+<a name="sec-10-3"></a>
+
 ### 10.3 创作者侧体验
 
 除曝光和收入外，还可以关注：
@@ -648,9 +764,11 @@ Gini 通常在 0 到 1 之间：
 
 ---
 
----
+<a name="sec-11"></a>
 
 ## 11. 实验指标角色与时间范围｜Metric Roles and Time Horizons
+
+<a name="sec-11-1"></a>
 
 ### 11.1 目标指标｜Primary Metric
 
@@ -666,6 +784,8 @@ Gini 通常在 0 到 1 之间：
 - GMV
 - Revenue
 
+<a name="sec-11-2"></a>
+
 ### 11.2 次要指标｜Secondary Metrics
 
 次要指标用于解释目标指标为什么发生变化。
@@ -678,6 +798,8 @@ Gini 通常在 0 到 1 之间：
 - CVR
 - Orders
 - AOV
+
+<a name="sec-11-3"></a>
 
 ### 11.3 护栏指标｜Guardrail Metrics
 
@@ -722,6 +844,8 @@ Customer Complaints ↑
 
 ---
 
+<a name="sec-11-4"></a>
+
 ### 11.4 短期、中期与长期指标｜Short-term and Long-term Metrics
 
 | 类型 | 常见指标 | 特点 |
@@ -748,11 +872,13 @@ Customer Complaints ↑
 
 ---
 
----
+<a name="sec-12"></a>
 
 ## 12. 指标聚合方式｜Metric Aggregation
 
 同一个指标采用不同聚合方式，可能得到不同结果。
+
+<a name="sec-12-1"></a>
 
 ### 12.1 Ratio of Sums
 
@@ -765,6 +891,8 @@ Global CTR
 
 这种方法会给予高曝光用户更高权重。
 
+<a name="sec-12-2"></a>
+
 ### 12.2 Average of User-level Ratios
 
 先计算每个用户的 CTR，再计算用户平均：
@@ -775,6 +903,8 @@ User-average CTR
 ```
 
 这种方法给予每个用户相同权重。
+
+<a name="sec-12-3"></a>
 
 ### 12.3 示例
 
@@ -799,17 +929,23 @@ Average of Ratios
 
 ---
 
----
+<a name="sec-13"></a>
 
 ## 13. 常见指标陷阱｜Common Metric Pitfalls
+
+<a name="sec-13-1"></a>
 
 ### 13.1 分母不一致
 
 同一个指标使用不同分母时，数值和业务含义可能完全不同。
 
+<a name="sec-13-2"></a>
+
 ### 13.2 曝光定义变化
 
 客户端修改曝光埋点后，CTR 可能变化，即使模型没有更新。
+
+<a name="sec-13-3"></a>
 
 ### 13.3 重复事件
 
@@ -826,6 +962,8 @@ Average of Ratios
 - Request ID
 - Order ID
 
+<a name="sec-13-4"></a>
+
 ### 13.4 延迟转化
 
 用户可能今天点击，几天后才购买。
@@ -838,13 +976,19 @@ Average of Ratios
 30-day Attribution
 ```
 
+<a name="sec-13-5"></a>
+
 ### 13.5 退款和取消
 
 GMV 上升但退款率同时上涨，并不一定代表真实商业价值提高。
 
+<a name="sec-13-6"></a>
+
 ### 13.6 幸存者偏差｜Survivorship Bias
 
 只分析当前活跃用户，可能忽略已经流失的用户。
+
+<a name="sec-13-7"></a>
 
 ### 13.7 辛普森悖论｜Simpson's Paradox
 
@@ -860,6 +1004,8 @@ GMV 上升但退款率同时上涨，并不一定代表真实商业价值提高�
 - 创作者规模
 - 用户兴趣群体
 
+<a name="sec-13-8"></a>
+
 ### 13.8 指标博弈｜Metric Gaming
 
 当系统只优化一个指标时，可能以非预期方式提升该指标。
@@ -870,5 +1016,3 @@ GMV 上升但退款率同时上涨，并不一定代表真实商业价值提高�
 - 通过自动播放提高 Watch Time
 - 通过低价补贴提高 Orders，但降低 Profit
 - 通过高频通知提高 DAU，但增加长期流失
-
----
