@@ -49,6 +49,14 @@ SQL answers live in `src/sql/`, next to deterministic fixtures and test harnesse
 
 PostgreSQL exercises run locally with Homebrew PostgreSQL 17 through `scripts/run_postgres_sql.sh`; SQLite exercises run with `sqlite3`. The PostgreSQL service must be started with `brew services start postgresql@17`. See `src/sql/README.md` for commands. Add a problem to `src/data/sqlProblems.ts`; the `/sql/[slug]` routes and Problems Bank SQL tab are generated from that data.
 
+### Practice-flow authoring
+
+Every algorithm page is an attempt-first learning loop: the problem statement is visible, but the guide, animation, and solution are opened by either saving an attempt or explicitly choosing **Study instead**. Attempt history is local-only and separate from spaced-repetition review ratings.
+
+When adding an algorithm problem, add the Python solution and a complete entry in `src/data/algorithmGuides.ts`; CI runs `scripts/validate_algorithm_guides.py --strict`. Add a bespoke animation only when motion makes the invariant or state change materially clearer than a guide and worked test cases do.
+
+The IndexedDB export format is versioned. Preserve all prior import versions when adding new local progress stores, and add migration plus export/import tests for the new version.
+
 ### Teaching motion framework
 
 Each algorithm page can embed a step-by-step animation built on the `teaching-motion` system:
@@ -58,7 +66,7 @@ Each algorithm page can embed a step-by-step animation built on the `teaching-mo
 - **`src/lib/teaching/highlight.ts`** — applies CSS classes (`teach-focus`, `teach-write`, `teach-discard`, etc.) to DOM elements matched by `data-teach-target` attribute. This is how individual cells/nodes get visually highlighted per step.
 - **Individual animation components** (e.g. `TwoSumAnimation.astro`, `SortColorsAnimation.astro`) — each wraps `<AlgorithmPlayer>` with a hardcoded `steps` array and renders SVG/HTML visuals as the slot. The `data-teach-target` attributes on visual elements must match `target` strings in the step's `highlights` array.
 
-To add a new animation: create `src/components/<ProblemName>Animation.astro`, define a `TeachingStep[]` array, wrap it in `<AlgorithmPlayer>`, render visuals in the slot, and register the slug in `[slug].astro`'s `animatedSlugs` set.
+To add a new animation: create `src/components/<ProblemName>Animation.astro`, define a `TeachingStep[]` array, wrap it in `<AlgorithmPlayer>`, render visuals in the slot, and register the slug in `[slug].astro`'s `animationBySlug` map.
 
 ### Spaced repetition (SR) system
 

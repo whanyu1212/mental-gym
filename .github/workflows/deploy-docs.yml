@@ -37,6 +37,9 @@ jobs:
       - name: Generate problems data
         run: poetry run python scripts/generate_problems.py
 
+      - name: Validate algorithm guides
+        run: poetry run python scripts/validate_algorithm_guides.py --strict
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -47,6 +50,10 @@ jobs:
       - name: Install Node dependencies
         working-directory: web
         run: npm ci
+
+      - name: Run web tests
+        working-directory: web
+        run: npm test
 
       - name: Build Astro site
         working-directory: web

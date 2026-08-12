@@ -25,6 +25,7 @@
     "@astrojs/mdx": "^5.0.6",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^26.1.1",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.1.1"
   }
 }

@@ -1,5 +1,6 @@
 ---
 import HighlightsIndex from "../../components/HighlightsIndex.astro";
+import AttemptHistory from "../../components/AttemptHistory.astro";
 import ProgressHistory from "../../components/ProgressHistory.astro";
 import ProgressSummary from "../../components/ProgressSummary.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
@@ -16,6 +17,15 @@ import { withBase } from "../../lib/url";
 	</section>
 
 	<ProgressSummary detailed={true} />
+
+	<section class="history-section">
+		<div class="section-heading">
+			<p class="eyebrow">Problem solving</p>
+			<h2>What happened before the explanation.</h2>
+			<p>Attempts measure your first-pass reasoning; reviews measure what you can retrieve later. They are intentionally separate.</p>
+		</div>
+		<AttemptHistory />
+	</section>
 
 	<section class="history-section">
 		<div class="section-heading">

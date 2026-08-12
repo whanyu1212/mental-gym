@@ -35,6 +35,12 @@ poetry run python scripts/generate_problems.py
 
 Review scheduling runs entirely client-side: a simplified SM-2 algorithm (`src/scripts/sr-scheduler.ts`) tracks per-problem review state in IndexedDB and the home dashboard surfaces what's due. No backend, no accounts — state lives in the browser it was created in.
 
+## Active practice
+
+Algorithm pages begin with an **attempt-first** panel. Before opening a guide, animation, or solution, start a timer, make a pattern/invariant/approach guess, and save a short self-report on the outcome, support used, confidence, and the part that caused trouble. Those attempt events are separate from later spaced-repetition ratings: attempts describe first-pass problem solving; reviews describe later recall.
+
+Progress stays private in IndexedDB, now with portable review records, highlights, and attempt history. The site offers JSON export/import and warns when new local activity has not been backed up recently. Export before changing browsers or clearing browser data.
+
 ## Architecture notes
 
 Deeper implementation details — the teaching-motion animation framework, SQL fixture/test harness conventions, the SR IndexedDB schema, and full routing table — are documented in [`CLAUDE.md`](CLAUDE.md).
