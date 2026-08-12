@@ -149,6 +149,7 @@ const {
 
   class AttemptModeElement extends HTMLElement {
     private session: AttemptSession | undefined;
+    private finishedAt: Date | undefined;
     private timer: number | undefined;
 
     connectedCallback() {
@@ -195,6 +196,12 @@ const {
         }
       };
 
+      const lockStudyMaterial = () => {
+        if (!studyContent) return;
+        studyContent.hidden = true;
+        studyContent.setAttribute("aria-hidden", "true");
+      };
+
       const renderHistory = async () => {
         try {
           const attempts = await getAttemptsForProblem(problemKey);
@@ -213,14 +220,13 @@ const {
         }
       };
 
-      if (studyContent) {
-        studyContent.hidden = true;
-        studyContent.setAttribute("aria-hidden", "true");
-      }
+      lockStudyMaterial();
       renderHistory();
 
       this.querySelector<HTMLButtonElement>("[data-start-attempt]")?.addEventListener("click", () => {
+        lockStudyMaterial();
         this.session = startAttempt();
+        this.finishedAt = undefined;
         if (timer) timer.hidden = false;
         renderTimer();
         this.timer = window.setInterval(renderTimer, 1000);
@@ -237,43 +243,55 @@ const {
 
       this.querySelector<HTMLButtonElement>("[data-finish-attempt]")?.addEventListener("click", () => {
         if (!this.session) return;
+        this.finishedAt = new Date();
         stopTimer();
         showStage("complete");
       });
 
       this.querySelector<HTMLButtonElement>("[data-return-attempt]")?.addEventListener("click", () => {
         if (!this.session) return;
+        this.finishedAt = undefined;
         renderTimer();
         this.timer = window.setInterval(renderTimer, 1000);
         showStage("active");
       });
 
       this.querySelectorAll<HTMLButtonElement>("[data-study-instead]").forEach((button) => {
-        button.addEventListener("click", unlockStudyMaterial);
+        button.addEventListener("click", () => {
+          this.session = undefined;
+          this.finishedAt = undefined;
+          if (timer) timer.hidden = true;
+          showStage("ready");
+          unlockStudyMaterial();
+        });
       });
 
       completionForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (!this.session) return;
+        if (!this.session || !this.finishedAt) return;
         const form = new FormData(completionForm);
         const reflection = form.get("reflection")?.toString();
         const submit = completionForm.querySelector<HTMLButtonElement>("[type=submit]");
 
         try {
           if (submit) submit.disabled = true;
-          const attempt = completeAttempt(this.session, {
-            domain,
-            slug,
-            title,
-            difficulty,
-            group,
-            outcome: form.get("outcome") as AttemptOutcome,
-            supportUsed: form.get("supportUsed") as AttemptSupport,
-            confidence: Number(form.get("confidence")) as AttemptConfidence,
-            difficultyArea: form.get("difficultyArea") as AttemptDifficultyArea,
-            patternGuess: patternGuess?.value,
-            reflection,
-          });
+          const attempt = completeAttempt(
+            this.session,
+            {
+              domain,
+              slug,
+              title,
+              difficulty,
+              group,
+              outcome: form.get("outcome") as AttemptOutcome,
+              supportUsed: form.get("supportUsed") as AttemptSupport,
+              confidence: Number(form.get("confidence")) as AttemptConfidence,
+              difficultyArea: form.get("difficultyArea") as AttemptDifficultyArea,
+              patternGuess: patternGuess?.value,
+              reflection,
+            },
+            this.finishedAt
+          );
           await putAttemptEvent(attempt);
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
           if (feedback) feedback.textContent = "Attempt saved. Opening the study material…";
