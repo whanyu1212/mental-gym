@@ -1,4 +1,4 @@
-# A/B 测试与在线实验｜A/B Testing and Online Experimentation
+# A/B 测试｜A/B Testing
 
 <a name="top"></a>
 
@@ -43,6 +43,7 @@
   - [10.5 多重检验｜Multiple Testing](#sec-10-5)
   - [10.6 中途查看与提前停止｜Peeking and Early Stopping](#sec-10-6)
   - [10.7 方差降低｜Variance Reduction](#sec-10-7)
+  - [10.8 异质性处理效应｜Heterogeneous Treatment Effects](#sec-10-8)
 - [11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs](#sec-11)
   - [11.1 常见解决方案](#sec-11-1)
   - [11.2 Switchback Experiment](#sec-11-2)
@@ -81,6 +82,12 @@
   - [17.11 忽略网络效应](#sec-17-11)
   - [17.12 直接从小流量推到全量](#sec-17-12)
   - [17.13 将未显著理解为完全相同](#sec-17-13)
+- [18. 实验分析工作流](#sec-18)
+  - [18.1 实验前：把问题定义成可检验假设](#sec-18-1)
+  - [18.2 实验运行中：先检查 Validity，再看 Lift](#sec-18-2)
+  - [18.3 实验结束：Readout 不应只有 p-value](#sec-18-3)
+  - [18.4 分析边界与工程依赖](#sec-18-4)
+- [19. 关联文档](#sec-19)
 
 ---
 
@@ -365,7 +372,6 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-
 @dataclass(frozen=True)
 class ExperimentConfig:
     experiment_id: str
@@ -377,7 +383,6 @@ class ExperimentConfig:
 
         if self.num_buckets <= 0:
             raise ValueError("num_buckets must be positive")
-
 
 def stable_bucket(
     unit_id: str,
@@ -426,7 +431,6 @@ print(bucket)
 ```python
 from dataclasses import dataclass
 
-
 @dataclass(frozen=True)
 class TrafficRange:
     group_name: str
@@ -448,12 +452,10 @@ class TrafficRange:
     def contains(self, bucket: int) -> bool:
         return self.start_bucket <= bucket < self.end_bucket
 
-
 TRAFFIC_RANGES = (
     TrafficRange("treatment", 0, 500),      # 5%
     TrafficRange("control", 500, 1_000),    # 5%
 )
-
 
 def assign_group(bucket: int) -> str:
     if bucket < 0:
@@ -703,7 +705,6 @@ from __future__ import annotations
 
 from scipy.stats import chisquare
 
-
 def check_srm(
     observed_counts: list[int],
     expected_ratios: list[float],
@@ -895,7 +896,6 @@ Relative Lift
 from statsmodels.stats.power import NormalIndPower
 from statsmodels.stats.proportion import proportion_effectsize
 
-
 def sample_size_for_two_proportions(
     baseline_rate: float,
     treatment_rate: float,
@@ -1022,7 +1022,6 @@ print(control_n)
 from __future__ import annotations
 
 from statsmodels.stats.proportion import proportions_ztest
-
 
 def compare_two_rates(
     control_successes: int,
@@ -1250,6 +1249,47 @@ Pre-experiment Watch Time
 
 ---
 
+<a name="sec-10-8"></a>
+
+### 10.8 异质性处理效应｜Heterogeneous Treatment Effects
+
+Overall Lift 只能描述平均效果，还需要判断不同用户群是否存在明显异质性。
+
+常见分群：
+
+- New / Existing Users
+- Light / Medium / Heavy Users
+- Android / iOS
+- High-end / Low-end Device
+- Country / Language
+- User Interest Cluster
+- Creator Tier
+- Content Category
+
+例如：
+
+```text
+Overall Watch Time +1.8%
+
+New Users          +4.0%
+Existing Users     +1.2%
+Low-end Device     -5.0%
+```
+
+此时 Overall 为正，但不能直接忽略 Low-end Device 的负向影响。
+
+分析 Heterogeneous Treatment Effects 时需要注意：
+
+- 优先使用实验前预先定义的重要 Segment
+- 报告 Effect Size 和 Confidence Interval
+- 避免在大量分群中只挑显著结果
+- 必要时使用 Multiple Testing Correction
+- 将探索性发现用于下一轮实验验证
+
+Segment Analysis 的主要价值是发现风险和理解机制，而不是寻找更多“显著结果”。
+
+---
+
 <a name="sec-11"></a>
 
 ## 11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs
@@ -1329,57 +1369,48 @@ Switchback 的关键风险：
 
 ### 12.1 Ramp-up 与灰度发布｜Gradual Rollout
 
-实验通过初步检查后，通常不会直接从 5% 跳到 100%。
-
-典型放量流程：
+A/B Test 通过后，通常不会直接从小流量跳到 Full Rollout，而会进入 Ramp-up。
 
 ```text
-Internal Traffic
-    ↓
-1%
-    ↓
+A/B Test Passed
+↓
 5%
-    ↓
+↓
 10%
-    ↓
+↓
 25%
-    ↓
+↓
 50%
-    ↓
+↓
 100%
 ```
 
-每个阶段需要检查：
-
-- SRM
-- Crash Rate
-- Error Rate
-- P95 / P99 Latency
-- 日志完整性
-- Primary Metric
-- Guardrail Metrics
-- 用户分群表现
-- 内容或商品分布变化
-
-#### 放量的两个目标
-
-1. **实验推断**：获得足够样本判断策略效果
-2. **工程风险控制**：限制 Bug 或异常策略的影响范围
-
-二者不能混为一谈。
-
-#### 自动停止条件
-
-可以为严重风险设置自动停止规则，例如：
+A/B Testing 在这里主要回答：
 
 ```text
-Crash Rate increase > 10%
-P99 Latency increase > 50 ms
-Error Rate increase > 0.5 percentage points
-Severe Negative Feedback increase > threshold
+新策略是否值得上线？
 ```
 
-具体阈值应根据业务风险和历史波动设置。
+Ramp-up 则继续回答：
+
+```text
+随着流量扩大，
+收益是否仍然存在？
+风险是否仍然可控？
+```
+
+Ramp-up 阶段需要重点观察：
+
+- Effect Size 是否稳定
+- Guardrail Metrics 是否安全
+- SRM 与 Logging Coverage 是否正常
+- 关键用户 Segment 是否出现异质性风险
+- Content / Creator / Item Distribution 是否异常漂移
+- 系统性能是否开始影响业务指标
+
+Ramp-up 的完整分析框架单独记录在：
+
+[**Ramp-up**](./ramp-up.md)
 
 ---
 
@@ -1661,7 +1692,6 @@ from __future__ import annotations
 import pandas as pd
 from scipy.stats import ttest_ind
 
-
 REQUIRED_COLUMNS = {
     "user_id",
     "experiment_group",
@@ -1669,7 +1699,6 @@ REQUIRED_COLUMNS = {
     "impressions",
     "clicks",
 }
-
 
 def validate_experiment_data(data: pd.DataFrame) -> None:
     missing_columns = REQUIRED_COLUMNS - set(data.columns)
@@ -1690,7 +1719,6 @@ def validate_experiment_data(data: pd.DataFrame) -> None:
         raise ValueError(
             f"Unexpected experiment groups: {sorted(invalid_groups)}"
         )
-
 
 def aggregate_to_user_level(data: pd.DataFrame) -> pd.DataFrame:
     """
@@ -1717,7 +1745,6 @@ def aggregate_to_user_level(data: pd.DataFrame) -> pd.DataFrame:
     )
 
     return user_level
-
 
 def compare_watch_time(
     user_level: pd.DataFrame,
@@ -1962,3 +1989,133 @@ CTR 提升不代表留存、生态或商业价值长期改善。
 `p-value > 0.05` 只表示证据不足，不表示两组完全等价。
 
 如果目标是证明差异足够小，应考虑 Equivalence Test 或 Non-inferiority Test。
+
+---
+
+<a name="sec-18"></a>
+
+## 18. 实验分析工作流
+
+<a name="sec-18-1"></a>
+
+### 18.1 实验前：把问题定义成可检验假设
+
+实验开始前应明确：
+
+```text
+Business Problem
+↓
+Model Change
+↓
+Expected User Behavior Change
+↓
+Primary Metric
+↓
+Guardrail Metrics
+↓
+Decision Rule
+```
+
+例如：
+
+> 新的多目标排序模型通过减少低质量点击，提高 Qualified Watch Time per User，同时 Negative Feedback 和 P95 Latency 不超过预定义风险阈值。
+
+这比“新模型应该更好”更适合在线验证。
+
+<a name="sec-18-2"></a>
+
+### 18.2 实验运行中：先检查 Validity，再看 Lift
+
+推荐的分析顺序：
+
+```text
+SRM
+↓
+Logging / Data Quality
+↓
+System Health
+↓
+Primary Metric
+↓
+Guardrail
+↓
+Secondary / Diagnostic
+↓
+Segment Analysis
+```
+
+如果 SRM 或 Logging Fail，业务指标不应被直接解释为 Treatment Effect。
+
+<a name="sec-18-3"></a>
+
+### 18.3 实验结束：Readout 不应只有 p-value
+
+一个完整的 Recommendation Experiment Readout 至少包括：
+
+| 项目 | 内容 |
+|---|---|
+| Hypothesis | 预先定义的实验假设 |
+| Population | 实验覆盖用户与资格条件 |
+| Primary Metric | Lift、CI、p-value |
+| Guardrail | 是否触发风险阈值 |
+| Diagnostic | 解释 Primary 变化路径 |
+| Segment | 关键用户群异质性 |
+| Data Quality | SRM、Logging、Missingness |
+| Practical Value | 收益是否达到业务要求 |
+| Recommendation | Rollback / Iterate / Ramp-up |
+
+示例结论：
+
+```text
+Primary:
+Qualified Watch Time +2.1%
+95% CI [+1.2%, +3.0%]
+
+Guardrail:
+Negative Feedback stable
+P95 Latency +4 ms, within threshold
+
+Segment:
+No material downside in key markets
+
+Decision:
+Proceed to Ramp-up
+```
+
+<a name="sec-18-4"></a>
+
+### 18.4 分析边界与工程依赖
+
+实验分析需要理解基础设施如何影响分流、日志、指标和上线决策，但不需要展开到平台实现细节。
+
+分析侧重点包括：
+
+- Experimental Design
+- Metric Design
+- Statistical Inference
+- Data Quality Validation
+- Segment Analysis
+- Business Interpretation
+- Decision Support
+
+工程团队通常负责：
+
+- Online Bucketing Service
+- Experiment Configuration Platform
+- Serving Infrastructure
+- Deployment
+- Feature Flags
+- Rollback Mechanism
+
+需要能够判断这些系统是否影响实验结论，并与对应 Owner 联合排查。
+
+---
+
+<a name="sec-19"></a>
+
+## 19. 关联文档
+
+- [Online Experiment Lifecycle](./online-experiment-lifecycle.md)
+- [Recommendation System Metrics](./metrics.md)
+- [A/A Testing](./aa-testing.md)
+- [Ramp-up](./ramp-up.md)
