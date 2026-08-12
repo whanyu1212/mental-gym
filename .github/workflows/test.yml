@@ -55,7 +55,7 @@ jobs:
 
       - name: Validate algorithm guides
         run: |
-          poetry run python scripts/validate_algorithm_guides.py
+          poetry run python scripts/validate_algorithm_guides.py --strict
 
       - name: Test Summary
         if: always()
@@ -112,3 +112,30 @@ jobs:
           echo "### Julia Test Results" >> $GITHUB_STEP_SUMMARY
           echo "Julia tests completed. Some tests may need fixes for import paths." >> $GITHUB_STEP_SUMMARY
           echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+
+  test-web:
+    name: Web Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Run web tests
+        working-directory: web
+        run: npm test
+
+      - name: Build Astro site
+        working-directory: web
+        run: npm run build

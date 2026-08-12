@@ -1,3 +1,10 @@
+---
+title: A/A Testing
+description: A practical guide to validating experiment infrastructure with A/A tests.
+category: Recommendation Systems
+status: stable
+---
+
 # A/A Testing
 
 <a name="top"></a>

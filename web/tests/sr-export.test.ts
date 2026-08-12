@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  deduplicateImportedAttempts,
   deduplicateImportedEvents,
   deduplicateImportedHighlights,
   normalizeExport,
   parseExport,
   serializeExport,
+  withoutAttemptIds,
   withoutEventIds,
 } from "../src/scripts/sr-export.ts";
+import type { AttemptEvent } from "../src/scripts/attempt-types.ts";
 import type { Highlight } from "../src/scripts/highlight-types.ts";
 import type { ReviewEvent, ReviewRecord } from "../src/scripts/sr-types.ts";
 
@@ -48,6 +51,24 @@ const highlight: Highlight = {
   createdAt: "2026-07-13T12:00:00.000Z",
 };
 
+const attempt: AttemptEvent = {
+  id: 1,
+  attemptedAt: "2026-07-13T12:00:00.000Z",
+  attemptDate: "2026-07-13",
+  problemKey: record.problemKey,
+  domain: record.domain,
+  slug: record.slug,
+  title: record.title,
+  difficulty: record.difficulty,
+  group: record.group,
+  durationSeconds: 642,
+  outcome: "partial",
+  supportUsed: "signal",
+  confidence: 2,
+  difficultyArea: "reasoning",
+  patternGuess: "hashmap complement lookup",
+};
+
 test("version 1 imports with empty history", () => {
   assert.deepEqual(
     normalizeExport({
@@ -55,7 +76,7 @@ test("version 1 imports with empty history", () => {
       exportedAt: "2026-07-13T12:00:00.000Z",
       records: [record],
     }),
-    { records: [record], events: [], highlights: [] }
+    { records: [record], events: [], highlights: [], attempts: [] }
   );
 });
 
@@ -67,21 +88,36 @@ test("version 2 imports with no highlights", () => {
       records: [record],
       events: [event],
     }),
-    { records: [record], events: [event], highlights: [] }
+    { records: [record], events: [event], highlights: [], attempts: [] }
   );
 });
 
-test("version 3 round trip preserves records, events, and highlights", () => {
+test("version 3 imports with no attempts", () => {
+  assert.deepEqual(
+    normalizeExport({
+      version: 3,
+      exportedAt: "2026-07-13T12:00:00.000Z",
+      records: [record],
+      events: [event],
+      highlights: [highlight],
+    }),
+    { records: [record], events: [event], highlights: [highlight], attempts: [] }
+  );
+});
+
+test("version 4 round trip preserves records, events, highlights, and attempts", () => {
   const json = serializeExport(
     [record],
     [event],
     [highlight],
+    [attempt],
     "2026-07-13T12:00:00.000Z"
   );
   assert.deepEqual(parseExport(json), {
     records: [record],
     events: [event],
     highlights: [highlight],
+    attempts: [attempt],
   });
 });
 
@@ -91,9 +127,31 @@ test("highlights with an attached note survive a round trip", () => {
     [record],
     [event],
     [annotated],
+    [],
     "2026-07-13T12:00:00.000Z"
   );
   assert.deepEqual(parseExport(json).highlights, [annotated]);
+});
+
+test("imported attempts discard browser-local auto-increment ids", () => {
+  assert.deepEqual(withoutAttemptIds([attempt]), [
+    {
+      attemptedAt: attempt.attemptedAt,
+      attemptDate: attempt.attemptDate,
+      problemKey: attempt.problemKey,
+      domain: attempt.domain,
+      slug: attempt.slug,
+      title: attempt.title,
+      difficulty: attempt.difficulty,
+      group: attempt.group,
+      durationSeconds: attempt.durationSeconds,
+      outcome: attempt.outcome,
+      supportUsed: attempt.supportUsed,
+      confidence: attempt.confidence,
+      difficultyArea: attempt.difficultyArea,
+      patternGuess: attempt.patternGuess,
+    },
+  ]);
 });
 
 test("imported events discard browser-local auto-increment ids", () => {
@@ -146,6 +204,23 @@ test("distinct highlights are preserved when imported", () => {
   );
 });
 
+test("re-importing the same attempt does not duplicate history", () => {
+  assert.deepEqual(deduplicateImportedAttempts([attempt], [attempt]), []);
+});
+
+test("distinct attempts are preserved when imported", () => {
+  const later = {
+    ...attempt,
+    id: 2,
+    attemptedAt: "2026-07-14T12:00:00.000Z",
+    attemptDate: "2026-07-14",
+  };
+  assert.deepEqual(
+    deduplicateImportedAttempts([attempt], [attempt, later]),
+    withoutAttemptIds([later])
+  );
+});
+
 test("invalid versions and malformed events are rejected", () => {
   assert.throws(
     () => normalizeExport({ version: 4, records: [] }),
@@ -169,5 +244,27 @@ test("invalid versions and malformed events are rejected", () => {
         highlights: [{ id: "x", noteId: "n" }],
       }),
     /invalid highlights/
+  );
+  assert.throws(
+    () =>
+      normalizeExport({
+        version: 4,
+        records: [record],
+        events: [event],
+        highlights: [highlight],
+        attempts: [{ ...attempt, confidence: 5 }],
+      }),
+    /invalid attempt events/
+  );
+  assert.throws(
+    () =>
+      normalizeExport({
+        version: 4,
+        records: [record],
+        events: [event],
+        highlights: [highlight],
+        attempts: [{ ...attempt, durationSeconds: -1 }],
+      }),
+    /invalid attempt events/
   );
 });

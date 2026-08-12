@@ -1944,6 +1944,183 @@ export const guides = {
 		],
 		relatedNotes: ["kadane_algorithm", "arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
 	},
+	"1768-merge-strings-alternately": {
+		slug: "1768-merge-strings-alternately",
+		pattern: "Paired streaming merge with a tail append",
+		recognitionSignals: [
+			"take one item from each of two ordered sequences in turn",
+			"the inputs may have unequal lengths, so one sequence can outlive the other",
+			"the output preserves order within each input rather than globally sorting values",
+		],
+		dissection:
+			"Build one result by alternating the next unused character from word1 and word2. Once either word is exhausted, append the untouched suffix of the other word exactly as it appears.",
+		intuition:
+			"The alternating portion has a simple paired structure: each loop consumes one character from both words. That structure ends at the shorter word, leaving a contiguous tail in the longer word; slicing and appending that tail avoids extra special cases.",
+		invariant:
+			"After each paired iteration, result contains the correct alternating merge of word1[:i] and word2[:j], with i == j and no character from either consumed prefix missing or reordered.",
+		bruteForce: {
+			approach:
+				"Repeatedly concatenate single characters onto an immutable string. It expresses the right order, but each concatenation may copy the accumulated prefix again.",
+			complexity: { time: "O((m+n)²)", space: "O(m+n)", note: "Repeated string copies can make append-heavy concatenation quadratic." },
+		},
+		constraintReasoning:
+			"The strings can each be large enough that repeatedly rebuilding the output is needless work. Collecting characters in a list and joining once keeps every input character to one append and one final copy.",
+		approachSteps: [
+			"Initialize i = j = 0 and an empty list result.",
+			"While both words still have a character, append word1[i], then word2[j], and advance both indices.",
+			"Append word1[i:] and word2[j:]; exactly one is non-empty, except when both words end together.",
+			"Join result into the final string.",
+		],
+		complexity: { time: "O(m+n)", space: "O(m+n)", note: "The output list stores every character once." },
+		pitfalls: [
+			"Stopping after the paired loop and forgetting the remaining suffix of the longer word.",
+			"Appending only one tail with an if/else when appending both slices is simpler and harmless.",
+			"Repeated string concatenation inside the loop instead of buffering characters and joining once.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 'word1 = "abc", word2 = "pqr"', expected: '"apbqcr"', note: "Equal-length inputs alternate through their final characters." },
+			{ kind: "boundary", input: 'word1 = "", word2 = "abc"', expected: '"abc"', note: "An empty word leaves the other word unchanged." },
+			{ kind: "trap", input: 'word1 = "ab", word2 = "pqrs"', expected: '"apbqrs"', note: "After two paired steps, the tail rs must remain in order." },
+		],
+		followUps: [
+			"Generalize from two inputs to k iterators: what data structure controls whose turn it is?",
+			"How would the approach change if alternation started with the longer word rather than always word1?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"18-4sum": {
+		slug: "18-4sum",
+		pattern: "Sort, fix two values, then solve a two-sum with opposite pointers",
+		recognitionSignals: [
+			"find unique groups of four values that sum to a target",
+			"the output contains value combinations rather than original indices",
+			"sorting makes duplicate removal and sum-directed pointer motion possible",
+		],
+		dissection:
+			"Return every unique quadruplet whose values add to target. Sort first, choose the first two positions with nested loops, then use left and right pointers to find the remaining pair in the suffix.",
+		intuition:
+			"Sorting turns the remaining two-sum into a monotone search: if the four-value sum is too small, only moving left rightward can increase it; if it is too large, only moving right leftward can decrease it. Skipping repeated values at every level gives each value combination one canonical construction.",
+		invariant:
+			"For fixed i and j, left and right delimit all unexamined pairs in the sorted suffix nums[j+1:], and every emitted quadruplet is sorted, sums to target, and has not been emitted before.",
+		bruteForce: {
+			approach:
+				"Enumerate every i < j < k < l quadruple, test its sum, and store normalized matches in a set to remove duplicates.",
+			complexity: { time: "O(n⁴)", space: "O(number of answers)", note: "Four nested choices are too expensive before duplicate handling is even considered." },
+		},
+		constraintReasoning:
+			"With n up to roughly 200, n⁴ can reach billions of candidate tuples. Sorting once and reducing the last two choices to a linear pointer sweep makes the dominant work O(n³), which is practical for the stated scale.",
+		approachSteps: [
+			"Sort nums so equal values are adjacent and pointer moves have a predictable effect on the sum.",
+			"For each first index i, skip it when it repeats the previous first value.",
+			"For each second index j after i, skip it when it repeats the previous second value for this same i.",
+			"Set left = j + 1 and right = n − 1. Move left for a sum below target and right for a sum above target.",
+			"On an exact sum, record the quadruplet, move both pointers, then skip equal left and right values before continuing.",
+		],
+		complexity: { time: "O(n³)", space: "O(1)", note: "Ignoring the returned quadruplets; sorting may use implementation-dependent auxiliary space." },
+		pitfalls: [
+			"Skipping nums[j] whenever it equals nums[j-1] instead of only when j > i + 1; a valid quadruplet may use the same value in both fixed positions.",
+			"After finding a match, moving only one pointer or failing to skip pair duplicates, which emits repeated quadruplets.",
+			"Using an overflow-prone integer type in languages where four values can exceed 32-bit range.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,0,-1,0,-2,2], target = 0", expected: "[[-2,-1,1,2],[-2,0,0,2],[-1,0,0,1]]", note: "Several solutions share values; sorting gives every answer a canonical order." },
+			{ kind: "boundary", input: "nums = [1,2,3], target = 6", expected: "[]", note: "Fewer than four elements cannot form a quadruplet." },
+			{ kind: "trap", input: "nums = [2,2,2,2,2], target = 8", expected: "[[2,2,2,2]]", note: "All equal values produce one valid combination, not several duplicates." },
+		],
+		followUps: [
+			"Generalize to k-sum: where is the recursion base case and where do two pointers take over?",
+			"Add lower/upper-bound pruning after sorting. What sums can the smallest or largest remaining values make?",
+		],
+		relatedNotes: ["two_pointers", "time-complexity"],
+	},
+	"26-remove-duplicates-from-sorted-array": {
+		slug: "26-remove-duplicates-from-sorted-array",
+		pattern: "Read/write two pointers over a sorted sequence",
+		recognitionSignals: [
+			"modify a sorted array in place and return the meaningful prefix length",
+			"duplicates appear in adjacent runs because the input is sorted",
+			"one pointer scans while another marks the next output position",
+		],
+		dissection:
+			"Keep exactly one copy of each distinct value at the front of nums. A fast pointer inspects every value; a slow pointer marks the last unique value written. When fast discovers a new value, extend the unique prefix and copy it there.",
+		intuition:
+			"In sorted order, a number is new precisely when it differs from the last unique value. That makes the array itself a valid output buffer: no separate set is needed, and the prefix before slow always contains the final answer so far.",
+		invariant:
+			"Before each fast iteration, nums[:slow+1] contains every distinct value from nums[:fast] exactly once in sorted order, and slow points at that prefix's final element.",
+		bruteForce: {
+			approach:
+				"Scan the array and delete each duplicate in place as it appears. Each deletion shifts the remaining suffix left.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "A long duplicate run repeatedly shifts O(n) remaining elements." },
+		},
+		constraintReasoning:
+			"n can reach tens of thousands, so repeated middle deletions turn one linear scan into quadratic shifting. A read/write sweep inspects each entry once and writes only when the distinct prefix grows.",
+		approachSteps: [
+			"Return 0 for an empty input; otherwise set slow = 0 for the first unique value.",
+			"Advance fast from index 1 through the array.",
+			"If nums[fast] differs from nums[slow], increment slow and write nums[fast] at nums[slow].",
+			"Return slow + 1 because slow is an index, while the task asks for a count.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "The input array doubles as the output buffer." },
+		pitfalls: [
+			"Returning slow instead of slow + 1, which confuses the last written index with the number of unique values.",
+			"Comparing fast to nums[fast-1] after overwriting positions; compare to nums[slow], the last unique value kept.",
+			"Assuming there is a first value without handling nums = [].",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,1,2]", expected: "k = 2; nums[:2] = [1,2]", note: "The second 1 is skipped and 2 is copied into the next output slot." },
+			{ kind: "boundary", input: "nums = []", expected: "k = 0", note: "There is no first unique value to seed the prefix." },
+			{ kind: "trap", input: "nums = [1,1,1,1]", expected: "k = 1; nums[:1] = [1]", note: "A whole duplicate run must not advance the write pointer." },
+		],
+		followUps: [
+			"Keep at most two copies of each value: how do you decide whether the current read value is allowed?",
+			"Remove a chosen value rather than duplicates. What does the write-pointer invariant become?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"88-merge-sorted-array": {
+		slug: "88-merge-sorted-array",
+		pattern: "Backward merge with two read pointers and one write pointer",
+		recognitionSignals: [
+			"merge two sorted arrays into the spare capacity of the first one",
+			"writing from the front could overwrite unread nums1 values",
+			"the largest remaining value belongs safely at the final open position",
+		],
+		dissection:
+			"nums1 has m meaningful sorted values followed by n empty slots. Compare the largest unused values in nums1 and nums2, write the larger into nums1's last open slot, and move backward until nums2 is exhausted.",
+		intuition:
+			"The empty capacity is at nums1's right edge, so fill it from right to left. That direction protects nums1's smaller unread values: every write goes into a slot that is either empty or has already been consumed as a source.",
+		invariant:
+			"At every step, nums1[k+1:] contains the largest values from the original inputs in their final sorted order; nums1[:i+1] and nums2[:j+1] are the only unread values.",
+		bruteForce: {
+			approach:
+				"Copy nums2 into nums1's spare slots, then sort all m+n values.",
+			complexity: { time: "O((m+n) log(m+n))", space: "O(1)", note: "It works but ignores that both inputs are already sorted." },
+		},
+		constraintReasoning:
+			"Both inputs arrive sorted, so a comparison merge can use one linear pass rather than paying for a fresh sort. The in-place requirement also rules out constructing a separate merged array as the primary answer.",
+		approachSteps: [
+			"Set i = m − 1, j = n − 1, and k = m + n − 1.",
+			"While i and j are both valid, copy the larger of nums1[i] and nums2[j] into nums1[k], then decrement its read pointer and k.",
+			"If nums2 still has entries, copy its remaining prefix into nums1; those values have no earlier nums1 value left to compare.",
+			"Do not copy a remaining nums1 prefix: it is already in its correct positions.",
+		],
+		complexity: { time: "O(m+n)", space: "O(1)", note: "Three indices and no auxiliary merged array." },
+		pitfalls: [
+			"Merging left to right and overwriting a nums1 value that has not been compared yet.",
+			"Forgetting the nums2 cleanup loop when nums1 is exhausted first.",
+			"Adding an unnecessary nums1 cleanup loop, which can overwrite already-correct values.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums1 = [1,2,3,0,0,0], m = 3; nums2 = [2,5,6], n = 3", expected: "nums1 = [1,2,2,3,5,6]", note: "Each largest remaining value is placed at the far right." },
+			{ kind: "boundary", input: "nums1 = [0], m = 0; nums2 = [1], n = 1", expected: "nums1 = [1]", note: "All output comes from nums2, so its cleanup loop does the work." },
+			{ kind: "trap", input: "nums1 = [4,5,6,0,0,0], m = 3; nums2 = [1,2,3], n = 3", expected: "nums1 = [1,2,3,4,5,6]", note: "Once nums1 is consumed from the right, nums2's remaining prefix still must be copied." },
+		],
+		followUps: [
+			"Merge when nums1 has no spare capacity: what additional storage is unavoidable?",
+			"How do stable merge requirements change the tie decision when equal values appear?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
 } satisfies AlgorithmGuides;
 
 export function getGuide(slug: string): AlgorithmGuide | undefined {

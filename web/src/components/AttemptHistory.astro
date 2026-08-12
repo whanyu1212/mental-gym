@@ -1,0 +1,168 @@
+---
+---
+
+<attempt-history>
+  <section class="panel">
+    <p class="loading">Loading attempt history…</p>
+    <div class="empty" hidden>
+      <h3>No attempts recorded yet</h3>
+      <p>Start an algorithm attempt before opening its guide to see how your problem-solving is developing.</p>
+    </div>
+    <div class="content" hidden>
+      <div class="metrics">
+        <article><strong data-value="week">0</strong><span>Attempts · 7 days</span></article>
+        <article><strong data-value="month">0</strong><span>Attempts · 30 days</span></article>
+        <article><strong data-value="unique">0</strong><span>Problems attempted</span></article>
+        <article><strong data-value="unaided">0%</strong><span>Unaided solves</span></article>
+        <article><strong data-value="duration">0m</strong><span>Average attempt</span></article>
+      </div>
+      <div class="details">
+        <section><h3>Outcomes</h3><div class="distribution" data-outcomes></div></section>
+        <section><h3>Help used</h3><div class="distribution" data-support></div></section>
+        <section><h3>What slowed you down</h3><div class="distribution" data-difficulties></div></section>
+        <section class="wide"><h3>By pattern</h3><div class="distribution" data-groups></div></section>
+        <section class="wide"><h3>Recent attempts</h3><div class="recent-list" data-recent></div></section>
+      </div>
+    </div>
+  </section>
+</attempt-history>
+
+<script>
+  import { getAllAttemptEvents } from "../scripts/sr-db";
+  import { summarizeAttempts } from "../scripts/attempt-stats";
+  import { todayISO } from "../scripts/sr-scheduler";
+
+  const labels = {
+    solved: "Solved",
+    partial: "Partial",
+    stuck: "Stuck",
+    none: "None",
+    signal: "Recognition signal",
+    guide: "Guide",
+    solution: "Solution",
+    pattern: "Pattern recognition",
+    reasoning: "Invariant / reasoning",
+    implementation: "Implementation",
+    complexity: "Complexity",
+    "edge-cases": "Edge cases",
+  } as const;
+
+  const escapeHtml = (value: string) =>
+    value.replace(
+      /[&<>"']/g,
+      (character) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[character] ?? character
+    );
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return minutes === 0 ? `${remainder}s` : `${minutes}m${remainder > 0 ? ` ${remainder}s` : ""}`;
+  };
+
+  class AttemptHistoryElement extends HTMLElement {
+    connectedCallback() {
+      this.render();
+      window.addEventListener("mental-gym:progress-updated", this.render);
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener("mental-gym:progress-updated", this.render);
+    }
+
+    render = async () => {
+      const loading = this.querySelector<HTMLElement>(".loading");
+      const empty = this.querySelector<HTMLElement>(".empty");
+      const content = this.querySelector<HTMLElement>(".content");
+
+      try {
+        const stats = summarizeAttempts(await getAllAttemptEvents(), todayISO());
+        if (loading) loading.hidden = true;
+        if (stats.uniqueProblemsAttempted === 0) {
+          if (empty) empty.hidden = false;
+          if (content) content.hidden = true;
+          return;
+        }
+
+        if (empty) empty.hidden = true;
+        if (content) content.hidden = false;
+
+        const values = {
+          week: String(stats.attemptsLast7Days),
+          month: String(stats.attemptsLast30Days),
+          unique: String(stats.uniqueProblemsAttempted),
+          unaided: `${Math.round(stats.unaidedSolveRate * 100)}%`,
+          duration: formatDuration(stats.averageDurationSeconds),
+        };
+        for (const [name, value] of Object.entries(values)) {
+          const element = this.querySelector<HTMLElement>(`[data-value="${name}"]`);
+          if (element) element.textContent = value;
+        }
+
+        const renderCounts = (counts: Record<string, number>, keys: string[]) =>
+          keys
+            .filter((key) => counts[key] > 0)
+            .map((key) => `<div><span>${labels[key as keyof typeof labels]}</span><strong>${counts[key]}</strong></div>`)
+            .join("");
+
+        const outcomes = this.querySelector<HTMLElement>("[data-outcomes]");
+        const support = this.querySelector<HTMLElement>("[data-support]");
+        const difficulties = this.querySelector<HTMLElement>("[data-difficulties]");
+        if (outcomes) outcomes.innerHTML = renderCounts(stats.outcomeCounts, ["solved", "partial", "stuck"]);
+        if (support) support.innerHTML = renderCounts(stats.supportCounts, ["none", "signal", "guide", "solution"]);
+        if (difficulties) difficulties.innerHTML = renderCounts(stats.difficultyAreaCounts, ["pattern", "reasoning", "implementation", "complexity", "edge-cases", "none"]);
+
+        const groups = this.querySelector<HTMLElement>("[data-groups]");
+        if (groups) {
+          groups.innerHTML = stats.groups
+            .map((group) => `<div><span>${escapeHtml(group.name)}</span><strong>${group.attempts} attempts · ${group.unaidedSolves} unaided</strong></div>`)
+            .join("");
+        }
+
+        const recent = this.querySelector<HTMLElement>("[data-recent]");
+        if (recent) {
+          recent.innerHTML = stats.recentAttempts
+            .map((attempt) => `<article><span><strong>${escapeHtml(attempt.title)}</strong><small>${escapeHtml(attempt.group)} · ${attempt.attemptDate}</small></span><em>${labels[attempt.outcome]} · ${formatDuration(attempt.durationSeconds)}</em></article>`)
+            .join("");
+        }
+      } catch {
+        if (loading) loading.textContent = "Attempt history is unavailable in this browser.";
+      }
+    };
+  }
+
+  if (!customElements.get("attempt-history")) {
+    customElements.define("attempt-history", AttemptHistoryElement);
+  }
+</script>
+
+<style>
+  attempt-history { display: block; }
+  .panel { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); padding: 1.25rem; }
+  .loading, .empty p { color: var(--muted); font: var(--fs-fine) var(--font-sans); line-height: 1.6; margin: 0; }
+  .empty h3, h3 { font: 600 var(--fs-xl) var(--font-serif); margin: 0 0 .45rem; }
+  .metrics { display: grid; gap: .75rem; grid-template-columns: repeat(5, 1fr); }
+  .metrics article { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: .25rem; padding: 1rem; }
+  .metrics strong { color: var(--text); font: 600 var(--fs-display) var(--font-serif); }
+  .metrics span, .distribution :global(span), .recent-list small { color: var(--muted); font: var(--fs-eyebrow) var(--font-sans); letter-spacing: .05em; text-transform: uppercase; }
+  .details { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1.5rem; }
+  .details section { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; }
+  .details .wide { grid-column: span 3; }
+  .distribution :global(div) { border-bottom: 1px solid var(--border); display: flex; gap: .75rem; justify-content: space-between; padding: .5rem 0; }
+  .distribution :global(div:last-child) { border-bottom: 0; padding-bottom: 0; }
+  .distribution :global(strong) { color: var(--text); font: 600 var(--fs-sm) var(--font-sans); text-align: right; }
+  .recent-list { display: grid; }
+  .recent-list :global(article) { align-items: center; border-bottom: 1px solid var(--border); display: flex; gap: 1rem; justify-content: space-between; padding: .65rem 0; }
+  .recent-list :global(article:last-child) { border-bottom: 0; padding-bottom: 0; }
+  .recent-list :global(span) { display: grid; gap: .2rem; }
+  .recent-list :global(strong) { font: 600 var(--fs-sm) var(--font-sans); }
+  .recent-list :global(em) { color: var(--accent); font: var(--fs-fine) var(--font-sans); font-style: normal; text-align: right; }
+  @media (max-width: 900px) { .metrics { grid-template-columns: repeat(2, 1fr); } .details { grid-template-columns: 1fr; } .details .wide { grid-column: auto; } }
+  @media (max-width: 520px) { .recent-list :global(article) { align-items: start; flex-direction: column; gap: .35rem; } .recent-list :global(em) { text-align: left; } }
+</style>

@@ -41,6 +41,7 @@ import MaximumSumCircularSubarrayAnimation from "../../components/MaximumSumCirc
 import SubarraySumAnimation from "../../components/notes/PrefixSumHashmapViz.astro";
 import XorQueriesAnimation from "../../components/notes/PrefixXorViz.astro";
 import RecallRating from "../../components/RecallRating.astro";
+import AttemptMode from "../../components/AttemptMode.astro";
 import LastVisited from "../../components/LastVisited.astro";
 import Layout from "../../layouts/Layout.astro";
 import { getGuide } from "../../data/algorithmGuides";
@@ -137,6 +138,16 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 		<div class="prose" set:html={problem.description} />
 	</section>
 
+	<AttemptMode
+		domain="algorithms"
+		slug={problem.slug}
+		title={problem.title}
+		difficulty={problem.difficulty}
+		group={problem.group}
+		recognitionSignal={guide?.recognitionSignals[0] ?? "Identify the relationship the prompt asks you to preserve, then name the simplest pattern that can maintain it in one pass."}
+	/>
+
+	<div class="post-attempt-study" data-study-content>
 	<section class="content-switcher">
 		<div class="content-tabs" role="tablist" aria-label="Problem detail views">
 			{hasGuide && (
@@ -390,6 +401,7 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 		difficulty={problem.difficulty}
 		group={problem.group}
 	/>
+	</div>
 	<LastVisited title={problem.title} kind="Algorithms" />
 </Layout>
 

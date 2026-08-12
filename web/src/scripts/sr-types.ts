@@ -1,4 +1,5 @@
 import type { Highlight } from "./highlight-types";
+import type { AttemptEvent } from "./attempt-types";
 
 export type ReviewQuality = 0 | 1 | 2 | 3; // Again, Hard, Good, Easy
 export type ReviewStatus = "overdue" | "due" | "upcoming" | "new";
@@ -53,16 +54,27 @@ export interface SRExportV3 {
   highlights: Highlight[];
 }
 
-export type SRExport = SRExportV1 | SRExportV2 | SRExportV3;
+export interface SRExportV4 {
+  version: 4;
+  exportedAt: string;
+  records: ReviewRecord[];
+  events: ReviewEvent[];
+  highlights: Highlight[];
+  attempts: AttemptEvent[];
+}
+
+export type SRExport = SRExportV1 | SRExportV2 | SRExportV3 | SRExportV4;
 
 export interface NormalizedSRExport {
   records: ReviewRecord[];
   events: ReviewEvent[];
   highlights: Highlight[];
+  attempts: AttemptEvent[];
 }
 
 export interface ImportResult {
   recordCount: number;
   eventCount: number;
   highlightCount: number;
+  attemptCount: number;
 }

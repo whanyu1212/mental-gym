@@ -1,0 +1,347 @@
+---
+interface Props {
+  domain: "algorithms";
+  slug: string;
+  title: string;
+  difficulty: string;
+  group: string;
+  recognitionSignal: string;
+}
+
+const {
+  domain,
+  slug,
+  title,
+  difficulty,
+  group,
+  recognitionSignal,
+} = Astro.props;
+---
+
+<attempt-mode
+  data-domain={domain}
+  data-slug={slug}
+  data-title={title}
+  data-difficulty={difficulty}
+  data-group={group}
+>
+  <section class="attempt-panel" aria-labelledby="attempt-heading">
+    <div class="attempt-heading-row">
+      <div>
+        <p class="eyebrow">Practice first</p>
+        <h2 id="attempt-heading">Make your own move.</h2>
+      </div>
+      <span class="attempt-timer" aria-live="polite" hidden>00:00</span>
+    </div>
+
+    <p class="attempt-history" data-attempt-history>Loading your attempt history…</p>
+
+    <div class="attempt-stage" data-stage="ready">
+      <p>
+        Before reading the explanation, name the pattern, state the invariant, and outline a solution.
+        A genuine attempt is the thing worth tracking here—not an open tab.
+      </p>
+      <div class="attempt-actions">
+        <button class="attempt-primary" type="button" data-start-attempt>Start an attempt</button>
+        <button class="attempt-secondary" type="button" data-study-instead>Study instead</button>
+      </div>
+    </div>
+
+    <div class="attempt-stage" data-stage="active" hidden>
+      <label>
+        <span>Pattern guess <em>optional</em></span>
+        <input data-pattern-guess placeholder="e.g. fixed sliding window" autocomplete="off" />
+      </label>
+      <label>
+        <span>Invariant / core idea <em>optional</em></span>
+        <textarea data-invariant rows="3" placeholder="What stays true as the algorithm moves?"></textarea>
+      </label>
+      <label>
+        <span>Approach or pseudocode <em>optional</em></span>
+        <textarea data-approach rows="5" placeholder="Write the steps you would implement."></textarea>
+      </label>
+
+      <div class="signal-box">
+        <button class="attempt-tertiary" type="button" data-request-signal>Give me one recognition signal</button>
+        <p data-recognition-signal hidden>{recognitionSignal}</p>
+      </div>
+
+      <div class="attempt-actions">
+        <button class="attempt-primary" type="button" data-finish-attempt>Finish and compare</button>
+        <button class="attempt-secondary" type="button" data-study-instead>Study instead</button>
+      </div>
+    </div>
+
+    <form class="attempt-stage attempt-complete" data-stage="complete" hidden>
+      <p class="completion-intro">Capture what happened, then compare your reasoning with the study material.</p>
+      <div class="attempt-field-grid">
+        <label>
+          <span>Outcome</span>
+          <select name="outcome">
+            <option value="solved">Solved</option>
+            <option value="partial" selected>Partially solved</option>
+            <option value="stuck">Stuck</option>
+          </select>
+        </label>
+        <label>
+          <span>Support used</span>
+          <select name="supportUsed">
+            <option value="none">None</option>
+            <option value="signal">Recognition signal</option>
+            <option value="guide">Guide</option>
+            <option value="solution">Solution</option>
+          </select>
+        </label>
+        <label>
+          <span>Confidence</span>
+          <select name="confidence">
+            <option value="1">1 — unsure</option>
+            <option value="2" selected>2 — some confidence</option>
+            <option value="3">3 — confident</option>
+            <option value="4">4 — certain</option>
+          </select>
+        </label>
+        <label>
+          <span>Hardest part</span>
+          <select name="difficultyArea">
+            <option value="pattern" selected>Pattern recognition</option>
+            <option value="reasoning">Invariant / reasoning</option>
+            <option value="implementation">Implementation</option>
+            <option value="complexity">Complexity</option>
+            <option value="edge-cases">Edge cases</option>
+            <option value="none">Nothing in particular</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        <span>One-sentence reflection <em>optional</em></span>
+        <textarea name="reflection" rows="2" placeholder="What would you notice faster next time?"></textarea>
+      </label>
+      <div class="attempt-actions">
+        <button class="attempt-primary" type="submit">Save attempt and compare</button>
+        <button class="attempt-secondary" type="button" data-return-attempt>Keep working</button>
+      </div>
+      <p class="attempt-feedback" aria-live="polite"></p>
+    </form>
+  </section>
+</attempt-mode>
+
+<script>
+  import type {
+    AttemptConfidence,
+    AttemptDifficultyArea,
+    AttemptOutcome,
+    AttemptSupport,
+  } from "../scripts/attempt-types";
+  import {
+    completeAttempt,
+    elapsedSeconds,
+    requestRecognitionSignal,
+    resumeAttempt,
+    startAttempt,
+    type AttemptSession,
+  } from "../scripts/attempt-state";
+  import { getAttemptsForProblem, putAttemptEvent } from "../scripts/sr-db";
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+  };
+
+  class AttemptModeElement extends HTMLElement {
+    private session: AttemptSession | undefined;
+    private finishedAt: Date | undefined;
+    private timer: number | undefined;
+
+    connectedCallback() {
+      const domain = this.dataset.domain as "algorithms";
+      const slug = this.dataset.slug!;
+      const title = this.dataset.title!;
+      const difficulty = this.dataset.difficulty!;
+      const group = this.dataset.group!;
+      const problemKey = `${domain}:${slug}`;
+      const studyContent = document.querySelector<HTMLElement>("[data-study-content]");
+      const timer = this.querySelector<HTMLElement>(".attempt-timer");
+      const feedback = this.querySelector<HTMLElement>(".attempt-feedback");
+      const history = this.querySelector<HTMLElement>("[data-attempt-history]");
+      const stages = this.querySelectorAll<HTMLElement>("[data-stage]");
+      const patternGuess = this.querySelector<HTMLInputElement>("[data-pattern-guess]");
+      const recognitionSignal = this.querySelector<HTMLElement>("[data-recognition-signal]");
+      const completionForm = this.querySelector<HTMLFormElement>(".attempt-complete");
+      const supportUsed = completionForm?.elements.namedItem("supportUsed") as HTMLSelectElement | null;
+
+      const showStage = (stage: "ready" | "active" | "complete") => {
+        stages.forEach((element) => {
+          element.hidden = element.dataset.stage !== stage;
+        });
+      };
+
+      const stopTimer = () => {
+        if (this.timer !== undefined) {
+          window.clearInterval(this.timer);
+          this.timer = undefined;
+        }
+      };
+
+      const renderTimer = () => {
+        if (!this.session || !timer) return;
+        timer.textContent = formatDuration(elapsedSeconds(this.session));
+      };
+
+      const unlockStudyMaterial = () => {
+        stopTimer();
+        if (studyContent) {
+          studyContent.hidden = false;
+          studyContent.removeAttribute("aria-hidden");
+          studyContent.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+
+      const lockStudyMaterial = () => {
+        if (!studyContent) return;
+        studyContent.hidden = true;
+        studyContent.setAttribute("aria-hidden", "true");
+      };
+
+      const renderHistory = async () => {
+        try {
+          const attempts = await getAttemptsForProblem(problemKey);
+          if (!history) return;
+          if (attempts.length === 0) {
+            history.textContent = "No saved attempts yet. Take a real swing before opening the explanation.";
+            return;
+          }
+          const newest = [...attempts].sort((a, b) => b.attemptedAt.localeCompare(a.attemptedAt))[0];
+          const unaided = attempts.filter(
+            (attempt) => attempt.outcome === "solved" && attempt.supportUsed === "none"
+          ).length;
+          history.textContent = `${attempts.length} previous ${attempts.length === 1 ? "attempt" : "attempts"} · ${unaided} unaided ${unaided === 1 ? "solve" : "solves"} · last attempted ${newest.attemptDate}`;
+        } catch {
+          if (history) history.textContent = "Attempt history is unavailable in this browser.";
+        }
+      };
+
+      lockStudyMaterial();
+      renderHistory();
+
+      this.querySelector<HTMLButtonElement>("[data-start-attempt]")?.addEventListener("click", () => {
+        lockStudyMaterial();
+        this.session = startAttempt();
+        this.finishedAt = undefined;
+        if (timer) timer.hidden = false;
+        renderTimer();
+        this.timer = window.setInterval(renderTimer, 1000);
+        showStage("active");
+        patternGuess?.focus();
+      });
+
+      this.querySelector<HTMLButtonElement>("[data-request-signal]")?.addEventListener("click", () => {
+        if (!this.session) return;
+        this.session = requestRecognitionSignal(this.session);
+        if (supportUsed?.value === "none") supportUsed.value = "signal";
+        if (recognitionSignal) recognitionSignal.hidden = false;
+      });
+
+      this.querySelector<HTMLButtonElement>("[data-finish-attempt]")?.addEventListener("click", () => {
+        if (!this.session) return;
+        this.finishedAt = new Date();
+        stopTimer();
+        showStage("complete");
+      });
+
+      this.querySelector<HTMLButtonElement>("[data-return-attempt]")?.addEventListener("click", () => {
+        if (!this.session || !this.finishedAt) return;
+        this.session = resumeAttempt(this.session, this.finishedAt);
+        this.finishedAt = undefined;
+        renderTimer();
+        this.timer = window.setInterval(renderTimer, 1000);
+        showStage("active");
+      });
+
+      this.querySelectorAll<HTMLButtonElement>("[data-study-instead]").forEach((button) => {
+        button.addEventListener("click", () => {
+          this.session = undefined;
+          this.finishedAt = undefined;
+          if (timer) timer.hidden = true;
+          showStage("ready");
+          unlockStudyMaterial();
+        });
+      });
+
+      completionForm?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!this.session || !this.finishedAt) return;
+        const form = new FormData(completionForm);
+        const reflection = form.get("reflection")?.toString();
+        const submit = completionForm.querySelector<HTMLButtonElement>("[type=submit]");
+
+        try {
+          if (submit) submit.disabled = true;
+          const attempt = completeAttempt(
+            this.session,
+            {
+              domain,
+              slug,
+              title,
+              difficulty,
+              group,
+              outcome: form.get("outcome") as AttemptOutcome,
+              supportUsed: form.get("supportUsed") as AttemptSupport,
+              confidence: Number(form.get("confidence")) as AttemptConfidence,
+              difficultyArea: form.get("difficultyArea") as AttemptDifficultyArea,
+              patternGuess: patternGuess?.value,
+              reflection,
+            },
+            this.finishedAt
+          );
+          await putAttemptEvent(attempt);
+          window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
+          if (feedback) feedback.textContent = "Attempt saved. Opening the study material…";
+          await renderHistory();
+          unlockStudyMaterial();
+        } catch {
+          if (feedback) feedback.textContent = "Could not save this attempt. Please try again.";
+          if (submit) submit.disabled = false;
+        }
+      });
+    }
+
+    disconnectedCallback() {
+      if (this.timer !== undefined) window.clearInterval(this.timer);
+    }
+  }
+
+  if (!customElements.get("attempt-mode")) {
+    customElements.define("attempt-mode", AttemptModeElement);
+  }
+</script>
+
+<style>
+  attempt-mode { display: block; margin: 0 0 2rem; }
+  .attempt-panel { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); padding: 1.4rem; }
+  .attempt-heading-row { align-items: start; display: flex; gap: 1rem; justify-content: space-between; }
+  .eyebrow { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .12em; margin: 0 0 .35rem; text-transform: uppercase; }
+  h2 { font: 600 var(--fs-xl) var(--font-serif); margin: 0; }
+  .attempt-timer { border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--accent); font: 600 var(--fs-base) var(--font-mono); padding: .35rem .6rem; }
+  .attempt-history { color: var(--muted); font: var(--fs-fine) var(--font-sans); line-height: 1.5; margin: .8rem 0 1.25rem; }
+  .attempt-stage > p, .completion-intro { color: var(--muted); font: var(--fs-sm) var(--font-sans); line-height: 1.6; margin: 0 0 1rem; max-width: 720px; }
+  .attempt-stage { display: grid; gap: .85rem; }
+  .attempt-stage[hidden] { display: none; }
+  label { display: grid; gap: .35rem; }
+  label > span { color: var(--text); font: 600 var(--fs-fine) var(--font-sans); }
+  label em { color: var(--muted); font-style: normal; font-weight: 400; }
+  input, textarea, select { background: color-mix(in srgb, var(--panel) 78%, transparent); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font: var(--fs-sm) var(--font-sans); padding: .65rem .75rem; width: 100%; }
+  textarea { line-height: 1.5; resize: vertical; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); outline: 2px solid color-mix(in srgb, var(--accent) 24%, transparent); outline-offset: 1px; }
+  .attempt-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .25rem; }
+  button { border-radius: var(--radius-xs); cursor: pointer; font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .04em; padding: .55rem .8rem; }
+  button:disabled { cursor: wait; opacity: .65; }
+  .attempt-primary { background: var(--accent); border: 1px solid var(--accent); color: var(--surface-strong); }
+  .attempt-secondary, .attempt-tertiary { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .attempt-secondary:hover, .attempt-tertiary:hover { border-color: var(--accent); color: var(--accent); }
+  .signal-box { align-items: start; background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: var(--radius-sm); display: grid; gap: .65rem; padding: .75rem; }
+  .signal-box p { color: var(--text); font: var(--fs-sm) var(--font-sans); line-height: 1.5; margin: 0; }
+  .attempt-field-grid { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .attempt-feedback { color: var(--accent); font: var(--fs-fine) var(--font-sans); margin: 0; min-height: 1.2em; }
+  @media (max-width: 640px) { .attempt-field-grid { grid-template-columns: 1fr; } .attempt-heading-row { align-items: stretch; flex-direction: column; } .attempt-timer { align-self: start; } }
+</style>
