@@ -7,47 +7,50 @@
 - [1. 概述](#sec-1)
 - [2. 完整流程](#sec-2)
 - [3. 开发新模型](#sec-3)
-  - [3.1 定义业务问题](#sec-3)
-  - [3.2 定义实验假设](#sec-3)
-  - [3.3 明确策略变化范围](#sec-3)
+  - [3.1 定义业务问题](#sec-3-1)
+  - [3.2 定义实验假设](#sec-3-2)
+  - [3.3 明确策略变化范围](#sec-3-3)
 - [4. 离线评估｜Offline Evaluation](#sec-4)
-  - [4.1 模型效果指标](#sec-4)
-  - [4.2 工程性能指标](#sec-4)
-  - [4.3 离线评估的限制](#sec-4)
+  - [4.1 模型效果指标](#sec-4-1)
+  - [4.2 工程性能指标](#sec-4-2)
+  - [4.3 离线评估的限制](#sec-4-3)
 - [5. 实验准备检查｜Experiment Readiness Check](#sec-5)
-  - [5.1 实验单位](#sec-5)
-  - [5.2 实验指标](#sec-5)
-  - [5.3 实验配置](#sec-5)
+  - [5.1 实验单位](#sec-5-1)
+  - [5.2 实验指标](#sec-5-2)
+  - [5.3 实验配置](#sec-5-3)
 - [6. A/A Testing](#sec-6)
-  - [6.1 什么时候需要 A/A Testing](#sec-6)
-  - [6.2 验证内容](#sec-6)
+  - [6.1 什么时候需要 A/A Testing](#sec-6-1)
+  - [6.2 验证内容](#sec-6-2)
 - [7. A/B Testing](#sec-7)
-  - [7.1 分析流程](#sec-7)
-  - [7.2 初始流量](#sec-7)
-  - [7.3 实验期间持续监控](#sec-7)
+  - [7.1 分析流程](#sec-7-1)
+  - [7.2 初始流量](#sec-7-2)
+  - [7.3 实验期间持续监控](#sec-7-3)
 - [8. SRM｜Sample Ratio Mismatch](#sec-8)
-  - [8.1 检查时机](#sec-8)
+  - [8.1 检查时机](#sec-8-1)
 - [9. Ramp-up](#sec-9)
-  - [9.1 Ramp-up 的目的](#sec-9)
-  - [9.2 每次放量前的检查](#sec-9)
-  - [9.3 Ramp-up 不等于重新随机](#sec-9)
+  - [9.1 Ramp-up 的目的](#sec-9-1)
+  - [9.2 每次放量前的检查](#sec-9-2)
+  - [9.3 Ramp-up 不等于重新随机](#sec-9-3)
 - [10. Full Rollout](#sec-10)
-  - [10.1 Full Rollout 与 Holdout](#sec-10)
+  - [10.1 Full Rollout 与 Holdout](#sec-10-1)
 - [11. Long-term Holdout](#sec-11)
-  - [11.1 Holdout 可以回答什么](#sec-11)
-  - [11.2 Holdout 的适用场景](#sec-11)
-  - [11.3 Holdout 的成本](#sec-11)
+  - [11.1 Holdout 可以回答什么](#sec-11-1)
+  - [11.2 Holdout 的适用场景](#sec-11-2)
+  - [11.3 Holdout 的成本](#sec-11-3)
 - [12. Go / No-Go 决策门槛](#sec-12)
 - [13. 常见误区](#sec-13)
-  - [13.1 每个 A/B Test 前都必须运行 A/A Test](#sec-13)
-  - [13.2 SRM 只需要在实验开始时检查一次](#sec-13)
-  - [13.3 离线指标提升就可以直接上线](#sec-13)
-  - [13.4 Ramp-up 只是扩大流量](#sec-13)
-  - [13.5 100% 上线后仍然天然存在 Control](#sec-13)
-  - [13.6 所有实验都必须保留 Holdout](#sec-13)
+  - [13.1 每个 A/B Test 前都必须运行 A/A Test](#sec-13-1)
+  - [13.2 SRM 只需要在实验开始时检查一次](#sec-13-2)
+  - [13.3 离线指标提升就可以直接上线](#sec-13-3)
+  - [13.4 Ramp-up 只是扩大流量](#sec-13-4)
+  - [13.5 100% 上线后仍然天然存在 Control](#sec-13-5)
+  - [13.6 所有实验都必须保留 Holdout](#sec-13-6)
+- [14. 各阶段的分析重点](#sec-14)
+  - [14.1 核心判断链路](#sec-14-1)
+  - [14.2 生命周期不是机械流水线](#sec-14-2)
+- [15. 关联文档](#sec-15)
 
 ---
-
 
 <a name="sec-1"></a>
 
@@ -60,7 +63,23 @@
 - A/A Testing 用于验证实验平台，只在平台首次上线或关键链路发生变化时执行。
 - A/B Testing 用于验证新模型或新策略的真实业务价值。
 - SRM 是 A/A 和 A/B 的数据质量门槛，并应在实验运行期间持续监控。
-- Ramp-up、Full Rollout 和 Long-term Holdout 分别承担风险控制、正式上线和长期测量的职责。
+- Ramp-up、Full Rollout 和 Long-term Holdout 分别用于风险控制、正式上线和长期测量。
+
+这套流程可以进一步理解为：
+
+```text
+定义问题
+↓
+证明模型离线可行
+↓
+确认实验数据可信
+↓
+估计线上因果增量
+↓
+验证扩大流量后的稳定性
+↓
+评估长期价值
+```
 
 ---
 
@@ -83,43 +102,36 @@ flowchart TB
     OFFLINE --> READY["实验准备检查"]
     READY --> NEED_AA{"实验平台是否需要验证？"}
 
-    NEED_AA -->|是| AA_START["A/A Testing"]
-    NEED_AA -->|否| AB_START["A/B Testing"]
+    NEED_AA -->|是| AA["A/A Testing"]
+    NEED_AA -->|否| AB["A/B Testing"]
 
-    subgraph AA_PHASE["A/A 平台验证"]
-        direction TB
-        AA_START --> AA_SRM{"① SRM Check"}
-        AA_SRM -->|FAIL| AA_STOP["停止平台验证并排查"]
-        AA_SRM -->|PASS| PLATFORM["② Platform Validation<br/>Baseline Balance<br/>Logging Validation<br/>Metric Validation<br/>Statistical Calibration"]
-        PLATFORM --> PLATFORM_OK{"平台验证是否通过？"}
-        PLATFORM_OK -->|FAIL| AA_STOP
-    end
+    AA --> AA_VALID{"SRM + Platform Validation<br/>是否通过？"}
+    AA_VALID -->|否| AA_STOP["停止并排查实验链路"]
+    AA_VALID -->|是| AB
 
-    PLATFORM_OK -->|PASS| AB_START
+    AB --> AB_VALID{"SRM / Data Quality / Guardrail<br/>是否通过？"}
+    AB_VALID -->|否| AB_STOP["停止、回滚或继续迭代"]
+    AB_VALID -->|是| EFFECT{"Primary Effect<br/>是否满足上线要求？"}
 
-    subgraph AB_PHASE["A/B 在线实验"]
-        direction TB
-        AB_START --> AB_SRM{"① 持续 SRM Monitoring"}
-        AB_SRM -->|FAIL| AB_STOP["停止实验并排查"]
-        AB_SRM -->|PASS| QUALITY{"② 数据质量与<br/>系统稳定性是否通过？"}
-        QUALITY -->|FAIL| AB_STOP
-        QUALITY -->|PASS| METRICS["③ 分析 Primary Metrics<br/>与 Guardrail Metrics"]
-        METRICS --> GO{"达到放量条件？"}
-        GO -->|否| ITERATE["停止、回滚或迭代"]
-        GO -->|是| RAMP["Ramp-up"]
-        RAMP --> RAMP_SRM{"每次放量重新检查 SRM"}
-        RAMP_SRM -->|FAIL| ROLLBACK["回滚流量"]
-        RAMP_SRM -->|PASS| FULL["Full Rollout"]
-        FULL --> HOLDOUT["Long-term Holdout（可选）"]
-    end
+    EFFECT -->|否| AB_STOP
+    EFFECT -->|是| RAMP["Ramp-up"]
+
+    RAMP --> RAMP_DATA{"Data Quality 正常？"}
+    RAMP_DATA -->|否| RAMP_STOP["Pause / Rollback"]
+    RAMP_DATA -->|是| RAMP_SAFE{"System + Guardrail + Segment<br/>是否安全？"}
+    RAMP_SAFE -->|否| RAMP_STOP
+    RAMP_SAFE -->|是| NEXT{"达到 Full Rollout？"}
+    NEXT -->|否| RAMP
+    NEXT -->|是| FULL["Full Rollout"]
+
+    FULL --> HOLDOUT["Long-term Holdout /<br/>Post-launch Monitoring"]
 
     classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
     classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
-    classDef phase fill:#f7f7f7,stroke:#555555,stroke-width:1px;
     classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
 
-    class NEED_AA,AA_SRM,PLATFORM_OK,AB_SRM,QUALITY,GO,RAMP_SRM decision;
-    class AA_STOP,AB_STOP,ITERATE,ROLLBACK stop;
+    class NEED_AA,AA_VALID,AB_VALID,EFFECT,RAMP_DATA,RAMP_SAFE,NEXT decision;
+    class AA_STOP,AB_STOP,RAMP_STOP stop;
     class FULL,HOLDOUT success;
 ```
 
@@ -133,7 +145,7 @@ flowchart TB
 
 模型开发应从明确的业务问题开始，而不是只追求离线指标提升。
 
-<a name="sec-3"></a>
+<a name="sec-3-1"></a>
 
 ### 3.1 定义业务问题
 
@@ -145,7 +157,7 @@ flowchart TB
 - 降低低质量内容曝光
 - 提升长尾内容覆盖率
 
-<a name="sec-3"></a>
+<a name="sec-3-2"></a>
 
 ### 3.2 定义实验假设
 
@@ -161,7 +173,7 @@ flowchart TB
 
 > 在精排模型中加入长期兴趣特征，可以提升人均有效观看时长，同时不显著损害内容多样性和系统延迟。
 
-<a name="sec-3"></a>
+<a name="sec-3-3"></a>
 
 ### 3.3 明确策略变化范围
 
@@ -183,7 +195,7 @@ flowchart TB
 
 离线评估用于过滤明显无效或高风险的方案，但不能替代在线 A/B Testing。
 
-<a name="sec-4"></a>
+<a name="sec-4-1"></a>
 
 ### 4.1 模型效果指标
 
@@ -198,7 +210,7 @@ flowchart TB
 - Coverage
 - Diversity
 
-<a name="sec-4"></a>
+<a name="sec-4-2"></a>
 
 ### 4.2 工程性能指标
 
@@ -212,7 +224,7 @@ flowchart TB
 - Timeout Rate
 - Fallback Rate
 
-<a name="sec-4"></a>
+<a name="sec-4-3"></a>
 
 ### 4.3 离线评估的限制
 
@@ -234,7 +246,7 @@ flowchart TB
 
 ## 5. 实验准备检查｜Experiment Readiness Check
 
-<a name="sec-5"></a>
+<a name="sec-5-1"></a>
 
 ### 5.1 实验单位
 
@@ -247,7 +259,7 @@ flowchart TB
 | Region | 地区级运营策略 |
 | Time Window | Switchback Experiment |
 
-<a name="sec-5"></a>
+<a name="sec-5-2"></a>
 
 ### 5.2 实验指标
 
@@ -257,7 +269,7 @@ flowchart TB
 | Secondary Metrics | 帮助解释用户行为变化 |
 | Guardrail Metrics | 防止局部优化损害系统健康 |
 
-<a name="sec-5"></a>
+<a name="sec-5-3"></a>
 
 ### 5.3 实验配置
 
@@ -281,7 +293,7 @@ flowchart TB
 
 A/A Testing 用于验证实验平台，而不是评估新模型效果。
 
-<a name="sec-6"></a>
+<a name="sec-6-1"></a>
 
 ### 6.1 什么时候需要 A/A Testing
 
@@ -309,7 +321,7 @@ Control:   Existing Model
 Treatment: Existing Model
 ```
 
-<a name="sec-6"></a>
+<a name="sec-6-2"></a>
 
 ### 6.2 验证内容
 
@@ -355,7 +367,6 @@ flowchart TB
 
 工程上，这些检查可能同时计算；但在分析逻辑上，SRM 是前置质量门槛。SRM Fail 时，不应继续使用后续指标差异来证明平台有效。
 
-
 ---
 
 <a name="sec-7"></a>
@@ -369,7 +380,7 @@ Treatment: New Model
 
 A/B Testing 用于判断新模型或新策略是否优于当前线上方案。
 
-<a name="sec-7"></a>
+<a name="sec-7-1"></a>
 
 ### 7.1 分析流程
 
@@ -405,7 +416,7 @@ flowchart TB
     class RAMP success;
 ```
 
-<a name="sec-7"></a>
+<a name="sec-7-2"></a>
 
 ### 7.2 初始流量
 
@@ -432,7 +443,7 @@ Treatment = 50%
 - 用户影响范围
 - 回滚能力
 
-<a name="sec-7"></a>
+<a name="sec-7-3"></a>
 
 ### 7.3 实验期间持续监控
 
@@ -479,7 +490,7 @@ Treatment = 55%
 
 则需要立即排查。
 
-<a name="sec-8"></a>
+<a name="sec-8-1"></a>
 
 ### 8.1 检查时机
 
@@ -501,11 +512,15 @@ SRM 不是 A/A 与 A/B 之间的独立阶段，而是两类实验都必须执行
 
 Ramp-up 是逐步扩大 Treatment 流量的过程。
 
+在本流程文档中只保留 Ramp-up 的位置与决策边界；详细的放量分析方法见：
+
+[**Ramp-up**](./ramp-up.md)
+
 ```text
 1% → 5% → 10% → 25% → 50% → 100%
 ```
 
-<a name="sec-9"></a>
+<a name="sec-9-1"></a>
 
 ### 9.1 Ramp-up 的目的
 
@@ -515,7 +530,7 @@ Ramp-up 是逐步扩大 Treatment 流量的过程。
 - 提前发现边缘用户问题
 - 验证效果是否随流量扩大保持稳定
 
-<a name="sec-9"></a>
+<a name="sec-9-2"></a>
 
 ### 9.2 每次放量前的检查
 
@@ -528,7 +543,7 @@ Ramp-up 是逐步扩大 Treatment 流量的过程。
 | 分群结果 | 关键国家、设备和用户群无严重负向 |
 | 回滚能力 | 能够快速恢复旧策略 |
 
-<a name="sec-9"></a>
+<a name="sec-9-3"></a>
 
 ### 9.3 Ramp-up 不等于重新随机
 
@@ -568,7 +583,7 @@ Bucket 0–2499
 - 模型维护成本
 - 业务风险
 
-<a name="sec-10"></a>
+<a name="sec-10-1"></a>
 
 ### 10.1 Full Rollout 与 Holdout
 
@@ -606,7 +621,7 @@ New Model          = 98%
 Long-term Holdout  = 2%
 ```
 
-<a name="sec-11"></a>
+<a name="sec-11-1"></a>
 
 ### 11.1 Holdout 可以回答什么
 
@@ -617,7 +632,7 @@ Long-term Holdout  = 2%
 - 创作者生态是否受到影响
 - 多个已上线策略的累计效果是多少
 
-<a name="sec-11"></a>
+<a name="sec-11-2"></a>
 
 ### 11.2 Holdout 的适用场景
 
@@ -628,7 +643,7 @@ Long-term Holdout  = 2%
 - 多项策略叠加上线
 - 难以通过短期实验观测的指标
 
-<a name="sec-11"></a>
+<a name="sec-11-3"></a>
 
 ### 11.3 Holdout 的成本
 
@@ -662,38 +677,119 @@ Holdout 不是每个模型上线后的必选步骤。
 
 ## 13. 常见误区
 
-<a name="sec-13"></a>
+<a name="sec-13-1"></a>
 
 ### 13.1 每个 A/B Test 前都必须运行 A/A Test
 
 错误。A/A Test 主要验证实验平台，不是每个业务实验的固定步骤。
 
-<a name="sec-13"></a>
+<a name="sec-13-2"></a>
 
 ### 13.2 SRM 只需要在实验开始时检查一次
 
 错误。SRM 应在实验运行期间和每次流量调整后持续检查。
 
-<a name="sec-13"></a>
+<a name="sec-13-3"></a>
 
 ### 13.3 离线指标提升就可以直接上线
 
 错误。离线指标无法完整反映真实用户行为和长期生态影响。
 
-<a name="sec-13"></a>
+<a name="sec-13-4"></a>
 
 ### 13.4 Ramp-up 只是扩大流量
 
 不完整。每次扩大流量都应重新验证数据质量、系统稳定性和业务指标。
 
-<a name="sec-13"></a>
+<a name="sec-13-5"></a>
 
 ### 13.5 100% 上线后仍然天然存在 Control
 
 错误。除非平台单独保留长期 Holdout，否则全量上线后没有同期 Control。
 
-<a name="sec-13"></a>
+<a name="sec-13-6"></a>
 
 ### 13.6 所有实验都必须保留 Holdout
 
 错误。Holdout 适合长期、高影响和累计效应明显的策略，但会带来机会成本。
+
+---
+
+<a name="sec-14"></a>
+
+## 14. 各阶段的分析重点
+
+| 阶段 | 核心任务 | 主要输出 |
+|---|---|---|
+| Model Development | 明确业务问题与可检验假设 | Hypothesis / Success Criteria |
+| Offline Evaluation | 评估模型效果与可上线性 | Offline Readout |
+| Readiness Check | 确认指标、实验单位和数据链路 | Experiment Design |
+| A/A Testing | 验证实验平台与数据可信度 | Platform PASS / FAIL |
+| A/B Testing | 估计 Treatment Effect | Experiment Readout |
+| Ramp-up | 验证 Effect Stability 与风险 | Continue / Pause / Rollback |
+| Full Rollout | 确认生产指标稳定 | Launch Readout |
+| Holdout | 评估长期累计效果 | Long-term Impact |
+
+<a name="sec-14-1"></a>
+
+### 14.1 核心判断链路
+
+可以把整个生命周期压缩成六个问题：
+
+```text
+1. 我们到底想改善什么？
+2. 离线证据是否足够支持上线实验？
+3. 实验数据是否可信？
+4. Treatment 是否产生真实且有业务意义的增量？
+5. 流量扩大后收益和风险是否稳定？
+6. 长期用户和生态价值是否仍然成立？
+```
+
+这些问题分别对应：
+
+```text
+Metrics
+→ Offline Evaluation
+→ A/A / Data Quality
+→ A/B Testing
+→ Ramp-up
+→ Holdout / Post-launch Monitoring
+```
+
+<a name="sec-14-2"></a>
+
+### 14.2 生命周期不是机械流水线
+
+例如：
+
+```text
+A/B p-value < 0.05
+→ Ramp-up
+→ 100%
+```
+
+是不完整的。
+
+实际 Go / No-Go 决策还需要结合：
+
+- Effect Size
+- Confidence Interval
+- Guardrail Metrics
+- Segment Risk
+- Data Quality
+- System Health
+- Business Value
+- Long-term Risk
+
+最终决策需要把实验结果、数据质量、系统风险、业务价值和长期影响组合起来解释。
+
+---
+
+<a name="sec-15"></a>
+
+## 15. 关联文档
+
+- [Recommendation System Metrics](./metrics.md)
+- [A/A Testing](./aa-testing.md)
+- [A/B Testing](./ab-testing.md)
+- [Ramp-up](./ramp-up.md)
