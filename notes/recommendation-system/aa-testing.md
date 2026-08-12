@@ -19,15 +19,20 @@
 - [5. 异常排查](#sec-5)
 - [6. 推荐系统示例](#sec-6)
 - [7. 检查清单](#sec-7)
-  - [实验配置](#section-16)
-  - [数据质量](#section-17)
-  - [统计分析](#section-18)
+  - [7.1 实验配置](#sec-7-1)
+  - [7.2 数据质量](#sec-7-2)
+  - [7.3 统计分析](#sec-7-3)
 - [8. 常见误区](#sec-8)
   - [8.1 每个 A/B Test 前都必须运行 A/A Test](#sec-8-1)
   - [8.2 A/A Test 的所有指标都必须完全相同](#sec-8-2)
   - [8.3 A/A Test 不显著就证明平台没有问题](#sec-8-3)
   - [8.4 A/A Test 显著一定说明平台有 Bug](#sec-8-4)
   - [8.5 SRM 正常就代表实验完全可信](#sec-8-5)
+- [9. 分析与输出](#sec-9)
+  - [9.1 需要完成的验证](#sec-9-1)
+  - [9.2 异常排查顺序](#sec-9-2)
+  - [9.3 A/A Readout 建议](#sec-9-3)
+- [10. 关联文档](#sec-10)
 
 ---
 
@@ -52,6 +57,17 @@ Treatment: Existing Strategy A
 | 是否每次都需要 | 否 | 在线决策通常需要 |
 
 A/A Testing 不是每个 A/B Test 的固定前置步骤。成熟平台通常只在实验基础设施或关键数据链路发生变化时重新执行。
+
+A/A Testing 的重点不是判断业务指标有没有提升，而是验证随机化、日志、指标链路和统计校准是否足以支撑后续实验分析：
+
+```text
+Randomization 是否可信？
+Logging 是否可信？
+Metric Pipeline 是否可信？
+Statistical Calibration 是否可信？
+```
+
+只有这些基础链路可信，后续 A/B Test 的业务结论才有解释意义。
 
 ---
 
@@ -264,9 +280,9 @@ Relative Difference = +12.0%
 
 ## 7. 检查清单
 
-<a name="section-16"></a>
+<a name="sec-7-1"></a>
 
-### 实验配置
+### 7.1 实验配置
 
 - [ ] Control 和 Treatment 使用完全相同的策略
 - [ ] 实验单位与正式 A/B Test 一致
@@ -274,9 +290,9 @@ Relative Difference = +12.0%
 - [ ] 实验组互斥逻辑正确
 - [ ] 两组曝光资格一致
 
-<a name="section-17"></a>
+<a name="sec-7-2"></a>
 
-### 数据质量
+### 7.2 数据质量
 
 - [ ] 无 SRM
 - [ ] 用户不会跨组
@@ -284,9 +300,9 @@ Relative Difference = +12.0%
 - [ ] 指标计算口径一致
 - [ ] Dashboard 与离线查询结果一致
 
-<a name="section-18"></a>
+<a name="sec-7-3"></a>
 
-### 统计分析
+### 7.3 统计分析
 
 - [ ] 基线变量基本均衡
 - [ ] 指标差异围绕 0 波动
@@ -330,3 +346,101 @@ Relative Difference = +12.0%
 ### 8.5 SRM 正常就代表实验完全可信
 
 错误。SRM 无法发现埋点差异、指标口径错误、用户跨组和统计实现问题。
+
+---
+
+<a name="sec-9"></a>
+
+## 9. 分析与输出
+
+<a name="sec-9-1"></a>
+
+### 9.1 需要完成的验证
+
+A/A Testing 需要验证实验基础设施产生的数据是否足以支持后续实验结论。Hash Service、日志 SDK 和实验配置平台本身可以由不同系统负责，但最终都需要在同一实验链路中被验证。
+
+核心验证内容包括：
+
+- 定义 A/A Test 需要验证的 Data Quality Metrics
+- 检查 SRM、Cross-over 和样本覆盖
+- 比较 Control / Treatment 的基线分布
+- 验证曝光、点击、观看、转化等埋点是否一致
+- 对比 Dashboard、离线 SQL 和 Metric Table
+- 检查 Effect Difference 是否围绕 0 波动
+- 判断显著差异更像系统问题还是随机假阳性
+- 给出 `PASS / INVESTIGATE / FAIL` 的验证结论
+
+SDK、Hash Service 或 Kafka 的修复通常由对应系统完成；分析时需要把异常定位到合理的链路层级，并判断它是否会影响实验结论。
+
+<a name="sec-9-2"></a>
+
+### 9.2 异常排查顺序
+
+出现 A/A 指标异常时，可以按以下顺序分析：
+
+```text
+1. SRM
+   ↓
+2. Cross-over / Experiment Unit
+   ↓
+3. Logging Coverage
+   ↓
+4. Metric Definition / Aggregation
+   ↓
+5. Client / Server Version
+   ↓
+6. Statistical Noise / Multiple Testing
+```
+
+这是一条“先判断数据能不能信，再解释指标”的链路。
+
+例如：
+
+```text
+Control CTR   = 10.0%
+Treatment CTR = 11.1%
+```
+
+如果同时发现：
+
+```text
+Control Exposure Coverage   = 99%
+Treatment Exposure Coverage = 88%
+```
+
+此时不应该先讨论 CTR 的 p-value，而应该先判断曝光分母是否被系统性漏记。
+
+<a name="sec-9-3"></a>
+
+### 9.3 A/A Readout 建议
+
+A/A Test 最终可以形成一个简洁的 Readout：
+
+| 检查项 | 结果 | 结论 |
+|---|---|---|
+| SRM | PASS | 样本比例符合设计 |
+| Cross-over | PASS | 用户分组稳定 |
+| Logging Coverage | PASS | 两组日志覆盖一致 |
+| Baseline Balance | PASS | 无系统性基线偏差 |
+| Metric Validation | PASS | Dashboard 与离线结果一致 |
+| Statistical Calibration | PASS | 差异围绕 0 波动 |
+
+最终结论：
+
+```text
+Experiment Platform Status: PASS
+→ 可以使用该实验链路支持正式 A/B Testing
+```
+
+如果关键 Data Quality Check Fail，则不应继续使用业务指标证明平台“正常”。
+
+---
+
+<a name="sec-10"></a>
+
+## 10. 关联文档
+
+- [Online Experiment Lifecycle](./online-experiment-lifecycle.md)
+- [Recommendation System Metrics](./metrics.md)
+- [A/B Testing](./ab-testing.md)
+- [Ramp-up](./ramp-up.md)
