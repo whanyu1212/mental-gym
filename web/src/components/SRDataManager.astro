@@ -44,6 +44,7 @@
   import {
     activityCount,
     needsBackup,
+    progressRevision,
     readBackupSnapshot,
   } from "../scripts/backup-status";
   import { todayISO } from "../scripts/sr-scheduler";
@@ -68,11 +69,15 @@
         setTimeout(() => feedbackEl.classList.remove("visible"), 3000);
       };
 
-      const saveBackupSnapshot = (count: number) => {
+      const saveBackupSnapshot = (count: number, dataRevision: string) => {
         try {
           localStorage.setItem(
             BACKUP_SNAPSHOT_KEY,
-            JSON.stringify({ exportedAt: new Date().toISOString(), activityCount: count })
+            JSON.stringify({
+              exportedAt: new Date().toISOString(),
+              activityCount: count,
+              dataRevision,
+            })
           );
         } catch {
           // Browser storage can be unavailable without affecting exports.
@@ -92,6 +97,7 @@
           highlights.length,
           attempts.length
         );
+        const dataRevision = progressRevision(records, events, highlights, attempts);
 
         if (records.length === 0 && activity === 0) {
           summaryEl.textContent = "No progress data yet. Finish an attempt or rate a problem to start tracking.";
@@ -108,7 +114,7 @@
         } catch {
           snapshot = undefined;
         }
-        const showReminder = needsBackup(activity, snapshot);
+        const showReminder = needsBackup({ activityCount: activity, dataRevision }, snapshot);
         backupReminderEl.hidden = !showReminder;
         backupReminderEl.textContent = showReminder
           ? snapshot
@@ -145,7 +151,8 @@
         a.click();
         URL.revokeObjectURL(url);
         saveBackupSnapshot(
-          activityCount(records.length, events.length, highlights.length, attempts.length)
+          activityCount(records.length, events.length, highlights.length, attempts.length),
+          progressRevision(records, events, highlights, attempts)
         );
         showFeedback(
           `Exported ${records.length} records, ${events.length} review events, ${highlights.length} highlights, and ${attempts.length} attempts.`

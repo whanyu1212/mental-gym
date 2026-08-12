@@ -137,6 +137,7 @@ const {
     completeAttempt,
     elapsedSeconds,
     requestRecognitionSignal,
+    resumeAttempt,
     startAttempt,
     type AttemptSession,
   } from "../scripts/attempt-state";
@@ -249,7 +250,8 @@ const {
       });
 
       this.querySelector<HTMLButtonElement>("[data-return-attempt]")?.addEventListener("click", () => {
-        if (!this.session) return;
+        if (!this.session || !this.finishedAt) return;
+        this.session = resumeAttempt(this.session, this.finishedAt);
         this.finishedAt = undefined;
         renderTimer();
         this.timer = window.setInterval(renderTimer, 1000);

@@ -34,6 +34,18 @@ export function requestRecognitionSignal(session: AttemptSession): AttemptSessio
   return { ...session, signalRequested: true };
 }
 
+export function resumeAttempt(
+  session: AttemptSession,
+  pausedAt: Date,
+  resumedAt = new Date()
+): AttemptSession {
+  const pauseMs = Math.max(0, resumedAt.getTime() - pausedAt.getTime());
+  return {
+    ...session,
+    startedAt: new Date(session.startedAt.getTime() + pauseMs),
+  };
+}
+
 export function elapsedSeconds(session: AttemptSession, finishedAt = new Date()): number {
   return Math.max(0, Math.round((finishedAt.getTime() - session.startedAt.getTime()) / 1000));
 }
