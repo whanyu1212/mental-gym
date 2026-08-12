@@ -59,6 +59,14 @@
   - [13.6 幸存者偏差｜Survivorship Bias](#sec-13-6)
   - [13.7 辛普森悖论｜Simpson's Paradox](#sec-13-7)
   - [13.8 指标博弈｜Metric Gaming](#sec-13-8)
+- [14. 指标工作框架](#sec-14)
+  - [14.1 Metric Tree](#sec-14-1)
+  - [14.2 Primary Metric 选择原则](#sec-14-2)
+  - [14.3 Diagnostic Metrics 用来回答“为什么”](#sec-14-3)
+  - [14.4 Segment Analysis](#sec-14-4)
+  - [14.5 Metric Contract](#sec-14-5)
+- [15. 指标在实验生命周期中的使用](#sec-15)
+- [16. 关联文档](#sec-16)
 
 ---
 
@@ -1016,3 +1024,212 @@ GMV 上升但退款率同时上涨，并不一定代表真实商业价值提高�
 - 通过自动播放提高 Watch Time
 - 通过低价补贴提高 Orders，但降低 Profit
 - 通过高频通知提高 DAU，但增加长期流失
+
+---
+
+<a name="sec-14"></a>
+
+## 14. 指标工作框架
+
+指标体系不是“把所有能看的指标列出来”，而是建立一套能够支持模型诊断、在线实验和上线决策的 Metric Framework。
+
+<a name="sec-14-1"></a>
+
+### 14.1 Metric Tree
+
+推荐系统中的指标通常可以按以下层次组织：
+
+```text
+North Star / Long-term Value
+        ↓
+Primary Metric
+        ↓
+Secondary / Diagnostic Metrics
+        ↓
+Guardrail Metrics
+        ↓
+Data Quality Metrics
+```
+
+例如一个 Ranking Model 实验：
+
+```text
+长期目标
+User Retention / Long-term Consumption
+
+Primary
+Qualified Watch Time per User
+
+Secondary
+CTR
+QVR
+Completion Rate
+Sessions per User
+
+Guardrail
+Negative Feedback
+Content Diversity
+D1 Retention
+P95 Latency
+
+Data Quality
+Exposure Coverage
+Missing Log Rate
+SRM
+```
+
+不同层级指标承担不同决策作用，不能把所有指标都当作“成功指标”。
+
+<a name="sec-14-2"></a>
+
+### 14.2 Primary Metric 选择原则
+
+Primary Metric 应尽量满足：
+
+- 与业务目标直接相关
+- 对模型变化有合理敏感度
+- 定义稳定且可重复计算
+- 不容易被单一策略 Gaming
+- 能在合理实验周期内获得足够统计功效
+
+例如推荐系统只使用 CTR 作为 Primary Metric，可能鼓励模型优化点击吸引力，而不是消费质量。
+
+如果业务目标是深度消费，可以优先考虑：
+
+```text
+Qualified Watch Time per User
+Average Dwell Time
+Completion Rate
+Long-term Retention Proxy
+```
+
+<a name="sec-14-3"></a>
+
+### 14.3 Diagnostic Metrics 用来回答“为什么”
+
+Primary Metric 回答：
+
+```text
+发生了什么？
+```
+
+Diagnostic Metrics 用来回答：
+
+```text
+为什么发生？
+```
+
+例如：
+
+```text
+Watch Time +2.0%
+```
+
+可以继续拆解：
+
+```text
+Sessions per User +0.5%
+Videos per Session +0.8%
+Average Watch Time per Video +0.7%
+```
+
+这种分解比只报告一个 Overall Lift 更有解释力。
+
+<a name="sec-14-4"></a>
+
+### 14.4 Segment Analysis
+
+推荐系统中的平均效果可能掩盖用户异质性。
+
+常见 Segment：
+
+- New / Existing Users
+- Light / Medium / Heavy Users
+- Android / iOS
+- High-end / Low-end Device
+- Country / Market
+- Language
+- Content Category
+- Creator Tier
+- User Interest Cluster
+
+例如：
+
+```text
+Overall Watch Time +1.8%
+New Users          +4.2%
+Heavy Users        +2.1%
+Low-end Device     -5.5%
+```
+
+此时不能只根据 Overall Metric 得出“全量上线”的结论。
+
+Segment Analysis 应优先服务于：
+
+- 风险识别
+- 异质性解释
+- 后续模型迭代
+
+而不是在大量分群中寻找偶然显著结果。
+
+<a name="sec-14-5"></a>
+
+### 14.5 Metric Contract
+
+关键指标建议形成稳定的 Metric Contract，至少明确：
+
+| 项目 | 示例 |
+|---|---|
+| Metric Name | Qualified Watch Time per User |
+| Unit | User |
+| Numerator | Total Qualified Watch Time |
+| Denominator | Eligible Active Users |
+| Aggregation | User-level Mean |
+| Window | Daily / 7-day |
+| Filters | Bot、内部流量、异常播放排除 |
+| Attribution | Same-day |
+| Data Delay | T+1 Complete |
+| Owner | Metric Owner / Team |
+
+这样可以减少不同实验、Dashboard 和 SQL 之间的口径漂移。
+
+---
+
+<a name="sec-15"></a>
+
+## 15. 指标在实验生命周期中的使用
+
+| 阶段 | 主要关注的指标 |
+|---|---|
+| Offline Evaluation | AUC、NDCG、Recall、Calibration、Coverage、Diversity |
+| A/A Testing | SRM、Logging Coverage、Baseline Balance、Metric Consistency |
+| A/B Testing | Primary、Secondary、Guardrail、Confidence Interval |
+| Ramp-up | Effect Stability、Guardrail、Segment、Data Quality、Distribution |
+| Full Rollout | Post-launch KPI、System Health、Regression Monitoring |
+| Long-term Holdout | Retention、Creator Ecosystem、Long-term Value |
+
+同一个指标在不同阶段可能承担不同角色。
+
+例如 P95 Latency：
+
+```text
+Offline
+→ 工程可行性检查
+
+A/B
+→ Guardrail Metric
+
+Ramp-up
+→ 大流量 System Risk Indicator
+```
+
+---
+
+<a name="sec-16"></a>
+
+## 16. 关联文档
+
+- [Online Experiment Lifecycle](./online-experiment-lifecycle.md)
+- [A/A Testing](./aa-testing.md)
+- [A/B Testing](./ab-testing.md)
+- [Ramp-up](./ramp-up.md)
