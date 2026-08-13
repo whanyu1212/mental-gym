@@ -1578,6 +1578,8 @@ Ramp-up 过程中应理解以下工程能力为什么重要：
 
 ## 17. 关联文档
 
+- [E-commerce Recommendation Context](./ecommerce-recommendation-context.md)
+- [Recommendation System Pipeline](./recommendation-system-pipeline.md)
 - [Online Experiment Lifecycle](./online-experiment-lifecycle.md)
 - [Recommendation System Metrics](./metrics.md)
 - [A/B Testing](./ab-testing.md)
