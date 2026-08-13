@@ -512,12 +512,46 @@ SRM 不是 A/A 与 A/B 之间的独立阶段，而是两类实验都必须执行
 
 Ramp-up 是逐步扩大 Treatment 流量的过程。
 
-在本流程文档中只保留 Ramp-up 的位置与决策边界；详细的放量分析方法见：
-
-[**Ramp-up**](./ramp-up.md)
-
 ```text
 1% → 5% → 10% → 25% → 50% → 100%
+```
+
+每个流量阶段都使用相同的判断顺序：
+
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 55,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    START["进入当前 Ramp-up Stage"] --> SRM{"① SRM 与数据质量<br/>是否正常？"}
+
+    SRM -->|FAIL| PAUSE1["暂停放量并排查"]
+    SRM -->|PASS| SYSTEM{"② Latency、Error Rate 与<br/>系统容量是否正常？"}
+
+    SYSTEM -->|FAIL| ROLLBACK["Pause 或 Rollback"]
+    SYSTEM -->|PASS| EFFECT["③ 检查 Effect Size、Guardrail、<br/>关键 Segment 与分布变化"]
+
+    EFFECT --> GATE{"满足当前 Stage<br/>放量门槛？"}
+    GATE -->|否，可修复| PAUSE2["Pause：保持当前流量并继续观察"]
+    GATE -->|否，风险明确| ROLLBACK
+    GATE -->|是，未到目标流量| NEXT["进入下一流量阶段"]
+    GATE -->|是，已到目标流量| FULL["进入 Full Rollout 决策"]
+
+    NEXT -.下一阶段重复检查.-> START
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class SRM,SYSTEM,GATE decision;
+    class PAUSE1,PAUSE2,ROLLBACK stop;
+    class NEXT,FULL success;
 ```
 
 <a name="sec-9-1"></a>
@@ -560,6 +594,8 @@ Bucket 0–2499
 
 稳定的 Hash Bucketing 可以保留原有 Treatment 用户，并加入新的 Bucket。
 
+更完整的指标设计、阶段 Readout 和回滚方法见 [Ramp-up](./ramp-up.md)。
+
 ---
 
 <a name="sec-10"></a>
@@ -567,6 +603,40 @@ Bucket 0–2499
 ## 10. Full Rollout
 
 当实验结果、系统性能和 Guardrail Metrics 均满足要求后，新模型可以成为默认生产策略。
+
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 55,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    START["完成目标 Ramp-up Stage"] --> EVIDENCE{"① 实验收益与置信区间<br/>是否满足上线标准？"}
+
+    EVIDENCE -->|否| ITERATE["继续迭代或停止上线"]
+    EVIDENCE -->|是| SAFETY{"② Guardrail、Segment 与<br/>系统性能是否稳定？"}
+
+    SAFETY -->|否| PAUSE["Pause 或 Rollback"]
+    SAFETY -->|是| READY{"③ 监控、Owner、回滚方案与<br/>维护成本是否可接受？"}
+
+    READY -->|否| PREPARE["补齐上线准备"]
+    READY -->|是| HOLDOUT{"是否需要长期 Holdout？"}
+
+    HOLDOUT -->|是| ROLLOUT1["生产流量上线<br/>保留独立 Holdout"]
+    HOLDOUT -->|否| ROLLOUT2["生产流量全量上线"]
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class EVIDENCE,SAFETY,READY,HOLDOUT decision;
+    class ITERATE,PAUSE,PREPARE stop;
+    class ROLLOUT1,ROLLOUT2 success;
+```
 
 通常所说的“100% 上线”是指：
 
@@ -619,6 +689,41 @@ Holdout 是长期保留旧策略或基础策略的一小部分用户，用于衡
 ```text
 New Model          = 98%
 Long-term Holdout  = 2%
+```
+
+```mermaid
+%%{init: {
+  "theme": "neutral",
+  "flowchart": {
+    "curve": "linear",
+    "nodeSpacing": 55,
+    "rankSpacing": 60,
+    "htmlLabels": true
+  }
+}}%%
+flowchart TB
+    START["提出长期测量问题"] --> VALUE{"① 长期因果测量的价值<br/>是否高于机会成本？"}
+
+    VALUE -->|否| NOHOLD["不设置长期 Holdout"]
+    VALUE -->|是| DESIGN["② 定义人群、比例、周期、<br/>指标与污染控制"]
+
+    DESIGN --> VALID{"③ 随机化、SRM 与<br/>跨组污染是否可控？"}
+    VALID -->|否| REDESIGN["重新设计或停止 Holdout"]
+    VALID -->|是| RUN["运行并持续监控"]
+
+    RUN --> READOUT["④ 分析累计效应、滞后效应<br/>与长期 Guardrail"]
+    READOUT --> DECIDE{"继续保留的价值<br/>是否仍高于成本？"}
+
+    DECIDE -->|是| RUN
+    DECIDE -->|否| CLOSE["结束 Holdout 并记录结论"]
+
+    classDef decision fill:#ffffff,stroke:#333333,stroke-width:1.5px;
+    classDef stop fill:#fff4f4,stroke:#a61b1b,stroke-width:1.5px;
+    classDef success fill:#f3faf3,stroke:#2f6b2f,stroke-width:1.5px;
+
+    class VALUE,VALID,DECIDE decision;
+    class NOHOLD,REDESIGN stop;
+    class RUN,READOUT,CLOSE success;
 ```
 
 <a name="sec-11-1"></a>
@@ -789,6 +894,8 @@ A/B p-value < 0.05
 
 ## 15. 关联文档
 
+- [E-commerce Recommendation Context](./ecommerce-recommendation-context.md)
+- [Recommendation System Pipeline](./recommendation-system-pipeline.md)
 - [Recommendation System Metrics](./metrics.md)
 - [A/A Testing](./aa-testing.md)
 - [A/B Testing](./ab-testing.md)
