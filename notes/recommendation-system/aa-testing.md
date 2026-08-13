@@ -440,6 +440,8 @@ Experiment Platform Status: PASS
 
 ## 10. 关联文档
 
+- [E-commerce Recommendation Context](./ecommerce-recommendation-context.md)
+- [Recommendation System Pipeline](./recommendation-system-pipeline.md)
 - [Online Experiment Lifecycle](./online-experiment-lifecycle.md)
 - [Recommendation System Metrics](./metrics.md)
 - [A/B Testing](./ab-testing.md)
