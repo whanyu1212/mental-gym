@@ -244,8 +244,6 @@ Bucket 1,000–9,999 → Not in Experiment，90%
 错误示例：
 
 ```python
-import random
-
 group = random.choice(["control", "treatment"])
 ```
 
@@ -367,11 +365,6 @@ Salt 的作用不是加密，而是让不同实验拥有独立的随机映射。
 下面的示例只依赖 Python 标准库，适合知识库演示和原型验证。
 
 ```python
-from __future__ import annotations
-
-import hashlib
-from dataclasses import dataclass
-
 @dataclass(frozen=True)
 class ExperimentConfig:
     experiment_id: str
@@ -429,8 +422,6 @@ print(bucket)
 ### 5.2 根据 Bucket 分配实验组
 
 ```python
-from dataclasses import dataclass
-
 @dataclass(frozen=True)
 class TrafficRange:
     group_name: str
@@ -701,10 +692,6 @@ Treatment = 46%
 ### 8.2 SRM 检查代码
 
 ```python
-from __future__ import annotations
-
-from scipy.stats import chisquare
-
 def check_srm(
     observed_counts: list[int],
     expected_ratios: list[float],
@@ -893,9 +880,6 @@ Relative Lift
 以下示例适用于 CTR、CVR、Retention 等比例指标。
 
 ```python
-from statsmodels.stats.power import NormalIndPower
-from statsmodels.stats.proportion import proportion_effectsize
-
 def sample_size_for_two_proportions(
     baseline_rate: float,
     treatment_rate: float,
@@ -1019,10 +1003,6 @@ print(control_n)
 ### 10.2 两比例检验代码
 
 ```python
-from __future__ import annotations
-
-from statsmodels.stats.proportion import proportions_ztest
-
 def compare_two_rates(
     control_successes: int,
     control_total: int,
@@ -1687,11 +1667,6 @@ Do not roll out.
 下面是一个简化的用户级实验分析示例。
 
 ```python
-from __future__ import annotations
-
-import pandas as pd
-from scipy.stats import ttest_ind
-
 REQUIRED_COLUMNS = {
     "user_id",
     "experiment_group",
