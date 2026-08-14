@@ -2072,8 +2072,73 @@ export const guides = {
 			{ kind: "trap", input: "nums = [1,1,1,1]", expected: "k = 1; nums[:1] = [1]", note: "A whole duplicate run must not advance the write pointer." },
 		],
 		followUps: [
-			"Keep at most two copies of each value: how do you decide whether the current read value is allowed?",
+			"Keep at most two copies of each value: how do you decide whether the current read value is allowed? See #80.",
 			"Remove a chosen value rather than duplicates. What does the write-pointer invariant become?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"80-remove-duplicates-from-sorted-array-ii": {
+		slug: "80-remove-duplicates-from-sorted-array-ii",
+		pattern: "Read/write two pointers, keep at most two copies",
+		recognitionSignals: [
+			"sorted array, modify in place, return the compacted prefix length",
+			"each value may appear at most twice, not once",
+			"O(1) extra space — the input is also the output buffer",
+		],
+		dissection:
+			"Keep at most two copies of each value at the front of nums. A read pointer scans every candidate; a write pointer marks the next keep-slot. Write the candidate only when it would not become a third copy of the prefix already accepted.",
+		intuition:
+			"This is the same read/write compaction as #26, with the keep rule relaxed from 1 to 2. l is the next keep-slot; nums[:l] is already a legal answer. When a value is rejected, l stays put — that slot is now a hole, not a swap partner. The next keeper is copied into the waiting l. Sorted order makes the third-copy test a single comparison against the value two accepted slots behind: nums[r] != nums[l - 2].",
+		invariant:
+			"After each read, nums[:l] is the correct compaction of nums[:r+1] — sorted, at most two of each value. Values from l onward may be holes or unread input and do not matter.",
+		bruteForce: {
+			approach:
+				"Count each equal-value run, then delete extras beyond the second copy by shifting the remaining suffix left.",
+			complexity: {
+				time: "O(n²)",
+				space: "O(1)",
+				note: "A long run of extras repeatedly shifts O(n) remaining elements.",
+			},
+		},
+		constraintReasoning:
+			"n reaches 3·10⁴, so deleting extras with suffix shifts is quadratic and risks TLE. A single read/write pass inspects each entry once and writes only when the compacted prefix grows.",
+		approachSteps: [
+			"Set l = 0 as the next keep-slot.",
+			"Scan every index r.",
+			"If l < 2, the first two values are always legal — write nums[r] at l and increment l. The l < 2 check must come first so Python never evaluates nums[l - 2] as nums[-2].",
+			"Otherwise write iff nums[r] != nums[l - 2]: that comparison asks whether the candidate would be a third copy of the already-accepted prefix.",
+			"Return l. Unlike #26, l is already a length (the next open index), not the last-written index.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "One pass; the input array doubles as the output buffer." },
+		pitfalls: [
+			"Evaluating nums[l - 2] before guarding with l < 2. In Python that silently reads nums[-2] from the tail instead of raising IndexError.",
+			"Comparing against nums[r - 2] instead of nums[l - 2]. r still sits in the dirty suffix; only l indexes the compacted prefix.",
+			"Returning l + 1. In #26, slow is a last-written index so you add 1. Here l is already the compacted length.",
+			"Treating a stalled l as a swap. Rejecting a value parks l on a hole; the next keeper overwrites that hole. The old nums[l] is already either kept earlier or a discarded extra.",
+		],
+		testCases: [
+			{
+				kind: "canonical",
+				input: "nums = [1,1,1,2,2,3]",
+				expected: "k = 5; nums[:5] = [1,1,2,2,3]",
+				note: "The third 1 is skipped; l stays on that hole and the next keeper (2) is copied there.",
+			},
+			{
+				kind: "boundary",
+				input: "nums = [1,1]",
+				expected: "k = 2; nums[:2] = [1,1]",
+				note: "Both values are kept by the l < 2 base case; the l - 2 comparison never runs.",
+			},
+			{
+				kind: "trap",
+				input: "nums = [1,1,1,1]",
+				expected: "k = 2; nums[:2] = [1,1]",
+				note: "After two writes, every later 1 equals nums[l - 2], so l never moves again.",
+			},
+		],
+		followUps: [
+			"Generalize to at most k copies: what do you compare against, and what is the base-case guard?",
+			"How does this keep rule differ from #26 (keep 1) and from removing a chosen value (#27)?",
 		],
 		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
 	},

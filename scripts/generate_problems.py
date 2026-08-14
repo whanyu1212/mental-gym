@@ -72,6 +72,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "trap": "trapping-rain-water",
     "min_stack": "min-stack",
     "remove_duplicate": "remove-duplicates-from-sorted-array",
+    "remove_duplicates_ii": "remove-duplicates-from-sorted-array-ii",
 }
 
 

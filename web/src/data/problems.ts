@@ -4319,6 +4319,118 @@ end`,
     sourceUrl: "https://leetcode.com/problems/trapping-rain-water/",
   },
   {
+    id: "80",
+    slug: "80-remove-duplicates-from-sorted-array-ii",
+    leetcodeSlug: "remove-duplicates-from-sorted-array-ii",
+    title: "Remove Duplicates from Sorted Array II",
+    difficulty: "Medium",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers"],
+    description: `<p>Given an integer array <code>nums</code> sorted in <strong>non-decreasing order</strong>, remove some duplicates <a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank"><strong>in-place</strong></a> such that each unique element appears <strong>at most twice</strong>. The <strong>relative order</strong> of the elements should be kept the <strong>same</strong>.</p>
+
+<p>Since it is impossible to change the length of the array in some languages, you must instead have the result be placed in the <strong>first part</strong> of the array <code>nums</code>. More formally, if there are <code>k</code> elements after removing the duplicates, then the first <code>k</code> elements of <code>nums</code>&nbsp;should hold the final result. It does not matter what you leave beyond the first&nbsp;<code>k</code>&nbsp;elements.</p>
+
+<p>Return <code>k</code><em> after placing the final result in the first </em><code>k</code><em> slots of </em><code>nums</code>.</p>
+
+<p>Do <strong>not</strong> allocate extra space for another array. You must do this by <strong>modifying the input array <a href="https://en.wikipedia.org/wiki/In-place_algorithm" target="_blank">in-place</a></strong> with O(1) extra memory.</p>
+
+<p><strong>Custom Judge:</strong></p>
+
+<p>The judge will test your solution with the following code:</p>
+
+<pre>
+int[] nums = [...]; // Input array
+int[] expectedNums = [...]; // The expected answer with correct length
+
+int k = removeDuplicates(nums); // Calls your implementation
+
+assert k == expectedNums.length;
+for (int i = 0; i &lt; k; i++) {
+    assert nums[i] == expectedNums[i];
+}
+</pre>
+
+<p>If all assertions pass, then your solution will be <strong>accepted</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,1,1,2,2,3]
+<strong>Output:</strong> 5, nums = [1,1,2,2,3,_]
+<strong>Explanation:</strong> Your function should return k = 5, with the first five elements of nums being 1, 1, 2, 2 and 3 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [0,0,1,1,1,1,2,3,3]
+<strong>Output:</strong> 7, nums = [0,0,1,1,2,3,3,_,_]
+<strong>Explanation:</strong> Your function should return k = 7, with the first seven elements of nums being 0, 0, 1, 1, 2, 3 and 3 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 3 * 10<sup>4</sup></code></li>
+	<li><code>-10<sup>4</sup> &lt;= nums[i] &lt;= 10<sup>4</sup></code></li>
+	<li><code>nums</code> is sorted in <strong>non-decreasing</strong> order.</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def removeDuplicates(self, nums: List[int]) -> int:
+        """
+        Keep at most two copies of each value in sorted \`\`nums\`\` in
+        place.
+
+        Return \`\`k\`\` such that \`\`nums[:k]\`\` is the compacted result. The order
+        of the kept values must remain sorted.
+        """
+        # \`\`write\`\` is the next keep-slot. \`\`nums[:write]\`\` is already a legal
+        # answer. \`\`read\`\` scans every candidate.
+        #
+        # Not a swap. When a value is rejected, \`\`write\`\` stays put — that
+        # slot is now a hole. The next keeper is copied into the waiting
+        # \`\`write\`\`.
+        #
+        #   skip extra  →  write stays  →  hole
+        #   keep next   →  nums[write] = nums[read]  →  write moves
+        #
+        # Write \`\`nums[read]\`\` at \`\`write\`\` iff it would not be a third copy
+        # of the prefix we have already accepted. Sorted input makes that
+        # test \`\`nums[read] != nums[write - 2]\`\`.
+        #
+        # \`\`write < 2\`\` short-circuits so \`\`nums[write - 2]\`\` is never
+        # evaluated while \`\`write\`\` is 0 or 1 (Python would silently read
+        # \`\`nums[-2]\`\`).
+        #
+        # Invariant: after each \`\`read\`\`, \`\`nums[:write]\`\` is the correct
+        # compaction of \`\`nums[:read + 1]\`\` — sorted, at most two of each
+        # value.
+        #
+        # Example: nums = [1, 1, 1, 2]
+        #   read=0,1  write<2         keep both 1s     prefix [1, 1], write=2
+        #   read=2    nums[0] == 1    skip 3rd 1       write stays on the hole
+        #   read=3    nums[0] != 2    copy 2 into write
+        #                             prefix [1, 1, 2], write=3
+        write = 0
+        for read in range(len(nums)):
+            if write < 2 or nums[read] != nums[write - 2]:
+                nums[write] = nums[read]
+                write += 1
+        return write`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/",
+  },
+  {
     id: "88",
     slug: "88-merge-sorted-array",
     leetcodeSlug: "merge-sorted-array",
