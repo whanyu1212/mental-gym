@@ -72,11 +72,12 @@ This order builds one idea at a time. Do not skip to 3Sum or Trapping Rain Water
 | 4 | [Two Sum II](../../algorithms/167-two-sum-ii-input-array-is-sorted) | Use sorted order to eliminate an endpoint |
 | 5 | [Container With Most Water](../../algorithms/11-container-with-most-water) | Prove a greedy endpoint move |
 | 6 | [Remove Duplicates from Sorted Array](../../algorithms/26-remove-duplicates-from-sorted-array) | Build an answer in the input prefix |
-| 7 | [Merge Strings Alternately](../../algorithms/1768-merge-strings-alternately) | Coordinate one pointer per input |
-| 8 | [Merge Sorted Array](../../algorithms/88-merge-sorted-array) | Write backward to protect unread values |
-| 9 | [3Sum](../../algorithms/15-3sum) | Reduce K-sum to a sorted pair search |
-| 10 | [4Sum](../../algorithms/18-4sum) | Add an anchor without changing the inner proof |
-| 11 | [Trapping Rain Water](../../algorithms/42-trapping-rain-water) | Settle a side using maintained state |
+| 7 | [Remove Duplicates from Sorted Array II](../../algorithms/80-remove-duplicates-from-sorted-array-ii) | Change only the keep rule: at most two copies |
+| 8 | [Merge Strings Alternately](../../algorithms/1768-merge-strings-alternately) | Coordinate one pointer per input |
+| 9 | [Merge Sorted Array](../../algorithms/88-merge-sorted-array) | Write backward to protect unread values |
+| 10 | [3Sum](../../algorithms/15-3sum) | Reduce K-sum to a sorted pair search |
+| 11 | [4Sum](../../algorithms/18-4sum) | Add an anchor without changing the inner proof |
+| 12 | [Trapping Rain Water](../../algorithms/42-trapping-rain-water) | Settle a side using maintained state |
 
 ---
 
@@ -366,11 +367,16 @@ if write < k or nums[read] != nums[write - k]:
 
 For `k = 2`, comparing against the value two accepted positions behind prevents a third copy from entering the finished prefix.
 
+### Deepen: At Most Two Copies
+
+[Remove Duplicates from Sorted Array II](../../algorithms/80-remove-duplicates-from-sorted-array-ii) is that `k = 2` rule as its own problem. The write pointer still marks the next keep-slot. Rejecting a third copy does not swap anything: `write` parks on a hole, and the next keeper is copied there. Guard `write < 2` before reading `nums[write - 2]` — in Python an unguarded index would silently become `nums[-2]`.
+
 ### Check Yourself
 
 - Why compare `nums[read]` with `nums[write - 1]` instead of `nums[read - 1]`?
 - What does the caller use after the function returns?
 - Why are values after `write` allowed to be anything?
+- For at most two copies, why must `write < 2` be checked before `nums[write - 2]`?
 
 ---
 
