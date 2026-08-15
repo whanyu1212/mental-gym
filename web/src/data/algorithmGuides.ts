@@ -2186,6 +2186,96 @@ export const guides = {
 		],
 		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
 	},
+	"189-rotate-array": {
+		slug: "189-rotate-array",
+		pattern: "Three-step sequence reversal (Algebraic Monoid Anti-automorphism)",
+		recognitionSignals: [
+			"rotate array right by k steps in-place with O(1) extra space",
+			"cyclic shift of blocks: XY -> YX",
+			"in-place requirement forbids auxiliary buffer copy",
+		],
+		dissection:
+			"Rotating the array right by k positions moves the suffix of length k (Y) to the front and the prefix of length n-k (X) to the back. Reversing the entire array places the two blocks into their target relative positions (Y^R X^R), and subsequent local reversals of the first k elements and the remaining n-k elements restore the internal ordering to produce YX.",
+		intuition:
+			"Sequence reversal acts like the matrix transpose: (XY)^R = Y^R X^R. Flipping the whole container swaps the two segments, but inverts each segment's contents. Applying two targeted sub-reversals cancels the local inversions via the involution property ((A^R)^R = A), achieving in-place rotation in O(n) time and O(1) space.",
+		invariant:
+			"After full reversal, the suffix block occupies index range [0, k-1] (inverted) and the prefix block occupies [k, n-1] (inverted). Each sub-reversal restores a block to its forward orientation.",
+		bruteForce: {
+			approach:
+				"Rotate by 1 step k times, shifting all n elements to the right on each step.",
+			complexity: { time: "O(n * k)", space: "O(1)", note: "Shifting the entire array k times is too slow for large inputs." },
+		},
+		constraintReasoning:
+			"Allocating a helper array makes rotation trivial in O(n) time and O(n) space, but the follow-up strictly demands O(1) auxiliary space. The three-reversal trick provides the optimal balance of O(n) time and O(1) memory without cyclic jump book-keeping.",
+		approachSteps: [
+			"Normalize k = k % n to handle rotations where k >= n.",
+			"Reverse the entire array from index 0 to n - 1.",
+			"Reverse the first k elements from index 0 to k - 1.",
+			"Reverse the remaining n - k elements from index k to n - 1.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "Each element is visited and swapped at most twice." },
+		pitfalls: [
+			"Forgetting to normalize k with k %= len(nums), which causes IndexError when k > n.",
+			"Reversing ranges with wrong endpoints (e.g. index k instead of k - 1 for the first block).",
+			"Assuming k is strictly less than array length.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,2,3,4,5,6,7], k = 3", expected: "[5,6,7,1,2,3,4]", note: "Suffix [5,6,7] shifts to front, prefix [1,2,3,4] shifts to back." },
+			{ kind: "boundary", input: "nums = [1,2], k = 3", expected: "[2,1]", note: "k > n: k % 2 = 1, so effective rotation is 1 step." },
+			{ kind: "trap", input: "nums = [1,2,3], k = 0", expected: "[1,2,3]", note: "k = 0 is an identity no-op rotation." },
+		],
+		followUps: [
+			"How does the cyclic replacement (juggling algorithm) achieve the same in O(1) space using gcd(n, k)?",
+			"How do you rotate left by k steps instead of right using reversal?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"881-boats-to-save-people": {
+		slug: "881-boats-to-save-people",
+		pattern: "Greedy + Two Pointers (Extreme-ends pairing)",
+		recognitionSignals: [
+			"minimize number of containers/boats with fixed capacity and max 2 items",
+			"pairing elements subject to a sum constraint",
+			"sorting allows pairing the heaviest with the lightest available",
+		],
+		dissection:
+			"Each boat carries at most 2 people and has a weight limit. The heaviest person currently waiting must get on a boat; to minimize boats, pair them with the lightest person if their sum fits within the limit. Otherwise, the heaviest person must ride alone.",
+		intuition:
+			"The heaviest person is the hardest constraint to satisfy. If they cannot share a boat with the lightest person available, they cannot share with anyone, so they must ride solo. If they can share with the lightest person, doing so is always optimal because it preserves lighter spots for heavier remaining people.",
+		invariant:
+			"At each iteration, people with indices > right have been assigned to boats, and people with indices < left have been paired. The person at `right` is always assigned to the current boat.",
+		bruteForce: {
+			approach:
+				"Try all pairwise combinations of people and count minimum valid boat configurations.",
+			complexity: { time: "Exponential / O(2^n)", space: "O(n)", note: "Combinatorial search is infeasible for n up to 50,000." },
+		},
+		constraintReasoning:
+			"With n up to 50,000, an O(n log n) sorting step followed by a linear O(n) two-pointer sweep easily runs within limits while providing guaranteed optimal pairing.",
+		approachSteps: [
+			"Sort people array in ascending order.",
+			"Initialize `left = 0` (lightest) and `right = len(people) - 1` (heaviest).",
+			"While left <= right, check if people[left] + people[right] <= limit.",
+			"If sum <= limit, advance `left += 1` to pair the lightest person.",
+			"Always decrement `right -= 1` because the heaviest person takes this boat.",
+			"Increment the boat count and repeat until all people are accommodated.",
+		],
+		complexity: { time: "O(n log n)", space: "O(1)", note: "Sorting dominates the time complexity; auxiliary space is O(1) (or O(n) for sort)." },
+		pitfalls: [
+			"Forgetting that a boat can hold AT MOST 2 people (not arbitrarily many within the weight limit).",
+			"Using `<` instead of `<=` in the while condition, stranding the final middle person.",
+			"Trying to pair the two lightest people together instead of the heaviest with the lightest.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "people = [3,2,2,1], limit = 3", expected: "3", note: "Pairs: (1,2), (2), (3) = 3 boats." },
+			{ kind: "boundary", input: "people = [1,2], limit = 3", expected: "1", note: "1 + 2 = 3 <= 3 fits in a single boat." },
+			{ kind: "trap", input: "people = [3,5,3,4], limit = 5", expected: "4", note: "None can be paired because smallest sum 3+3=6 > 5; all 4 ride solo." },
+		],
+		followUps: [
+			"What if boats could hold up to 3 people or unlimited people? (Reduces to Bin Packing NP-hard problem).",
+			"Can this be solved in O(n + limit) time using counting sort if limit is small?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
 } satisfies AlgorithmGuides;
 
 export function getGuide(slug: string): AlgorithmGuide | undefined {
