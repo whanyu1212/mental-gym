@@ -1,0 +1,15 @@
+{
+  "name": "mental-gym",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript ports of LeetCode solutions. Separate from web/, which is the Astro site.",
+  "scripts": {
+    "leetcode": "bun",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "typescript": "^7.0.2"
+  }
+}

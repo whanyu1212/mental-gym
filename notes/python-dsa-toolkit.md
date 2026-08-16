@@ -219,7 +219,7 @@ The helper is not the algorithm. Use this table to jump from a Python tool to th
 |---|---|---|
 | Unweighted shortest path | `deque` | BFS |
 | Weighted shortest path, non-negative edges | `heapq` | Dijkstra |
-| Sliding-window maximum/minimum | `deque` | Monotonic queue |
+| Sliding-window maximum/minimum | `deque` | [Sliding Window](../sliding_window/) (monotonic queue) |
 | Pair search in sorted input | indices and `enumerate` | [Two Pointers](../two_pointers/) |
 | Frequency or complement lookup | `dict`, `set`, `Counter` | [Arrays & Hashing](../arrays_and_hashing/) |
 | Connectivity under edge additions | no direct stdlib tool | Union-Find / DSU |
@@ -231,5 +231,6 @@ The helper is not the algorithm. Use this table to jump from a Python tool to th
 
 - [Python Standard Library for DSA](../python_builtins_for_leetcode/) — complete APIs and module behavior
 - [Python Big O Cheatsheet](../python-big-o-cheatsheet/) — operation and data-structure costs
+- [TypeScript DSA Quick Reference](../typescript-dsa-toolkit/) — the same job when solving in TypeScript
 - [Two Pointers](../two_pointers/) — invariants and pointer-movement families
 - [Arrays & Hashing](../arrays_and_hashing/) — lookup, counting, grouping, and canonical-key patterns

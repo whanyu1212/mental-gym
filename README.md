@@ -20,7 +20,7 @@ Most problems are solved with an explicit invariant and complexity justification
 
 | Area | Scope | Where |
 | --- | --- | --- |
-| DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution; 16 also have a Julia port | `src/leetcode/` |
+| DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution; 16 also have a Julia port; TypeScript ports start from the repo-root Bun project | `src/leetcode/` |
 | Competitive programming (Kattis) | 27 unique solved problems (26 Python, 1 Julia-only), 10 with pytest coverage in CI | `src/kattis/`, `tests/kattis/` |
 | ML from scratch | A NumPy-only logistic regression implementation (vectorized forward pass, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
@@ -78,6 +78,13 @@ poetry run python scripts/generate_problems.py
 ```
 
 **Julia solutions and tests** run via `julia --project=.`; see `Project.toml`.
+
+**TypeScript LeetCode ports** (repo root, separate from `web/`):
+
+```bash
+bun install
+bun src/leetcode/sliding_window/contains_duplicate_2.ts
+```
 
 ## CI
 
