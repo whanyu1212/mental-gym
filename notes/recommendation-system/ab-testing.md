@@ -44,6 +44,7 @@
   - [10.6 中途查看与提前停止｜Peeking and Early Stopping](#sec-10-6)
   - [10.7 方差降低｜Variance Reduction](#sec-10-7)
   - [10.8 异质性处理效应｜Heterogeneous Treatment Effects](#sec-10-8)
+  - [10.9 Cluster Bootstrap｜聚类自助法](#sec-10-9)
 - [11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs](#sec-11)
   - [11.1 常见解决方案](#sec-11-1)
   - [11.2 Switchback Experiment](#sec-11-2)
@@ -1267,6 +1268,221 @@ Low-end Device     -5.0%
 - 将探索性发现用于下一轮实验验证
 
 Segment Analysis 的主要价值是发现风险和理解机制，而不是寻找更多“显著结果”。
+
+---
+
+<a name="sec-10-9"></a>
+
+### 10.9 Cluster Bootstrap｜聚类自助法
+
+#### 为什么普通 Bootstrap 可能错误
+
+推荐与电商实验经常按用户随机化，但原始数据可能是一行一次曝光、Session 或订单：
+
+```text
+User A → 20 Sessions → 300 Impressions → 4 Orders
+User B →  2 Sessions →  15 Impressions → 0 Orders
+```
+
+同一用户内部的观测共享兴趣、活跃度、设备和购买能力，因此并非相互独立。如果直接对事件行进行 Ordinary Bootstrap，相当于假设每次曝光都是一个独立实验单位，通常会：
+
+- 低估 Standard Error；
+- 产生过窄的 Confidence Interval；
+- 增加 False Positive Risk；
+- 让高活跃用户的重复行为看起来像更多独立样本。
+
+Cluster Bootstrap 的核心原则是：
+
+> 按独立的随机化单位进行有放回重采样，并保留同一单位内部的全部相关观测。
+
+如果实验按 `user_id` 随机化，就重采样用户；如果按 `seller_id`、城市或时间块随机化，就应在相应层级重采样。
+
+#### 基本算法
+
+假设实验包含 `N` 个独立 Cluster：
+
+1. 从全部 Cluster 中有放回抽取 `N` 次；
+2. 某个 Cluster 被抽中几次，它的全部观测就获得几倍权重；
+3. 在 Bootstrap Sample 中重新计算 Control 和 Treatment 指标；
+4. 计算 Treatment Effect；
+5. 重复 `B` 次，得到经验分布 $\{\hat{\tau}^{*(1)},\ldots,\hat{\tau}^{*(B)}\}$。
+
+对于均值差：
+
+$$
+\hat{\tau}=\bar{Y}_T-\bar{Y}_C
+$$
+
+Bootstrap Standard Error 为：
+
+$$
+\widehat{SE}_{\mathrm{boot}}(\hat{\tau})
+=\sqrt{
+\frac{1}{B-1}
+\sum_{b=1}^{B}
+\left(
+\hat{\tau}^{*(b)}-
+\frac{1}{B}\sum_{c=1}^{B}\hat{\tau}^{*(c)}
+\right)^2
+}
+$$
+
+#### 用户级聚合实现
+
+如果业务指标可以先聚合到用户级，这是最清楚的实现方式：
+
+```python
+def ratio_metric(rows):
+    numerator = sum(row["numerator"] for row in rows)
+    denominator = sum(row["denominator"] for row in rows)
+    return numerator / denominator if denominator else float("nan")
+
+
+def treatment_effect(user_rows):
+    treatment = [r for r in user_rows if r["group"] == "treatment"]
+    control = [r for r in user_rows if r["group"] == "control"]
+    return ratio_metric(treatment) - ratio_metric(control)
+
+
+def cluster_bootstrap(user_rows, rng, repetitions=2_000):
+    effects = []
+    sample_size = len(user_rows)
+
+    for _ in range(repetitions):
+        sample = [
+            user_rows[rng.randrange(sample_size)]
+            for _ in range(sample_size)
+        ]
+        effects.append(treatment_effect(sample))
+
+    effects.sort()
+    lower = effects[int(0.025 * repetitions)]
+    upper = effects[int(0.975 * repetitions)]
+
+    return {
+        "effect": treatment_effect(user_rows),
+        "ci_lower": lower,
+        "ci_upper": upper,
+    }
+```
+
+代码假设每行已经是一个用户，且包含实验组、指标分子和分母。它计算的是 Ratio of Sums：
+
+$$
+CTR=\frac{\sum_u Clicks_u}{\sum_u Impressions_u}
+$$
+
+而不是 Average of User-level Ratios：
+
+$$
+\frac{1}{N}\sum_u\frac{Clicks_u}{Impressions_u}
+$$
+
+两者回答的问题不同，Bootstrap 不能替代 Metric Definition。
+
+#### 多重出现的 Cluster
+
+Cluster Bootstrap 是有放回抽样，因此同一个用户可能被抽中多次。不能先用 `DISTINCT user_id` 去重，否则会破坏 Bootstrap Multiplicity。
+
+大数据实现中通常不复制整批事件，而是为每个 Cluster 生成整数权重：
+
+```text
+User A sampled 0 times → weight = 0
+User B sampled 2 times → weight = 2
+User C sampled 1 time  → weight = 1
+```
+
+随后使用权重重新计算指标。这样比物理复制用户的全部曝光和订单更高效。
+
+#### 置信区间方法
+
+| 方法 | 计算方式 | 优点 | 局限 |
+|---|---|---|---|
+| Percentile CI | 直接取 Bootstrap Effect 的分位数 | 简单、直观 | 对偏差和偏态修正有限 |
+| Normal CI | $\hat{\tau}\pm z\widehat{SE}_{\mathrm{boot}}$ | 易于报告 | 依赖近似对称性 |
+| Basic CI | 围绕原始估计反射 Bootstrap Quantile | 可做简单偏差修正 | 对复杂偏态仍有限 |
+| BCa CI | 修正 Bias 与 Acceleration | 通常更稳健 | 计算复杂、成本更高 |
+
+实验平台中最常见的是 Percentile CI 或基于 Bootstrap Standard Error 的 Normal CI。选择方法后应保持平台口径稳定，避免根据结果选择更有利的区间。
+
+#### 与 Cluster-robust Standard Error 的区别
+
+| 方法 | 核心思想 | 优势 | 局限 |
+|---|---|---|---|
+| Cluster Bootstrap | 重采样 Cluster，重新计算完整指标 | 适合复杂、非线性和长尾指标 | 计算成本较高 |
+| Cluster-robust SE | 使用 Sandwich Estimator 修正 Cluster 内相关性 | 速度快，适合回归框架 | 依赖大样本渐近近似 |
+| Delta Method | 对 Ratio 等函数做一阶 Taylor Expansion | 高效、适合标准 Ratio Metric | 强非线性或重尾时近似可能较差 |
+
+它们不一定产生完全相同的区间。Cluster 数量足够大、指标较规则时结果通常接近；Cluster 较少时，三种方法都需要谨慎，并考虑 small-sample correction 或 Randomization Inference。
+
+#### Cluster 应如何选择
+
+基本原则：
+
+```text
+Inference Unit 不应比 Randomization Unit 更细
+```
+
+| 随机化设计 | 通常的 Bootstrap Cluster |
+|---|---|
+| User-level Experiment | `user_id` |
+| Seller-level Experiment | `seller_id` |
+| Geo Experiment | city / region |
+| Switchback Experiment | randomization time block，必要时结合 geographic unit |
+| Household-level Assignment | household_id |
+
+如果用户级实验中还存在家庭、社交网络或共享供给造成的跨用户依赖，仅按用户 Cluster Bootstrap 仍可能低估方差。此时需要重新考虑实验设计，而不是机械扩大 Cluster。
+
+#### 分层与实验组处理
+
+通常应在 Control 和 Treatment 内分别重采样，保持每次 Bootstrap 的组内样本量稳定：
+
+```text
+Sample Treatment clusters with replacement
++
+Sample Control clusters with replacement
+→ Compute Treatment Effect
+```
+
+如果实验使用分层随机化，应尽量在 `stratum × treatment` 内重采样，从而保留原设计结构。若直接从全部用户混合抽样，Bootstrap Sample 中的组别和重要层级比例会产生额外波动。
+
+#### 计算成本与 Poisson Bootstrap
+
+标准 Cluster Bootstrap 需要重复扫描数据。在超大规模场景中，可以为每个 Cluster 和 Bootstrap Replicate 生成：
+
+$$
+w_u^{(b)}\sim Poisson(1)
+$$
+
+然后用 `w` 作为聚合权重。Poisson Bootstrap 易于并行和流式计算，是经典有放回 Bootstrap 的工程近似。
+
+#### Cluster Bootstrap 不能解决什么
+
+Cluster Bootstrap 只处理抽样推断中的 Cluster 内相关性，不能修复：
+
+- SRM 或错误分流；
+- Treatment Leakage 与 Cross-over；
+- Network Effect 或 Marketplace Interference；
+- 曝光选择偏差；
+- 指标埋点错误；
+- 延迟转化尚未成熟；
+- Cluster 数量太少；
+- 随机化单位和分析范围不一致。
+
+例如，Treatment 改变了共享商品池并影响 Control 用户，这是 Interference。按用户重采样不会恢复 SUTVA，需要 Cluster Randomization、Switchback 或其他替代实验设计。
+
+#### 使用检查清单
+
+- Randomization Unit 是什么？
+- 原始数据是否包含同一单位的重复观测？
+- Bootstrap Cluster 是否与随机化设计一致？
+- 指标是 Mean、Ratio of Sums 还是 Average of Ratios？
+- 是否在实验组和随机化 Stratum 内分别重采样？
+- 是否保留了重复抽中的 Cluster 权重？
+- Bootstrap Replications 是否足够，结果是否对随机种子稳定？
+- Cluster 数量是否足够支持渐近推断？
+- 是否同时报告 Point Estimate、Confidence Interval 和业务阈值？
+- 是否错误地把 Cluster Bootstrap 当成 Interference 的解决方案？
 
 ---
 
