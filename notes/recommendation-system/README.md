@@ -44,7 +44,7 @@ Buyer intent + Product/content supply + Context
 | [Metrics](./metrics.md) | 用户、交易、推荐质量与生态指标，Metric Tree 和口径治理 |
 | [Online Experiment Lifecycle](./online-experiment-lifecycle.md) | 从假设、离线评估到发布和长期测量 |
 | [A/A Testing](./aa-testing.md) | 随机化、SRM、日志、指标链路和统计校准 |
-| [A/B Testing](./ab-testing.md) | 实验设计、MDE、推断、异质性分析和 Readout |
+| [A/B Testing](./ab-testing.md) | 实验设计、MDE、Cluster Bootstrap、异质性分析和 Readout |
 | [Ramp-up](./ramp-up.md) | 放量阶段的效应稳定性、护栏、分群与回滚 |
 
 ## 推荐阅读顺序
@@ -142,7 +142,7 @@ Eligible Pool
 
 ### A/B Testing
 
-回答“新模型是否真的带来因果增量？”重点包括 experiment unit、hash bucketing、MDE/power、confidence interval、multiple testing、CUPED、异质性分析和 readout。
+回答“新模型是否真的带来因果增量？”重点包括 experiment unit、hash bucketing、MDE/power、confidence interval、multiple testing、CUPED、Cluster Bootstrap、异质性分析和 readout。
 
 ### Ramp-up
 
