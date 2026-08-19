@@ -1305,7 +1305,13 @@ Cluster Bootstrap 的核心原则是：
 2. 某个 Cluster 被抽中几次，它的全部观测就获得几倍权重；
 3. 在 Bootstrap Sample 中重新计算 Control 和 Treatment 指标；
 4. 计算 Treatment Effect；
-5. 重复 `B` 次，得到经验分布 $\{\hat{\tau}^{*(1)},\ldots,\hat{\tau}^{*(B)}\}$。
+5. 重复 `B` 次，得到 Bootstrap Treatment Effect 的经验分布：
+
+$$
+\hat{\tau}^{*(1)},
+\ldots,
+\hat{\tau}^{*(B)}
+$$
 
 对于均值差：
 
@@ -1320,10 +1326,10 @@ $$
 =\sqrt{
 \frac{1}{B-1}
 \sum_{b=1}^{B}
-\left(
+(
 \hat{\tau}^{*(b)}-
 \frac{1}{B}\sum_{c=1}^{B}\hat{\tau}^{*(c)}
-\right)^2
+)^2
 }
 $$
 
@@ -1344,15 +1350,27 @@ def treatment_effect(user_rows):
     return ratio_metric(treatment) - ratio_metric(control)
 
 
+def sample_with_replacement(rows, rng):
+    return [
+        rows[rng.randrange(len(rows))]
+        for _ in range(len(rows))
+    ]
+
+
 def cluster_bootstrap(user_rows, rng, repetitions=2_000):
+    treatment = [r for r in user_rows if r["group"] == "treatment"]
+    control = [r for r in user_rows if r["group"] == "control"]
+
+    if not treatment or not control:
+        raise ValueError("both experiment groups must be non-empty")
+
     effects = []
-    sample_size = len(user_rows)
 
     for _ in range(repetitions):
-        sample = [
-            user_rows[rng.randrange(sample_size)]
-            for _ in range(sample_size)
-        ]
+        sample = (
+            sample_with_replacement(treatment, rng)
+            + sample_with_replacement(control, rng)
+        )
         effects.append(treatment_effect(sample))
 
     effects.sort()
@@ -1399,7 +1417,7 @@ User C sampled 1 time  → weight = 1
 | 方法 | 计算方式 | 优点 | 局限 |
 |---|---|---|---|
 | Percentile CI | 直接取 Bootstrap Effect 的分位数 | 简单、直观 | 对偏差和偏态修正有限 |
-| Normal CI | $\hat{\tau}\pm z\widehat{SE}_{\mathrm{boot}}$ | 易于报告 | 依赖近似对称性 |
+| Normal CI | `point estimate ± critical value × bootstrap SE` | 易于报告 | 依赖近似对称性 |
 | Basic CI | 围绕原始估计反射 Bootstrap Quantile | 可做简单偏差修正 | 对复杂偏态仍有限 |
 | BCa CI | 修正 Bias 与 Acceleration | 通常更稳健 | 计算复杂、成本更高 |
 
