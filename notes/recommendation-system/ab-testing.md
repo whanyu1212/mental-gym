@@ -1308,9 +1308,9 @@ Cluster Bootstrap 的核心原则是：
 5. 重复 `B` 次，得到 Bootstrap Treatment Effect 的经验分布：
 
 $$
-\hat{\tau}^{*(1)},
+\hat{\tau}_{\mathrm{boot}}^{(1)},
 \ldots,
-\hat{\tau}^{*(B)}
+\hat{\tau}_{\mathrm{boot}}^{(B)}
 $$
 
 对于均值差：
@@ -1327,8 +1327,8 @@ $$
 \frac{1}{B-1}
 \sum_{b=1}^{B}
 (
-\hat{\tau}^{*(b)}-
-\frac{1}{B}\sum_{c=1}^{B}\hat{\tau}^{*(c)}
+\hat{\tau}_{\mathrm{boot}}^{(b)}-
+\frac{1}{B}\sum_{c=1}^{B}\hat{\tau}_{\mathrm{boot}}^{(c)}
 )^2
 }
 $$
