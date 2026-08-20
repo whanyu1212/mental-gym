@@ -35,12 +35,19 @@ flowchart LR
 
 推荐链路不是多个模型的简单串联，而是受计算预算约束的级联决策：
 
-$$
-\text{Item Pool}\xrightarrow{retrieval}C_1
-\xrightarrow{pre\text{-}rank}C_2
-\xrightarrow{rank}C_3
-\xrightarrow{re\text{-}rank}S
-$$
+```mermaid
+flowchart TB
+    POOL["Eligible Item Pool<br/>全量可推荐商品"]
+    RETRIEVAL["Retrieval<br/>输出候选集 C₁"]
+    PRERANK["Pre-ranking<br/>输出候选集 C₂"]
+    RANK["Ranking<br/>输出候选集 C₃"]
+    RERANK["Re-ranking<br/>输出最终列表 S"]
+
+    POOL --> RETRIEVAL
+    RETRIEVAL --> PRERANK
+    PRERANK --> RANK
+    RANK --> RERANK
+```
 
 通常满足 `|C₁| ≫ |C₂| ≫ |C₃| ≫ |S|`。越靠前的阶段候选更多、单候选计算预算更低；越靠后的阶段可以使用更丰富的交叉特征和列表级目标。
 
@@ -123,16 +130,18 @@ Validity → Data quality → Effect size → Funnel diagnosis
 
 ## 6. 主题文档
 
+以下文档按照“业务背景 → 推荐主链路 → 专题问题 → 系统优化”的顺序排列：
+
 | Topic | 文档 | 重点 |
 |---|---|---|
 | 业务背景 | [ecommerce-recommendation-context.md](./ecommerce-recommendation-context.md) | 业务对象、交易漏斗与分析边界 |
-| 召回 | [retrieval.md](./retrieval.md) | CF、双塔、样本、ANN、多路召回 |
-| 粗排与精排 | [ranking.md](./ranking.md) | 多任务预估、多目标融合与校准 |
-| 特征交叉 | [feature-interaction.md](./feature-interaction.md) | FM、DeepFM、DCN、FiBiNET |
-| 行为序列 | [user-behavior-sequence.md](./user-behavior-sequence.md) | LastN、DIN、DIEN 与兴趣漂移 |
-| 重排 | [reranking.md](./reranking.md) | MMR、DPP、规则、探索与生态约束 |
-| 冷启动 | [cold-start.md](./cold-start.md) | 新商品、新商家、新用户与探索 |
-| 系统优化 | [system-optimization.md](./system-optimization.md) | 召回配额、迭代路线与诊断框架 |
+| 召回 | [retrieval.md](./retrieval.md) | CF、双塔、训练样本、ANN 与多路召回 |
+| 粗排与精排 | [ranking.md](./ranking.md) | 排序链路、多任务预估、多目标融合与校准 |
+| 特征交叉 | [feature-interaction.md](./feature-interaction.md) | 深入排序模型：FM、DeepFM、DCN、xDeepFM 与 FiBiNET |
+| 行为序列 | [user-behavior-sequence.md](./user-behavior-sequence.md) | 深入用户建模：LastN、DIN、DIEN 与兴趣演化 |
+| 重排 | [reranking.md](./reranking.md) | MMR、DPP、规则、探索与列表级约束 |
+| 冷启动 | [cold-start.md](./cold-start.md) | 新商品、新商家、新用户与探索机制 |
+| 系统优化 | [system-optimization.md](./system-optimization.md) | 召回配额、阶段漏斗、迭代路线与诊断框架 |
 
 ## 7. 从离线到上线
 
