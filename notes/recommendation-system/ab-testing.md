@@ -22,7 +22,9 @@
 - [6. 实验层与正交设计｜Experiment Layers and Orthogonality](#sec-6)
   - [6.1 同层互斥｜Mutual Exclusion](#sec-6-1)
   - [6.2 跨层正交｜Orthogonality](#sec-6-2)
-  - [6.3 正交不代表没有交互作用](#sec-6-3)
+  - [6.3 正交分流不等于效果可加](#sec-6-3)
+  - [6.4 2 × 2 Factorial Design｜二因子实验](#sec-6-4)
+  - [6.5 何时互斥，何时正交，何时做 Factorial](#sec-6-5)
 - [7. 实验假设与指标设计｜Hypothesis and Metric Design](#sec-7)
   - [7.1 指标角色](#sec-7-1)
   - [7.2 推荐排序实验示例](#sec-7-2)
@@ -46,8 +48,10 @@
   - [10.8 异质性处理效应｜Heterogeneous Treatment Effects](#sec-10-8)
   - [10.9 Cluster Bootstrap｜聚类自助法](#sec-10-9)
 - [11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs](#sec-11)
-  - [11.1 常见解决方案](#sec-11-1)
-  - [11.2 Switchback Experiment](#sec-11-2)
+  - [11.1 电商推荐中的干扰来源](#sec-11-1)
+  - [11.2 设计选择](#sec-11-2)
+  - [11.3 Switchback Experiment](#sec-11-3)
+  - [11.4 跨入口归因与延迟转化](#sec-11-4)
 - [12. 放量、回滚与长期测量｜Ramp-up, Rollback, and Holdout](#sec-12)
   - [12.1 Ramp-up 与灰度发布｜Gradual Rollout](#sec-12-1)
   - [12.2 回滚｜Rollback](#sec-12-2)
@@ -60,11 +64,11 @@
   - [13.5 假设结果](#sec-13-5)
   - [13.6 结果解释](#sec-13-6)
   - [13.7 放量计划](#sec-13-7)
-- [14. 实验案例：电商排序与 GMV｜Case Study: Commerce Ranking](#sec-14)
-  - [14.1 背景](#sec-14-1)
-  - [14.2 指标设计](#sec-14-2)
-  - [14.3 假设结果](#sec-14-3)
-  - [14.4 结果解释](#sec-14-4)
+- [14. 工业案例：三类电商推荐实验](#sec-14)
+  - [14.1 短视频商品内容排序实验](#sec-14-1)
+  - [14.2 直播内容流与直播间分发实验](#sec-14-2)
+  - [14.3 商城商品卡召回或排序实验](#sec-14-3)
+  - [14.4 召回 × 精排的 2 × 2 Factorial](#sec-14-4)
 - [15. 实验分析代码示例｜Experiment Analysis Example](#sec-15)
 - [16. 实验平台与上线检查｜Platform and Launch Checklist](#sec-16)
   - [16.1 实验平台架构｜Experimentation Platform Architecture](#sec-16-1)
@@ -128,6 +132,9 @@ Negative Feedback ↑
 | 随机分流 | Randomization | 将实验单位随机分配到不同组的过程 |
 | 分桶 | Bucketing | 将流量映射到固定数量的 Bucket |
 | 实验层 | Experiment Layer | 管理一类相互排斥实验的逻辑空间 |
+| 因子实验 | Factorial Experiment | 同时随机化两个或多个因子，并覆盖其处理组合的实验设计 |
+| 主效应 | Main Effect | 对另一个因子的处理状态取平均后，一个因子的平均处理效应 |
+| 交互效应 | Interaction Effect | 一个因子的效果是否随另一个因子的处理状态而改变 |
 | 实验参数 | Experiment Parameter | 不同实验组采用的配置、模型或策略 |
 | 盐值 | Salt | 加入哈希输入的实验标识，用于产生独立随机分配 |
 | 基准策略 | Baseline | 当前线上稳定策略 |
@@ -171,7 +178,7 @@ Negative Feedback ↑
 1. 实验单位应尽量与策略实际作用对象一致。
 2. 同一实验单位在实验期间应保持固定分组。
 3. 不同组之间应尽量减少相互影响。
-4. 分析粒度需要与随机化粒度一致。
+4. Point Estimate 可以由事件数据聚合，但推断单位和标准误必须尊重随机化单位及其相关结构。
 
 例如，推荐排序策略会持续影响用户体验，因此一般使用 User-level Randomization。
 
@@ -189,6 +196,21 @@ Request 3 → Control
 - 策略之间互相影响
 - 长期指标无法正确归因
 - 实验效应被稀释
+
+对于跨 Surface 的用户旅程，通常应保持同一 `user_id` 在短视频商品内容流、直播内容流和商城商品卡推荐中的 Assignment 一致，或明确把各 Surface 定义为独立因子。否则用户可能在一个入口接受 Treatment、另一个入口接受 Control，导致策略污染和难以解释的联合体验。
+
+购买指标还要区分 Assignment、Exposure 与 Conversion：
+
+```text
+User Assignment
+→ Short-video / Live / Mall Exposure
+→ Product Detail Page
+→ Add to Cart
+→ Order
+→ Refund / Cancellation Maturity
+```
+
+若 Treatment 会影响是否点击商品，主分析不应只保留“已点击用户”，因为点击是 Post-treatment Variable。更稳健的主估计通常是对预先定义 Eligible Population 的 Intention-to-Treat Effect，并预先固定订单归因窗口和退款成熟窗口；Triggered Analysis 可作为补充，但必须使用实验前或不受 Treatment 影响的触发条件。
 
 ---
 
@@ -525,32 +547,30 @@ Treatment Phase 3: Bucket 500–2,499
 
 ## 6. 实验层与正交设计｜Experiment Layers and Orthogonality
 
-大型推荐系统会同时运行大量实验，需要通过实验层管理流量。
+大型推荐系统会同时运行大量实验。Experiment Layer 的作用不是声明两个策略在业务上互不影响，而是管理随机流量、参数冲突和共同曝光。
 
-典型实验层包括：
+电商推荐通常同时包含多个 Surface 和多个 Stage：
 
-```text
-Recall Layer
-Ranking Layer
-Re-ranking Layer
-UI Layer
-Ads Layer
-Commerce Layer
-```
+| Surface | 常见 Stage / Layer | 可能共享的状态 |
+|---|---|---|
+| 短视频商品内容流 | Recall、Ranking、Re-ranking、商品入口 UI | 用户兴趣、商品库存、商家流量 |
+| 直播内容流 | Live-room Recall、Ranking、Traffic Allocation | 直播间容量、主播供给、实时互动 |
+| 商城商品卡推荐 | Recall、Ranking、Re-ranking、商品卡 UI | 商品池、库存、价格与订单 |
+
+同一个用户可能跨入口消费，同一个商品或商家也可能同时出现在多个 Surface。因此，层应根据“是否会争用同一参数、改变同一决策点或产生强交互”划分，而不能只按组织边界命名。
 
 <a name="sec-6-1"></a>
 
 ### 6.1 同层互斥｜Mutual Exclusion
 
-同一层的实验通常互斥。
+同层互斥表示同一实验单位不会同时进入该层的两个实验。最典型的情况是两种策略不能在一次请求中同时成立：
 
-例如 Ranking Layer 同时存在：
+- 同一精排服务的 Model A 与 Model B；
+- 同一召回通道的两套互斥参数；
+- 同一商品卡位置的两种 UI；
+- 同一直播间流量分配器的两套目标函数。
 
-- Ranking Model A
-- Ranking Model B
-- Ranking Feature C
-
-同一个用户通常只应进入其中一个实验，避免多个排序变化叠加后无法归因。
+即使两个改动在工程上可以同时开启，只要它们修改同一阶段、预计存在强交互，而当前实验只想识别各自的独立效果，也应先放入同一层互斥。
 
 ```text
 Ranking Layer
@@ -559,11 +579,13 @@ Ranking Layer
 └── Experiment C
 ```
 
+互斥的代价是流量不能完全复用，也无法直接估计两种可叠加策略的组合效果。如果最终上线计划就是同时启用两个策略，仅分别运行两个互斥 A/B Test 仍然缺少联合上线证据。
+
 <a name="sec-6-2"></a>
 
 ### 6.2 跨层正交｜Orthogonality
 
-不同层可以使用不同 Salt 重新分桶。
+跨层正交通常指不同层使用不同 Salt 对同一实验单位独立分桶。它让各层可以复用同一批流量，并使两个 Treatment Assignment 在设计上近似独立。
 
 同一个用户可能同时进入：
 
@@ -577,36 +599,155 @@ UI Treatment
 
 这样可以提高流量复用效率。
 
+若实验 A 与实验 B 都按 50% 分流，正交分桶后通常会形成四个交叉单元：
+
+| A | B | 期望流量 |
+|---|---|---:|
+| Control | Control | 25% |
+| Treatment | Control | 25% |
+| Control | Treatment | 25% |
+| Treatment | Treatment | 25% |
+
+这四个比例应由实际分流比例相乘得到，而不是固定为 25%。上线前需要检查：
+
+- 两个实验使用相同且稳定的 Experiment Unit；
+- Salt 独立，交叉单元均有足够样本；
+- 分层、资格过滤和触发条件不会破坏交叉单元的可比性；
+- 实验日志同时记录两个 Assignment 与实际 Exposure。
+
+跨 Surface 时要额外谨慎。例如短视频商品内容流和商城商品卡推荐虽然属于不同入口，但用户兴趣、商品曝光和购买路径相连；直播内容流还可能改变共享直播间和商家供给。仅把它们配置到不同层，不能消除这些业务联系。
+
 <a name="sec-6-3"></a>
 
-### 6.3 正交不代表没有交互作用
+### 6.3 正交分流不等于效果可加
 
-即使两个实验位于不同层，也可能存在 Interaction Effect。
+“正交”至少有两个容易混淆的含义：
 
-例如：
+1. 平台层面的正交：两个 Assignment 由独立随机化产生；
+2. 统计设计中的正交：设计矩阵的效应列不相关，主效应和交互项可以分别估计。
+
+两者都不表示业务效果一定满足 `1 + 1 = 2`。如果策略 A 的效果取决于策略 B 是否开启，就存在 Interaction Effect。
+
+例如增加一条召回通道后，新的精排模型可能更擅长识别新增候选，出现协同；也可能因新增低质量候选挤占计算预算，抵消精排收益。
+
+以下口号必须放在同一个指标、同一个总体和同一个效应尺度下理解：
 
 ```text
-New Recall Model
-+
-New Ranking Model
+1 + 1 > 2：正向交互，组合增量大于两个单独增量之和
+1 + 1 = 2：加性尺度上没有交互
+1 + 1 < 2：负向交互，组合增量小于两个单独增量之和
 ```
 
-组合效果可能不等于两个单独效果之和。
+“无加性交互”不等于在 Relative Lift、Odds Ratio 或 Log Scale 上也无交互。实验设计和 Readout 必须预先声明所使用的尺度，业务指标通常优先报告 Absolute Effect，并同时提供 Relative Effect 作为解释。
 
-如果怀疑实验存在强交互，可以设计 2 × 2 Factorial Experiment：
+<a name="sec-6-4"></a>
 
-| Recall | Ranking | Group |
+### 6.4 2 × 2 Factorial Design｜二因子实验
+
+设：
+
+- 因子 A：是否增加新召回通道；
+- 因子 B：是否启用新精排模型；
+- `mu_00`、`mu_10`、`mu_01`、`mu_11`：四个处理组合下的总体平均结果。
+
+| 新召回通道 A | 新精排模型 B | Cell | 期望结果 |
+|---|---|---|---|
+| 0 | 0 | Baseline | `mu_00` |
+| 1 | 0 | Recall Only | `mu_10` |
+| 0 | 1 | Ranking Only | `mu_01` |
+| 1 | 1 | Combined | `mu_11` |
+
+在加性尺度上，A 在 B 关闭时的条件效应为：
+
+```math
+\Delta_{A \mid B=0}=\mu_{10}-\mu_{00}
+```
+
+A 在 B 开启时的条件效应为：
+
+```math
+\Delta_{A \mid B=1}=\mu_{11}-\mu_{01}
+```
+
+交互效应是 Difference-in-Differences：
+
+```math
+\Delta_{AB}
+=
+(\mu_{11}-\mu_{01})-(\mu_{10}-\mu_{00})
+```
+
+等价地：
+
+```math
+\Delta_{AB}=\mu_{11}-\mu_{10}-\mu_{01}+\mu_{00}
+```
+
+因此：
+
+```text
+Delta_AB > 0 → 协同，1 + 1 > 2
+Delta_AB = 0 → 加性，1 + 1 = 2
+Delta_AB < 0 → 抵消，1 + 1 < 2
+```
+
+平衡的 2 × 2 设计中，A 的平均主效应为：
+
+```math
+\Delta_A
+=
+\frac{1}{2}
+[(\mu_{10}-\mu_{00})+(\mu_{11}-\mu_{01})]
+```
+
+B 的平均主效应同理。使用 0/1 编码时，可拟合：
+
+```math
+Y
+=
+\beta_0+\beta_A A+\beta_B B+\beta_{AB}AB+\varepsilon
+```
+
+其中 `beta_A` 是 B=0 时 A 的条件效应，`beta_B` 是 A=0 时 B 的条件效应，`beta_AB` 对应加性尺度上的交互效应；平均主效应需要通过上面的边际 Contrast 计算。若使用 -1/+1 Effect Coding，系数解释和倍数会改变，因此 Readout 应直接报告四个 Cell Mean 与预先定义的 Contrasts。标准误、Cluster 和协变量调整仍必须匹配原随机化设计。
+
+一个直观的指标指数示例：
+
+| Cell | 指标指数 | 相对 Baseline 的绝对增量 |
+|---|---:|---:|
+| Baseline | 100 | 0 |
+| Recall Only | 102 | +2 |
+| Ranking Only | 103 | +3 |
+| Combined | 108 | +8 |
+
+若没有交互，组合预期是 105；实际为 108，因此交互效应为 `+3`，属于 `1 + 1 > 2`。如果 Combined 为 103.5，交互效应为 `-1.5`，属于 `1 + 1 < 2`。
+
+交互项通常比主效应更难检出。若交互是上线决策的一部分，应单独为最小交互效应做 Power Analysis，不能沿用单个 A/B Test 的 MDE。
+
+<a name="sec-6-5"></a>
+
+### 6.5 何时互斥，何时正交，何时做 Factorial
+
+| 情况 | 建议设计 | 原因 |
 |---|---|---|
-| Old | Old | Control |
-| New | Old | Recall Only |
-| Old | New | Ranking Only |
-| New | New | Combined |
+| 两个模型不能在同一请求中同时生效 | 同层互斥 | 处理定义天然冲突 |
+| 两个改动修改同一参数或同一排名位置 | 同层互斥 | 避免不可解释的共同曝光 |
+| 两个改动作用链路不同，交互风险低 | 跨层正交 | 提高流量复用效率 |
+| 两个改动可以联合上线，且需要估计协同或抵消 | 2 × 2 Factorial | 直接估计主效应与交互效应 |
+| 跨 Surface 改动共同影响同一用户购买路径 | Factorial 或全局互斥层 | 独立分桶不能排除跨入口交互 |
+| Treatment 会改变共享库存、直播间或商家供给 | Cluster / Switchback / Two-sided Design | 问题是跨实验单位干扰，而不只是实验重叠 |
 
-通过四组实验可以估计：
+决策顺序可以概括为：
 
-- Recall 的主效应
-- Ranking 的主效应
-- Recall × Ranking 的交互效应
+```text
+能否同时生效？
+├── 否 → 互斥
+└── 是
+    ├── 联合效果是否重要或可能强交互？
+    │   ├── 是 → Factorial
+    │   └── 否 → 正交重叠
+    └── 是否改变共享市场状态？
+        └── 是 → 重新设计 Randomization Unit
+```
 
 ---
 
@@ -756,7 +897,7 @@ print(
 )
 ```
 
-SRM 检查应在分析实验效果之前完成，并且需要在实验运行期间持续执行。
+SRM 检查应在分析实验效果之前完成，并且需要在实验运行期间持续执行。主 SRM 应基于被随机化且满足实验前资格条件的单位；按曝光、点击、进店或下单后的样本做 SRM，可能把真实 Treatment Effect 或 Post-treatment Selection 误判为分流异常。
 
 如果存在严重 SRM，不应直接解释业务指标差异。
 
@@ -878,7 +1019,7 @@ Relative Lift
 
 ### 9.2 二项指标样本量代码
 
-以下示例适用于 CTR、CVR、Retention 等比例指标。
+以下示例只适用于“每个独立实验单位贡献一个 Bernoulli 结果”的比例指标，例如用户级 D7 Retention 或是否下单。用户随机化下的曝光 CTR、点击后 CVR 通常是 Clustered Ratio，Power Analysis 应使用历史用户级 `(numerator, denominator)` 的 Delta / Linearization / Cluster Bootstrap 方差，不能把曝光或订单当作独立样本。
 
 ```python
 def sample_size_for_two_proportions(
@@ -930,7 +1071,8 @@ def sample_size_for_two_proportions(
         alternative="two-sided",
     )
 
-    return int(control_sample_size) + 1
+    whole = int(control_sample_size)
+    return whole if control_sample_size == whole else whole + 1
 ```
 
 使用示例：
@@ -992,16 +1134,61 @@ print(control_n)
 
 | 指标类型 | 示例 | 常见方法 |
 |---|---|---|
-| 二项比例 | CTR、CVR、Retention | Two-proportion Z-test、Chi-square Test |
+| 实验单位级二项结果 | User Retention、是否下单 | Two-proportion Z-test、回归或 Randomization Inference |
 | 近似连续且分布较稳定 | Usage Time、Session Count | T-test、Welch's T-test |
-| 长尾连续指标 | GMV、Revenue、Watch Time | Bootstrap、Delta Method、Winsorized Analysis |
-| 用户级比率 | User CTR、Orders per User | User-level Aggregation + T-test / Bootstrap |
+| 长尾连续指标 | GMV、Revenue、Watch Time | Unit-level / Cluster Bootstrap、稳健回归；预先定义的截尾分析可作敏感性检查 |
+| Ratio of Sums | CTR、CVR、AOV | Delta Method、Linearization、Cluster Bootstrap |
+| 实验单位均值 | GMV per User、Orders per User | Unit-level Aggregation + T-test / Bootstrap |
 | 时间或地区随机实验 | Switchback、Geo Experiment | Cluster-robust Inference、Time-series Analysis |
 | 多次中途查看 | Sequential Experiment | Sequential Test、Always-valid Inference |
+
+方法由 Estimand 和 Randomization Unit 共同决定，不能只由指标名称决定。例如曝光级 CTR 虽然表面上是二项比例，但用户级随机实验中的同一用户会产生多次曝光，事件并不独立；直接把每次曝光放进普通两比例检验会低估不确定性。
+
+对长尾指标做 Winsorization、Capping 或 Log Transformation 会改变 Estimand。若它用于正式决策，阈值和转换应在看结果前确定，并同时报告原始业务指标，不能把“让 p-value 更小”当成选择转换的依据。
+
+#### Ratio Metric：先定义估计对象
+
+设每个用户贡献分子 `N_u` 和分母 `D_u`。业务 CTR 常定义为 Ratio of Sums：
+
+```math
+R
+=
+\frac{\sum_u N_u}{\sum_u D_u}
+```
+
+它与 Average of User Ratios 不同。定义正分母用户集合：
+
+```math
+\mathcal{U}_{+}=\{u:D_u>0\}
+```
+
+则：
+
+```math
+R_{user}
+=
+\frac{1}{|\mathcal{U}_{+}|}
+\sum_{u\in\mathcal{U}_{+}}
+\frac{N_u}{D_u}
+```
+
+前者按曝光量隐式加权用户，回答“全部合格曝光中有多少点击”；后者让每个正分母用户权重相同，回答“发生过分母事件者的平均用户 CTR”。两者都可以是合理指标，但不能混用。若 `D_u > 0` 本身会被 Treatment 改变，后者还条件化了实验后变量，不能直接解释为 Eligible Population 上的 ITT 因果效果。
+
+Ratio of Sums 的方差不能通过“把分子和分母当成固定常数”得到。常见做法是对 `(N_u, D_u)` 使用 Delta Method / Linearization，或在随机化单位层级同时重采样分子和分母。对于用户级随机实验，即使 AOV 的分母是订单，推断仍应保留同一用户订单之间的相关性。
+
+实验报告应同时声明：
+
+- Numerator、Denominator 和 Eligible Population；
+- Analysis / Randomization Unit；
+- Zero-denominator 处理；
+- Attribution Window 与 Maturity Window；
+- Absolute Difference、Relative Lift 使用的基线和尺度。
 
 <a name="sec-10-2"></a>
 
 ### 10.2 两比例检验代码
+
+以下实现只适用于每个独立实验单位贡献一个二项结果，或观测确实可以视为相互独立的场景。例如用户级随机实验中的 D7 Retention，可以让每位用户贡献一个 `retained / not retained` 结果。它不应直接用于把同一用户的数百次曝光当作数百个独立 CTR 样本。
 
 ```python
 def compare_two_rates(
@@ -1137,9 +1324,13 @@ Lower Bound above Business Threshold
 
 ### 10.5 多重检验｜Multiple Testing
 
-一个实验同时观察大量指标或用户分群时，偶然显著的概率会增加。
+一个实验同时观察大量指标、Treatment 或用户分群时，偶然显著的概率会增加。若 20 个原假设都成立且检验相互独立，每个使用 5% 显著性水平，至少出现一个假阳性的概率为：
 
-例如，同时检验 20 个完全无效指标，每个使用 5% 显著性水平，可能自然出现约 1 个假阳性结果。
+```math
+1-(1-0.05)^{20}
+```
+
+约为 64%，而“期望假阳性个数”才约为 1。真实指标往往相关，因此不能机械套用独立公式，但问题不会因指标相关而自动消失。
 
 常见处理方法：
 
@@ -1150,6 +1341,13 @@ Lower Bound above Business Threshold
 | Benjamini-Hochberg | 控制 False Discovery Rate |
 | Pre-specified Primary Metric | 预先确定唯一或少量核心指标 |
 | Metric Hierarchy | 先检验主指标，再检验次要指标 |
+
+选择控制目标时需要区分：
+
+- Confirmatory Ship Decision 通常更关心 Family-wise Error Rate，可使用 Holm 或预先定义的 Gatekeeping；
+- 大规模探索性 Segment / Metric Discovery 可使用 False Discovery Rate，但发现应在后续实验中验证；
+- 多个 Co-primary Metrics 是“全部必须通过”还是“任意一个通过”会形成不同假设族，必须提前写进 Decision Rule；
+- Guardrail 常是 Non-inferiority 问题，应报告相对于风险阈值的单侧置信区间，而不是把 `p > 0.05` 当成“安全”。
 
 最佳实践：
 
@@ -1182,10 +1380,22 @@ Day 3: p = 0.03 → Stop and Ship
 - Always-valid p-values
 - Bayesian Sequential Decision
 
+这些方法不是可互换的标签。正式采用 Sequential Design 时，应在实验前定义：
+
+- 最大样本量或最大 Information Time；
+- Interim Look 的次数和时点，或允许连续查看的规则；
+- Efficacy、Futility 与 Harm Boundary；
+- Alpha Spending 或对应的错误率保证；
+- 指标成熟窗口和最后一次有效数据日期。
+
+Group Sequential / Alpha Spending 可以在预定 Interim Looks 下控制总体第一类错误；Always-valid p-value 或 Confidence Sequence 面向更灵活的持续查看。Bayesian Decision 需要先定义 Prior、Loss 和决策阈值，它本身不自动提供 Frequentist Type-I Error Control。
+
 业务监控和统计决策需要区分：
 
 - 可以实时监控 Crash、Latency、严重负反馈
 - 不应使用普通 p-value 随意提前宣布实验成功
+
+短视频到商品详情页、订单和退款的链路具有延迟。即使使用 Sequential Method，也不能在转化尚未成熟时把“暂未发生订单或退款”当作最终 0；序贯推断解决重复查看问题，不解决右删失和延迟归因。
 
 ---
 
@@ -1195,15 +1405,13 @@ Day 3: p = 0.03 → Stop and Ship
 
 指标方差越低，在相同样本量下越容易检测到真实效应。
 
-常见方法：
+真正用于提高统计精度的方法包括：
 
-- 使用实验前指标作为协变量
-- 用户级聚合
-- 分层随机化
-- 去除明显异常日志
-- 对极端值进行合理 Winsorization
-- 使用 CUPED
-- 使用更稳定的指标定义
+- 使用实验前指标作为协变量，例如 CUPED；
+- 预处理协变量上的分层或配对随机化，并在分析中保留分层结构；
+- 在不改变业务问题的前提下，使用预先定义且噪声更低的指标。
+
+以下操作需要与“方差降低”区分：用户级聚合首先是为了匹配随机化单位和相关结构，不保证方差一定下降；异常日志删除属于数据质量规则，只能使用实验前定义、两组对称且不由 Treatment 诱发的条件；Winsorization 或 Capping 会改变 Estimand，若用于正式决策必须预先固定阈值并同时报告原始业务指标。
 
 #### CUPED
 
@@ -1221,12 +1429,35 @@ Pre-experiment Watch Time
 
 直观上，如果用户实验前就属于重度用户，可以利用其历史行为解释一部分自然差异，从而更准确地估计实验效应。
 
+设实验期指标为 `Y`，实验前协变量为 `X`。经典线性调整为：
+
+```math
+Y_{\mathrm{adj}}
+=
+Y-\theta(X-\mathbb{E}[X])
+```
+
+常用系数为：
+
+```math
+\theta
+=
+\frac{\mathrm{Cov}(Y,X)}{\mathrm{Var}(X)}
+```
+
+随机化保证 Treatment 与实验前的 `X` 独立，因此中心化后的调整不会改变目标平均处理效应；当 `X` 与 `Y` 高度相关时，它可以降低方差。实际平台可以在盲化或合并分组数据上稳定估计 `theta`，但不能按“哪个系数让 Treatment 更显著”选择参数。
+
 使用 CUPED 时：
 
 - 协变量必须在实验前产生
 - 协变量不能被实验策略影响
 - 协变量应与目标指标高度相关
 - Control 与 Treatment 应使用相同处理逻辑
+- 新用户没有历史数据时，应预先定义缺失值填补、Missing Indicator 或分层策略
+- 多个协变量或灵活模型需要避免过拟合，可使用独立历史数据、样本拆分或 Cross-fitting
+- 方差降低提高 Precision，不修复 SRM、污染、埋点错误或未观测混杂
+
+对于 CTR、CVR、AOV 等 Ratio Metric，通常先在随机化单位上构造 Numerator 和 Denominator 的线性化贡献，再进行 CUPED 或回归调整；直接对每个用户的比率做 CUPED，估计的可能是 Average of User Ratios，而不是业务定义的 Ratio of Sums。
 
 ---
 
@@ -1284,7 +1515,7 @@ User A → 20 Sessions → 300 Impressions → 4 Orders
 User B →  2 Sessions →  15 Impressions → 0 Orders
 ```
 
-同一用户内部的观测共享兴趣、活跃度、设备和购买能力，因此并非相互独立。如果直接对事件行进行 Ordinary Bootstrap，相当于假设每次曝光都是一个独立实验单位，通常会：
+同一用户内部的观测共享兴趣、活跃度、设备和购买能力，因此并非相互独立。如果直接对事件行进行 Ordinary Bootstrap，相当于假设每次曝光都是一个独立实验单位。在常见的正向 Cluster 内相关下，这通常会：
 
 - 低估 Standard Error；
 - 产生过窄的 Confidence Interval；
@@ -1301,27 +1532,27 @@ Cluster Bootstrap 的核心原则是：
 
 假设实验包含 `N` 个独立 Cluster：
 
-1. 从全部 Cluster 中有放回抽取 `N` 次；
+1. 在 Control 与 Treatment 各自的 Cluster 集合内有放回抽样，保持每组原有 Cluster 数；
 2. 某个 Cluster 被抽中几次，它的全部观测就获得几倍权重；
 3. 在 Bootstrap Sample 中重新计算 Control 和 Treatment 指标；
 4. 计算 Treatment Effect；
 5. 重复 `B` 次，得到 Bootstrap Treatment Effect 的经验分布：
 
-$$
+```math
 \hat{\tau}_{\mathrm{boot}}^{(1)},
 \ldots,
 \hat{\tau}_{\mathrm{boot}}^{(B)}
-$$
+```
 
 对于均值差：
 
-$$
+```math
 \hat{\tau}=\bar{Y}_T-\bar{Y}_C
-$$
+```
 
 Bootstrap Standard Error 为：
 
-$$
+```math
 \widehat{SE}_{\mathrm{boot}}(\hat{\tau})
 =\sqrt{
 \frac{1}{B-1}
@@ -1331,17 +1562,34 @@ $$
 \frac{1}{B}\sum_{c=1}^{B}\hat{\tau}_{\mathrm{boot}}^{(c)}
 )^2
 }
-$$
+```
 
 #### 用户级聚合实现
 
 如果业务指标可以先聚合到用户级，这是最清楚的实现方式：
 
 ```python
+def is_finite(value):
+    return value == value and value not in (
+        float("inf"),
+        float("-inf"),
+    )
+
+
 def ratio_metric(rows):
-    numerator = sum(row["numerator"] for row in rows)
-    denominator = sum(row["denominator"] for row in rows)
-    return numerator / denominator if denominator else float("nan")
+    numerators = [row["numerator"] for row in rows]
+    denominators = [row["denominator"] for row in rows]
+
+    if not all(is_finite(value) for value in numerators + denominators):
+        raise ValueError("ratio inputs must all be finite")
+    if any(value < 0 for value in denominators):
+        raise ValueError("ratio denominators must be non-negative")
+
+    numerator = sum(numerators)
+    denominator = sum(denominators)
+    if denominator <= 0:
+        raise ValueError("ratio denominator must be positive in every replicate")
+    return numerator / denominator
 
 
 def treatment_effect(user_rows):
@@ -1357,12 +1605,34 @@ def sample_with_replacement(rows, rng):
     ]
 
 
+def empirical_quantile(values, probability):
+    if not 0 <= probability <= 1:
+        raise ValueError("probability must be between 0 and 1")
+    if not values:
+        raise ValueError("values must be non-empty")
+    if not all(is_finite(value) for value in values):
+        raise ValueError("quantile values must all be finite")
+
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * probability
+    lower_index = int(position)
+    upper_index = min(lower_index + 1, len(ordered) - 1)
+    weight = position - lower_index
+
+    return (
+        ordered[lower_index] * (1 - weight)
+        + ordered[upper_index] * weight
+    )
+
+
 def cluster_bootstrap(user_rows, rng, repetitions=2_000):
     treatment = [r for r in user_rows if r["group"] == "treatment"]
     control = [r for r in user_rows if r["group"] == "control"]
 
     if not treatment or not control:
         raise ValueError("both experiment groups must be non-empty")
+    if repetitions < 2:
+        raise ValueError("repetitions must be at least 2")
 
     effects = []
 
@@ -1373,9 +1643,8 @@ def cluster_bootstrap(user_rows, rng, repetitions=2_000):
         )
         effects.append(treatment_effect(sample))
 
-    effects.sort()
-    lower = effects[int(0.025 * repetitions)]
-    upper = effects[int(0.975 * repetitions)]
+    lower = empirical_quantile(effects, 0.025)
+    upper = empirical_quantile(effects, 0.975)
 
     return {
         "effect": treatment_effect(user_rows),
@@ -1386,17 +1655,19 @@ def cluster_bootstrap(user_rows, rng, repetitions=2_000):
 
 代码假设每行已经是一个用户，且包含实验组、指标分子和分母。它计算的是 Ratio of Sums：
 
-$$
+```math
 CTR=\frac{\sum_u Clicks_u}{\sum_u Impressions_u}
-$$
+```
 
-而不是 Average of User-level Ratios：
+而不是 Average of User-level Ratios。令 `U_+` 表示正曝光用户集合，则后者是：
 
-$$
-\frac{1}{N}\sum_u\frac{Clicks_u}{Impressions_u}
-$$
+```math
+\frac{1}{|\mathcal{U}_{+}|}
+\sum_{u\in\mathcal{U}_{+}}
+\frac{Clicks_u}{Impressions_u}
+```
 
-两者回答的问题不同，Bootstrap 不能替代 Metric Definition。
+两者回答的问题不同，Bootstrap 不能替代 Metric Definition。若 Treatment 会改变用户是否进入 `U_+`，Average of User-level Ratios 还是实验后条件指标，不能当作 Eligible Population 的 ITT 效果。
 
 #### 多重出现的 Cluster
 
@@ -1419,37 +1690,39 @@ User C sampled 1 time  → weight = 1
 | Percentile CI | 直接取 Bootstrap Effect 的分位数 | 简单、直观 | 对偏差和偏态修正有限 |
 | Normal CI | `point estimate ± critical value × bootstrap SE` | 易于报告 | 依赖近似对称性 |
 | Basic CI | 围绕原始估计反射 Bootstrap Quantile | 可做简单偏差修正 | 对复杂偏态仍有限 |
-| BCa CI | 修正 Bias 与 Acceleration | 通常更稳健 | 计算复杂、成本更高 |
+| BCa CI | 修正 Bias 与 Acceleration | 在正则条件下可提高区间准确性 | 需要 Jackknife；Cluster BCa 通常要 Leave-one-cluster-out，且不代表对异常值或少量 Cluster 稳健 |
 
 实验平台中最常见的是 Percentile CI 或基于 Bootstrap Standard Error 的 Normal CI。选择方法后应保持平台口径稳定，避免根据结果选择更有利的区间。
 
-#### 与 Cluster-robust Standard Error 的区别
+#### 与 Delta Method 和 Cluster-robust Standard Error 的关系
 
-| 方法 | 核心思想 | 优势 | 局限 |
+| 组合方式 | 核心思想 | 优势 | 局限 |
 |---|---|---|---|
-| Cluster Bootstrap | 重采样 Cluster，重新计算完整指标 | 适合复杂、非线性和长尾指标 | 计算成本较高 |
-| Cluster-robust SE | 使用 Sandwich Estimator 修正 Cluster 内相关性 | 速度快，适合回归框架 | 依赖大样本渐近近似 |
-| Delta Method | 对 Ratio 等函数做一阶 Taylor Expansion | 高效、适合标准 Ratio Metric | 强非线性或重尾时近似可能较差 |
+| Direct Cluster Bootstrap | 重采样 Cluster，并在每个 Replicate 重新计算完整指标 | 直接适配复杂 Ratio 和非线性统计量 | 计算成本较高，仍要求足够多的独立 Cluster |
+| Delta / Linearization + Cluster-robust Covariance | 先把 Ratio 等函数一阶线性化，再对 Cluster 贡献使用 Sandwich Covariance | 高效，适合标准 Ratio Metric 和回归调整 | 依赖线性化与大样本近似 |
+| Regression + Cluster-robust SE | 在回归框架中估计效应，并按随机化 Cluster 计算 Sandwich SE | 易结合协变量和分层固定效应 | 模型规格和少 Cluster 修正需要谨慎 |
 
-它们不一定产生完全相同的区间。Cluster 数量足够大、指标较规则时结果通常接近；Cluster 较少时，三种方法都需要谨慎，并考虑 small-sample correction 或 Randomization Inference。
+Delta Method 是函数近似，Cluster-robust SE 是相关结构下的 Covariance 估计，两者可以组合，并非互斥的三选一。不同组合不一定产生完全相同的区间；Cluster 较少时都应谨慎，并考虑 small-sample correction 或 Randomization Inference。
 
 #### Cluster 应如何选择
 
 基本原则：
 
 ```text
-Inference Unit 不应比 Randomization Unit 更细
+Variance / Resampling Cluster 不应比 Randomization Unit 更细
 ```
+
+Point Estimate 或回归数据可以保留事件级行，但标准误和重采样必须至少尊重随机化层级；若还存在跨随机化单位依赖，则需要更粗的依赖结构或重新设计实验。
 
 | 随机化设计 | 通常的 Bootstrap Cluster |
 |---|---|
 | User-level Experiment | `user_id` |
 | Seller-level Experiment | `seller_id` |
 | Geo Experiment | city / region |
-| Switchback Experiment | randomization time block，必要时结合 geographic unit |
+| Switchback Experiment | 保留时间结构的较长 Block / Day；使用 Block Bootstrap、HAC 或按 Assignment Schedule 的 Randomization Inference，不能把相邻 geo × time block 当作独立样本 |
 | Household-level Assignment | household_id |
 
-如果用户级实验中还存在家庭、社交网络或共享供给造成的跨用户依赖，仅按用户 Cluster Bootstrap 仍可能低估方差。此时需要重新考虑实验设计，而不是机械扩大 Cluster。
+如果用户级实验中还存在家庭、社交网络或共享供给造成的跨用户依赖，仅按用户 Cluster Bootstrap 仍可能低估方差并产生有偏 Point Estimate。此时需要重新考虑实验设计，而不是机械扩大 Cluster。
 
 #### 分层与实验组处理
 
@@ -1466,13 +1739,13 @@ Sample Control clusters with replacement
 
 #### 计算成本与 Poisson Bootstrap
 
-标准 Cluster Bootstrap 需要重复扫描数据。在超大规模场景中，可以为每个 Cluster 和 Bootstrap Replicate 生成：
+标准 Cluster Bootstrap 需要重复扫描数据。在超大规模场景中，可以在每个实验组内为每个 Cluster 和 Bootstrap Replicate 生成：
 
-$$
+```math
 w_u^{(b)}\sim Poisson(1)
-$$
+```
 
-然后用 `w` 作为聚合权重。Poisson Bootstrap 易于并行和流式计算，是经典有放回 Bootstrap 的工程近似。
+然后用 `w` 作为聚合权重。Poisson Bootstrap 易于并行和流式计算，是经典 Multinomial Bootstrap 的工程近似；它不改变 Cluster 的选择原则，也不修复跨 Cluster 干扰。
 
 #### Cluster Bootstrap 不能解决什么
 
@@ -1508,38 +1781,63 @@ Cluster Bootstrap 只处理抽样推断中的 Cluster 内相关性，不能修�
 
 ## 11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs
 
-标准 A/B Testing 通常依赖一个重要假设：一个实验单位接受的处理不会改变另一个实验单位的结果。
+标准 A/B Testing 通常依赖无跨单位干扰：一个实验单位接受的处理不会改变另一个实验单位的潜在结果。推荐和电商系统还常隐含“同一个 Treatment 版本含义稳定”的假设。
 
-但在以下场景中可能不成立：
-
-- 社交推荐
-- 创作者与消费者双边平台
-- 拼车或配送平台
-- 广告竞价
-- 游戏匹配
-- 直播互动
-- 市场供需系统
-
-例如，一部分用户获得新的创作者推荐策略后，可能改变创作者供给，进而影响 Control 用户。
+当 Treatment 改变共享候选池、库存、直播间热度或商家行为时，Control 用户所处环境也会被改变。此时用户级 A/B Test 估计的可能是“在某个 Treatment Saturation 下的直接效果”，不一定等于 100% 上线后的全局效果。
 
 <a name="sec-11-1"></a>
 
-### 11.1 常见解决方案
+### 11.1 电商推荐中的干扰来源
 
-- Cluster Randomization
-- Geo Experiment
-- Creator-level Randomization
-- Marketplace-level Randomization
-- Switchback Experiment
-- Two-sided Experiment Design
+| 来源 | 示例 | 可能产生的偏差 |
+|---|---|---|
+| 同一用户跨入口污染 | 短视频商品内容流的策略改变用户兴趣，随后影响商城商品卡点击 | Surface-specific Effect 被混合或稀释 |
+| 共享直播间 | Treatment 将更多用户送入同一直播间，改变热度、互动和主播行为 | Control 用户也受到直播间状态变化 |
+| 有限库存 | Treatment 加速部分商品售罄，使 Control 面对不同商品可用性 | Treatment 与 Control 的机会集合不同 |
+| 商家侧反馈 | 曝光变化促使商家调价、补货、投放或更换商品 | 短期 Direct Effect 与长期 Equilibrium Effect 不同 |
+| 共享计算或配额 | 新召回通道占用候选、精排或缓存预算 | 其他策略效果随 Treatment 流量占比变化 |
+| 社交与内容供给 | 用户行为改变创作者或主播供给 | 跨用户 Spillover |
 
-选择实验设计时，需要考虑策略是否会产生跨用户干扰。
+需要区分三个问题：
+
+```text
+Experiment Overlap
+= 同一用户同时参加多个实验
+
+Within-user Cross-surface Effect
+= 一个入口的 Treatment 改变同一用户在另一个入口的行为
+
+Cross-unit Interference
+= 一个用户、商品、直播间或商家的 Treatment 改变其他实验单位的结果
+```
+
+实验层和 Factorial Design 主要处理第一个问题并刻画策略交互；保持用户跨 Surface Assignment 一致可以减少第二个问题；第三个问题通常需要改变随机化设计。
 
 ---
 
 <a name="sec-11-2"></a>
 
-### 11.2 Switchback Experiment
+### 11.2 设计选择
+
+| 主要问题 | 候选设计 | 关键代价或限制 |
+|---|---|---|
+| 个性化排序，几乎不改变共享资源 | User-level Randomization | 仍需保持跨设备和跨 Surface 身份一致 |
+| 直播间内所有观众共享房间状态 | Live-room / Host-level Cluster Randomization | Room 数量较少，房间异质性高 |
+| 商家工具或供给策略 | Seller-level Randomization | 消费者会跨商家浏览，可能仍有 Spillover |
+| 地区内供需或库存强耦合 | Geo Cluster 或 Geo × Time Switchback | Cluster 少、方差高、存在时间趋势 |
+| 平台状态可快速切换且 Carryover 较短 | Switchback | 需要随机时段、Washout 和时序推断 |
+| 同时影响消费者与商家 | Two-sided Randomization / Multiple Randomization Design | 设计与解释复杂，需明确 Direct / Spillover Estimand |
+| 已知关系网络 | Graph Cluster Randomization | Cluster 边界仍可能存在跨组连接 |
+
+随机化层级越粗，通常越能减少干扰，但可用独立 Cluster 数越少、统计功效越低。选择设计时应先明确希望估计的是 Direct Effect、Spillover Effect、某个 Saturation 下的效果，还是全量上线后的 Equilibrium Effect。
+
+Cluster Bootstrap 只能在给定设计下估计不确定性；若用户级随机化本身因库存或供给干扰而产生偏差，事后按用户或商家重采样都不能恢复正确反事实。
+
+---
+
+<a name="sec-11-3"></a>
+
+### 11.3 Switchback Experiment
 
 Switchback 适合具有强网络效应、资源共享或供需耦合的系统。
 
@@ -1551,17 +1849,18 @@ Switchback 适合具有强网络效应、资源共享或供需耦合的系统。
 - Marketplace Matching
 - 实时资源调度
 - 直播流量分配
+- 共享库存或配额会随全局 Treatment 状态快速变化的策略
 
-基础设计：
+在日期、地区和时段分层后，对每组匹配时间块做受约束随机化。例如规定四个时间块中恰有两个 Treatment，某次随机实现可能是：
 
 ```text
-09:00–10:00 → Control
-10:00–11:00 → Treatment
+09:00–10:00 → Treatment
+10:00–11:00 → Control
 11:00–12:00 → Control
 12:00–13:00 → Treatment
 ```
 
-为了避免固定时段偏差，通常需要随机安排时间块，并对日期、地区或时间进行分层。
+上面只是一个随机实现，不是固定顺序模板。不能简单采用永远交替的 Control / Treatment 顺序，因为小时、星期和活动节奏可能与处理完全重合；分层、随机 Block Sequence、Carryover 处理和推断方式都应在实验前确定。
 
 Switchback 的关键风险：
 
@@ -1571,7 +1870,36 @@ Switchback 的关键风险：
 - 时段之间不独立
 - 切换策略需要冷却时间
 
-如果新策略会对后续时间段产生持续影响，需要设置 Washout Period。
+如果新策略会对后续时间段产生持续影响，需要设置 Burn-in / Washout，并根据实际随机化的 Geo × Time Block 进行推断。块太短会增加 Carryover Bias，块太长会减少独立切换次数并降低 Power。
+
+Switchback 不是所有 Marketplace Effect 的通用答案。商品补货、商家学习、用户囤货或主播行为可能持续数天甚至更久；若系统无法在合理时间内回到稳定状态，需要更长周期的 Cluster / Geo Design 或明确建模 Carryover。
+
+---
+
+<a name="sec-11-4"></a>
+
+### 11.4 跨入口归因与延迟转化
+
+短视频或直播曝光可能先引导用户进入商品页，订单在数小时或数天后发生，退款又更晚成熟。实验必须提前固定：
+
+- Exposure / Click / Order 的去重键；
+- Same-session、Last-touch 或固定 Lookback Attribution Rule；
+- Order Conversion Window；
+- Cancellation / Refund Maturity Window；
+- 跨设备和跨 Surface 的身份合并规则；
+- 实验结束后的 Data Freeze Date。
+
+用于决策的用户级 GMV 或订单指标通常按 Assignment 归因，而不是只分析点击 Treatment 商品的人。只保留点击者、进店者或下单者会按 Post-treatment Behavior 选择样本，破坏随机化。
+
+若需要理解漏斗机制，可以同时报告：
+
+```text
+ITT: Assigned eligible users 的订单与 Net GMV
+Triggered: 由实验前条件定义、确实有机会触发策略的用户
+Diagnostic: Exposure → Click → Product Page → Order → Refund
+```
+
+Diagnostic Funnel 用于解释机制，不能用下游显著而上游不显著来反向更换 Primary Metric。
 
 ---
 
@@ -1828,69 +2156,77 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 
 <a name="sec-14"></a>
 
-## 14. 实验案例：电商排序与 GMV｜Case Study: Commerce Ranking
+## 14. 工业案例：三类电商推荐实验
+
+以下均为实验设计模板，不代表任何真实业务配置或实验结果。案例中的“决策”描述的是预先定义的判断规则，而不是已经发生的上线结论。
 
 <a name="sec-14-1"></a>
 
-### 14.1 背景
+### 14.1 短视频商品内容排序实验
 
-新商品排序模型提高了商品 CTR，但无法确认是否提高最终商业价值。
+| 实验卡片字段 | 设计 |
+|---|---|
+| 业务假设 | 多目标排序在保持内容消费质量的同时，提高成熟的 Net GMV per Assigned Eligible User |
+| Control / Treatment | Control 使用当前排序；Treatment 加入购买意图、商品质量和长期负反馈目标的新排序 |
+| 随机化单位 | User ID，并保持跨设备和相关入口的 Assignment 稳定 |
+| Eligibility | 由实验前条件定义、具备进入短视频商品内容场景机会的用户；不能只保留已曝光或已点击用户 |
+| Primary Metric | 成熟的 Net GMV per Assigned Eligible User；也可预先选择 Orders per Assigned Eligible User，但不能看结果后切换 |
+| Secondary / Diagnostic | 商品 Exposure Rate、Product CTR、商品页到达率、Add-to-Cart Rate、Order CVR |
+| Guardrail | 内容负反馈、有效观看时长、P95 / P99 Latency、取消率、退款率、Seller Exposure Concentration |
+| Attribution / Maturity | 按 Assignment 归因，固定订单转化窗口、取消与退款成熟窗口、跨入口身份合并规则和 Data Freeze Date |
+| 常见误判 | Treatment 改变了谁看到或点击商品；只分析 Exposed / Clicked User 会产生 Post-treatment Selection，CTR 提升也不等于净交易价值提升 |
+| 决策 | Assignment SRM 与日志链路通过，Primary 的成熟区间达到业务阈值，且内容、系统和交易 Guardrail 均未越界，才进入 Ramp-up |
 
 <a name="sec-14-2"></a>
 
-### 14.2 指标设计
+### 14.2 直播内容流与直播间分发实验
 
-| 指标类型 | 指标 |
+| 实验卡片字段 | 设计 |
 |---|---|
-| Primary | Net GMV per User |
-| Secondary | Product CTR, Add-to-Cart Rate, Order CVR, AOV, Orders per User |
-| Guardrails | Refund Rate, Cancellation Rate, Complaint Rate, Latency |
-| Diagnostic | Category Mix, Price Distribution, Seller Exposure Share |
+| 业务假设 | 新的直播间召回或流量分配提高合格观众的成熟交易价值，同时不损害房间体验、主播生态和库存可用性 |
+| Control / Treatment | Control 使用当前房间分发；Treatment 调整直播间候选、排序目标或流量配额 |
+| 随机化单位 | 若观众只接受个性化排序且共享状态影响很弱，可用 User ID；若 Treatment 改变房间热度、主播行为或全局配额，应优先考虑 Live Room / Host Cluster、Geo-Time Switchback 或 Saturation Design |
+| Eligibility | 实验前定义的可分发直播间、Host、地区与时间块，以及相应合格观众；不能按进入 Treatment 房间后再筛选 |
+| Primary Metric | Net GMV per Eligible Viewer 或每个随机化 Cluster 的成熟交易价值；Point Estimate 与方差口径必须和设计一致 |
+| Secondary / Diagnostic | Room Entry Rate、Qualified Watch Time、Order Rate、Room Occupancy、Host / Room Exposure Share |
+| Guardrail | Complaint Rate、Refund Rate、P99 Latency、Room Concentration、主播侧流量不平等、Out-of-stock Exposure |
+| Attribution / Maturity | 按实际 Assignment Block 归因；Switchback 预先固定 Burn-in / Washout、Carryover 处理、订单与退款成熟窗口 |
+| 常见误判 | 用户级 Control 可能进入已被 Treatment 观众改变的直播间；按用户计算普通 Standard Error 或 User Bootstrap 既低估相关性，也不能修复 Control Contamination |
+| 决策 | 根据 Direct / Spillover / Equilibrium Estimand 报告 Cluster 或 Randomization-based CI；Carryover、库存和主播反馈可接受后才扩大流量 |
 
 <a name="sec-14-3"></a>
 
-### 14.3 假设结果
+### 14.3 商城商品卡召回或排序实验
 
-```text
-Product CTR            +3.0%
-Add-to-Cart Rate       +1.2%
-Order CVR              -1.5%
-AOV                    -2.0%
-Gross GMV per User     +0.4%
-Net GMV per User       -0.8%
-Refund Rate            +1.1%
-```
+| 实验卡片字段 | 设计 |
+|---|---|
+| 业务假设 | 新召回或多目标排序在不增加缺货、履约和退款风险的前提下，提高商城访问用户的成熟 Net GMV |
+| Control / Treatment | Control 使用当前商品候选与排序；Treatment 使用新的召回模型、精排模型或明确的一体化策略 |
+| 随机化单位 | User ID；若直接改变商家供给、库存分配或定价工具，则重新评估 Seller / Item / Geo Cluster |
+| Eligibility | 实验前定义的商城合格访问用户或请求；主分析不能只保留产生商品卡 Impression、Click 或 Order 的用户 |
+| Primary Metric | 成熟的 Net GMV per Assigned Eligible User，或预先指定的 Paid Orders per Assigned Eligible User |
+| Secondary / Diagnostic | Candidate Coverage、Zero-result Rate、Product CTR、Add-to-Cart、Payment CVR、AOV、Price / Category Mix |
+| Guardrail | Recall / Ranking Latency、Out-of-stock Exposure、Cancellation、Refund、Complaint、Seller Exposure Concentration |
+| Attribution / Maturity | 固定商品卡曝光与订单去重键、跨设备身份、支付归因窗口、取消 / 退款 Maturity Window 和 Data Freeze Date |
+| 常见误判 | 点击上涨可能来自低价或强吸引但低购买质量的商品；新近订单尚未退款时，Gross GMV 与 Refund Rate 会给出过度乐观信号 |
+| 决策 | 使用同等成熟的 Order Cohort 评估 Net Metric；若成熟收益未达到阈值，或库存、履约、退款与商家集中度恶化，则停止或迭代 |
 
 <a name="sec-14-4"></a>
 
-### 14.4 结果解释
+### 14.4 召回 × 精排的 2 × 2 Factorial
 
-虽然 CTR 和加购率提升，但：
-
-- Order CVR 下降
-- AOV 下降
-- 退款率增加
-- Net GMV 下降
-
-可能原因：
-
-- 模型更偏向低价、高点击商品
-- 推荐商品吸引点击，但购买意愿较弱
-- 商品质量或履约能力较差
-- 过度优化短期点击标签
-
-结论：
-
-```text
-Do not roll out.
-```
-
-下一步可以：
-
-- 将 Net GMV、Order CVR 和 Refund Risk 加入多目标训练
-- 对商品质量和履约能力设置约束
-- 检查价格区间和类目分布
-- 分析新客和老客是否受到不同影响
+| 实验卡片字段 | 设计 |
+|---|---|
+| 业务假设 | 新召回通道与新精排能够联合上线，且组合收益可能协同或抵消，因此需要直接估计 Interaction |
+| Treatment Factors | 因子 A 为当前 / 新召回，因子 B 为当前 / 新精排，形成 Baseline、Recall Only、Ranking Only、Combined 四个 Cell |
+| 随机化单位 | 同一个稳定 User ID 上独立随机化 A 与 B，并记录 Joint Assignment、Joint Exposure 和四个 Cell 的 Eligibility |
+| Eligibility | 在 Assignment 前定义、同时具备两项策略生效机会的用户；不能按某条新召回是否返回候选再筛选 |
+| Primary Metric | 成熟的 Net GMV per Assigned Eligible User；Interaction 使用预先声明的 Absolute Effect Scale |
+| Secondary / Diagnostic | Candidate Coverage、Recall Source Mix、Ranking Score Calibration、CTR、Order CVR、四个 Cell 的漏斗 |
+| Guardrail | Candidate Quality、P99 Latency、缓存与精排预算、内容或商品多样性、缺货、取消和退款 |
+| Attribution / Maturity | 四个 Cell 使用相同订单归因、成熟窗口和 Data Freeze Date；交互检验单独规划 MDE 与 Power |
+| 常见误判 | `A Only > 0` 且 `B Only > 0` 不能推出 Combined 等于两者之和；正交 Assignment 也不代表业务效果可加 |
+| 决策 | 同时报告四个 Cell Mean、条件效应、平均主效应和 Interaction Contrast；联合上线以 Combined 的成熟收益与 Guardrail 为准，而不是机械相加两个独立 Lift |
 
 ---
 
@@ -2084,10 +2420,14 @@ Ramp-up or Rollback
 - [ ] 计算样本量和 MDE
 - [ ] 确定实验周期
 - [ ] 检查实验层冲突
+- [ ] 评估并记录与同期实验的共同曝光和潜在交互
+- [ ] 若联合上线是候选方案，确认是否需要 Factorial Design 和 Interaction MDE
+- [ ] 评估库存、直播间、商家与跨 Surface Spillover
 - [ ] 确定 Salt 和 Bucket 范围
 - [ ] 验证线上与离线分桶一致
 - [ ] 确认实验平台和随机化链路处于正常状态
 - [ ] 检查埋点和数据链路
+- [ ] 固定 Attribution Window、Maturity Window 和 Data Freeze Date
 - [ ] 确定回滚方案
 
 #### 实验运行中
@@ -2108,6 +2448,8 @@ Ramp-up or Rollback
 - [ ] 检查 Guardrail Metrics
 - [ ] 分析关键用户分群
 - [ ] 检查内容、创作者或商品分布变化
+- [ ] 对预先指定的实验对估计 Interaction Effect
+- [ ] 判断 Treatment Saturation 或 Marketplace Spillover 是否限制外推
 - [ ] 评估业务收益与工程成本
 - [ ] 制定 Ramp-up 或 Rollback 计划
 - [ ] 保存实验结论和配置
@@ -2183,7 +2525,7 @@ CTR 提升不代表留存、生态或商业价值长期改善。
 
 ### 17.11 忽略网络效应
 
-用户、创作者、广告主和供给侧之间可能相互影响。
+用户、直播间、商品库存、商家和供给侧之间可能相互影响。用户级 A/B Test 在这种情况下不仅可能低估方差，还可能因 Control 被 Treatment 改变而产生有偏 Point Estimate。
 
 <a name="sec-17-12"></a>
 
