@@ -16,8 +16,13 @@
   - [4.3 基线、方差与时间趋势](#sec-4-3)
   - [4.4 统计校准](#sec-4-4)
   - [4.5 A/A Testing 与 SRM](#sec-4-5)
+  - [4.6 实验层与跨入口 Assignment 校验](#sec-4-6)
+  - [4.7 延迟转化与指标成熟](#sec-4-7)
 - [5. 异常排查](#sec-5)
-- [6. 推荐系统示例](#sec-6)
+- [6. 工业案例：A/A 平台与数据链路验证](#sec-6)
+  - [6.1 短视频商品内容：Assignment 与 Exposure 校验](#sec-6-1)
+  - [6.2 商城商品卡：订单与退款成熟度校验](#sec-6-2)
+  - [6.3 直播间分发：Cluster 推断校准](#sec-6-3)
 - [7. 检查清单](#sec-7)
   - [7.1 实验配置](#sec-7-1)
   - [7.2 数据质量](#sec-7-2)
@@ -84,6 +89,8 @@ Statistical Calibration 是否可信？
 - 实时指标链路上线
 - 新关键指标正式用于实验决策
 - 多个 A/B Test 同时出现无法解释的偏移
+- 新增短视频商品内容流、直播内容流或商城商品卡推荐之间的跨入口分流
+- 直播间、商品库存或商家资格过滤逻辑变化
 
 平台成熟、分流和数据链路未变化、仅上线新模型时，通常可以直接进入 A/B Testing。
 
@@ -106,6 +113,8 @@ Statistical Calibration 是否可信？
 - 客户端版本要求
 - 降级逻辑
 - 曝光资格
+- Surface Routing 与跨入口用户身份规则
+- 商品可售、库存和直播间资格过滤
 
 <a name="sec-3-2"></a>
 
@@ -182,16 +191,22 @@ SRM 是前置数据质量门槛。SRM Fail 时，应暂停业务指标分析并�
 
 ### 4.4 统计校准
 
-A/A Test 的理想结果不是所有指标完全相等，而是：
+A/A Test 的理想结果不是所有指标完全相等。单次 A/A 只能检查一次随机化实现和数据链路，不能仅凭“所有 p-value 都大于 0.05”证明统计系统已经校准。
+
+更可靠的校准需要运行多次独立 A/A，或在历史无处理数据上执行大量 Synthetic A/A Randomization。若检验有效且原假设成立，长期来看应观察到：
 
 - 差异围绕 0 随机波动
 - 没有持续性单边偏移
 - 置信区间与标准误合理
-- 大部分置信区间覆盖 0
-- 多次实验的假阳性率接近预设显著性水平
-- p-value 整体分布不存在系统性异常
+- 约定置信水平的区间具有接近标称值的 Coverage
+- 多次预先指定检验的假阳性率接近设定的 Alpha
+- 连续型、正确校准检验的 p-value 在 Null 下近似 Uniform
 
-一次 `p-value > 0.05` 不能证明平台完全可靠；一次显著也不一定代表平台有 Bug。应结合 SRM、日志、指标链路、时间趋势和多重检验综合判断。
+离散指标、小样本或保守检验的 p-value 不一定严格 Uniform，因此应结合仿真或 Randomization-based Calibration 判断，不能机械套用图形结论。
+
+统计校准必须覆盖生产中实际使用的方法，包括 Ratio Linearization、CUPED、Cluster-robust SE、Cluster Bootstrap、Multiple Testing 和 Sequential Monitoring。仅校准普通 T-test，不能证明其他推断链路正确。
+
+一次 `p-value > 0.05` 不能证明平台完全可靠；一次显著也不一定代表平台有 Bug。应结合 SRM、日志、指标链路、时间趋势和预先定义的多重检验范围综合判断。
 
 <a name="sec-4-5"></a>
 
@@ -206,6 +221,47 @@ A/A Test 的理想结果不是所有指标完全相等，而是：
 | 执行方式 | 平台验证实验 | 实验期间持续监控 |
 
 SRM 是 A/A Testing 的重要组成部分，但也必须独立应用于正式 A/B Testing。
+
+<a name="sec-4-6"></a>
+
+### 4.6 实验层与跨入口 Assignment 校验
+
+A/A 还可用于验证 Overlapping Experiment Infrastructure 本身，但需要区分“Assignment 独立”与“业务效果无交互”。A/A 能检查前者，不能证明后者。
+
+对于两个配置为正交的 50/50 层，应检查四个交叉单元是否接近预期 25%：
+
+| Layer A | Layer B | 期望占比 |
+|---|---|---:|
+| Control | Control | 25% |
+| Treatment | Control | 25% |
+| Control | Treatment | 25% |
+| Treatment | Treatment | 25% |
+
+若分流比例不是 50/50，期望交叉占比应由两个边际概率相乘。还需要检查：
+
+- 同层实验是否确实互斥；
+- 跨层 Salt 是否产生独立且稳定的 Assignment；
+- 短视频商品内容流、直播内容流、商城商品卡推荐是否使用预期的统一用户身份；
+- 用户跨设备或跨入口后是否发生 Cross-over；
+- Surface-specific Eligibility 是否造成条件样本中的交叉单元比例异常。
+
+需要注意：按“实际触发某 Surface”的用户检查交叉比例时，触发行为可能受到 Treatment 影响。平台校验应优先使用 Assignment 与实验前 Eligibility；Exposure-based 检查作为诊断，不能替代 ITT 分流检查。
+
+<a name="sec-4-7"></a>
+
+### 4.7 延迟转化与指标成熟
+
+A/A 两组策略虽然相同，但短视频或直播曝光到商品页、订单、取消和退款仍存在延迟。两组若使用不同的数据截止时间、迟到日志处理或归因规则，也会产生伪差异。
+
+需要验证：
+
+- Assignment、Exposure、Click、Order 和 Refund 使用一致时区；
+- Attribution Window 和 Maturity Window 在两组一致；
+- Late-arriving Event 的回补逻辑一致；
+- 每个 Observation Cohort 只在相同成熟度下比较；
+- Ratio Metric 的 Numerator、Denominator、Zero-denominator 规则一致。
+
+例如订单发生后 7 天内均可能退款，就不应将 Treatment 的新近订单与 Control 的已成熟订单直接比较 Net GMV 或 Refund Rate。
 
 ---
 
@@ -243,36 +299,83 @@ flowchart TB
 
 <a name="sec-6"></a>
 
-## 6. 推荐系统示例
+## 6. 工业案例：A/A 平台与数据链路验证
+
+以下案例用于说明验证方法；其中流量、比例和时间均为示例，不代表任何真实业务结果。
 
 | 项目 | 配置 |
 |---|---|
 | Experiment Unit | User ID |
+| Surfaces | 短视频商品内容流、直播内容流、商城商品卡推荐 |
 | Control Traffic | 50% |
 | Treatment Traffic | 50% |
 | Control Strategy | Ranking Model V1 |
 | Treatment Strategy | Ranking Model V1 |
-| Primary Metric | Watch Time per User |
-| Secondary Metrics | CTR、Completion Rate、Retention |
-| Guardrail Metrics | Crash Rate、Latency、Complaint Rate |
+| Validation Metrics | Eligible Users、Assignment、Exposure Coverage、Cross-over |
+| Business Metrics | Product CTR、Order CVR、Net GMV per Assigned User |
+| Guardrail Metrics | Refund Rate、Crash Rate、Latency、Complaint Rate |
 
-预期结果：
+总体预期结果：
 
 ```text
 Treatment Effect ≈ 0
 ```
 
-异常示例：
+平台级异常示例：
 
 ```text
-CTR:
-Control   = 10.0%
-Treatment = 11.2%
+Net GMV per Assigned User:
+Control   = 10.0
+Treatment = 11.2
 
 Relative Difference = +12.0%
 ```
 
-由于两组策略相同，应依次检查 SRM、用户跨组、曝光资格、日志完整性、客户端版本、指标 SQL 和随机假阳性。
+由于两组策略相同，应依次检查 SRM、用户跨组、跨 Surface 身份、商品或直播间资格过滤、曝光与订单日志、归因成熟度、指标 SQL 和随机假阳性。下面三个案例分别把这些检查落到短视频商品内容、直播间和商城商品卡链路。
+
+<a name="sec-6-1"></a>
+
+### 6.1 短视频商品内容：Assignment 与 Exposure 校验
+
+| 实验卡片字段 | 设计与判断 |
+|---|---|
+| 验证目标 | 确认 User Assignment、商品 Exposure 资格和客户端曝光日志均不偏向任一组 |
+| 两组策略 | 同一个商品排序模型、同一套入口配置与过滤规则 |
+| Eligibility | 由实验前条件定义的可进入短视频商品内容场景的用户 |
+| 发生什么 | 示例：10 万名合格用户的 Assignment 为 50,120 对 49,880，但某客户端版本漏记一组曝光，使 Exposed User 比例变成 46% 对 54% |
+| 为什么会误判 | 只对 Exposed User 做 SRM 会把日志缺失解释为随机化失败；只看 Assignment SRM 又会漏掉曝光链路异常 |
+| 正确分析 | 先在 Eligible Assignment 上做主 SRM，再按 Group × Client Version 比较 `Exposure / Assigned Eligible User`、Null Rate 与 Duplicate Rate |
+| 通过条件 | Assignment 比例符合设计，Cross-over 可忽略，修复后两组 Exposure Coverage 与迟到日志率无系统性差异 |
+| 决策 | 主 SRM Fail 时停止验证；Assignment Pass 但 Exposure Fail 时修复埋点并重新运行 A/A |
+
+<a name="sec-6-2"></a>
+
+### 6.2 商城商品卡：订单与退款成熟度校验
+
+| 实验卡片字段 | 设计与判断 |
+|---|---|
+| 验证目标 | 确认商品卡曝光、订单归因、取消与退款回补在两组使用同一口径和成熟窗口 |
+| 两组策略 | 相同的商品卡召回与排序策略 |
+| Eligibility | 实验前满足商城访问条件的 Assigned User；不能只保留下单用户 |
+| 发生什么 | 示例：一个数据分片的 Refund Event 晚到两天，Dashboard 暂时显示 Control Refund Rate 为 4.8%、Treatment 为 3.5% |
+| 为什么会误判 | 查询当天的全部订单具有不同 Maturity Age，差异可能来自迟到日志，而不是随机波动或隐藏的策略差异 |
+| 正确分析 | 按 Order Cohort 对齐相同退款成熟窗口，只分析 Data Freeze Date 前已完整观察的订单，并比较 Late-arriving Rate |
+| 通过条件 | Attribution、去重、时区、Maturity Window 和最终回补后的 Net Metric 均无系统性组间差异 |
+| 决策 | 未成熟结果只作 Preliminary 诊断；成熟结果或回补链路 Fail 时不得批准该指标用于正式 A/B |
+
+<a name="sec-6-3"></a>
+
+### 6.3 直播间分发：Cluster 推断校准
+
+| 实验卡片字段 | 设计与判断 |
+|---|---|
+| 验证目标 | 验证共享直播间下的标准误、置信区间和假阳性率，而不只验证用户级 Point Estimate |
+| 两组策略 | 相同的直播间候选与分发策略 |
+| 实验结构 | 示例：20 万名观众主要集中在 80 个直播间；数值仅用于说明“用户多、独立 Cluster 少” |
+| 为什么会误判 | 把所有用户当作独立样本会低估 Standard Error，少数热门房间的共同波动可能被报告为显著平台偏差 |
+| 正确分析 | 依据实际随机化设计与依赖结构，采用 Live Room、Host 或预定义 Room × Time Block 的 Cluster-robust SE、Cluster Bootstrap 或 Randomization Inference |
+| 通过条件 | 报告独立 Cluster 数；在重复 A/A 或 Synthetic A/A 中，Coverage 与假阳性率接近预设水平 |
+| 决策 | 用户级检验通过但 Cluster 校准失败时，仍视为平台推断链路未通过，修正后再进入正式实验 |
 
 ---
 
@@ -288,6 +391,8 @@ Relative Difference = +12.0%
 - [ ] 实验单位与正式 A/B Test 一致
 - [ ] Hash、Salt、Bucket 和流量比例正确
 - [ ] 实验组互斥逻辑正确
+- [ ] 正交层的交叉单元比例符合设计
+- [ ] 同一用户跨 Surface 的 Assignment 符合设计
 - [ ] 两组曝光资格一致
 
 <a name="sec-7-2"></a>
@@ -298,6 +403,8 @@ Relative Difference = +12.0%
 - [ ] 用户不会跨组
 - [ ] 两组日志覆盖率、延迟和重复率一致
 - [ ] 指标计算口径一致
+- [ ] Attribution / Maturity Window 一致
+- [ ] Ratio Metric 的 Numerator、Denominator 与 Zero-denominator 规则一致
 - [ ] Dashboard 与离线查询结果一致
 
 <a name="sec-7-3"></a>
@@ -310,6 +417,8 @@ Relative Difference = +12.0%
 - [ ] 没有持续性单边偏移
 - [ ] 已考虑多重检验
 - [ ] 已检查按时间拆分的结果
+- [ ] 推断方法与 Randomization / Cluster Unit 一致
+- [ ] 多次 A/A 或 Synthetic A/A 的 Coverage 和 Type-I Error 接近标称水平
 
 ---
 
