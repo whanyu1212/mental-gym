@@ -388,7 +388,7 @@ compatible user/item tower checkpoint
 
 ANN 还需要处理 tombstone、重复 ID、Base/Delta 合并和周期性 compaction。下架、缺货或直播下播首先属于 eligibility/state 更新；即使向量尚未物理删除，曝光前也必须过滤。动态写入过多后，应以 Exact Top-K 对照监控 ANN Recall，并在图结构或量化误差恶化时重建 Base Index。
 
-发布单元应绑定 `network_version`、`item_encoder_version`、`embedding_snapshot`、`feature_schema`、`index_version` 和必要的下游校准/重排配置。切换时使用同一 release manifest 做原子发布；回滚也要恢复整套兼容组合，不能只回滚网络权重而继续使用新索引。
+发布单元应绑定 `network_version`、`item_encoder_version`、`embedding_snapshot`、`feature_schema`、`index_version`、`reranker_service_build`、`algorithm_implementation_version` 和必要的下游校准/重排配置。重排配置至少包括 Similarity Encoder / Kernel Version、Similarity Normalization/Mapping、Utility Normalization、MMR Lambda 或 DPP Alpha、Residual Floor、Jitter/Clamp Tolerance、Window Size、Tie-break、Fallback、Constraint 与 Relaxation Version。切换时应原子切换指向一套已验证兼容组合的 Release Manifest Pointer；这不要求所有底层 Artifact 同时生成，但禁止请求看到混合版本。回滚也要恢复整套兼容组合，不能只回滚网络权重而继续使用新索引或旧阈值。
 
 <a name="sec-9-6"></a>
 
@@ -404,6 +404,7 @@ ANN 还需要处理 tombstone、重复 ID、Base/Delta 合并和周期性 compac
 | Materialization | 待回填向量数、向量年龄、编码失败、维度/归一化一致性 |
 | Index | Base/Delta 规模、tombstone、重复 ID、ANN Recall、index age、版本 join 失败 |
 | Serving / Business | P99 latency、fallback、valid-at-exposure、核心漏斗、供给集中度和长期质量 |
+| Re-ranking | similarity/kernel build 与 greedy selection 分段延迟、utility loss、constraint relaxation、rank deficiency、显著负 residual、PSD failure、no-solution、jitter/clamp/early-stop/fallback rate |
 
 训练或物化任务出现异常时应先停止后续发布，而不是让错误继续进入索引。Canary 必须验证整个 release bundle；若触发回滚，应冻结新的增量写入、恢复上一套兼容 manifest，并确认缓存和 Delta Index 没有残留新版本向量。
 
@@ -444,7 +445,7 @@ ANN 还需要处理 tombstone、重复 ID、Base/Delta 合并和周期性 compac
 - **发生什么**：策略在 5% 流量时进房率提升 6%，放量到 50% 后只提升 1%，P99 延迟增加 40 毫秒，状态特征超过 TTL 的比例从 1% 升至 8%。
 - **诊断问题**：小流量收益可能依赖热点候选和充足缓存；放量后请求竞争、缓存未命中和房间状态延迟共同改变了实际策略，并非统计波动或模型效果自然消失。
 - **正确做法**：按流量档位记录模型版本、缓存命中、候选新鲜度和有效曝光；压测特征服务与重排，在容量不足时限制高成本特征、启用可追踪的降级路径，并根据预设阈值暂停放量。
-- **应监控指标**：Effect by Ramp Stage、P50/P95/P99 延迟、Timeout、Cache Hit Rate、Feature Age、Valid-at-exposure Rate、Fallback Share、Quick Exit 和成熟净价值。
+- **应监控指标**：Effect by Ramp Stage、Feature/Kernel Build 与 Greedy Selection 的分段 P50/P95/P99、Timeout、Cache Hit Rate、Feature Age、Valid-at-exposure Rate、Fallback Share、Quick Exit 和成熟净价值。
 
 <a name="sec-10-3"></a>
 
