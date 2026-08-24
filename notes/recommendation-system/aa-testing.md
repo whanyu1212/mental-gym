@@ -23,6 +23,7 @@
   - [6.1 短视频商品内容：Assignment 与 Exposure 校验](#sec-6-1)
   - [6.2 商城商品卡：订单与退款成熟度校验](#sec-6-2)
   - [6.3 直播间分发：Cluster 推断校准](#sec-6-3)
+  - [6.4 搜索排序：查询、筛选与成交链路校验](#sec-6-4)
 - [7. 检查清单](#sec-7)
   - [7.1 实验配置](#sec-7-1)
   - [7.2 数据质量](#sec-7-2)
@@ -89,7 +90,7 @@ Statistical Calibration 是否可信？
 - 实时指标链路上线
 - 新关键指标正式用于实验决策
 - 多个 A/B Test 同时出现无法解释的偏移
-- 新增短视频商品内容流、直播内容流或商城商品卡推荐之间的跨入口分流
+- 新增或联通推荐场景，例如内容、直播、商城、搜索、详情页、创作者合作或跨渠道分流
 - 直播间、商品库存或商家资格过滤逻辑变化
 
 平台成熟、分流和数据链路未变化、仅上线新模型时，通常可以直接进入 A/B Testing。
@@ -241,7 +242,8 @@ A/A 还可用于验证 Overlapping Experiment Infrastructure 本身，但需要�
 
 - 同层实验是否确实互斥；
 - 跨层 Salt 是否产生独立且稳定的 Assignment；
-- 短视频商品内容流、直播内容流、商城商品卡推荐是否使用预期的统一用户身份；
+- 内容、直播、商城、搜索与详情页等买家侧场景是否使用预期的统一用户身份；
+- 创作者、商品、商家或活动级实验是否使用稳定且与设计一致的决策单位；
 - 用户跨设备或跨入口后是否发生 Cross-over；
 - Surface-specific Eligibility 是否造成条件样本中的交叉单元比例异常。
 
@@ -306,7 +308,7 @@ flowchart TB
 | 项目 | 配置 |
 |---|---|
 | Experiment Unit | User ID |
-| Surfaces | 短视频商品内容流、直播内容流、商城商品卡推荐 |
+| Surfaces | 短视频商品内容、直播内容、商城商品卡、搜索与类目浏览等公开电商场景 |
 | Control Traffic | 50% |
 | Treatment Traffic | 50% |
 | Control Strategy | Ranking Model V1 |
@@ -331,7 +333,7 @@ Treatment = 11.2
 Relative Difference = +12.0%
 ```
 
-由于两组策略相同，应依次检查 SRM、用户跨组、跨 Surface 身份、商品或直播间资格过滤、曝光与订单日志、归因成熟度、指标 SQL 和随机假阳性。下面三个案例分别把这些检查落到短视频商品内容、直播间和商城商品卡链路。
+由于两组策略相同，应依次检查 SRM、用户跨组、跨 Surface 身份、候选资格过滤、曝光与订单日志、归因成熟度、指标 SQL 和随机假阳性。下面用内容分发、直播间、商品卡与搜索排序等常用场景说明同一套校验思路；它们是例子，不是固定的场景分类。
 
 <a name="sec-6-1"></a>
 
@@ -376,6 +378,22 @@ Relative Difference = +12.0%
 | 正确分析 | 依据实际随机化设计与依赖结构，采用 Live Room、Host 或预定义 Room × Time Block 的 Cluster-robust SE、Cluster Bootstrap 或 Randomization Inference |
 | 通过条件 | 报告独立 Cluster 数；在重复 A/A 或 Synthetic A/A 中，Coverage 与假阳性率接近预设水平 |
 | 决策 | 用户级检验通过但 Cluster 校准失败时，仍视为平台推断链路未通过，修正后再进入正式实验 |
+
+<a name="sec-6-4"></a>
+
+### 6.4 搜索排序：查询、筛选与成交链路校验
+
+| 实验卡片字段 | 设计与判断 |
+|---|---|
+| 验证目标 | 确认搜索词解析、类目或价格筛选、结果曝光与延迟成交在两组中使用同一口径 |
+| 两组策略 | 相同的 Query Understanding、候选生成、排序模型和筛选规则 |
+| 设计单位 | User ID 稳定分流，Query Request 作为日志与机制诊断单位；不能把同一用户的多次查询当成完全独立样本 |
+| Eligibility | 实验前定义的合格搜索用户与可处理查询；不能只保留有结果、有曝光或有点击的查询 |
+| 示例现象 | 示例：20 万合格用户产生 120 万次查询；Assignment 为 50.0% 对 50.0%，但一个筛选参数解析版本在 Treatment 日志中漏记 4.2% 的价格筛选请求，使 Zero-result Rate 看似相对降低 6.0% |
+| 指标 | Assigned Eligible Users、Query Coverage、Parser Null Rate、Zero-result Rate、Search CTR、成熟 Orders 与 Net GMV per Assigned User；前几项用于定位日志异常，交易指标用于验证端到端链路 |
+| 干扰与成熟 | 热门查询会共享库存与商家供给波动；搜索后成交和退款存在延迟，两组必须使用相同 Attribution Window、Maturity Window 和 Data Freeze Date |
+| 通过条件 | 合格用户层的 SRM 通过，查询与筛选参数日志覆盖率无系统性组间差异，成熟交易指标差异符合随机波动 |
+| 决策 | 示例中应修复筛选日志并重跑 A/A；在 Query Coverage、成熟归因与用户级推断同时通过前，不得将该链路用于正式搜索 A/B |
 
 ---
 
