@@ -761,7 +761,9 @@ flowchart TB
 
 ## 11. Long-term Holdout
 
-Holdout 是长期保留旧策略或基础策略的一小部分用户，用于衡量累计效果和长期副作用。
+Holdout 是长期保留旧策略或基础策略的一小部分随机化单位，用于衡量累计效果和长期副作用。用户级 Holdout 主要识别买家侧效果；若策略会改变创作者供给、共享库存或整体市场均衡，需要能覆盖 Spillover 的 Cluster、Saturation、Two-sided 或市场级设计。
+
+固定 Holdout 与周期性重新随机 Holdout 回答不同问题：前者保留同一 Cohort，估计持续采用一组策略的累计差异；后者只有在起始状态可比，或将既往 Treatment History 纳入目标量时，才解释为下一周期策略包的新增效果。重新随机会切断长期对照，不能同时声称保留了连续累计 Estimand。若新策略已经影响用户状态、创作者供给、库存或商家行为，再把部分流量切回旧策略通常测量撤回效应，并可能存在延续效应；反转前应声明清洗期、状态重置可行性与旧策略兼容性。详细设计边界见 [A/B Testing](./ab-testing.md#sec-12-3)。
 
 ```text
 New Model          = 98%
