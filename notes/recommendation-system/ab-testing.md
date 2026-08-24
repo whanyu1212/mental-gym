@@ -40,13 +40,14 @@
 - [10. 统计推断｜Statistical Inference](#sec-10)
   - [10.1 常见方法](#sec-10-1)
   - [10.2 两比例检验代码](#sec-10-2)
-  - [10.3 显著不等于重要](#sec-10-3)
-  - [10.4 置信区间｜Confidence Interval](#sec-10-4)
-  - [10.5 多重检验｜Multiple Testing](#sec-10-5)
-  - [10.6 中途查看与提前停止｜Peeking and Early Stopping](#sec-10-6)
-  - [10.7 方差降低｜Variance Reduction](#sec-10-7)
-  - [10.8 异质性处理效应｜Heterogeneous Treatment Effects](#sec-10-8)
-  - [10.9 Cluster Bootstrap｜聚类自助法](#sec-10-9)
+  - [10.3 A/A 与 A/B 中如何解释 p-value](#sec-10-3)
+  - [10.4 显著不等于重要](#sec-10-4)
+  - [10.5 置信区间｜Confidence Interval](#sec-10-5)
+  - [10.6 多重检验｜Multiple Testing](#sec-10-6)
+  - [10.7 中途查看与提前停止｜Peeking and Early Stopping](#sec-10-7)
+  - [10.8 方差降低｜Variance Reduction](#sec-10-8)
+  - [10.9 异质性处理效应｜Heterogeneous Treatment Effects](#sec-10-9)
+  - [10.10 Cluster Bootstrap｜聚类自助法](#sec-10-10)
 - [11. 用户污染、网络效应与替代实验设计｜Interference and Alternative Designs](#sec-11)
   - [11.1 电商推荐中的干扰来源](#sec-11-1)
   - [11.2 设计选择](#sec-11-2)
@@ -768,7 +769,7 @@ Y
 如果上线新的排序模型，
 那么用户的人均有效观看时长将提升，
 因为新模型可以更准确地识别深度消费偏好，
-同时负反馈率和 P95 Latency 不应显著恶化。
+同时负反馈率和 P95 Latency 的单侧置信区间不得越过预先定义的 Harm Threshold。
 ```
 
 <a name="sec-7-1"></a>
@@ -803,7 +804,7 @@ Y
 
 ## 8. 实验有效性检查｜Experiment Validity Checks
 
-Sample Ratio Mismatch，简称 SRM，表示实际实验组比例与设计比例存在无法由随机波动解释的差异。
+Sample Ratio Mismatch，简称 SRM，表示实际分配计数相对设计比例出现异常偏离。低于预先定义阈值的 SRM p-value 表示数据与预期分配比例不一致，值得优先排查；它不是“平台出错的概率”。
 
 例如，设计为：
 
@@ -1266,7 +1267,89 @@ print(result)
 
 <a name="sec-10-3"></a>
 
-### 10.3 显著不等于重要
+### 10.3 A/A 与 A/B 中如何解释 p-value
+
+p-value 在 A/A 与 A/B 中的数学定义没有改变。它不是“H0 为真的概率”，也不是 Treatment 变好的概率。它回答的是：
+
+> 假设原假设和当前统计模型成立，观察到当前结果或更极端结果的概率有多大？
+
+这种解释依赖实验与分析链路有效：随机化和 SRM 正常、日志与指标定义正确、指标已成熟、方差方法匹配依赖结构，并且 Multiple Testing 与 Sequential Rule 已按计划处理。若这些前提失败，一个很小的业务 p-value 也不能挽救因果解释。
+
+两者真正不同的是实验目的和决策语境。设 `tau` 为预先定义 Estimand 上的 Treatment Effect，常见的双侧检验为：
+
+```text
+H0: tau = 0
+H1: tau != 0
+```
+
+| 场景 | 为什么运行 | 对 p-value 的正确使用 |
+|---|---|---|
+| A/A | 两组运行相同策略，用于验证分流、日志、指标和统计系统 | `p > alpha` 符合零效应预期，但不能证明平台正确；`p < alpha` 既可能是异常，也可能是预期内的假阳性 |
+| A/B | 两组策略不同，用于估计新策略的因果效果 | `p < alpha` 只表示存在统计显著差异；效果方向要看 Point Estimate 和 Confidence Interval |
+
+#### A/A：不显著是预期，不是平台正确的证明
+
+```text
+p-value > 0.05
+-> 没有足够证据认为两组存在差异
+-> 符合 A/A 的设计预期
+-> 不能推出“平台一定没有问题”
+```
+
+完整判断还需要检查：
+
+```text
+SRM
++ Assignment / Exposure / Cross-over
++ Logging 与 Metric Definition
++ 指标成熟度和时间趋势
++ 多次 A/A 的假阳性率、Coverage 与 p-value 分布
+-> 当前没有明显的平台异常证据
+```
+
+如果预先指定了 20 个相互独立且原假设均成立的指标，并都使用 `alpha = 0.05`，即使系统完全正常，也可能偶然出现显著结果。A/A 应关注长期校准和系统性模式，而不是要求每次、每个指标都 `p > 0.05`。更完整的校准方法见 [A/A Testing 的统计校准](aa-testing.md#sec-4-4)。
+
+#### A/B：显著差异不等于正向提升
+
+双侧检验中的 `p-value < 0.05` 只提供“效果不等于 0”的证据，本身不包含方向：
+
+```text
+Effect = +2.0%, p-value < 0.05
+-> 统计显著的正向差异
+
+Effect = -2.0%, p-value < 0.05
+-> 统计显著的负向差异
+```
+
+因此，不能把 `p-value < 0.05` 直接翻译成 Improve。对于希望提升的 Primary Metric，至少需要：
+
+```text
+Point Estimate > 0
++ Confidence Interval 支持正向效果
++ 结果通过预先定义的显著性规则
++ Guardrail 没有越过风险阈值
++ 效果达到实际业务门槛
+-> Rollout Candidate
+```
+
+例如，某商品排序实验使用成熟净价值作为 Primary Metric：
+
+| 示例结果 | 正确解释 |
+|---|---|
+| Lift `+2.3%`，95% CI `[+0.8%, +3.7%]`，`p = 0.01` | 有统计显著的正向效果；仍需检查 Guardrail、成熟度和业务门槛 |
+| Lift `-2.3%`，95% CI `[-3.7%, -0.8%]`，`p = 0.01` | 有统计显著的负向效果，应优先评估伤害与回滚 |
+| Lift `+0.1%`，95% CI `[+0.01%, +0.19%]`，`p = 0.03` | 统计显著，但收益可能小于上线成本或业务门槛 |
+| Lift `+2.0%`，95% CI `[-0.7%, +4.7%]`，`p = 0.12` | Point Estimate 为正，但证据不足；不能说“确定提升”，也不能说“没有效果” |
+
+在同一个双侧检验、同一显著性水平和相同统计假设下，`p-value < 0.05` 与 95% Confidence Interval 不跨 0 通常是同一检验结论的两种表达，并不是两份相互独立的证据。仍然需要报告置信区间，因为它能展示效果方向、可能范围以及是否达到业务门槛。
+
+如果实验前预先定义的是单侧优效检验，可以直接检验 `H0: tau <= 0` 对 `H1: tau > 0`；不能看完双侧结果后再临时切换为单侧检验。Guardrail 通常更适合预先定义 Non-inferiority Margin，而不是用 `p-value > 0.05` 宣称“没有伤害”。
+
+---
+
+<a name="sec-10-4"></a>
+
+### 10.4 显著不等于重要
 
 一个实验可能：
 
@@ -1287,9 +1370,9 @@ p-value < 0.001
 
 ---
 
-<a name="sec-10-4"></a>
+<a name="sec-10-5"></a>
 
-### 10.4 置信区间｜Confidence Interval
+### 10.5 置信区间｜Confidence Interval
 
 只报告 p-value 不足以表达实验结果。
 
@@ -1325,9 +1408,9 @@ Lower Bound above Business Threshold
 
 ---
 
-<a name="sec-10-5"></a>
+<a name="sec-10-6"></a>
 
-### 10.5 多重检验｜Multiple Testing
+### 10.6 多重检验｜Multiple Testing
 
 一个实验同时观察大量指标、Treatment 或用户分群时，偶然显著的概率会增加。若 20 个原假设都成立且检验相互独立，每个使用 5% 显著性水平，至少出现一个假阳性的概率为：
 
@@ -1363,9 +1446,9 @@ Lower Bound above Business Threshold
 
 ---
 
-<a name="sec-10-6"></a>
+<a name="sec-10-7"></a>
 
-### 10.6 中途查看与提前停止｜Peeking and Early Stopping
+### 10.7 中途查看与提前停止｜Peeking and Early Stopping
 
 如果每天使用普通固定样本检验查看 p-value，并在首次显著时停止实验，会提高假阳性率。
 
@@ -1404,9 +1487,9 @@ Group Sequential / Alpha Spending 可以在预定 Interim Looks 下控制总体�
 
 ---
 
-<a name="sec-10-7"></a>
+<a name="sec-10-8"></a>
 
-### 10.7 方差降低｜Variance Reduction
+### 10.8 方差降低｜Variance Reduction
 
 指标方差越低，在相同样本量下越容易检测到真实效应。
 
@@ -1466,9 +1549,9 @@ Y-\theta(X-\mathbb{E}[X])
 
 ---
 
-<a name="sec-10-8"></a>
+<a name="sec-10-9"></a>
 
-### 10.8 异质性处理效应｜Heterogeneous Treatment Effects
+### 10.9 异质性处理效应｜Heterogeneous Treatment Effects
 
 Overall Lift 只能描述平均效果，还需要判断不同用户群是否存在明显异质性。
 
@@ -1507,9 +1590,9 @@ Segment Analysis 的主要价值是发现风险和理解机制，而不是寻找
 
 ---
 
-<a name="sec-10-9"></a>
+<a name="sec-10-10"></a>
 
-### 10.9 Cluster Bootstrap｜聚类自助法
+### 10.10 Cluster Bootstrap｜聚类自助法
 
 #### 为什么普通 Bootstrap 可能错误
 
