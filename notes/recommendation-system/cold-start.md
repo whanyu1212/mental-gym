@@ -9,12 +9,17 @@
   - [1.2 从先验到常规流量的状态机](#sec-1-2)
 - [2. 新商品召回](#sec-2)
   - [2.1 Content-based Embedding](#sec-2-1)
+  - [2.2 阶段化召回与实时索引](#sec-2-2)
 - [3. Look-alike](#sec-3)
+  - [3.1 反馈可靠性与新鲜度](#sec-3-1)
 - [4. 探索流量](#sec-4)
   - [4.1 Boost、保量与 Bandit 的区别](#sec-4-1)
-  - [4.2 Multi-armed Bandit](#sec-4-2)
-  - [4.3 探索数据的价值](#sec-4-3)
+  - [4.2 流量时钟、前置 Pacing 与容量](#sec-4-2)
+  - [4.3 Multi-armed Bandit](#sec-4-3)
+  - [4.4 探索数据的价值](#sec-4-4)
 - [5. 实验设计难点](#sec-5)
+  - [5.1 随机化设计与估计目标](#sec-5-1)
+  - [5.2 Saturation、候选池收缩与推全外推](#sec-5-2)
 - [6. 新用户与新商家](#sec-6)
   - [6.1 新用户](#sec-6-1)
   - [6.2 新商家](#sec-6-2)
@@ -25,6 +30,8 @@
   - [9.2 新直播场次：成熟主播也存在 session 冷启动](#sec-9-2)
   - [9.3 新商城商品卡：库存耗尽前能否学到可靠结论](#sec-9-3)
   - [9.4 新创作者—商品关系：单边历史不能证明双方匹配](#sec-9-4)
+  - [9.5 新供给保量：完成目标不等于流量有效](#sec-9-5)
+  - [9.6 新查询与新属性组合：没有历史点击也要返回有效结果](#sec-9-6)
 - [10. 关联文档](#sec-10)
 
 ---
@@ -109,7 +116,43 @@ e_{item}=\text{MLP}([e_{text};e_{image};e_{category};e_{price};e_{seller}])
 
 训练目标可以是预测成熟商品的协同过滤 embedding，或直接用用户—商品行为进行对比学习。前者属于 representation distillation，能够让新商品进入已有向量空间。
 
+若用内容近邻训练相似空间，可以使用 Triplet Margin Loss。令 `a` 为 Anchor，`p` 为语义与行为都支持的 Positive，`n` 为同类目但不应互换的 Hard Negative，且相似度越大表示越接近：
+
+```math
+\mathcal{L}_{triplet}=\max(0,m+s(a,n)-s(a,p))
+```
+
+Positive 不能只靠标题相同构造，否则模型可能只学到词面近重复；Negative 也不能全部从随机全库抽取，否则任务过于简单。商品场景可混合类目、属性、视觉、价格带和成熟行为关系，并在建索引前过滤完全重复、风险与不可售对象。Margin、近邻数和相似度阈值都需要离线回放与线上实验校准。
+
 评估时应按商品年龄分桶，例如 `<1 day`、`1–7 days`、`7–30 days`，否则成熟商品会掩盖冷启动效果。
+
+<a name="sec-2-2"></a>
+
+### 2.2 阶段化召回与实时索引
+
+冷启动召回不应只按“上架几天”切换，而应按当前可用证据切换。一个实用的状态链是：
+
+```text
+zero interaction
+→ category / keyword time index + content cluster
+→ a few high-confidence interactions
+→ seed-user look-alike + cluster expansion
+→ sufficient and mature feedback
+→ behavior-heavy Two-Tower / collaborative recall gains weight
+```
+
+零交互阶段可以维护 `category or keyword → newest eligible items`、`cluster_id → newest eligible items` 和 `item_id → cluster_id` 等实时索引。用户近期高置信 Seed 先映射到兴趣 cluster，再从该 cluster 的新供给时间索引取回候选。行为充足后再让协同召回逐步提高权重；这比在固定年龄点突然切换更稳健，因为同一天上架的两个商品可能获得完全不同的有效反馈量。
+
+新供给是否“可召回”还取决于整条发布链路：
+
+```math
+\Delta_{visible}
+\approx
+\Delta_{ingest}+\Delta_{eligibility}+\Delta_{encode}
++\Delta_{materialize}+\Delta_{index}+\Delta_{cache}
+```
+
+这里的加法式只是在各阶段串行时对 SLA 的近似；若编码、资格校验或物化并行，端到端延迟应取执行图的 Critical Path，而不是机械相加。`visible` 也应定义为线上请求真正能够取回新对象，而不只是索引写入成功，因此缓存失效或版本切换必须计入。应分别监控事件接入、资格校验、内容编码、向量物化、索引可见与请求可见延迟，并记录 Feature、Encoder、Index 和 Eligibility Version。Base Index + Delta Index 能快速吸收新对象，但仍需处理重复 ID、删除标记、压缩合并、索引召回率和回滚兼容性；“共享模型参数”不代表这些刷新与查询成本为零。
 
 <a name="sec-3"></a>
 
@@ -125,6 +168,14 @@ e_i^{behavior}=\frac{\sum_{u\in S_i}w_u e_u}{\sum_{u\in S_i}w_u}
 
 再与内容先验做置信度加权融合。`S_i` 很小时，行为向量方差大且容易被偶然用户带偏；权重可结合行为强度、反作弊和曝光 propensity。Look-alike 是冷启动后的快速适应，不解决零交互时的第一批流量来源。
 
+<a name="sec-3-1"></a>
+
+### 3.1 反馈可靠性与新鲜度
+
+Seed 不应等同于“发生过一次点击的用户”。可先要求可见曝光、有效观看或详情停留，再结合反作弊、最低有效样本和标签成熟度定义置信度。商品支付与退款反馈较慢，内容观看和直播退出反馈较快；不同反馈进入 posterior 的时间与权重不应相同。
+
+反馈新鲜度也不是一个日志延迟。它至少包括行为上报、窗口聚合、特征物化、模型或 ID Row 更新、候选索引可见和缓存失效。若商品点击已经到达但 look-alike 索引仍使用 30 分钟前的 Seed，分析时会把工程延迟误判为模型无法适应。建议记录 `event_time`、`processing_time`、`item_age`、Seed 资格原因、样本量、Propensity、Model/Index Version 与首次可见时间，才能把质量问题和新鲜度问题分开。
+
 <a name="sec-4"></a>
 
 ## 4. 探索流量
@@ -134,7 +185,7 @@ e_i^{behavior}=\frac{\sum_{u\in S_i}w_u e_u}{\sum_{u\in S_i}w_u}
 ```text
 Eligibility & quality check
 → small exploration budget
-→ collect unbiased-enough feedback
+→ collect controlled feedback with logged policy probability and support
 → quality estimation
 → graduate / continue / stop
 ```
@@ -163,7 +214,50 @@ gap(t)=\frac{t}{T_{\mathrm{target}}}
 
 <a name="sec-4-2"></a>
 
-### 4.2 Multi-armed Bandit
+### 4.2 流量时钟、前置 Pacing 与容量
+
+墙钟线性进度只适合最简示意。若凌晨流量很少、晚间流量很大，`t / T_target` 会把“时间过去一半”误当作“机会过去一半”。可用对象或 Quota Pool 的预测合格匹配机会强度 `lambda(u)` 构造归一化流量时钟；它表示能通过资格与适配门槛的可用新供给槽位，而不是所有入口请求：
+
+```math
+\tau(t)=
+\frac{\int_0^t\lambda(u)\,du}
+{\int_0^{T_{target}}\lambda(u)\,du}
+```
+
+该定义要求 `0 <= t <= T_target` 且分母严格大于 0；没有可用匹配机会时应把目标标记为不可行，不能继续累积曝光债务。Deadline 之后控制器停止，下一窗口是否重置或重新估计目标需要显式记录。
+
+为尽早获得学习信号，可以使用前置目标曲线。下面是一种满足起点为 0、终点为 1 的示例：
+
+```math
+g_{\theta}(\tau)=1-(1-\tau)\exp(-\theta\tau),\qquad \theta\ge 0
+```
+
+`theta=0` 时退化为线性目标；`theta>0` 时更早投放。若对象 `i` 的实际完成比例为 `E_i(t)/E_{target,i}`，控制器可以依据目标差计算有上下界的加分：
+
+```math
+b_i(t)=\mathrm{clip}
+(
+k[g_{\theta}(\tau(t))-\frac{E_i(t)}{E_{target,i}}],
+b_{min},b_{max}
+)
+```
+
+这里的 `b_min` 可以允许降权；风险、缺货、下架或持续负反馈必须能够直接停止，而不是永久保证最低加权。上式只有当前误差的比例项，没有积分状态，因此无需积分饱和回算。目标不可实现时，应截断 Deficit 与 Bonus、停止过期目标、标记不可行原因，并重估或重置目标。
+
+若 `E_org,i` 是对象 `i` 在同窗口的自然曝光点预测、`B_reserved` 是额外预留的新供给槽位，可以先做一阶规划检查：
+
+```math
+\sum_i\max(E_{target,i}-E_{org,i},0)
+\le B_{reserved}
+```
+
+该式用自然曝光的点预测近似计划缺口，不是严格的必要条件；自然曝光波动会使实际缺口偏离点预测。生产规划应使用预测分布的保守分位数或显式 Safety Buffer，再折算召回、粗排、精排和重排通过率以及对象级可达机会。示例中，1 万个新商品各需 100 次总曝光，目标共 100 万次；若基线预计只有 20 万次自然曝光，另有 30 万个预留槽位，则最多约 50 万次，目标明显不可行。若自然曝光点预测为 70 万次，聚合容量看似够用，但预测误差和长尾匹配机会不足仍可能导致未完成。请求级重排不能创造不存在的机会。线上应记录目标、自然曝光预测分布、Safety Buffer、实际合格机会、实际曝光、Bonus、停止原因和未完成原因。
+
+多级 Quota 可以让第一阶段使用内容与主体先验，后续阶段使用成熟行为 posterior；但低先验对象仍需要最低探索支持，否则先验会决定谁永远没有学习机会。单次请求的列表重排只负责执行当前 Slate 配额，跨请求累计目标必须由有状态的 Pacing Controller 维护。
+
+<a name="sec-4-3"></a>
+
+### 4.3 Multi-armed Bandit
 
 若每个候选视为一个 arm，Upper Confidence Bound 在均值收益上加入不确定性奖励：
 
@@ -212,9 +306,9 @@ def thompson_sample(alpha, beta, rng):
 
 真实推荐中候选数巨大且上下文不同，通常需要 contextual bandit、分层先验或以模型不确定性生成 exploration bonus，而不是为每个商品独立维护简单 Beta 分布。
 
-<a name="sec-4-3"></a>
+<a name="sec-4-4"></a>
 
-### 4.3 探索数据的价值
+### 4.4 探索数据的价值
 
 探索不仅追求即时收益，还用于降低曝光选择偏差、发现潜在优质供给和改善下一轮训练数据。分析时应区分：
 
@@ -226,6 +320,10 @@ def thompson_sample(alpha, beta, rng):
 
 ## 5. 实验设计难点
 
+<a name="sec-5-1"></a>
+
+### 5.1 随机化设计与估计目标
+
 新商品供给会在实验期间持续进入，且实验组对商品产生的互动可能反过来影响全站排序。这可能违反用户级 SUTVA。
 
 可根据问题考虑：
@@ -235,6 +333,28 @@ def thompson_sample(alpha, beta, rng):
 - 双边/cluster randomization：降低干扰，成本和复杂度更高；
 - switchback：适合共享资源和时段性处理；
 - 长期 holdout：观察供给成长与反馈闭环。
+
+冷启动策略常同时改变需求侧体验和供给侧学习机会，不存在对所有问题都最优的单一分桶方式：
+
+| 设计 | 主要估计目标 | 关键风险 |
+|---|---|---|
+| 用户随机化、共享供给池 | 给定 Treatment Saturation 下的买家侧 Direct Effect | Treatment 多拿的新供给曝光可能挤走 Control 机会；不等于全量均衡 |
+| 商品、创作者或商家随机化、共享需求 | 供给对象在当前竞争环境中的相对扶持效果 | 两组争夺同一需求；小流量胜出可能在推全后消失 |
+| 用户与供给双边隔离 | 隔离子市场中的策略效果 | 候选池缩小，处理本身发生变化，体验可能被隔离伤害 |
+| 市场或地区级生态隔离 | 更接近完整市场反馈的总体效果 | Cluster 少、功效低，市场间异质性和跨区交易仍可能干扰 |
+| Two-sided / Saturation Design | Direct、Spillover 与不同处理密度下的效果 | Cell 多、解释复杂，需要预先声明 Estimand 与 Power |
+
+“隔离更彻底”不自动意味着结论更准确。隔离减少组间污染的同时，也可能缩小可选商品、直播间或合作关系集合，使实验评估的策略不同于最终全量系统。Readout 必须写明 Randomization Unit、Eligibility、Candidate Pool、Treatment Saturation、Credit Rule 和希望外推到的目标环境。
+
+<a name="sec-5-2"></a>
+
+### 5.2 Saturation、候选池收缩与推全外推
+
+假设平台为每个新对象预留固定总曝光。Treatment 用户获得更多新供给曝光时，Control 用户可能获得更少；用户 A/B 此时估计的是“当前 Treatment 占比和共享预算下”的效果，而不是 100% 上线后的均衡效果。反过来，只对实验组供给提高 Bonus，也可能在小流量时从 Control 供给抢到份额，推全后同类对象都提高 Bonus，相对优势随之消失。
+
+要识别因果 Saturation Curve，应并行随机化不同 Treatment Saturation Cell，并为各 Cell 明确独立或可追踪的资源边界。顺序 Ramp Stage 发生在不同时间，流量、供给、活动与模型状态也会变化，因此最多提供描述性证据；即使标准化人群和供给构成，也不能把阶段曲线直接解释为密度响应。分析应同时报告总探索预算、供给覆盖、买家价值和跨组 Spillover。
+
+若推全会改变商家补货、创作者发布、直播供给或库存，Switchback 只适用于状态可逆、Carryover 相对 Block 足够短且能够设置 Burn-in/Washout 的情况。对于长效补货、不可逆库存消耗或持续发布反馈，应优先考虑并行市场或 Cluster、Two-sided/Saturation Design，或长期 Holdout。Holdout 本身不会消除共享供给 Spillover；Cluster Bootstrap 也只能估计给定设计下的不确定性，不能修复错误随机化造成的因果偏差。
 
 <a name="sec-6"></a>
 
@@ -267,13 +387,17 @@ market / entry / device
 
 ## 7. 指标
 
+指标应从随机化或入组时固定的 Eligible Cohort 出发，并同时报告数量、质量、时间与容量。按实验后曝光量把商品分为“低曝/高曝”可以用于机制诊断，但曝光是策略改变后的变量，不能把这些条件分组当作无偏的质量因果比较。
+
 买家侧：CTR、CVR、Net GMV、负反馈、留存。
 
-供给侧：eligible-to-first-impression time、新商品覆盖、达到质量门槛比例、商家发布/上新、流量集中度。
+供给侧：T-day First-qualified-exposure Incidence、Restricted Mean Waiting Time、新商品覆盖、达到质量门槛比例、商家发布/上新、流量集中度。
 
 学习效率：每单位探索曝光获得的有效反馈、从探索到常规流量的 graduation rate、误扶持成本。
 
-必须同时报告数量、质量和时间窗口；“新商品曝光增加”不是独立成功标准。
+供给侧时间指标必须保留未发生对象。完整观察满 `T` 的 Cohort 中，未发生对象应保留在分母并记为截至 `T` 未发生；只有随访不足时才在最后可观察时点右删失。推荐使用 `T-day First-qualified-exposure Incidence`、Survival Curve 或截至 `T` 的 Restricted Mean Waiting Time。Treatment 导致的下架、缺货或失去资格不能自动当作非信息性删失，应按端到端失败结果或预声明的 Competing Event 单独报告。只对最终获得曝光、发布内容或成交的对象求平均，会形成幸存者偏差。“新商品曝光增加”不是独立成功标准。
+
+生命周期成熟后还可报告高潜质量达标率与高曝低质量占比，但两者都依赖策略产生的曝光路径。质量阈值、生命周期、成熟窗口和 Eligible Cohort 必须预先固定；高曝分层只用于解释流量是否浪费，不能取代用户级和供给级端到端结果。
 
 按决策面还应补充：
 
@@ -295,6 +419,8 @@ market / entry / device
 ```
 
 先验参数可按类目或市场历史数据估计。平滑能降低偶然一次点击造成的过度放大，但不能替代探索；若商品从未曝光，仍缺少个体证据。
+
+Empirical Bayes 只是在给定样本与先验模型下做部分池化，主要减少小样本方差。它不能自动修复位置偏差、曝光选择、幸存者偏差、标签延迟或错误归因；若输入点击来自强选择性旧策略，平滑后的后验仍会继承该策略的选择机制。
 
 ---
 
@@ -339,7 +465,29 @@ market / entry / device
 - **学习机制**：创作者质量和商品质量都是单边先验，不能替代“这个创作者是否适合表达这个商品”的关系后验。若训练数据只包含历史已接受或已发布的关系，模型还会把旧匹配策略造成的选择偏差当成真实偏好。
 - **实现与决策**：为创作者、商品、商家和关系分别维护表示与不确定性；先做资格、库存与风险过滤，再在受众—类目匹配门槛内分配小规模关系探索。反馈状态按关系曝光、接受、内容发布、买家有效曝光、支付和成熟交易逐步更新，毕业规则同时要求创作履约与交易质量。
 - **应监控指标**：T-day Cumulative First-match Rate、截至 T 日的 Restricted Mean Waiting Time to First Match、Match Acceptance、T-day Cumulative Publish Rate、截至 T 日的 Restricted Mean Waiting Time to Publication、Creator/Product/Seller Coverage、成熟净价值 per Point-in-time Eligible Relation、重复合作、集中度和误匹配成本。关系价值需要互斥订单 Credit；无法排他认领时按 Randomized Eligible Creator / Seller 报告。
-- **失败边界**：不能只分析已匹配、已接受或已发布内容的关系，因为这些是策略改变后的中介变量；未在观察期内匹配或发布者必须作为右删失，或以 `T` 进入对应受限等待时间，不能被丢弃。同一创作者的产能、同一商品的库存、商家预算和买家跨组内容消费还会造成单元间干扰。若探索只提高邀请或接受而没有提升合格内容与成熟交易，应停止放大。
+- **失败边界**：不能只分析已匹配、已接受或已发布内容的关系，因为这些是策略改变后的中介变量。完整观察满 `T` 但仍未发生者保留为截至 `T` 未发生，并以 `T` 进入对应受限等待时间；随访不足者才在最后可观察时点右删失。关系撤销、商品下架或缺货若受 Treatment 影响，应作为端到端失败或 Competing Event，而不是默认删失。同一创作者的产能、同一商品的库存、商家预算和买家跨组内容消费还会造成单元间干扰。若探索只提高邀请或接受而没有提升合格内容与成熟交易，应停止放大。
+
+<a name="sec-9-5"></a>
+
+### 9.5 新供给保量：完成目标不等于流量有效
+
+- **Eligibility**：在发布时已通过安全与质量校验、可售、有库存且目标市场可达的新对象进入固定 Cohort；用户机会必须在结果生成前按市场、资格和适配规则确定。失去库存或资格是结果链路的一部分，不能事后从 Treatment 删除。
+- **发生什么**：示例中，系统希望合格新商品在 24 小时内获得 100 次可见曝光。线性墙钟 Pacing 在白天机会不足时持续累积 Gap，晚间高峰突然大幅提权；目标完成率从 72% 升到 96%，但 Fast Skip 上升，按 7 天订单归因并等待支付后 30 天取消与退款成熟后，净价值没有增长。
+- **学习问题**：控制器只追踪曝光债务，没有使用对象或 Quota Pool 的合格匹配机会、候选通过率、库存和用户适配；“完成 100 次”因此只是投放结果，不是学习质量。
+- **正确做法**：用可用新供给槽位强度建立流量时钟，使用前置但有上限的目标曲线；先检查自然曝光与预留槽位共同决定的容量，再按内容先验、主体先验和后续 Posterior 分阶段分配 Quota。风险、缺货、负反馈和低匹配度触发停止，无法完成的原因单独归类，不能靠无限 Boost 补齐。
+- **实验设计**：若 Controller 或预算跨用户共享，使用并行随机化 Saturation Cell，并让各 Cell 具有独立预算；无法隔离资源时，随机化单位应扩大到覆盖共享资源边界的市场或 Cluster。单纯用户随机化只能估计给定 Saturation 下的 Direct Effect，不能识别全量均衡。
+- **实验与决策**：以每 1,000 Assigned Eligible Users 的成熟净价值、有效消费和负反馈为买家侧结果，同时观察供给覆盖、首次合格曝光累计发生率、单位探索曝光的信息收益、预算利用和跨组挤出。若只有低 Saturation Cell 有效，或完成率上升但成熟净价值不增，应继续诊断容量与干扰，不能直接推全。
+
+<a name="sec-9-6"></a>
+
+### 9.6 新查询与新属性组合：没有历史点击也要返回有效结果
+
+- **发生什么**：示例中，在实验开始前固定约 20 万名满足市场与基础使用资格的用户，并做 14 天稳定分桶。一个新属性组合首次出现后，语义召回把它映射到头部宽泛类目，结果数量很多，但显式属性满足率只有 61%，查询改写率为 34%。这些数字仅用于说明分析方法。
+- **Eligibility 与估计目标**：使用 User ID 做 50/50 稳定 Assignment，主 ITT 按实验开始前固定的全部 Eligible User Cohort 报告，包括实验期没有搜索的用户。Triggered 机制分析只使用用户尚未接受任何实验结果前出现的首个合格 Query，并在该次结果渲染前按 Query 文本、属性规则和地域可达定义 Eligibility。后续是否搜索以及 Query 内容都可能受此前 Treatment 影响，不能据此重新选择分析人群；若要分析多次时变触发，需要另行预声明相应设计与估计量。
+- **学习问题**：新 Query 没有可靠点击，热门点击先验会覆盖字面约束；曝光未点击也不能立即当作负样本，因为位置、库存和属性错误共同影响点击。两组若共同更新 Query 表示或索引，Treatment 点击还会污染 Control。
+- **正确做法**：先用词项、类目和属性约束从实时倒排取回精确候选，再用相似 Query 与内容 Cluster 扩展。实验期冻结共享在线学习，或隔离两组的更新状态；对新候选做小规模受控探索时，保存当时的完整候选集、资格原因以及实际候选和 Slot 选择概率，而不是只记录名义探索率。
+- **指标与成熟**：报告 Valid Result Coverage、Attribute Constraint Satisfaction、Zero-result、Reformulation、合格结果累计发生率、PDP 与索引可见延迟。交易结果使用示例 7 天归因窗，并等待支付后 30 天取消与退款成熟，主价值指标为 Mature Net Value per Assigned Eligible User；共享库存造成的跨组竞争需单列。
+- **决策**：若属性满足率从 61% 提升到 78%，但改写率、PDP 或成熟净价值没有同步改善，应先检查结果可见性、库存和扩展候选质量；若跨组在线学习或库存干扰无法控制，则不能把观察差异解释为独立策略效果。
 
 ---
 
