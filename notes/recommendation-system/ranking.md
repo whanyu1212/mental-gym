@@ -748,7 +748,7 @@ Teacher Consistency 不是最终目标。Student 可能与 Teacher 非常一致�
 - 将 CTR 当作交易价值的充分代理；
 - 分析精排却忽略召回/粗排候选集变化；
 - 使用订单后才可见的特征造成泄漏；
-- 新模型 score scale 改变，旧重排阈值仍直接复用；
+- 新模型 Score Scale 改变，旧重排阈值仍直接复用；应先在代表线上目标分布的未偏置验证集，或已按 Sampling/Propensity 一致校正的验证集上重做概率 Calibration 与 Utility Normalization，再用固定候选回放验证或调优 MMR Lambda、DPP Alpha 和 Relevance Floor。若 Utility Contract 未变，参数未必必须改变；若 Similarity Kernel 也改变，则必须同时复核 Similarity Scale；
 - 模型平均收益为正，却损害关键市场或新用户。
 - 认为粗排一定是 Two-Tower、精排一定是某个固定深度模型；
 - 使用粗排 AUC 代替精排 Top-K Retention；
