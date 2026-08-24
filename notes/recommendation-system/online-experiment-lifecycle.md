@@ -18,6 +18,7 @@
   - [5.1 实验单位](#sec-5-1)
   - [5.2 实验指标](#sec-5-2)
   - [5.3 实验配置](#sec-5-3)
+  - [5.4 实验层、交互与干扰设计](#sec-5-4)
 - [6. A/A Testing](#sec-6)
   - [6.1 什么时候需要 A/A Testing](#sec-6-1)
   - [6.2 验证内容](#sec-6-2)
@@ -25,6 +26,7 @@
   - [7.1 分析流程](#sec-7-1)
   - [7.2 初始流量](#sec-7-2)
   - [7.3 实验期间持续监控](#sec-7-3)
+  - [7.4 统计与归因计划](#sec-7-4)
 - [8. SRM｜Sample Ratio Mismatch](#sec-8)
   - [8.1 检查时机](#sec-8-1)
 - [9. Ramp-up](#sec-9)
@@ -48,7 +50,13 @@
 - [14. 各阶段的分析重点](#sec-14)
   - [14.1 核心判断链路](#sec-14-1)
   - [14.2 生命周期不是机械流水线](#sec-14-2)
-- [15. 关联文档](#sec-15)
+- [15. 工业案例：实验生命周期落地](#sec-15)
+  - [15.1 短视频商品内容到商城订单](#sec-15-1)
+  - [15.2 直播内容流与共享直播间](#sec-15-2)
+  - [15.3 商城商品卡召回或排序：支付、取消与退款成熟](#sec-15-3)
+  - [15.4 召回与精排联合上线](#sec-15-4)
+  - [15.5 搜索排序：查询意图、零结果与延迟成交](#sec-15-5)
+- [16. 关联文档](#sec-16)
 
 ---
 
@@ -156,6 +164,8 @@ flowchart TB
 - 提升新用户次日留存
 - 降低低质量内容曝光
 - 提升长尾内容覆盖率
+- 改善直播间与商品供给的分配效率
+- 在退款和取消风险可控的前提下提升 Net GMV per User
 
 <a name="sec-3-2"></a>
 
@@ -183,9 +193,11 @@ flowchart TB
 - 特征版本
 - 训练数据窗口
 - 召回和排序链路变化
+- 作用场景与决策单元：内容或直播分发、商城与搜索、详情页与橱窗、创作者合作或跨渠道分配；同时写清 User、Query、Room、Creator、Seller 或 Campaign 等单位
 - 参数变化
 - 降级策略
 - 适用用户范围
+- 是否改变共享库存、直播间或商家侧流量
 
 ---
 
@@ -256,8 +268,12 @@ flowchart TB
 | Device ID | 匿名用户 |
 | Session ID | 会话级策略 |
 | Creator ID | 创作者工具或激励实验 |
+| Live Room / Host ID | 直播间共享体验或主播侧策略 |
+| Seller / Item ID | 商家工具、商品供给或库存策略 |
 | Region | 地区级运营策略 |
-| Time Window | Switchback Experiment |
+| Geo × Time Window | 供需或共享资源的 Switchback Experiment |
+
+随机化单位不能只按实现方便选择。个性化排序通常使用 User ID；若 Treatment 会改变共享直播间、商品库存或商家行为，用户级随机化可能违反无干扰假设，需要考虑 Room、Seller、Geo-Time Cluster 或 Two-sided Design。随机化层级越粗，独立样本通常越少，样本量和推断方法也必须同步调整。
 
 <a name="sec-5-2"></a>
 
@@ -268,6 +284,10 @@ flowchart TB
 | Primary Metric | 决定实验是否成功 |
 | Secondary Metrics | 帮助解释用户行为变化 |
 | Guardrail Metrics | 防止局部优化损害系统健康 |
+| Diagnostic Metrics | 解释 Exposure、Click、商品页、Order、Refund 的变化路径 |
+| Data Quality Metrics | 验证 Assignment、SRM、日志与成熟度 |
+
+每个指标还必须明确 Numerator、Denominator、Eligible Population、Analysis Unit、Attribution Window 和 Maturity Window。短视频或直播到订单存在延迟时，应按同一成熟 Cohort 比较；不能让近期 Treatment 订单与更成熟的 Control 订单使用不同退款观察期。
 
 <a name="sec-5-3"></a>
 
@@ -280,10 +300,43 @@ flowchart TB
 - Bucket 区间
 - 流量比例
 - 实验层和互斥关系
+- 与同期实验的共同曝光、潜在交互和 Factorial 计划
 - 用户资格条件
 - 实验开始和结束时间
+- Attribution / Maturity Window 与 Data Freeze Date
+- Sequential Monitoring 或固定样本分析规则
 - Ramp-up 计划
 - 回滚条件
+
+<a name="sec-5-4"></a>
+
+### 5.4 实验层、交互与干扰设计
+
+实验上线前应先回答三个不同问题：
+
+```text
+参数是否冲突？
+→ 决定是否同层互斥
+
+两个策略能否共同上线且需要估计组合收益？
+→ 决定是否运行 2 × 2 Factorial
+
+Treatment 是否改变其他实验单位面对的市场状态？
+→ 决定是否需要 Cluster、Switchback 或 Two-sided Design
+```
+
+对于两个可组合的二元策略 A 和 B，完整 Factorial 包含四组：
+
+| A | B | 作用 |
+|---|---|---|
+| Control | Control | Baseline |
+| Treatment | Control | A Only |
+| Control | Treatment | B Only |
+| Treatment | Treatment | Combined |
+
+若 Combined Increment 大于 A Only 与 B Only 增量之和，就是加性尺度上的正向交互，即 `1 + 1 > 2`；小于则为负向交互，即 `1 + 1 < 2`。仅使用独立 Salt 正交分流不会自动消除交互，只是让四个组合在设计上可被观察。
+
+跨 Surface 尤其要检查同一用户的购买旅程。短视频商品内容流的商品入口、直播内容流的房间分发和商城商品卡推荐可能共同改变用户兴趣与订单；如果需要联合上线结论，应保持用户 Assignment 可追踪，并预先估计主效应与 Interaction Effect。
 
 ---
 
@@ -403,7 +456,8 @@ flowchart TB
     QUALITY -->|FAIL| ROLLBACK["停止或回滚实验"]
     QUALITY -->|PASS| METRICS["③ 分析 Primary Metrics<br/>Secondary Metrics<br/>Guardrail Metrics"]
 
-    METRICS --> GOAL{"达到实验目标？"}
+    METRICS --> VALIDITY["④ 检查指标成熟度、Interaction、<br/>跨 Surface 与 Marketplace Spillover"]
+    VALIDITY --> GOAL{"达到实验目标且<br/>外推边界可接受？"}
     GOAL -->|否| ITERATE["停止、回滚或继续迭代"]
     GOAL -->|是| RAMP["进入 Ramp-up"]
 
@@ -457,13 +511,36 @@ Treatment = 50%
 - Complaint Rate
 - 核心业务指标
 
+实时安全监控与正式统计决策应分开。Crash、Error、严重投诉可以触发预先定义的安全回滚；业务成功不能通过每天查看普通固定样本 p-value 并在首次显著时停止来判断。
+
+<a name="sec-7-4"></a>
+
+### 7.4 统计与归因计划
+
+正式 A/B Test 开始前应冻结分析计划：
+
+- Primary / Guardrail Hypothesis 与业务阈值；
+- Fixed-horizon 或预先校准的 Sequential Design；
+- Multiple Testing Family 与 Correction / Gatekeeping；
+- Mean、Ratio of Sums 或 Average of Ratios 的指标定义；
+- Delta Method、Cluster Bootstrap、Cluster-robust SE 或 Randomization Inference；
+- CUPED 协变量及缺失历史数据的处理；
+- 跨 Surface Assignment、Exposure 和订单归因；
+- Delayed Order、Cancellation、Refund 的成熟窗口；
+- 需要估计的 Factorial Interaction；
+- 库存、直播间和商家 Spillover 的外推边界。
+
+用户级随机实验中的曝光 CTR 不是独立曝光的简单二项检验问题。同一用户的曝光和订单相关，推断需要在用户层级聚合、线性化或重采样。若随机化发生在 Room、Seller 或 Geo-Time，推断也必须使用相应 Cluster。
+
+只分析点击、进店或下单用户通常会按 Post-treatment Behavior 选择样本。用于 Ship Decision 的订单和 Net GMV 主分析应优先保留预先定义 Eligible Population 的 Intention-to-Treat Estimand，Triggered Analysis 用于补充机制解释。
+
 ---
 
 <a name="sec-8"></a>
 
 ## 8. SRM｜Sample Ratio Mismatch
 
-SRM 用于判断实验实际分组比例是否符合设计比例。它只检查样本比例，不分析 CTR、CVR、Watch Time 等业务指标。
+SRM 用于判断实验实际分组比例是否符合设计比例。它只检查样本比例，不分析 CTR、CVR、Watch Time 等业务指标。主 SRM Check 应使用被随机化且满足实验前资格条件的单位；若使用可能被 Treatment 影响的曝光、点击或下单样本做 SRM，会把真实 Treatment Effect 误判成分流异常。
 
 例如实验设计为：
 
@@ -769,10 +846,10 @@ Holdout 不是每个模型上线后的必选步骤。
 | 阶段 | Go 条件 | No-Go 条件 |
 |---|---|---|
 | 离线评估 | 模型和工程指标满足最低要求 | 离线效果下降或性能不可接受 |
-| 实验准备 | 配置、埋点和回滚方案完整 | 指标口径不清或无法快速回滚 |
+| 实验准备 | 配置、埋点、归因、Interaction 与回滚方案完整 | 指标口径不清、干扰设计不适用或无法快速回滚 |
 | A/A Testing | 无系统性偏差，平台链路可信 | SRM、日志或指标链路异常 |
-| A/B Testing | Primary Metric 改善，Guardrail 可接受 | 核心指标下降或风险过高 |
-| Ramp-up | 效果稳定，系统容量正常 | 放量后出现异常或效果反转 |
+| A/B Testing | Primary 改善、Guardrail 可接受、指标已成熟且外推边界清楚 | 核心指标下降、组合交互不利或 Marketplace Bias 无法解释 |
+| Ramp-up | 效果稳定，系统容量和 Marketplace State 可接受 | 放量后异常、效果反转或 Saturation 风险明显 |
 | Full Rollout | 综合收益大于成本和风险 | 结果不稳定或长期风险未知 |
 | Holdout | 长期测量价值高于机会成本 | 流量成本过高或污染严重 |
 
@@ -892,7 +969,92 @@ A/B p-value < 0.05
 
 <a name="sec-15"></a>
 
-## 15. 关联文档
+## 15. 工业案例：实验生命周期落地
+
+以下案例是流程模板，不代表任何真实实验结果。所有现象、流量、指标和区间数字都明确为示例，只用于说明 Readiness、A/A、A/B、Ramp-up 和最终决策阶段分别需要回答什么。
+
+<a name="sec-15-1"></a>
+
+### 15.1 短视频商品内容到商城订单
+
+| 生命周期环节 | 设计与判断 |
+|---|---|
+| 业务假设 | 新商品排序提高 Assigned Eligible User 的成熟订单与 Net GMV，同时不损害内容体验和交易质量 |
+| 示例现象 | 示例：Eligible Assignment 为 50.1% 对 49.9%；Control 商品 Exposure Rate 为 40%，Treatment 为 55%；成熟 Net GMV per Assigned User 相对提升 1.8%，P99 Latency 增加 6 ms |
+| Readiness | 使用稳定 User ID；实验前定义 Eligibility；固定跨入口身份、订单归因窗口、退款成熟窗口与 Data Freeze Date |
+| A/A / Data Quality | 在 Eligible Assignment 上检查 SRM；分别校验短视频商品 Exposure、商城商品卡到达、Order 与 Refund 的日志覆盖率 |
+| A/B | Primary 使用 ITT 的成熟 Net GMV per Assigned Eligible User；Exposure、Click 与商品页漏斗只用于机制诊断 |
+| Ramp-up | 比较 Fixed Cohort 与新增 Population，监控设备结构、P99 Latency、跨入口 Exposure 和成熟订单是否出现 Effect Decay |
+| 常见误判 | 只分析已曝光或已点击用户；把点击提升当成交易提升；实验停止当天就把尚未发生的取消和退款记作 0 |
+| Decision | 示例中的 1.8% 只是 Point Estimate；只有数据质量通过、Primary 的成熟区间达到预设业务阈值，且内容、系统、取消与退款 Guardrail 安全，才进入下一阶段 |
+
+<a name="sec-15-2"></a>
+
+### 15.2 直播内容流与共享直播间
+
+| 生命周期环节 | 设计与判断 |
+|---|---|
+| 业务假设 | 新分发策略改善直播间匹配和成熟交易价值，同时控制房间拥挤、主播集中与库存风险 |
+| 示例现象 | 示例：120 个合格直播间中，用户级分析给出 2.0% Lift、95% CI 为 [1.6%, 2.4%]，按直播间 Cluster 后仍为 2.0%，但 95% CI 变为 [-0.8%, 4.8%]；高 Saturation 时 Top-10 Room Exposure Share 从 32% 升至 41% |
+| Readiness | 先定义 Direct、Spillover 或整体市场效应；据此选择 Live Room / Host Cluster、Geo-Time Switchback 或 Saturation Design，而不是默认 User Randomization |
+| A/A / Data Quality | 验证 Assignment Schedule、Room Eligibility、Carryover 处理与 Cluster Inference；报告独立 Room / Host / Time Block 数 |
+| A/B | 按真实随机化 Cluster 推断，观察 Room Entry、Qualified Watch、Net GMV、Host Exposure Share 与 Out-of-stock Exposure |
+| Ramp-up | 检查 Treatment Saturation 是否改变房间热度、主播行为、共享库存和 Control 所处市场状态 |
+| 常见误判 | 用户数量很大就认为 Power 足够；按用户 Bootstrap；把已受房间状态影响的 Control 当作未污染反事实 |
+| Decision | 示例中 Cluster CI 跨过 0 且房间集中度上升，不能按用户级显著结果直接上线；应延长或改进 Cluster Design，并在 Carryover、Spillover 和 Saturation 风险进入预设边界后再放量 |
+
+<a name="sec-15-3"></a>
+
+### 15.3 商城商品卡召回或排序：支付、取消与退款成熟
+
+| 生命周期环节 | 设计与判断 |
+|---|---|
+| 业务假设 | 新召回或多目标排序提高商城 Eligible User 的成熟 Net GMV，同时不增加缺货、履约、取消和退款风险 |
+| 示例现象 | 示例相对变化：Product CTR 为 +3.0%，Paid Orders per User 为 +0.8%，Gross GMV per User 为 +1.5%；完成示例 14 天退款成熟窗口后，Cancellation 为 +0.7%，Refund 为 +1.1%，Net GMV per User 变为 -0.4% |
+| Readiness | 使用稳定 User ID 与实验前 Eligibility；预先指定成熟 Net GMV 为 Primary。示例窗口为 7 天支付归因和 14 天退款成熟，实际窗口必须依据历史完成曲线确定 |
+| A/A / Data Quality | 校验 Assignment SRM、Candidate / Impression Coverage、支付去重、订单状态流转、迟到取消和退款回补；同一 Order Cohort 使用相同 Maturity Age |
+| A/B | Primary 使用 ITT 的成熟 Net GMV per Assigned Eligible User；CTR、Add-to-Cart、Payment CVR、AOV 和 Gross GMV 作为 Diagnostic，不替换预先指定的 Primary |
+| Ramp-up | 新 Stage 未达到退款成熟窗口时，将 Cancellation、Refund 与 Net GMV 标记为 Preliminary；同时监控 In-stock Candidate Rate、Latency 和 Seller Concentration |
+| 常见误判 | 点击或 Gross GMV 上升就宣布成功；把尚未发生的取消和退款记作 0；比较不同成熟度的 Stage；根据早期结果把 Primary 改成 CTR |
+| Decision | 示例中成熟 Net GMV 为 -0.4% 且退款恶化，应停止放量并迭代；只有同等成熟 Cohort 的 Net Metric 达到阈值且交易 Guardrail 安全，才 Continue |
+
+<a name="sec-15-4"></a>
+
+### 15.4 召回与精排联合上线
+
+| 生命周期环节 | 设计与判断 |
+|---|---|
+| 业务假设 | 新召回与新精排可以共同生效，但组合收益可能协同或抵消 |
+| 示例现象 | 示例指标指数：Baseline 为 100，Recall Only 为 102，Ranking Only 为 103，Combined 为 108；加性预期为 105，因此示例 Interaction 为 +3 |
+| Readiness | 若两者工程上冲突则同层互斥；若联合上线需要证据，则配置 2 × 2 Factorial，并预先定义 Interaction Scale、MDE 与 Power |
+| A/A / Data Quality | 检查四个 Joint Assignment Cell、Joint Exposure、Eligibility 和跨层 Salt 是否符合设计 |
+| A/B | 报告四个 Cell Mean、条件效应、平均主效应与 Interaction Contrast，不能只看两个边际 Lift |
+| Ramp-up | 固定另一因子的流量或按共同权重 Standardize；Cell Mix 改变时不能把 Overall Lift 变化直接解释为模型衰减 |
+| 常见误判 | 两个独立实验都为正就机械相加；正交 Assignment 被误解为效果可加；Combined Cell 不可执行却仍做 Factorial |
+| Decision | 示例中的正向 Interaction 仍不足以单独上线；必须以 Combined Cell 的成熟业务价值和 Guardrail 为依据，并明确 Interaction 对放量计划的影响 |
+
+<a name="sec-15-5"></a>
+
+### 15.5 搜索排序：查询意图、零结果与延迟成交
+
+| 生命周期环节 | 设计与判断 |
+|---|---|
+| 业务假设 | 新的查询意图识别与排序模型降低无效或零结果搜索，并提高合格搜索用户的成熟交易价值 |
+| 示例现象 | 示例：30 万合格用户的 Query CTR 相对提升 4.0%，Zero-result Rate 从 6.5% 降至 5.8%，7 天 Paid Orders per Assigned User 提升 1.1%；14 天退款成熟后 Net GMV Lift 仅为 0.2%，95% CI 为 [-0.5%, 0.9%] |
+| 设计单位与 Eligibility | User ID 稳定随机化，Query Request 仅作为机制诊断单位；Eligibility 由实验前的搜索入口可用性和查询处理规则定义，不能只保留有结果或有点击的请求 |
+| Readiness | 冻结 Query Normalization、语言、地区、类目与筛选参数口径；预先声明 Primary、Zero-result 定义、订单归因与退款成熟窗口 |
+| A/A / Data Quality | 在 Assigned Eligible User 层检查 SRM，比较 Query、Filter、Candidate、Impression 和 Order 的日志覆盖与去重；按用户或实际随机化单位校准方差 |
+| A/B | Primary 使用成熟 Net GMV 或 Paid Orders per Assigned Eligible User；Query CTR、Reformulation Rate、Zero-result Rate、Add-to-Cart 和排名位置分布用于解释机制 |
+| 干扰与成熟 | 热门查询可能争用共享库存、促销名额或广告位，改变 Control 面对的市场状态；搜索后跨会话支付、取消与退款需使用相同 Attribution、Maturity 和 Data Freeze Rule |
+| Ramp-up | 分别报告高频与尾部 Query、不同语言和地区的 Stage-only 与 Fixed Cohort 结果；监控 P99 Latency、索引新鲜度、缺货曝光和 Seller Concentration |
+| 常见误判 | Zero-result 与 CTR 改善就宣布成功；把 Query 数当作独立样本；或在退款尚未成熟时用 Gross GMV 替代预先指定的 Net Metric |
+| Decision | 示例的成熟 Primary 区间尚不支持达到业务门槛，应 Pause 并继续收集成熟样本或优化尾部 Query；只有成熟 Primary 达标且延迟、库存与集中度 Guardrail 安全才进入全量 |
+
+---
+
+<a name="sec-16"></a>
+
+## 16. 关联文档
 
 - [E-commerce Recommendation Context](./ecommerce-recommendation-context.md)
 - [Recommendation System Pipeline](./recommendation-system-pipeline.md)
