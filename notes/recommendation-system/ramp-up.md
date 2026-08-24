@@ -14,11 +14,13 @@
   - [4.2 系统容量与延迟风险](#sec-4-2)
   - [4.3 Population Shift](#sec-4-3)
   - [4.4 推荐生态反馈](#sec-4-4)
+  - [4.5 Treatment Saturation 与 Marketplace Spillover](#sec-4-5)
 - [5. Ramp-up 策略设计](#sec-5)
   - [5.1 常见流量阶梯](#sec-5-1)
   - [5.2 固定 Control 与稳定放量](#sec-5-2)
   - [5.3 按人群、版本与地区灰度](#sec-5-3)
   - [5.4 每个阶段观察多久](#sec-5-4)
+  - [5.5 同期实验与 Factorial 组合](#sec-5-5)
 - [6. Ramp-up 分析重点](#sec-6)
   - [6.1 设计监控指标](#sec-6-1)
   - [6.2 判断是否可以继续放量](#sec-6-2)
@@ -42,12 +44,14 @@
   - [10.2 Effect Size 与 Confidence Interval](#sec-10-2)
   - [10.3 Population Mix 与 Segment Shift](#sec-10-3)
   - [10.4 Peeking 与短期波动](#sec-10-4)
-- [11. 推荐排序模型案例](#sec-11)
-  - [11.1 A/B Test 结果](#sec-11-1)
-  - [11.2 10% Ramp-up](#sec-11-2)
-  - [11.3 25% Ramp-up](#sec-11-3)
-  - [11.4 50% Ramp-up](#sec-11-4)
-  - [11.5 决策结论](#sec-11-5)
+  - [10.5 累积数据、阶段数据与序贯决策](#sec-10-5)
+- [11. 工业案例：电商推荐放量](#sec-11)
+  - [11.1 短视频商品排序：Effect Decay](#sec-11-1)
+  - [11.2 直播间分发：共享房间与 Saturation](#sec-11-2)
+  - [11.3 商城商品卡：支付、取消与退款成熟](#sec-11-3)
+  - [11.4 召回 × 精排：Factorial Cell Mix](#sec-11-4)
+  - [11.5 自然、联盟与付费流量协同放量](#sec-11-5)
+  - [11.6 跨案例决策模板](#sec-11-6)
 - [12. 自动停止与回滚规则](#sec-12)
 - [13. Ramp-up 检查清单](#sec-13)
   - [13.1 放量前](#sec-13-1)
@@ -369,6 +373,30 @@ Negative Feedback ↑
 
 因此推荐系统 Ramp-up 不能只关注短期消费指标。
 
+<a name="sec-4-5"></a>
+
+### 4.5 Treatment Saturation 与 Marketplace Spillover
+
+在没有跨用户干扰时，扩大 Treatment 比例主要改变样本量和风险暴露；在共享市场中，Treatment 比例本身可能改变 Treatment Effect。
+
+电商推荐中的典型机制包括：
+
+- 短视频商品内容流和商城商品卡推荐争用同一商品库存；
+- 直播内容流将更多用户送入有限直播间，改变热度、互动和主播行为；
+- 曝光增长促使商家调价、补货、增加投放或改变商品供给；
+- 新召回通道扩大后占用共享精排预算、缓存或流量配额；
+- Treatment 商品更早售罄，使 Control 用户面对不同候选集合。
+
+因此，小流量用户级 A/B Test 估计的可能是低 Saturation 下的 Direct Effect，不一定等于全量上线后的 Equilibrium Effect：
+
+```text
+5% Treatment  → Control 几乎处在原市场状态
+50% Treatment → 库存、直播间和商家反馈已经变化
+100% Rollout  → 不再存在同一个同期反事实市场
+```
+
+当 Lift 随流量变化时，应同时检查 Population Mix、System Capacity 和 Marketplace Saturation。Cluster Randomization、Geo-Time Switchback、Two-sided Experiment 或不同 Saturation Arms 可以帮助识别此类效应；仅用用户级 Cluster Bootstrap 不能修复 Control Contamination。
+
 ---
 
 <a name="sec-5"></a>
@@ -504,6 +532,31 @@ Ramp-up 不一定按随机百分比。
 
 业务效果指标通常需要更稳定的观察窗口。
 
+短视频或直播曝光到订单、取消和退款存在不同延迟。每个阶段必须使用一致的 Attribution Window、Maturity Window 和 Data Freeze Rule；阶段刚扩量后不能把大量未成熟订单当作最终无退款订单。
+
+<a name="sec-5-5"></a>
+
+### 5.5 同期实验与 Factorial 组合
+
+Ramp-up 前应冻结与同期实验的重叠关系。若策略 A 与 B 位于正交层并准备联合上线，不能只确认各自 A/B Test 为正：
+
+```text
+A Only > 0
+B Only > 0
+```
+
+还需要检查 Combined Cell，因为组合可能：
+
+```text
+1 + 1 > 2：协同
+1 + 1 = 2：加性
+1 + 1 < 2：抵消
+```
+
+如果联合效果影响 Ship Decision，应在 2 × 2 Factorial 中预先估计 Interaction Effect，并让四个 Cell 在 Ramp-up 期间保持可追踪。放量时只扩大 A 或 B、改变另一实验的分流比例，都会改变 Cell Mix，使 Overall Lift 难以与上一阶段直接比较。
+
+跨 Surface 策略尤其如此。例如短视频商品内容流的商品召回与商城商品卡精排可能共享用户兴趣和库存；直播内容流的流量策略还会改变直播间状态。若无法维持完整 Factorial，应至少记录每个用户的 Joint Assignment，并按组合单元报告关键指标。
+
 ---
 
 <a name="sec-6"></a>
@@ -621,7 +674,9 @@ Ramp-up 不能只看 Primary Metric。
 - Completion Rate
 - QVR
 - Retention
-- GMV
+- Net GMV per Assigned User
+- Orders per Assigned User
+- Buyer Conversion Rate
 - Revenue
 
 例如：
@@ -645,7 +700,8 @@ Watch Time +2.5%
 - 新增 Population 是否不同
 - 系统性能是否影响用户体验
 - 是否存在实验污染
-- 是否有生态反馈
+- Factorial Cell Mix 是否变化
+- 是否有库存、直播间或商家生态反馈
 - 原小流量结果是否不稳定
 
 <a name="sec-7-2"></a>
@@ -660,8 +716,12 @@ Watch Time +2.5%
 - D1 Retention
 - Complaint Rate
 - Refund Rate
+- Cancellation Rate
+- Out-of-stock Exposure Rate
 - Content Diversity
 - Creator Exposure Fairness
+- Seller Exposure Concentration
+- Live-room Traffic Concentration
 - P95 / P99 Latency
 
 例如：
@@ -763,8 +823,13 @@ Metric 不可信
 | User Lifecycle | New / Existing |
 | Activity | Casual / Medium / Heavy |
 | Region | Country / Market |
+| Surface | 内容 / 直播 / 商城 / 搜索与类目 / 详情页与橱窗 / 供给匹配 / 跨渠道模块 |
+| Query / Page Context | Head / Tail Query、筛选器、PDP / Storefront、模块位置 |
 | Content | Category / Language |
 | Creator | Head / Mid-tail / Tail |
+| Seller | New / Established、Head / Long-tail |
+| Match / Campaign | Creator–Product / Seller–Creator、自然 / 联盟 / 付费、预算层级 |
+| Live Room | Room Size、Category、Host Tier |
 
 需要关注：
 
@@ -789,6 +854,10 @@ Overall 好
 - Head / Tail Content Share
 - Price Distribution
 - Seller Exposure Share
+- In-stock Candidate Rate 与 Stock-out Rate
+- Live-room Traffic Concentration
+- Cross-surface Item / Seller Exposure Overlap
+- Order、Cancellation 与 Refund Distribution
 
 因为模型可能在平均指标上表现正常，但已经改变推荐生态结构。
 
@@ -1022,7 +1091,7 @@ Watch Time Lift = +1.9%
 95% CI = [+1.1%, +2.7%]
 ```
 
-虽然 Effect Size 略有下降，但方向和量级仍较一致。
+从描述上看，Effect Size 略有下降，但方向和量级仍较接近。
 
 如果变成：
 
@@ -1032,6 +1101,8 @@ Watch Time Lift = +0.1%
 ```
 
 就需要调查效果是否发生明显衰减。
+
+CI 同方向、彼此重叠或点估计接近，只是描述性信号，不是正式的稳定性检验。不同阶段可能共享用户且新增 Population Mix，估计值通常相关；若 Effect Decay 是决策条件，应拟合 `Treatment × Stage` 或 `Treatment × Population` Interaction，或基于联合 Covariance 对预先定义的 Stage Contrast 做推断。固定 Cohort 分析可以减少人群变化，但不能消除重复观测相关性。
 
 <a name="sec-10-3"></a>
 
@@ -1091,141 +1162,126 @@ Rollback
 
 避免 Noise-driven Decision。
 
+<a name="sec-10-5"></a>
+
+### 10.5 累积数据、阶段数据与序贯决策
+
+Ramp-up 的各阶段不是相互独立实验：早期用户仍在后续阶段，阶段之间共享数据和市场状态。因此需要区分：
+
+| 分析视角 | 回答的问题 | 主要限制 |
+|---|---|---|
+| Cumulative Analysis | 从实验开始到当前的平均效果是什么 | 早期 Population 和较长暴露权重更高 |
+| Stage-only Analysis | 新增流量或当前阶段表现如何 | 样本更少，容易受时点与人群变化影响 |
+| Fixed Cohort Analysis | 同一批用户随暴露时间如何变化 | 可能混入 Learning、Novelty 和 Attrition |
+
+三种结果都可以用于诊断，但不能把多个相关的普通 p-value 当成新的独立证据。如果每个阶段都可能因业务指标越界而正式宣告成功、失败或 Futility，应使用预先设计的 Group Sequential / Alpha-spending Rule，或将原 A/B Test 作为唯一 Confirmatory Test，Ramp-up 只按预先定义的 Safety 与 Stability Gate 决策。
+
+实时监控系统 SLO 和严重伤害不需要等待统计显著；这类阈值应基于绝对风险、历史基线和用户影响预设。相反，“Primary Metric 首次 p-value < 0.05 就继续放量”不是安全规则，也不是有效的序贯检验。
+
+对于 Ratio Metric 和重复行为，所有阶段都应保持相同 Estimand 和推断方法：
+
+- CTR / CVR 使用一致的 Numerator、Denominator 与 Eligibility；
+- 用户级随机实验采用 Delta Method、Linearization 或 User Cluster Bootstrap；
+- Geo-Time / Live-room / Seller 随机实验按实际 Cluster 推断；
+- CUPED 只使用 Treatment 前协变量，不能在每个阶段重选最有利协变量。
+
 ---
 
 <a name="sec-11"></a>
 
-## 11. 推荐排序模型案例
+## 11. 工业案例：电商推荐放量
 
-当前线上模型：
-
-```text
-Ranking Model V1
-```
-
-新模型：
-
-```text
-Ranking Model V2
-```
-
-新模型加入：
-
-- Watch Time Prediction
-- Completion Probability
-- Negative Feedback Prediction
-- Content Diversity Constraint
+以下案例均为放量设计模板，不代表任何真实业务数据。若案例中提到“小流量”“中流量”或“高流量”，它们表示相对阶段，实际比例应由风险、样本量和系统容量决定。
 
 <a name="sec-11-1"></a>
 
-### 11.1 A/B Test 结果
+### 11.1 短视频商品排序：Effect Decay
 
-| 指标 | Relative Lift | 结果 |
-|---|---:|---|
-| Average Watch Time | +2.4% | 显著提升 |
-| Completion Rate | +1.1% | 提升 |
-| CTR | -0.3% | 小幅下降 |
-| Negative Feedback | -0.6% | 改善 |
-| P95 Latency | +3 ms | 在 Guardrail 内 |
-
-结论：
-
-```text
-A/B Test Passed
-→ Enter Ramp-up
-```
+| 放量卡片字段 | 设计与判断 |
+|---|---|
+| 业务假设 | 新排序提高成熟的 Orders / Net GMV per Assigned Eligible User，同时保持内容体验与系统性能 |
+| 进入 Ramp-up 的证据 | A/B 的 Primary 区间达到业务阈值，Assignment SRM、日志、内容负反馈、取消与退款 Guardrail 均通过 |
+| 稳定人群 | 使用固定 Control 与稳定 User Assignment；记录每个 Stage 新增的设备、版本、地区和历史活跃度分布 |
+| Primary / Guardrail | 成熟 Net GMV 或 Orders per Assigned User；同时监控有效观看、负反馈、P99 Latency、Crash、取消与退款 |
+| 可能的 Effect Decay | 新增低性能设备导致 Serving Latency 上升，Population Mix 改变，或跨入口流量变化稀释高意向用户 |
+| 正确分析 | 同时报告 Cumulative、Stage-only 与 Fixed Cohort；使用考虑阶段相关性的 `Treatment × Stage` Contrast，并分解设备、Latency、Exposure 和订单成熟度 |
+| 常见误判 | 仅比较两个点估计或 CI 是否重叠，就把 Overall Lift 下降写成“模型失效” |
+| 决策 | 可解释且可修复的系统或 Segment 风险先 Pause；优化后重新验证。无法解释的实质性衰减或 Guardrail 越界则 Rollback |
 
 <a name="sec-11-2"></a>
 
-### 11.2 10% Ramp-up
+### 11.2 直播间分发：共享房间与 Saturation
 
-```text
-Watch Time           +2.3%
-Negative Feedback    -0.5%
-P95 Latency          +4 ms
-Crash Rate           Stable
-Logging Coverage     Stable
-SRM                  PASS
-```
-
-结论：
-
-```text
-Continue
-```
+| 放量卡片字段 | 设计与判断 |
+|---|---|
+| 业务假设 | 新直播间分发改善匹配与成熟交易价值，同时不造成房间拥挤、主播集中或共享库存风险 |
+| 随机化与推断 | 延续 A/B 的 Live Room / Host Cluster、Geo-Time Switchback 或 Saturation Design；不能在 Ramp-up 阶段改成普通 User-level 比较 |
+| Primary / Guardrail | Cluster 口径下的 Net GMV、Qualified Watch；同时监控 Room Occupancy、Host Exposure Share、Complaint、Latency 与 Out-of-stock Exposure |
+| Saturation 风险 | Treatment 流量扩大后，房间热度和主播行为变化，Control 也可能被共享状态影响；低流量 Direct Effect 不等于全量 Equilibrium Effect |
+| Carryover / Maturity | 保持预设 Burn-in、Washout 与时间块；订单、取消和退款仍按同等成熟 Cohort 比较 |
+| 正确分析 | 对每个 Stage 报告实际 Treatment Saturation、独立 Cluster 数、房间状态和 Spillover 指标，并按 Assignment Schedule 推断 |
+| 常见误判 | 用户数增加就认为 Power 充分；User Bootstrap；把 Control 当作完全未受影响的市场反事实 |
+| 决策 | Cluster-level 收益稳定且 Carryover、房间集中、库存与主播生态风险均在边界内才 Continue；否则 Pause 或回退流量 |
 
 <a name="sec-11-3"></a>
 
-### 11.3 25% Ramp-up
+### 11.3 商城商品卡：支付、取消与退款成熟
 
-```text
-Watch Time           +2.0%
-Negative Feedback    -0.4%
-P95 Latency          +8 ms
-Logging Coverage     Stable
-```
-
-Segment：
-
-```text
-Android              +2.2%
-iOS                  +1.8%
-High-end Device      +2.4%
-Low-end Device       -0.5%
-```
-
-Low-end Device 有轻微下降，但仍在预定义 Guardrail 范围。
-
-结论：
-
-```text
-Continue with Monitoring
-```
+| 放量卡片字段 | 设计与判断 |
+|---|---|
+| 业务假设 | 新召回或排序提高商城合格用户的成熟 Net GMV，并控制缺货、履约与退款风险 |
+| 稳定口径 | 各 Stage 使用相同 User Eligibility、Assignment、订单归因、支付窗口、取消 / 退款 Maturity Window 与 Data Freeze Rule |
+| 快速指标 | Candidate Coverage、Zero-result Rate、Latency、Error、Gross Orders；可实时或较早监控，但不替代成熟交易指标 |
+| 慢速指标 | Cancellation、Refund、Net GMV；新 Stage 未达到成熟窗口时必须标记 Preliminary |
+| 正确分析 | 按 Order Cohort 对齐相同 Maturity Age，比较 Late-arriving Event，并同时监控 In-stock Candidate Rate 与 Seller Concentration |
+| 常见误判 | 新 Stage 的退款率较低就判断商品质量改善；把尚未出现的取消和退款记作 0；用 Gross GMV 代替预先指定的 Net Metric |
+| 决策 | 系统安全可先通过即时 Gate，但正式扩大交易流量必须等待预设成熟度；成熟收益不足或退款、缺货恶化则 Pause / Rollback |
 
 <a name="sec-11-4"></a>
 
-### 11.4 50% Ramp-up
+### 11.4 召回 × 精排：Factorial Cell Mix
 
-```text
-Watch Time           +1.9%
-Negative Feedback    -0.2%
-P95 Latency          +25 ms
-Low-end Device WT    -6.0%
-```
-
-出现两个问题：
-
-```text
-Latency 明显恶化
-+
-Low-end Device 用户明显受损
-```
-
-此时 Overall Watch Time 仍然为正，但不能直接扩大到 100%。
+| 放量卡片字段 | 设计与判断 |
+|---|---|
+| 业务假设 | 新召回 A 与新精排 B 联合上线，Combined 收益取决于主效应与 Interaction |
+| 放量结构 | 保留 Baseline、A Only、B Only、Combined 四个 Joint Assignment Cell；尽量冻结另一因子的流量配置 |
+| Primary / Guardrail | 四个 Cell 使用相同的成熟业务指标；同时监控候选质量、P99 Latency、计算预算、多样性、缺货与退款 |
+| Cell Mix 风险 | A 放量时若 B 的 Treatment 比例也变化，A 的 Overall Lift 会因边际权重改变，即使 Cell 内条件效应完全稳定 |
+| 正确分析 | 持续报告四个 Cell Mean、条件效应和 Interaction；跨 Stage 使用预先指定的共同权重 Standardize |
+| 常见误判 | 把 Cell Mix 引起的 Overall 变化解释为 A 的 Effect Decay，或用两个独立 Lift 相加预测 Combined |
+| 决策 | 联合放量依据 Combined Cell 的成熟收益、Interaction 与 Guardrail；Joint Assignment 无法追踪时不得做确定性的联合上线结论 |
 
 <a name="sec-11-5"></a>
 
-### 11.5 决策结论
+### 11.5 自然、联盟与付费流量协同放量
 
-合理流程：
+流量协同策略可能将本来由自然推荐或创作者联盟带来的订单，重新标记为付费流量订单。这会使单一渠道的归因 ROAS 看似提升，却未必产生等量的全局增量。
 
-```text
-Pause at 50%
-↓
-调查 Model Serving Latency
-↓
-分析 Low-end Device
-↓
-优化模型或推理链路
-↓
-重新验证
-↓
-决定 Continue / Rollback
-```
+| 放量卡片字段 | 设计与判断 |
+|---|---|
+| 业务假设 | 联合优化各流量来源的预算与商品分配，能提高成熟全局 Net GMV 或贡献，而不只是在渠道间搬运订单 |
+| 设计单位 | 随机化边界必须覆盖最大的资源共享范围。若 Seller 预算或 SKU 库存跨 Geo / Time 共享，Seller × Geo × Time Cell 仍会相互干扰；应改用覆盖共享市场的 Cluster、Saturation / Two-sided Design，或带随机时段、Washout 与 Carryover 处理的 Market-level Switchback |
+| Eligibility | 放量前固定可使用相关流量来源、库存合格且有预算机会的 Seller / Product / Market Block；不能按事后获得付费曝光的商品筛选 |
+| 示例数字 | 示例：在 30% Stage 的同一固定 Eligible Cluster Population 上，相对同期 Control 的每 1,000 个 Eligible Unit 绝对效应为：付费归因成熟净价值 `+180`、自然与联盟归因净价值 `-165`、全渠道去重成熟净价值 `+15`、增量渠道成本 `+28`、增量贡献 `-13`。渠道分项只作互斥路径诊断 |
+| Primary / Diagnostic | Primary 使用同一固定 Eligible Population 上的 Treatment - Control 成熟 Net Value 或 Contribution per Eligible Cluster；各渠道曝光、互斥归因金额、Spend、ROAS 和重叠触点用于诊断，不代替全局增量 |
+| Guardrail | 自然流量挤出、创作者佣金与覆盖、Seller / Product Concentration、缺货、贡献率、取消、退款和竞价成本 |
+| 干扰与成熟 | 共享竞价、库存、商家预算和创作者供给会造成 Spillover；多触点订单不能在渠道报表中重复计算，并必须等待取消、退款和贡献成熟 |
+| 正确分析 | 每个 Stage 报告实际 Saturation、Cluster 数，以及固定 Eligible Population 上的 Stage-only 与 Fixed Cohort Treatment - Control 绝对效应；使用互斥订单去重、统一成熟口径和相同单位分解渠道变化，不能直接相减不同基数的相对百分比 |
+| 决策 | 示例中全渠道净增量很小而扣成本贡献为负，应 Pause；自然与联盟分项下降与渠道替代机制一致，但不单独证明某渠道的因果 Credit。只有成熟全局增量和贡献达标，替代效应与集中度在边界内，才 Continue |
 
-这个 Case 说明：
+<a name="sec-11-6"></a>
 
-> **Ramp-up 决策不能只看 Overall Primary Metric，而要同时考虑 Guardrail、System、Segment 和 Data Quality。**
+### 11.6 跨案例决策模板
+
+| 检查顺序 | Continue | Pause | Rollback |
+|---|---|---|---|
+| Data Quality | SRM、日志与成熟度通过 | 数据延迟或 Cell Mix 暂不可解释 | 严重污染且无法恢复可信分析 |
+| System | 容量与 Latency 在阈值内 | 可修复的容量或局部版本问题 | Crash、Error 或严重性能风险越界 |
+| Primary | 成熟效果与业务阈值一致 | 区间宽、Effect Decay 原因待查 | 成熟效果明确低于风险边界 |
+| Guardrail / Segment | 关键人群与生态指标安全 | 局部风险可通过限制流量诊断 | 用户、交易或生态伤害明确且严重 |
+| Marketplace | Saturation 与 Spillover 可接受 | 需要更长观察或替代设计 | Control 严重污染，当前设计无法回答上线问题 |
+
+决策记录应写清楚“当前证据支持什么、哪些指标尚未成熟、下一步需要修复或验证什么”，而不是只记录流量比例。
 
 ---
 
@@ -1289,6 +1345,9 @@ Severe Negative Feedback > Threshold
 - [ ] 已确定每阶段 Monitoring Window
 - [ ] 已定义 Pause 条件
 - [ ] 已定义 Rollback Threshold
+- [ ] 已固定跨层 / 跨 Surface Joint Assignment 和 Interaction 监控方式
+- [ ] 已评估库存、直播间和商家侧 Spillover
+- [ ] Attribution / Maturity Window 与 Data Freeze Rule 已固定
 - [ ] Data Quality Dashboard 可用
 - [ ] System Metrics Dashboard 可用
 - [ ] 关键 Segment 已预先定义
@@ -1307,6 +1366,9 @@ Severe Negative Feedback > Threshold
 - [ ] Crash / Error 正常
 - [ ] 关键 Segment 无明显风险
 - [ ] Distribution 无异常变化
+- [ ] Factorial Cell Mix 与 Interaction Effect 无异常漂移
+- [ ] Delayed Order / Refund 数据已达到当前决策所需成熟度
+- [ ] Treatment Saturation 与 Marketplace State 已记录
 - [ ] 记录每次流量调整时间
 
 <a name="sec-13-3"></a>
@@ -1317,6 +1379,7 @@ Severe Negative Feedback > Threshold
 - [ ] 持续 Post-launch Monitoring
 - [ ] 检查长期 Retention
 - [ ] 检查内容与 Creator 生态变化
+- [ ] 检查商品库存、直播间与商家供给反馈
 - [ ] 必要时保留 Holdout
 - [ ] 记录最终上线结论
 - [ ] 记录异常与原因
@@ -1532,7 +1595,11 @@ Logging Coverage 是否变化？
 ↓
 关键 Segment 是否稀释 Overall Effect？
 ↓
-模型是否存在容量或供给反馈？
+同期实验的 Factorial Cell Mix 是否变化？
+↓
+模型是否存在容量、库存或供给反馈？
+↓
+Treatment Saturation 是否改变 Marketplace State？
 ↓
 原 A/B Effect 是否本身不稳定？
 ```
