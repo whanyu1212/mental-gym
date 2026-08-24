@@ -46,6 +46,8 @@
   - [7.1 短期体验](#sec-7-1)
   - [7.2 留存与复购](#sec-7-2)
   - [7.3 代理指标的边界](#sec-7-3)
+  - [7.4 活跃用户与场景渗透](#sec-7-4)
+  - [7.5 跨场景消费权衡](#sec-7-5)
 - [8. 推荐模型与阶段指标](#sec-8)
   - [8.1 召回](#sec-8-1)
   - [8.2 粗排](#sec-8-2)
@@ -177,6 +179,10 @@ Average Depth per Consumer
 - `per Consumer` 只描述已消费人群。若 Treatment 会改变谁成为 Consumer，它是处理后条件指标，不能替代 ITT。
 
 消费指标还需要场景校正。例如 Completion Rate 受内容长度影响，直播观看受进房时刻和房间剩余时长影响，页面 Dwell Time 可能因加载慢而虚高，搜索改写既可能表示需求收敛，也可能表示结果不相关。单个消费数字必须结合机会、内容长度、延迟、负反馈和下游行为解释。
+
+`Qualified Click` 也属于消费质量定义，而不是一种天然存在的事件。它通常要求点击后满足预先声明的停留时长、页面可见性或后续有效动作，用于排除误触和立即退出。例如，商品卡点击后详情页至少前台可见 3 秒，和“点击后加购”回答的是两个不同问题，不能合并成同一个合格点击口径。计时应从可见渲染完成开始，并暂停后台或离屏时间。阈值必须在看实验结果前固定，并同时报告原始 Click、Quick Exit 与下游交易；否则通过改变阈值也能机械地制造指标提升。
+
+同一个分子可以对应不同问题：`Qualified Clicks per Eligible User` 适合用户级总效果，`Qualified CTR = Qualified Clicks / Viewable Impressions` 解释机会效率，`Qualification Rate = Qualified Clicks / All Clicks` 描述已点击人群。推荐策略通常会同时改变 Viewable Impressions 和 Clicks，因此后两者都是漏斗诊断；`Qualification Rate` 还额外条件在已点击集合上，处理后选择更强。二者都不能替代 ITT。
 
 <a name="sec-1-4"></a>
 
@@ -800,12 +806,23 @@ Total Net GMV
 | 指标 | 推荐定义 |
 |---|---|
 | D7 Visit Retention | Day 0 Cohort 中在第 7 天再次访问的用户占比 |
-| Rolling D7 Retention | Day 0 Cohort 中第 7 天或以后再次访问的用户占比 |
-| D30 Buyer Retention | 首购 Cohort 中在目标窗口再次购买的用户占比 |
-| Repeat Purchase Rate | 固定窗口内至少产生第二次成熟购买的首购买家占比 |
-| Time to Next Purchase | 首购到下一次成熟购买的时间分布 |
+| D1–D7 Cumulative Retention | Day 0 Cohort 中第 1 至第 7 天至少返回一次的用户占比 |
+| Rolling D7 Retention within H | Day 0 Cohort 中第 7 天至固定观察终点 H 至少返回一次的用户占比 |
+| D30 Buyer Retention | 首购买家条件诊断；必须注明是第 30 天再次购买、D1–D30 至少复购一次，还是以第 30 天为起点的 Rolling Retention |
+| Repeat Purchase Rate | 首购买家中固定窗口内至少产生第二次成熟购买的比例；若 Treatment 改变首购，只作条件机制诊断 |
+| Time to Next Purchase | 首购到下一次成熟购买的条件时间分布；未复购者按完整随访或生存口径处理 |
 
-留存需要固定 Cohort 定义、Day 0 行为、市场时区和资格人群。只看当前活跃用户会遗漏已流失用户，形成幸存者偏差。
+若 Treatment 会改变谁完成首次购买，首购买家 Cohort 是处理后集合，上述买家指标不能作为端到端因果主结果。主分析应报告每 Assigned Eligible User 的 T-day Second-mature-purchase Incidence 或 Retained Buyer Value；也可以在实验开始前已形成的固定 Buyer Cohort 上研究复购。
+
+Exact、Cumulative 与 Rolling 留存回答的问题不同。令 `r_d` 为 Day-0 Cohort 在第 `d` 天发生 Return Event 的 Exact Retention，则前 `N` 天的期望活跃天数可写成：
+
+```math
+EAD_N=1+\sum_{d=1}^{N}r_d
+```
+
+这里的 `1` 是 Day 0；`EAD_N` 表示固定窗口内的 Expected Active Days，不是无限期用户生命周期价值。Rolling Retention 还必须声明观察终点 `H`，否则较早 Cohort 天然拥有更长的返回机会。
+
+留存需要固定 Cohort 定义、Day 0 Event、Return Event、市场时区和资格人群。固定 Cohort Retention 的原始分母不会因为低活用户离开而机械缩小；真正会产生幸存者偏差的是只分析当前仍活跃者，或在 Treatment 后重新定义分析人群。人群构成变化仍可能改变不同 Cohort 之间的总体留存，因此应同时报告固定 Cohort 的分层结果，并把 Cohort Retention 与 Eligible Population、Active Users、活跃频次和消费深度联合解释。
 
 <a name="sec-7-3"></a>
 
@@ -818,6 +835,39 @@ Total Net GMV
 - 不容易被展示方式或自动播放直接 Gaming；
 - 与退款、投诉、留存等护栏共同使用；
 - 通过长期 Holdout 定期重新验证。
+
+<a name="sec-7-4"></a>
+
+### 7.4 活跃用户与场景渗透
+
+DAU、WAU 与 MAU 都需要先定义什么行为算作 `Active Event`。打开应用、收到一次服务端返回、看到一次可见结果、完成一次有效消费或产生一次购买意图，对应完全不同的活跃含义。一个可复现的定义至少包含：身份去重键、Active Event、资格人群、自然日或滚动窗口、市场时区，以及机器人和异常流量规则。
+
+```text
+DAU
+= Users with at least one predefined Active Event in the market day
+
+Surface Penetration
+= Eligible Platform Active Users with at least one qualified event on the surface
+  / Eligible Platform Active Users
+```
+
+场景渗透率适合回答“合格活跃用户中有多少使用了这个决策面”，但它把分析限定在已经活跃的人群中，通常是描述性指标。若策略本身会改变平台活跃，实验主结果仍应从随机化时定义的 Eligible Users 出发，同时报告总 Active Users、场景 Reach 和每 Eligible User 的有效消费，避免只把流量从一个入口搬到另一个入口后误判为增长。
+
+同一用户可以在短视频商品内容、直播、商城、搜索和商品详情页同时活跃，因此各场景 Active Users 之和通常大于全局去重 Active Users。跨场景分析应同时报告 User Union、Pairwise Intersection、仅在单一场景活跃的人群与迁移矩阵；渗透率增长既可能来自该场景分子增加，也可能来自全局活跃分母下降。
+
+<a name="sec-7-5"></a>
+
+### 7.5 跨场景消费权衡
+
+用户的时间和购买意图有限，一个入口的消费提升可能来自另一个入口的下降。例如，短视频商品内容的观看增加，可能减少直播进房或商城浏览；搜索点击增加，也可能只是替代原本会直接打开商品详情页的路径。入口内 CTR 或 Watch Time 用于定位机制，整体决策必须回到与随机化单位和实验前 Eligibility 一致的去重总结果。用户级随机化时以 `per Assigned Eligible User` 为主；Session 或 User-day 只有在资格预先固定，或其本身就是随机化单位时，才能作为目标量，否则只作诊断并按用户层级处理相关性。
+
+若同时关心多个结果，可以先检查 Pareto 关系：只有依据预声明的非劣界值和联合置信区间，方案 A 在成熟交易、有效消费和关键护栏上都不差于方案 B，且至少一个维度更好，A 才构成 Pareto 改善。Guardrail 通常是硬约束，不能被其他正向指标抵消。若非护栏指标有升有降，需要预先声明业务效用或容忍边界，例如：
+
+```math
+\Delta U=\sum_{j=1}^{J}w_j\Delta m_j
+```
+
+不同量纲的 `m_j` 应先标准化，或把 `w_j` 明确定义成带单位的效用换算。权重是产品治理选择，不是从相关性自动推导出的因果“兑换率”；`Delta U` 的标准误还必须包含各指标估计之间的协方差。历史实验可以估计局部 Trade-off Frontier，并给出不确定性区间，但不能把“1 次阅读等于若干秒观看”当作跨人群、跨市场和跨时期恒定的自然规律。最终还应报告每 Eligible User 的总有效消费、成熟净价值、留存和负反馈，识别真正增量与跨场景蚕食。
 
 ---
 
@@ -910,10 +960,12 @@ Total Net GMV
 | SKU Exposure Coverage | `Exposed Eligible SKUs / Eligible SKUs` |
 | Seller Exposure Coverage | `Exposed Eligible Sellers / Eligible Sellers` |
 | Seller Transaction Coverage | `Sellers with Mature Orders / Eligible Sellers` |
-| New-item Exploration Rate | `New-item Impressions / Eligible Impressions` |
-| New-item Success Rate | `New Items reaching Quality Threshold / Explored New Items` |
-| Time to First Qualified Exposure | 商品进入 Eligible 后到首次有效曝光的时长 |
-| Time to First Mature Order | 商品进入 Eligible 后到首次成熟订单的时长 |
+| New-item Exposure Share | `New-item Viewable Impressions / All Viewable Impressions in the same surface and window`；描述流量分配，不等于供给覆盖 |
+| T-day New-item Quality Attainment | 随机化或入组时固定的 Eligible New-item Cohort 中，截至 T 日达到预声明质量门槛的比例；未探索对象仍保留在分母 |
+| T-day First-qualified-exposure Incidence | 固定 Eligible Cohort 中，截至 T 日至少获得一次合格曝光的比例；同时报告 Survival Curve 或 Restricted Mean Waiting Time |
+| T-day First-mature-order Incidence | 固定 Eligible Cohort 中，订单发生窗 T 内至少产生一笔订单，且该订单已完整观察售后成熟窗 M 的对象占比；完整观察满 T+M 仍未成交者保留在分母并记为未发生 |
+
+`Explored New Items reaching Quality Threshold / Explored New Items` 可以保留为策略机制诊断，但 `Explored` 是策略改变后的集合，不能单独解释为端到端因果效果。类似地，只对“最终获得曝光或成交”的商品计算平均等待时间会丢掉最困难的对象；固定窗口累计发生率或受限平均等待时间才会保留这些对象。成交指标必须同时声明订单发生窗 `T`、取消与退款成熟窗 `M` 和 Data Freeze Date；只有随访不足时才在最后可观察时点右删失，Treatment 导致的下架或缺货应作为未成交结果或预声明的 Competing Event 处理。
 
 <a name="sec-9-3"></a>
 
@@ -942,14 +994,17 @@ Total Net GMV
 | 指标 | 诊断意义 |
 |---|---|
 | Eligible Creator Count | 有多少创作者满足市场、类目、质量与合作资格 |
-| Creator–Product Opportunity Coverage | 合格关系中有多少真正获得推荐机会 |
-| Active Publisher Rate | Eligible Creator 中有多少在窗口内发布合格商品内容 |
-| Time to First Eligible Content | 从机会分配到首次有效发布的时间 |
-| Repeat Collaboration Rate | 首次合作后在固定窗口再次形成合格合作的主体占比 |
+| Creator–Product Opportunity Coverage | 入组时固定的 Eligible Relation Cohort 中有多少获得至少一次合格推荐机会 |
+| Active Publisher Rate | 入组时固定的 Eligible Creator Cohort 中，窗口内达到预声明活跃门槛，例如至少 K 次合格发布的主体占比；K 应在分析前固定 |
+| T-day First-content Incidence | 从 Point-in-time Eligible Creator Cohort 出发，截至 T 日至少发布一次合格内容的比例 |
+| Restricted Mean Waiting Time to Content | 对完整观察满 T 的 Cohort，未发布者以 T 计入；随访不足者按 Survival 方法处理，受 Treatment 影响的退出不能默认作非信息性删失 |
+| Repeat Collaboration Rate | 首次合作后再次合作的条件机制诊断；首次合作是 Treatment 可能改变的处理后事件 |
+| T-day Creator Second-collaboration Incidence | 每个 Assigned Eligible Creator 截至 T 日跨商品形成第二次合格合作的比例 |
+| T-day Relation Repeat-collaboration Incidence | 每个 Assigned Eligible Creator–Product Relation 截至 T 日在同一关系内形成再次合作的比例 |
 | Creator Concentration | 曝光、合作或成熟交易是否过度集中于少数创作者 |
 | Content-to-Product Binding Quality | 发布内容与目标商品是否准确、可审计地绑定 |
 
-合作接受率高而内容发布率不变，可能说明推荐只优化了低成本的早期动作。应从 Eligible Creator 或 Match Unit 开始保留完整漏斗，并将内容质量、买家曝光、成熟交易和售后结果连接回同一合作关系。
+合作接受率高而内容发布率不变，可能说明推荐只优化了低成本的早期动作。应从 Eligible Creator 或 Match Unit 开始保留完整漏斗，并将内容质量、买家曝光、成熟交易和售后结果连接回同一合作关系。Creator-level 与 Relation-level 指标必须分别对齐实际随机化单位，不能混用分母。
 
 <a name="sec-9-5"></a>
 
