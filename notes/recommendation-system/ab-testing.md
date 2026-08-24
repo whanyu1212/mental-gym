@@ -64,11 +64,12 @@
   - [13.5 假设结果](#sec-13-5)
   - [13.6 结果解释](#sec-13-6)
   - [13.7 放量计划](#sec-13-7)
-- [14. 工业案例：三类电商推荐实验](#sec-14)
+- [14. 工业案例：多场景电商推荐实验](#sec-14)
   - [14.1 短视频商品内容排序实验](#sec-14-1)
   - [14.2 直播内容流与直播间分发实验](#sec-14-2)
   - [14.3 商城商品卡召回或排序实验](#sec-14-3)
   - [14.4 召回 × 精排的 2 × 2 Factorial](#sec-14-4)
+  - [14.5 创作者—商品匹配实验](#sec-14-5)
 - [15. 实验分析代码示例｜Experiment Analysis Example](#sec-15)
 - [16. 实验平台与上线检查｜Platform and Launch Checklist](#sec-16)
   - [16.1 实验平台架构｜Experimentation Platform Architecture](#sec-16-1)
@@ -145,7 +146,7 @@ Negative Feedback ↑
 | 实验放量 | Ramp-up | 逐步提高实验组流量比例 |
 | 回滚 | Rollback | 停止新策略并恢复旧策略 |
 | 长期保留组 | Holdout Group | 长期不接收某类新策略的对照流量 |
-| 反转实验 | Reverse Experiment | 新策略成为默认策略后，保留少量旧策略流量继续比较 |
+| 反转实验 | Reverse Experiment | 已接受新策略的单位在预声明时点随机从 New 切回 Old，并与同期 New → New 组比较撤回效应 |
 
 ---
 
@@ -556,8 +557,12 @@ Treatment Phase 3: Bucket 500–2,499
 | 短视频商品内容流 | Recall、Ranking、Re-ranking、商品入口 UI | 用户兴趣、商品库存、商家流量 |
 | 直播内容流 | Live-room Recall、Ranking、Traffic Allocation | 直播间容量、主播供给、实时互动 |
 | 商城商品卡推荐 | Recall、Ranking、Re-ranking、商品卡 UI | 商品池、库存、价格与订单 |
+| 搜索与类目浏览 | Query Understanding、Retrieval、Ranking、Filter | Query 约束、索引、库存、广告位 |
+| 商品详情页与主体橱窗 | Content / Related-item Ranking、Manual Ordering | 当前商品、主体候选集、人工置顶与隐藏 |
+| 创作者选品与合作匹配 | Pair Retrieval、Matching、Opportunity Allocation | 样品、创作者产能、商家预算、合作容量 |
+| 跨渠道协同 | Channel Allocation、Budget、Creative Ranking | 用户频次、竞价、库存、自然与联盟流量 |
 
-同一个用户可能跨入口消费，同一个商品或商家也可能同时出现在多个 Surface。因此，层应根据“是否会争用同一参数、改变同一决策点或产生强交互”划分，而不能只按组织边界命名。
+同一个用户可能跨入口消费，同一个商品、创作者或商家也可能同时参与多个 Surface 和合作链路。因此，层应根据“是否会争用同一参数、改变同一决策点或产生强交互”划分，而不能只按页面或组织边界命名。
 
 <a name="sec-6-1"></a>
 
@@ -1993,11 +1998,11 @@ Ramp-up 的完整分析框架单独记录在：
 
 Global Holdout 长期不接收某一系列实验策略。
 
-例如：
+例如，从策略上线开始就固定保留一组从未接受新策略的随机化单位：
 
 ```text
-95% Users → Normal Experimentation
-5% Users  → Global Holdout
+95%: Old → New / Normal Experimentation
+ 5%: Old → Old / Never-treated Holdout
 ```
 
 用于衡量：
@@ -2005,7 +2010,9 @@ Global Holdout 长期不接收某一系列实验策略。
 - 推荐团队整体迭代的长期增量
 - 多个实验累积后的真实效果
 - 长期留存和生态影响
-- 季节性变化与算法变化的区别
+- 在共同季节性冲击下，整条策略迭代路径相对旧路径的同期累计增量
+
+随机同期 Holdout 能控制两组共同经历的季节性变化，但不能自动拆解单个版本贡献，也不能排除 Treatment 与季节之间的异质交互。
 
 #### Layer Holdout
 
@@ -2019,22 +2026,34 @@ Creator Ecosystem Holdout
 
 #### Reverse Experiment
 
-当新策略已经成为默认策略时，可以保留少量旧策略流量：
+当一批用户已经使用新策略后，可以在明确的反转时点重新随机一小部分单位撤回到旧策略，并保留同时期继续使用新策略的对照：
 
 ```text
-95% → New Strategy
-5%  → Old Strategy
+Before reversal: 100% New
+At reversal t*: re-randomize eligible units
+  95%: New → New  / concurrent continuation control
+   5%: New → Old  / withdrawal treatment
 ```
 
-用于继续观察长期差异。
+反转时点、稳定版本、目标人群、重新随机规则、清洗期和分析窗口都必须预先声明。它测量的是撤回效应，而不是“从未使用新策略”的固定 Holdout。
+
+反转实验与原始 Adoption Experiment 不一定估计同一个因果量。用户已经接受新策略后再切回旧策略，观测到的是撤回效应；继续使用新策略组相对撤回组的差异也会受到历史兴趣状态、缓存、创作者供给、库存和商家响应影响。只有 Carryover 可忽略或清洗期有效，且没有不可逆状态变化时，撤回效应才可能对应原始采用效应的负向镜像。
+
+| 设计 | 主要回答的问题 | 不能自动回答的问题 |
+|---|---|---|
+| 固定 Long-term Holdout | 一组持续未采用新策略的人，相对持续采用策略的人，累计差异是多少 | 当前单个版本的独立贡献；完全消除跨组 Spillover |
+| 周期性重新随机 Holdout | 起始状态可比，或将 Treatment History 纳入目标量时，下一周期新增策略包相对当期 Baseline 的效果 | 跨多个周期连续累积的长期效果 |
+| Reverse Experiment | 默认策略上线后，撤回策略会发生什么 | 用户最初从旧策略切换到新策略的 Adoption Effect |
+
+重置 Holdout 会终止原有 Cohort 的连续对照，因此不能只因固定周期结束就机械重置。应先说明 Estimand 是否从“长期累计效果”改变为“下一周期增量”，并重新评估身份稳定、污染、样本量和指标成熟。不可逆界面变化、已经改变的供给生态、旧策略不再安全或数据协议已不兼容时，不适合用反转实验恢复旧行为。
 
 #### Holdout 风险
 
 - 长期保留旧策略可能损害这部分用户体验
-- Holdout 用户可能逐渐不再具有代表性
+- 目标总体可能漂移；差异流失、跨组污染或只分析当前活跃者会破坏原始可比性
 - 用户跨设备或账号可能造成污染
 - 其他产品变化可能使旧策略无法兼容
-- 需要定期评估是否重置 Holdout
+- 需要定期评估是否仍值得保留；若重置，必须明确新的 Estimand
 
 Holdout 是可选的长期测量机制，不是每个模型上线后的必经步骤。
 
@@ -2156,9 +2175,9 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 
 <a name="sec-14"></a>
 
-## 14. 工业案例：三类电商推荐实验
+## 14. 工业案例：多场景电商推荐实验
 
-以下均为实验设计模板，不代表任何真实业务配置或实验结果。案例中的“决策”描述的是预先定义的判断规则，而不是已经发生的上线结论。
+以下均为实验设计模板，不代表任何真实业务配置或实验结果。案例中的“决策”描述的是预先定义的判断规则，而不是已经发生的上线结论。内容、直播和商品卡是常用例子，并不构成固定的业务分类；同一实验原则也适用于搜索、选品、合作匹配和流量协同。
 
 <a name="sec-14-1"></a>
 
@@ -2227,6 +2246,26 @@ Holdout 是可选的长期测量机制，不是每个模型上线后的必经步
 | Attribution / Maturity | 四个 Cell 使用相同订单归因、成熟窗口和 Data Freeze Date；交互检验单独规划 MDE 与 Power |
 | 常见误判 | `A Only > 0` 且 `B Only > 0` 不能推出 Combined 等于两者之和；正交 Assignment 也不代表业务效果可加 |
 | 决策 | 同时报告四个 Cell Mean、条件效应、平均主效应和 Interaction Contrast；联合上线以 Combined 的成熟收益与 Guardrail 为准，而不是机械相加两个独立 Lift |
+
+<a name="sec-14-5"></a>
+
+### 14.5 创作者—商品匹配实验
+
+这里的决策是“向哪位创作者展示哪些可合作商品”。完整漏斗为选品曝光→了解合作条件→添加商品或申请样品→发布内容→有效分发→成熟交易，因此选品点击不是最终成功标准。
+
+| 实验卡片字段 | 设计 |
+|---|---|
+| 业务假设 | 新匹配模型提高合格创作者的有效内容产出和成熟交易价值，同时不过度集中于头部商品或创作者 |
+| Control / Treatment | Control 使用当前选品排序；Treatment 加入内容专长、商品属性、合作资格和预期交易质量目标 |
+| 设计单位 | 只有在买家侧曝光隔离且样品、预算、商品容量等共享资源干扰可忽略时，个性化工具实验才可使用 Creator ID。若内容进入共享买家排序、同一买家会接触两组创作者，或资源跨 Creator 竞争，应使用能包住 Buyer / Creator / Product 竞争的 Two-sided、Saturation 或 Market-level Cluster Design |
+| Eligibility | 实验前定义的合格创作者，例如已获得选品功能且在所在地区可看到合作商品的人；不能只保留点击或已发布内容的人 |
+| 示例数字 | 示例：8 万合格创作者随机分组；Treatment 选品点击率相对提升 6.0%，14 天有效内容发布率提升 1.4%，但 Top-100 商品曝光份额从 35% 升至 47% |
+| Primary Metric | Creator-level 工具实验可预先选择 T-day Active Publisher Rate per Assigned Eligible Creator；全局价值实验应在覆盖干扰边界的设计上使用去重 Mature Net Value per Eligible Buyer / Market。按 Creator 归因的价值只作诊断，并采用预先声明的互斥订单 Credit |
+| Secondary / Diagnostic | 选品曝光与点击、样品申请、商品添加、内容发布、有效分发、有交易创作者数和漏斗分段转化 |
+| Guardrail | 商品和创作者覆盖、头部曝光集中度、样品履约、取消与退款、商家负担和创作者负反馈 |
+| 干扰 / 归因 / 成熟 | 共享样品、佣金、商家预算和商品容量会产生供给侧 Spillover；同一买家可能接触两组创作者内容，同一订单也可能连接多个创作者。必须固定发布观察、互斥订单 Credit、交易归因与退款成熟窗口，并让设计覆盖两侧混流 |
+| 常见误判 | 选品点击增加就认定匹配成功，只分析 Treatment 影响后已发布内容的创作者，或把多个创作者认领的同一订单重复计入，都无法回答全局因果效果 |
+| 决策 | 示例中头部集中度明显恶化，即使中间漏斗为正也不应直接全量；应先加入多样性或配额约束，并在预设 Primary 达标且 Guardrail 安全后放量。若 Primary 是全局交易价值，还必须等待成熟窗口完成 |
 
 ---
 
