@@ -111,7 +111,7 @@ flowchart TB
 | Retrieval | 在海量 item 中最大化高价值候选覆盖 | ItemCF、Two-Tower、Graph、ANN |
 | Pre-ranking | 在低延迟下保留精排高价值候选 | Two-Tower、轻量联合模型、三分支粗排、Distillation |
 | Ranking | 估计用户—商品多目标价值 | DeepFM、DCN、DIN、MMoE、LTR |
-| Re-ranking | 最大化整个列表的约束效用 | MMR、DPP、规则、Slate Optimization |
+| Re-ranking | 最大化整个列表的约束效用 | MMR、DPP（Cholesky / MGS 实现）、规则、Slate Optimization |
 | Exploration | 在即时收益与信息获取间权衡 | UCB、Thompson Sampling、Contextual Bandit |
 
 <a name="sec-1-3"></a>
@@ -219,7 +219,7 @@ Validity → Data quality → Effect size → Funnel diagnosis
 | 粗排与精排 | [ranking.md](./ranking.md) | 排序链路、多任务预估、多目标融合与校准 |
 | 特征交叉 | [feature-interaction.md](./feature-interaction.md) | 深入排序模型：FM、DeepFM、DCN、xDeepFM 与 FiBiNET |
 | 行为序列 | [user-behavior-sequence.md](./user-behavior-sequence.md) | 深入用户建模：LastN、DIN、DIEN 与兴趣演化 |
-| 重排 | [reranking.md](./reranking.md) | MMR、DPP、规则、探索与列表级约束 |
+| 重排 | [reranking.md](./reranking.md) | 多层相似度、MMR、DPP / MGS、规则、探索与位置约束 |
 | 冷启动 | [cold-start.md](./cold-start.md) | 新商品、新商家、新用户与探索机制 |
 | 系统优化 | [system-optimization.md](./system-optimization.md) | 召回配额、阶段漏斗、迭代路线与诊断框架 |
 
