@@ -194,6 +194,31 @@ SRM 是前置数据质量门槛。SRM Fail 时，应暂停业务指标分析并�
 
 A/A Test 的理想结果不是所有指标完全相等。单次 A/A 只能检查一次随机化实现和数据链路，不能仅凭“所有 p-value 都大于 0.05”证明统计系统已经校准。
 
+若用 `tau` 表示预先定义指标上的 Treatment 与 Control 差异，A/A 的检验通常写成：
+
+```text
+H0: tau = 0
+H1: tau != 0
+```
+
+这里的 Treatment 与 Control 实际运行相同策略，因此零效应符合设计预期。但单次检验只能作如下解释：
+
+```text
+p-value > 0.05
+-> 没有足够证据拒绝 H0
+-> 符合 A/A 应当没有系统差异的预期
+-> 不能证明实验平台一定正确
+
+p-value < 0.05
+-> 观察到了在 H0 下较少见的结果
+-> 可能来自平台异常，也可能只是预期内的假阳性
+-> 需要结合重复校准、SRM 和数据链路定位
+```
+
+p-value 不是“H0 为真的概率”，也不是平台健康度分数。它回答的是：假设 H0 及当前统计模型成立，得到当前或更极端数据的概率有多大。
+
+p-value 的通用定义，以及它在 A/A 与 A/B 决策中的区别，见 [A/A 与 A/B 中如何解释 p-value](ab-testing.md#sec-10-3)。
+
 更可靠的校准需要运行多次独立 A/A，或在历史无处理数据上执行大量 Synthetic A/A Randomization。若检验有效且原假设成立，长期来看应观察到：
 
 - 差异围绕 0 随机波动
@@ -208,6 +233,17 @@ A/A Test 的理想结果不是所有指标完全相等。单次 A/A 只能检查
 统计校准必须覆盖生产中实际使用的方法，包括 Ratio Linearization、CUPED、Cluster-robust SE、Cluster Bootstrap、Multiple Testing 和 Sequential Monitoring。仅校准普通 T-test，不能证明其他推断链路正确。
 
 一次 `p-value > 0.05` 不能证明平台完全可靠；一次显著也不一定代表平台有 Bug。应结合 SRM、日志、指标链路、时间趋势和预先定义的多重检验范围综合判断。
+
+因此，A/A 的通过逻辑更接近：
+
+```text
+SRM 正常
++ Assignment、Exposure 与 Cross-over 正常
++ Logging 和 Metric Definition 正常
++ 指标成熟度与时间趋势正常
++ 重复 A/A 的假阳性率、Coverage 和 p-value 分布符合预期
+-> 当前没有明显的平台异常证据
+```
 
 <a name="sec-4-5"></a>
 
