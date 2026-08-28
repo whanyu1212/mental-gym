@@ -146,7 +146,7 @@ Do **not** force a variable grow/shrink window when:
 
 | Signal | Why the window fails | Reach for |
 |---|---|---|
-| A sum-threshold input can contain negative values | Expanding can decrease the sum and shrinking can increase it, so a threshold cannot safely decide which boundary to move. Zero is safe for the usual non-negative sum windows. | [Prefix Sum](../prefix_sum_pattern/) (count ranges that hit a target) or [Kadane](../kadane_algorithm/) (best contiguous sum) |
+| A sum-threshold input can contain negative values | Expanding can decrease the sum and shrinking can increase it, so a threshold cannot safely decide which boundary to move. Zero is safe for the usual non-negative sum windows. | Prefix sums plus a monotonic deque (shortest range reaching a threshold), a [prefix-sum frequency map](../prefix_sum_pattern/) (count/exact-target ranges), or [Kadane](../kadane_algorithm/) (best contiguous sum) |
 | A product input violates the positivity assumptions used by the variable-window proof | Zero, negative values, or factors below one can change how multiplication responds to expansion and shrinking; derive the product-specific invariant before using a window. | A product-specific prefix/transform approach, or another method justified by the input constraints |
 | The prompt asks for a subsequence, not a substring / subarray | The answer is allowed to skip elements | Hashing, DP, or two pointers on a transformed input |
 | You must count *every* valid range, not the best one, and validity is not a simple prefix of the current window | A best-so-far scalar throws the extras away | Either a window that counts `right - left + 1` starts after each repair, or a prefix-sum frequency map |
