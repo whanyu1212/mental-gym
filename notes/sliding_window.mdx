@@ -137,15 +137,17 @@ Minimum Size Subarray Sum is the usual first example: all values are positive, s
 
 ### When Not To Use This
 
-A sliding window needs a contiguous range whose validity is **monotonic** in the endpoints:
+A sliding window needs a contiguous range whose validity is **monotonic** in the endpoints, but the direction depends on the prompt:
 
-> If `[left, right]` is already invalid, every larger range that still contains it is also invalid. For a shortest-window problem, if `[left, right]` already meets the goal, no larger range can beat it, so the only useful move is to shrink and test whether a tighter range still qualifies.
+- **Longest-window constraints are downward-closed.** If a window is valid, every subwindow is valid; equivalently, once a window is invalid, every larger range containing it is also invalid. Shrinking repairs the constraint.
+- **Shortest-window goals are upward-closed.** If a window meets the goal, every larger range containing it also meets the goal; a smaller window may stop qualifying. Expanding can turn a miss into a match, and shrinking searches for the tightest match.
 
 Do **not** force a window when:
 
 | Signal | Why the window fails | Reach for |
 |---|---|---|
-| The values can be negative or zero and the test is a sum / product | Adding a value can help *or* hurt, so shrinking is no longer a safe repair | [Prefix Sum](../prefix_sum_pattern/) (count ranges that hit a target) or [Kadane](../kadane_algorithm/) (best contiguous sum) |
+| A sum-threshold input can contain negative values | Expanding can decrease the sum and shrinking can increase it, so endpoint movement is no longer monotonic. Zero is safe for the usual non-negative sum windows. | [Prefix Sum](../prefix_sum_pattern/) (count ranges that hit a target) or [Kadane](../kadane_algorithm/) (best contiguous sum) |
+| A product input violates the positivity assumptions used by the window proof | Zero, negative values, or factors below one can change how multiplication responds to expansion and shrinking; derive the product-specific invariant before using a window. | A product-specific prefix/transform approach, or another method justified by the input constraints |
 | The prompt asks for a subsequence, not a substring / subarray | The answer is allowed to skip elements | Hashing, DP, or two pointers on a transformed input |
 | You must count *every* valid range, not the best one, and validity is not a simple prefix of the current window | A best-so-far scalar throws the extras away | Either a window that counts `right - left + 1` starts after each repair, or a prefix-sum frequency map |
 | The useful left partner is not “the current range,” only “the best earlier value” | There is no range invariant to restore | The forward-pair scan in [section 1](#1-forward-pair-scan-best-time-to-buy-and-sell-stock), or Kadane on daily differences |
@@ -543,7 +545,9 @@ best is the largest such window seen so far.
 
 The code recomputes the maximum frequency from the map so the invariant directly describes the actual current window. Because this problem has only 26 uppercase letters, that is still O(n). A common optimization keeps a non-decreasing historical maximum frequency, but learn the direct proof before using that shortcut.
 
-A single `if` can replace the `while` here, and only here. The window grows by one character per step and the task asks for a *longest* valid range, so shrinking by more than one cannot beat a width you have already recorded. A stale `max_f` is also safe for the same reason: it can only make the validity test stricter. Use `while` until that argument is obvious; the saved 424 solution uses the `if` form.
+A single `if` can replace the `while` here, and only here. The window grows by one character per step and the task asks for a *longest* valid range, so shrinking by more than one cannot beat a width you have already recorded.
+
+A non-decreasing historical `max_f` needs a different proof. Once stale, it is at least the current window's true maximum, so it **underestimates** the replacement cost and makes the validity test more permissive. The shortcut is still safe for the maximum length: the algorithm never shrinks a previously achieved candidate width merely to restore exact validity, and that width can grow only when a newly observed frequency provides enough real matching characters to justify the larger candidate. The maintained range may therefore be temporarily invalid, even though the recorded best width remains attainable. Use the recomputed maximum and `while` form until that non-shrinking best-width argument is obvious; the saved 424 solution uses the optimized `if` form.
 
 ### Why Shrink Instead Of Restarting
 
