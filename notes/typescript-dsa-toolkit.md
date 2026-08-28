@@ -62,7 +62,7 @@ Run a solution from the repo root with the Bun project (`bun install`, then `bun
 | `set.add` / `set.remove` | `set.add` / `set.delete` |
 | `dict.get(k, 0)` | `map.get(k) ?? 0` |
 | `"".join(parts)` | `parts.join("")` |
-| `s[i]` | `s[i]` or `s.charAt(i)` — both are the one character, not a byte |
+| `s[i]` | `s[i]` returns one UTF-16 code unit or `undefined`; `charAt(i)` returns one code unit or `""`; use `for...of` for Unicode code points |
 | `if __name__ == "__main__":` | `if (import.meta.main) { ... }` under Bun |
 
 `==` vs `===`: always use `===`. `==` coerces types (`0 == ""` is `true`).
@@ -176,9 +176,9 @@ for (const value of seen) { ... }
 for (const [key, value] of count) { ... }
 ```
 
-A plain object `{ [key: string]: number }` works for string keys, but number keys are coerced to strings. Use `Map` whenever the key is an integer, a pair, or anything you do not want stringified.
+A plain object `{ [key: string]: number }` works for string keys, but number keys are coerced to strings. Use `Map` when the key is an integer or when object identity intentionally matters. Fresh arrays and objects with the same contents are different keys, so encode logical pairs and other compound state as a primitive value.
 
-There is no tuple-key. Encode compound state:
+There is no value-based tuple key. Encode compound state:
 
 ```ts
 const visited = new Set<string>();
@@ -190,12 +190,12 @@ visited.add(`${row},${col}`);
 ## Strings
 
 ```ts
-s.length;
-s[i];                         // one character, or undefined
-s.charCodeAt(i);              // like ord(s[i])
-String.fromCharCode(97);      // like chr(97) → "a"
-s.slice(left, right);         // [left, right)
-s.split("");                  // characters as an array
+s.length;                     // number of UTF-16 code units
+s[i];                         // one UTF-16 code unit, or undefined
+s.charCodeAt(i);              // numeric UTF-16 code unit
+String.fromCharCode(97);      // code unit 97 → "a"
+s.slice(left, right);         // [left, right) in code-unit indices
+s.split("");                  // UTF-16 code units as an array
 s.includes(sub);
 s.startsWith(prefix);
 s.endsWith(suffix);
@@ -203,9 +203,9 @@ s.toLowerCase();
 s.trim();
 ```
 
-`s[i]` is already a string of length 1. There is no separate `char` type.
+JavaScript string indexing operates on UTF-16 code units. A BMP character uses one code unit, but a non-BMP code point such as an emoji uses a surrogate pair, so indexing or `split("")` separates it. Use `for (const codePoint of s)` or `Array.from(s)` to iterate code points, and `s.codePointAt(i)` when you need a numeric code point. There is no separate `char` type.
 
-Lowercase frequency array:
+Lowercase ASCII frequency array:
 
 ```ts
 const freq = Array<number>(26).fill(0);
@@ -323,7 +323,7 @@ class TreeNode {
 
 Null-check before you read `.val` or `.next`. Optional chaining helps on one-off reads: `node?.left?.val`.
 
-Memoize with a `Map` (arguments must be a primitive or an encoded string):
+Memoize logical value-based argument tuples with an encoded primitive key. A stable object can instead be a `Map` key when object identity is intentional:
 
 ```ts
 const memo = new Map<string, number>();
