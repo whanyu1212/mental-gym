@@ -13,6 +13,7 @@ tags:
 
 import PatternVizModal from '../web/src/components/notes/PatternVizModal.astro';
 import BuySellStockAnimation from '../web/src/components/BuySellStockAnimation.astro';
+import ContainsDuplicate2Animation from '../web/src/components/ContainsDuplicate2Animation.astro';
 import LongestSubstringAnimation from '../web/src/components/LongestSubstringAnimation.astro';
 import CharacterReplacementAnimation from '../web/src/components/CharacterReplacementAnimation.astro';
 import PermutationInStringAnimation from '../web/src/components/PermutationInStringAnimation.astro';
@@ -52,8 +53,10 @@ Use the phrasing of the question to pick the right window family. The state is w
 | If the problem says... | Reach for... | State to maintain | Start with |
 |---|---|---|---|
 | Buy before sell; maximize a later-minus-earlier value | Forward-pair scan | Best eligible earlier value | [Best Time to Buy and Sell Stock](../../algorithms/121-best-time-to-buy-and-sell-stock) |
-| Check every substring of exactly length `k` | Fixed-size window | Counts, sum, or another rolling summary | [Permutation in String](../../algorithms/567-permutation-in-string) |
-| Longest or shortest valid substring/subarray | Variable-size window | State that says whether the current range is valid | [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters) |
+| Nearby duplicate, or any predicate over the last `k` values | Fixed-size membership window | A set or map of the values still in range | [Contains Duplicate II](../../algorithms/219-contains-duplicate-ii) |
+| Check every substring of exactly length `k` | Fixed-size summary window | Counts, sum, or another rolling summary | [Permutation in String](../../algorithms/567-permutation-in-string) |
+| Longest valid substring/subarray | Variable-size window | State that says whether the current range is valid | [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters) |
+| Shortest range that still satisfies a goal | Shrink-to-qualify window | The same validity state, but the answer is taken while shrinking | See [Shortest Windows Update Inside The Repair Loop](#shortest-windows-update-inside-the-repair-loop) |
 | Longest range after at most `k` changes, deletions, or replacements | Budgeted variable window | Cost needed to repair the current range | [Longest Repeating Character Replacement](../../algorithms/424-longest-repeating-character-replacement) |
 | Maximum or minimum for every fixed-size window | Window plus candidate structure | A monotonic deque of undominated candidates | [Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) |
 
@@ -64,12 +67,14 @@ This sequence starts with a single forward scan, then adds exactly one kind of w
 | Step | Problem | New idea to own |
 |---|---|---|
 | 1 | [Best Time to Buy and Sell Stock](../../algorithms/121-best-time-to-buy-and-sell-stock) | Keep the best feasible left boundary while scanning right |
-| 2 | [Permutation in String](../../algorithms/567-permutation-in-string) | Slide a fixed-width frequency map |
-| 3 | [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters) | Grow, then shrink until the invariant is restored |
-| 4 | [Longest Repeating Character Replacement](../../algorithms/424-longest-repeating-character-replacement) | Express validity as a repair budget |
-| 5 | [Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) | Keep only candidates that can still win |
+| 2 | [Contains Duplicate II](../../algorithms/219-contains-duplicate-ii) | A set that is exactly the last `k` values |
+| 3 | [Number of Sub-arrays of Size K and Average >= Threshold](../../algorithms/1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold) | A rolling sum of fixed width |
+| 4 | [Permutation in String](../../algorithms/567-permutation-in-string) | Slide a fixed-width frequency map |
+| 5 | [Longest Substring Without Repeating Characters](../../algorithms/3-longest-substring-without-repeating-characters) | Grow, then shrink until the invariant is restored |
+| 6 | [Longest Repeating Character Replacement](../../algorithms/424-longest-repeating-character-replacement) | Express validity as a repair budget |
+| 7 | [Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) | Keep only candidates that can still win |
 
-The last two problems are currently filed in the Stack section of the practice bank, but their core technique belongs in this sliding-window progression.
+[Permutation in String](../../algorithms/567-permutation-in-string) and [Sliding Window Maximum](../../algorithms/239-sliding-window-maximum) are currently filed in the Stack section of the practice bank, but their core technique belongs in this sliding-window progression.
 
 ---
 
@@ -107,6 +112,47 @@ The order matters:
 3. Only then use the window as a candidate answer.
 
 For a fixed-size window, the rule is different: shrink whenever the width grows beyond the required size, then inspect only windows with exactly that size.
+
+### Shortest Windows Update Inside The Repair Loop
+
+The skeleton above is the **longest**-window rhythm: grow, repair until the range is valid, then take the current width as a candidate. Shortest-window prompts invert only the moment you record the answer.
+
+```python
+left = 0
+state = empty_state()
+best = inf
+
+for right, value in enumerate(items):
+    add(state, value)
+
+    while window_meets_goal(state, left, right):
+        best = min(best, right - left + 1)
+        remove(state, items[left])
+        left += 1
+```
+
+The window is useful *while it still qualifies*. Each shrink asks whether a tighter range can still meet the goal. Recording after the `while` would measure a window that has already been trimmed *past* the last valid left edge.
+
+Minimum Size Subarray Sum is the usual first example: all values are positive, so adding on the right can only help the sum and removing on the left can only hurt it. That monotonicity is what makes the inner `while` safe.
+
+### When Not To Use This
+
+A **variable-size** sliding window whose boundary movement depends on validity needs a contiguous range whose validity is **monotonic** in the endpoints, but the direction depends on the prompt. Fixed-size windows are different: the required width determines each eviction, so their values may be negative without breaking the add/evict technique.
+
+- **Longest-window constraints are downward-closed.** If a window is valid, every subwindow is valid; equivalently, once a window is invalid, every larger range containing it is also invalid. Shrinking repairs the constraint.
+- **Shortest-window goals are upward-closed.** If a window meets the goal, every larger range containing it also meets the goal; a smaller window may stop qualifying. Expanding can turn a miss into a match, and shrinking searches for the tightest match.
+
+Do **not** force a variable grow/shrink window when:
+
+| Signal | Why the window fails | Reach for |
+|---|---|---|
+| A sum-threshold input can contain negative values | Expanding can decrease the sum and shrinking can increase it, so a threshold cannot safely decide which boundary to move. Zero is safe for the usual non-negative sum windows. | Prefix sums plus a monotonic deque (shortest range reaching a threshold), a [prefix-sum frequency map](../prefix_sum_pattern/) (count/exact-target ranges), or [Kadane](../kadane_algorithm/) (best contiguous sum) |
+| A product input violates the positivity assumptions used by the variable-window proof | Zero, negative values, or factors below one can change how multiplication responds to expansion and shrinking; derive the product-specific invariant before using a window. | A product-specific prefix/transform approach, or another method justified by the input constraints |
+| The prompt asks for a subsequence, not a substring / subarray | The answer is allowed to skip elements | Hashing, DP, or two pointers on a transformed input |
+| You must count *every* valid range, not the best one, and validity is not a simple prefix of the current window | A best-so-far scalar throws the extras away | Either a window that counts `right - left + 1` starts after each repair, or a prefix-sum frequency map |
+| The useful left partner is not “the current range,” only “the best earlier value” | There is no range invariant to restore | The forward-pair scan in [section 1](#1-forward-pair-scan-best-time-to-buy-and-sell-stock), or Kadane on daily differences |
+
+If you cannot name the property that makes the next `left += 1` safe, stop and write the invariant before coding.
 
 ---
 
@@ -163,19 +209,63 @@ The code can be written with two pointers, but the key idea is a running minimum
 
 ---
 
-## 2. Fixed-Size Windows: Permutation In String
+## 2. Fixed-Size Windows
 
 ### Recognize It
 
 Use a fixed-size window when every candidate range must have the same width:
 
+- "nearby / within `k` positions"
 - "contains a permutation/anagram"
 - "every substring of length `k`"
 - "average, sum, or count in every block of `k` values"
 
-The window does not choose its own width. It advances exactly one step at a time after it reaches the required size.
+The window does not choose its own width. It advances exactly one step at a time after it reaches the required size. The state is what changes from problem to problem: a membership set, a rolling sum, or a frequency map.
 
-### Anchor Problem: Permutation In String
+### First Anchor: Contains Duplicate II
+
+[Contains Duplicate II](../../algorithms/219-contains-duplicate-ii) asks whether any value repeats inside an index distance of `k`. The window is the last `k + 1` values. Membership in that window *is* the distance constraint, so a hit is a valid nearby pair.
+
+<PatternVizModal label="Fixed-Size Membership Window">
+  <ContainsDuplicate2Animation />
+</PatternVizModal>
+
+```python
+def contains_nearby_duplicate(nums: list[int], k: int) -> bool:
+    window = set()
+    left = 0
+
+    for right, value in enumerate(nums):
+        if right - left > k:
+            window.remove(nums[left])
+            left += 1
+
+        if value in window:
+            return True
+
+        window.add(value)
+
+    return False
+```
+
+### The Invariant
+
+Just before testing index `right`:
+
+```text
+window holds exactly the values at indices max(0, right - k) .. right - 1.
+If value is already in the set, a pair at distance <= k exists.
+```
+
+Remove `nums[left]` **before** incrementing `left`. Advance first and you evict the wrong element; the truly stale value stays in the set and later reports a duplicate that is farther than `k`.
+
+`k = 0` is always false: distinct indices cannot satisfy `abs(i - j) <= 0`.
+
+### Change One Rule
+
+If the question asks for a rolling **sum** of every block of `k` values instead of membership, keep the same skeleton and replace the set with a running total. That is [Number of Sub-arrays of Size K and Average >= Threshold](../../algorithms/1343-number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold), worked in [Three Ways To Write The Same Fixed Window](#three-ways-to-write-the-same-fixed-window) below.
+
+### Next Anchor: Permutation In String
 
 [Permutation in String](../../algorithms/567-permutation-in-string) asks whether `s2` contains a contiguous permutation of `s1`. A permutation has the same character frequencies, so only windows of length `len(s1)` can qualify.
 
@@ -230,6 +320,8 @@ Each slide performs constant rolling work: add one character and, once full, rem
 ### Change One Rule
 
 If the question asks for **all** matching positions rather than a boolean, append `left` when the maps match instead of returning. The fixed-width invariant stays unchanged.
+
+Comparing whole maps is fine while the alphabet is a small constant. For a true O(1) check per slide, keep a `matches` counter: how many distinct characters currently have the exact needed frequency. Adding or removing a character then updates `matches` in constant time, and the window is an anagram exactly when `matches == len(needed)`.
 
 ### Three Ways To Write The Same Fixed Window
 
@@ -380,6 +472,16 @@ The nested `while` does not make the algorithm O(n^2). `right` visits each chara
 
 For `"abba"`, a duplicate does not mean discard everything and start over. When the second `b` arrives, shrink from the left just enough to remove the older `b`; the valid window is then `"ba"`. Resetting loses valid progress and breaks the invariant.
 
+### Change One Rule: Jump Instead Of Stepping
+
+The `while` is honest, but it is not required. Store `last_seen[char] = index` and, when a repeat arrives, jump:
+
+```python
+left = max(left, last_seen[char] + 1)
+```
+
+The `max` is the `"abba"` lesson in one expression: a later last-seen index must not pull `left` backward over a shrink you have already paid for.
+
 ### Check Yourself
 
 - Why must the invalidity repair use `while`, not one `if`?
@@ -442,6 +544,10 @@ best is the largest such window seen so far.
 ```
 
 The code recomputes the maximum frequency from the map so the invariant directly describes the actual current window. Because this problem has only 26 uppercase letters, that is still O(n). A common optimization keeps a non-decreasing historical maximum frequency, but learn the direct proof before using that shortcut.
+
+A single `if` can replace the `while` only when you have a problem-specific **non-shrinking best-width proof**; the optimization is not unique to this problem. Some longest, downward-closed windows support it when each step adds one right value, can evict one left value, and any temporarily invalid maintained range cannot increase the recorded answer beyond an attainable valid width. It is unsafe when later logic needs the maintained range or left boundary to be exactly valid—such as many shortest, counting, or enumeration problems—or whenever no proof rules out an invalid range inflating the answer. Default to `while` until those conditions are proved.
+
+A non-decreasing historical `max_f` needs a different proof. Once stale, it is at least the current window's true maximum, so it **underestimates** the replacement cost and makes the validity test more permissive. The shortcut is still safe for the maximum length: the algorithm never shrinks a previously achieved candidate width merely to restore exact validity, and that width can grow only when a newly observed frequency provides enough real matching characters to justify the larger candidate. The maintained range may therefore be temporarily invalid, even though the recorded best width remains attainable. Use the recomputed maximum and `while` form until that non-shrinking best-width argument is obvious; the saved 424 solution uses the optimized `if` form.
 
 ### Why Shrink Instead Of Restarting
 
@@ -548,7 +654,7 @@ Both techniques use boundaries that move forward, but they answer different ques
 | Signals: longest, shortest, at most, substring, subarray, every block of `k` | Signals: pair, symmetry, sorted endpoints, two inputs, in-place filtering |
 | State might be counts, sum, a set, or a deque | State might be none beyond the pointers, or a small problem-specific summary |
 
-If the task asks about a **contiguous range** and a condition that can be updated as endpoints move, investigate sliding window first.
+If the task asks about a **contiguous range** and a condition that can be updated as endpoints move, investigate sliding window first. If the range is contiguous but the next shrink is not a safe repair, start with [Prefix Sum](../prefix_sum_pattern/) or [Kadane](../kadane_algorithm/) instead. For the Python helper that usually implements a window maximum, see [Python DSA Toolkit](../python-dsa-toolkit/).
 
 ---
 
@@ -559,8 +665,10 @@ When a window solution is wrong, inspect these contracts before changing conditi
 | Symptom | Question to ask |
 |---|---|
 | The map or set disagrees with the displayed window | Did I remove `items[left]` from state before advancing `left`? |
+| A nearby-duplicate check fires too late or too early | Is the eviction test `right - left > k`, and did I evict `nums[left]` before incrementing? |
 | The window grows past a fixed width | Did I shrink whenever `right - left + 1 > k`? |
 | An invalid window updates the answer | Am I updating after validity is restored? |
+| A shortest-window answer is one step too long | Did I record the width *inside* the shrink loop, while the window still qualified? |
 | A duplicate still remains | Does this problem require a `while` loop rather than a single `if`? |
 | Frequency maps never match | Did I delete a key after its count reached zero? |
 | Character Replacement is off by one | Is validity `window length - max frequency <= k`? |
@@ -574,8 +682,11 @@ When a window solution is wrong, inspect these contracts before changing conditi
 | Family | Time | Extra space | Main reason |
 |---|---|---|---|
 | Best Time to Buy and Sell Stock | O(n) | O(1) | Keep only the best prior buy price |
+| Fixed-size membership window | O(n) | O(min(n, k)) | Each value enters and leaves the set at most once |
+| Fixed-size sum window | O(n) | O(1) | One addition and one subtraction per slide |
 | Fixed-size frequency window | O(n) for a bounded alphabet | O(alphabet) | One value enters and leaves per slide |
 | Longest unique substring | O(n) | O(min(n, alphabet)) | Each character enters and leaves the set at most once |
+| Shortest qualifying window | O(n) | O(1) or O(alphabet) | `left` still only moves forward |
 | Budgeted character window | O(n) for a bounded alphabet | O(alphabet) | Window state changes incrementally; alphabet has 26 letters |
 | Sliding Window Maximum with heap | O(n log n) | O(n) | Heap operations and lazy stale entries |
 | Sliding Window Maximum with deque | O(n) | O(k) | Each index enters and leaves the deque once |
@@ -591,8 +702,9 @@ Before coding a sliding-window problem, say these answers out loud:
 1. Is the window fixed-size or variable-size?
 2. What does the state represent exactly?
 3. What makes a window valid, and how do I repair invalidity?
-4. When is it safe to update the answer?
+4. When is it safe to update the answer — after the repair, or while shrinking?
 5. Does each item enter and leave the state at most once?
 6. Do I need all window values, or only undominated candidates?
+7. Is the validity rule actually monotonic, or should this be prefix sums / Kadane?
 
 If those answers are clear, the implementation is usually a short loop. If not, solve the earlier problem in the same family before moving on.
