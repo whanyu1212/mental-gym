@@ -137,17 +137,17 @@ Minimum Size Subarray Sum is the usual first example: all values are positive, s
 
 ### When Not To Use This
 
-A sliding window needs a contiguous range whose validity is **monotonic** in the endpoints, but the direction depends on the prompt:
+A **variable-size** sliding window whose boundary movement depends on validity needs a contiguous range whose validity is **monotonic** in the endpoints, but the direction depends on the prompt. Fixed-size windows are different: the required width determines each eviction, so their values may be negative without breaking the add/evict technique.
 
 - **Longest-window constraints are downward-closed.** If a window is valid, every subwindow is valid; equivalently, once a window is invalid, every larger range containing it is also invalid. Shrinking repairs the constraint.
 - **Shortest-window goals are upward-closed.** If a window meets the goal, every larger range containing it also meets the goal; a smaller window may stop qualifying. Expanding can turn a miss into a match, and shrinking searches for the tightest match.
 
-Do **not** force a window when:
+Do **not** force a variable grow/shrink window when:
 
 | Signal | Why the window fails | Reach for |
 |---|---|---|
-| A sum-threshold input can contain negative values | Expanding can decrease the sum and shrinking can increase it, so endpoint movement is no longer monotonic. Zero is safe for the usual non-negative sum windows. | [Prefix Sum](../prefix_sum_pattern/) (count ranges that hit a target) or [Kadane](../kadane_algorithm/) (best contiguous sum) |
-| A product input violates the positivity assumptions used by the window proof | Zero, negative values, or factors below one can change how multiplication responds to expansion and shrinking; derive the product-specific invariant before using a window. | A product-specific prefix/transform approach, or another method justified by the input constraints |
+| A sum-threshold input can contain negative values | Expanding can decrease the sum and shrinking can increase it, so a threshold cannot safely decide which boundary to move. Zero is safe for the usual non-negative sum windows. | [Prefix Sum](../prefix_sum_pattern/) (count ranges that hit a target) or [Kadane](../kadane_algorithm/) (best contiguous sum) |
+| A product input violates the positivity assumptions used by the variable-window proof | Zero, negative values, or factors below one can change how multiplication responds to expansion and shrinking; derive the product-specific invariant before using a window. | A product-specific prefix/transform approach, or another method justified by the input constraints |
 | The prompt asks for a subsequence, not a substring / subarray | The answer is allowed to skip elements | Hashing, DP, or two pointers on a transformed input |
 | You must count *every* valid range, not the best one, and validity is not a simple prefix of the current window | A best-so-far scalar throws the extras away | Either a window that counts `right - left + 1` starts after each repair, or a prefix-sum frequency map |
 | The useful left partner is not “the current range,” only “the best earlier value” | There is no range invariant to restore | The forward-pair scan in [section 1](#1-forward-pair-scan-best-time-to-buy-and-sell-stock), or Kadane on daily differences |
