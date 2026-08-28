@@ -4962,4 +4962,141 @@ merged: a p b q c   d
     },
     sourceUrl: "https://leetcode.com/problems/merge-strings-alternately/",
   },
+  {
+    id: "189",
+    slug: "189-rotate-array",
+    leetcodeSlug: "rotate-array",
+    title: "Rotate Array",
+    difficulty: "Medium",
+    group: "Two Pointers",
+    topics: ["array", "math", "two-pointers"],
+    description: `<p>Given an integer array <code>nums</code>, rotate the array to the right by <code>k</code> steps, where <code>k</code> is non-negative.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2,3,4,5,6,7], k = 3
+<strong>Output:</strong> [5,6,7,1,2,3,4]
+<strong>Explanation:</strong>
+rotate 1 steps to the right: [7,1,2,3,4,5,6]
+rotate 2 steps to the right: [6,7,1,2,3,4,5]
+rotate 3 steps to the right: [5,6,7,1,2,3,4]
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [-1,-100,3,99], k = 2
+<strong>Output:</strong> [3,99,-1,-100]
+<strong>Explanation:</strong>
+rotate 1 steps to the right: [99,-1,-100,3]
+rotate 2 steps to the right: [3,99,-1,-100]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>
+	<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong></p>
+
+<ul>
+	<li>Try to come up with as many solutions as you can. There are at least three different ways to solve this problem.</li>
+	<li>Could you do it in-place with <code>O(1)</code> extra space?</li>
+</ul>`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def rotate(self, nums: List[int], k: int) -> None:
+        """
+        Do not return anything, modify nums in-place instead.
+        """
+        n = len(nums)
+        k %= n
+
+        def reverse(l: int, r: int) -> None:
+            while l < r:
+                nums[l], nums[r] = nums[r], nums[l]
+                l, r = l + 1, r - 1
+
+        reverse(0, n - 1)
+        reverse(0, k - 1)
+        reverse(k, n - 1)`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/rotate-array/",
+  },
+  {
+    id: "881",
+    slug: "881-boats-to-save-people",
+    leetcodeSlug: "boats-to-save-people",
+    title: "Boats to Save People",
+    difficulty: "Medium",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers", "greedy", "sorting"],
+    description: `<p>You are given an array <code>people</code> where <code>people[i]</code> is the weight of the <code>i<sup>th</sup></code> person, and an <strong>infinite number of boats</strong> where each boat can carry a maximum weight of <code>limit</code>. Each boat carries at most two people at the same time, provided the sum of the weight of those people is at most <code>limit</code>.</p>
+
+<p>Return <em>the minimum number of boats to carry every given person</em>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> people = [1,2], limit = 3
+<strong>Output:</strong> 1
+<strong>Explanation:</strong> 1 boat (1, 2)
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> people = [3,2,2,1], limit = 3
+<strong>Output:</strong> 3
+<strong>Explanation:</strong> 3 boats (1, 2), (2) and (3)
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> people = [3,5,3,4], limit = 5
+<strong>Output:</strong> 4
+<strong>Explanation:</strong> 4 boats (3), (3), (4), (5)
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= people.length &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>1 &lt;= people[i] &lt;= limit &lt;= 3 * 10<sup>4</sup></code></li>
+</ul>`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def numRescueBoats(self, people: List[int], limit: int) -> int:
+        people.sort()
+        left, right = 0, len(people) - 1
+        boats = 0
+
+        while left <= right:
+            if people[left] + people[right] <= limit:
+                left += 1
+            right -= 1
+            boats += 1
+
+        return boats`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/boats-to-save-people/",
+  },
 ];
