@@ -230,9 +230,10 @@ Math.log2(x);
 Infinity;
 -Infinity;
 Number.MAX_SAFE_INTEGER;  // 2^53 - 1
+Number.MIN_SAFE_INTEGER;  // -(2^53 - 1)
 ```
 
-`number` is IEEE-754. Integer work on LeetCode is safe below `2^53`. For 32-bit wrap problems, use `n | 0` only when the prompt asks for it.
+`number` is IEEE-754. Integer work is exact only while every input, intermediate value, and result stays within `Number.MIN_SAFE_INTEGER` through `Number.MAX_SAFE_INTEGER`; safe inputs can still produce an unsafe sum or product. Use `bigint` when any integer value can exceed that range. For 32-bit wrap problems, use `n | 0` only when the prompt asks for it.
 
 Bitwise operators on `number` are limited to 32-bit work: value operands are coerced to 32 bits and higher bits are discarded; `& | ^ ~ << >>` produce signed 32-bit results, while `>>>` produces an unsigned 32-bit result. All three shift operators mask the shift count to its low five bits (`0`–`31`). For wider integer bit operations, use `bigint` operands such as `1n` (`bigint` has no `>>>`, and cannot be mixed with `number`).
 
