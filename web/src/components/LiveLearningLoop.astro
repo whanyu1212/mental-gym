@@ -1,0 +1,246 @@
+---
+import { withBase } from "../lib/url";
+
+const steps = [
+	{ label: "Learn", detail: "Build the model", href: "/notes", x: 320, y: 62, delay: "0s" },
+	{ label: "Implement", detail: "Make it concrete", href: "/machine-learning", x: 505, y: 158, delay: "1.2s" },
+	{ label: "Practice", detail: "Work unaided", href: "/problems", x: 455, y: 342, delay: "2.4s" },
+	{ label: "Review", detail: "Retrieve later", href: "/#review", x: 185, y: 342, delay: "3.6s" },
+	{ label: "Retain", detail: "Keep it durable", href: "/progress", x: 135, y: 158, delay: "4.8s" },
+];
+---
+
+<nav class="learning-loop" aria-label="Mental Gym learning loop">
+	<svg viewBox="0 0 640 420" aria-labelledby="loop-title loop-description">
+		<title id="loop-title">The Mental Gym learning loop</title>
+		<desc id="loop-description">
+			Learn, implement, practice, review, and retain. Each stage links to the relevant area of Mental Gym.
+		</desc>
+
+		<defs>
+			<filter id="comet-glow" x="-300%" y="-300%" width="700%" height="700%">
+				<feGaussianBlur stdDeviation="5" result="blur" />
+				<feMerge>
+					<feMergeNode in="blur" />
+					<feMergeNode in="SourceGraphic" />
+				</feMerge>
+			</filter>
+		</defs>
+
+		<path
+			class="loop-track"
+			d="M 320 62 C 405 62 475 96 505 158 C 535 220 515 300 455 342 C 390 388 250 388 185 342 C 125 300 105 220 135 158 C 165 96 235 62 320 62 Z"
+		/>
+		<path
+			class="loop-flow"
+			d="M 320 62 C 405 62 475 96 505 158 C 535 220 515 300 455 342 C 390 388 250 388 185 342 C 125 300 105 220 135 158 C 165 96 235 62 320 62 Z"
+		/>
+
+		<circle class="comet" r="4" cx="0" cy="0" filter="url(#comet-glow)" />
+
+		<g class="loop-core" aria-hidden="true">
+			<circle cx="320" cy="220" r="79" />
+			<circle class="core-ring" cx="320" cy="220" r="63" />
+			<text class="core-kicker" x="320" y="211">Build</text>
+			<text class="core-title" x="320" y="238">Durable fluency</text>
+		</g>
+
+		{steps.map((step, index) => (
+			<a
+				class="loop-node"
+				href={withBase(step.href)}
+				aria-label={`${step.label}: ${step.detail}`}
+				style={`--node-delay: ${step.delay}`}
+			>
+				<circle class="node-halo" cx={step.x} cy={step.y} r="45" />
+				<circle class="node-surface" cx={step.x} cy={step.y} r="38" />
+				<text class="node-index" x={step.x} y={step.y - 8}>
+					{String(index + 1).padStart(2, "0")}
+				</text>
+				<text class="node-label" x={step.x} y={step.y + 13}>{step.label}</text>
+			</a>
+		))}
+	</svg>
+	<p class="loop-caption">Select a stage to continue your training.</p>
+</nav>
+
+<style>
+	.learning-loop {
+		position: relative;
+		width: 100%;
+		min-width: 0;
+	}
+
+	svg {
+		display: block;
+		height: auto;
+		overflow: visible;
+		width: 100%;
+	}
+
+	.loop-track,
+	.loop-flow {
+		fill: none;
+		stroke-linecap: round;
+	}
+
+	.loop-track {
+		stroke: var(--glass-border-strong);
+		stroke-width: 2;
+	}
+
+	.loop-flow {
+		animation: flow 9s linear infinite;
+		stroke: var(--accent);
+		stroke-dasharray: 2 15;
+		stroke-width: 1.5;
+		opacity: 0.45;
+	}
+
+	.comet {
+		animation: orbit 9s linear infinite;
+		fill: var(--accent);
+		offset-path: path("M 320 62 C 405 62 475 96 505 158 C 535 220 515 300 455 342 C 390 388 250 388 185 342 C 125 300 105 220 135 158 C 165 96 235 62 320 62 Z");
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	.loop-core circle {
+		fill: var(--glass-surface);
+		stroke: var(--glass-border);
+		stroke-width: 1;
+	}
+
+	.loop-core .core-ring {
+		fill: none;
+		stroke: var(--accent-ring);
+		stroke-dasharray: 1 7;
+		stroke-linecap: round;
+	}
+
+	.loop-core text,
+	.loop-node text {
+		pointer-events: none;
+		text-anchor: middle;
+	}
+
+	.core-kicker,
+	.node-index {
+		fill: var(--accent);
+		font: 600 var(--fs-micro) var(--font-sans);
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.core-title {
+		fill: var(--text);
+		font: 600 var(--fs-xl) var(--font-serif);
+	}
+
+	.loop-node {
+		outline: none;
+	}
+
+	.node-halo {
+		animation: breathe 6s var(--ease-out) infinite;
+		animation-delay: var(--node-delay);
+		fill: var(--accent-glow);
+		opacity: 0;
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	.node-surface {
+		fill: color-mix(in srgb, var(--glass-surface-strong) 94%, transparent);
+		stroke: var(--glass-border-strong);
+		stroke-width: 1.5;
+		transition: fill var(--dur-mid), stroke var(--dur-mid), transform var(--dur-mid);
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+
+	.node-label {
+		fill: var(--text);
+		font: 600 var(--fs-sm) var(--font-sans);
+		letter-spacing: 0.02em;
+		text-transform: capitalize;
+	}
+
+	.loop-node:hover .node-surface,
+	.loop-node:focus-visible .node-surface {
+		fill: var(--accent-soft);
+		stroke: var(--accent);
+		transform: scale(1.08);
+	}
+
+	.loop-node:hover .node-halo,
+	.loop-node:focus-visible .node-halo {
+		animation: none;
+		opacity: 1;
+		transform: scale(1.12);
+	}
+
+	.loop-node:focus-visible .node-surface {
+		stroke-width: 3;
+	}
+
+	.loop-caption {
+		color: var(--muted);
+		font: var(--fs-fine) var(--font-sans);
+		letter-spacing: 0.03em;
+		margin: -0.25rem 0 0;
+		text-align: center;
+	}
+
+	@keyframes flow {
+		to {
+			stroke-dashoffset: -68;
+		}
+	}
+
+	@keyframes orbit {
+		from {
+			offset-distance: 0%;
+		}
+		to {
+			offset-distance: 100%;
+		}
+	}
+
+	@keyframes breathe {
+		0%,
+		70%,
+		100% {
+			opacity: 0;
+			transform: scale(0.82);
+		}
+		8%,
+		24% {
+			opacity: 0.8;
+			transform: scale(1.12);
+		}
+	}
+
+	@media (max-width: 700px) {
+		.learning-loop {
+			margin-inline: auto;
+			max-width: 560px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.loop-flow,
+		.comet,
+		.node-halo {
+			animation: none;
+		}
+
+		.loop-flow {
+			stroke-dasharray: 2 15;
+		}
+
+		.comet {
+			display: none;
+		}
+	}
+</style>

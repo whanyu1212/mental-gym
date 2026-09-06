@@ -1,7 +1,9 @@
 ---
 import { getCollection } from "astro:content";
 import DueForReview from "../components/DueForReview.astro";
+import LiveLearningLoop from "../components/LiveLearningLoop.astro";
 import ProgressSummary from "../components/ProgressSummary.astro";
+import RoadmapFilm from "../components/RoadmapFilm.astro";
 import ResumeRow from "../components/ResumeRow.astro";
 import { mlProblems } from "../data/mlProblems";
 import { problems } from "../data/problems";
@@ -15,22 +17,15 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 
 <Layout title="Mental Gym — Build technical fluency">
 	<section class="hero">
-		<p class="eyebrow">Mental Gym</p>
-		<h1>Build technical fluency.</h1>
-		<p class="description">
-			A workspace for deliberate practice, first-principles implementation, and durable technical knowledge.
-		</p>
-		<p class="learning-loop">
-			<span class="loop-step">Learn</span>
-			<span class="loop-sep" aria-hidden="true">→</span>
-			<span class="loop-step">implement</span>
-			<span class="loop-sep" aria-hidden="true">→</span>
-			<span class="loop-step">practice</span>
-			<span class="loop-sep" aria-hidden="true">→</span>
-			<span class="loop-step">review</span>
-			<span class="loop-sep" aria-hidden="true">→</span>
-			<span class="loop-step is-accent">retain</span>
-		</p>
+		<div class="hero-copy">
+			<p class="eyebrow">Mental Gym</p>
+			<h1>Build technical fluency.</h1>
+			<p class="description">
+				A workspace for deliberate practice, first-principles implementation, and durable technical knowledge.
+			</p>
+			<RoadmapFilm />
+		</div>
+		<LiveLearningLoop />
 	</section>
 
 	<ResumeRow />
@@ -136,55 +131,12 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 </Layout>
 
 <style>
-	.hero { max-width: 720px; padding: 4rem 0 2.5rem; }
+	.hero { align-items: center; display: grid; gap: 1.5rem; grid-template-columns: minmax(0, .9fr) minmax(440px, 1.1fr); padding: 3rem 0 2.5rem; }
+	.hero-copy { max-width: 520px; }
 	.eyebrow, .card-index { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .14em; margin: 0 0 .65rem; text-transform: uppercase; }
 	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
 	h1 { font-size: var(--fs-mega); line-height: .95; letter-spacing: -.02em; margin: 0; }
-	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0; max-width: 620px; }
-	.learning-loop {
-		display: inline-flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: .4rem .35rem;
-		margin: .25rem 0 0;
-		padding: .35rem .5rem .35rem .35rem;
-		border: 1px solid var(--glass-border);
-		background: var(--glass-surface);
-		border-radius: 999px;
-		backdrop-filter: blur(var(--glass-blur));
-		-webkit-backdrop-filter: blur(var(--glass-blur));
-		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
-	}
-	.loop-step {
-		display: inline-flex;
-		align-items: center;
-		padding: .32em .68em;
-		border-radius: 999px;
-		font: 600 var(--fs-micro) var(--font-sans);
-		letter-spacing: .08em;
-		text-transform: uppercase;
-		color: var(--muted);
-		border: 1px solid transparent;
-		line-height: 1;
-		transition: color .2s, border-color .2s, background .2s;
-	}
-	.loop-step.is-accent {
-		color: var(--bg);
-		background: var(--accent);
-		border-color: var(--accent);
-		box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
-	}
-	.loop-sep {
-		color: var(--accent);
-		font: 500 var(--fs-micro) var(--font-sans);
-		opacity: .9;
-		margin: 0 .05rem;
-		user-select: none;
-	}
-	/* subtle hover polish */
-	.learning-loop:hover .loop-step { color: var(--text); }
-	.learning-loop:hover .loop-step.is-accent { color: var(--bg); }
-	.learning-loop:hover .loop-sep { opacity: 1; }
+	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0 0; max-width: 520px; }
 	.workflow, .domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
 	.workflow { margin: 1rem 0 3rem; }
 	.workflow-card, .domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
@@ -210,6 +162,6 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 	.notes li strong { flex: 1; font: 600 var(--fs-h3) var(--font-serif); }
 	.notes li em { color: var(--muted); font: normal var(--fs-eyebrow) var(--font-sans); text-transform: uppercase; }
 	.notes li b { color: var(--accent); }
-	@media (max-width: 800px) { .workflow { grid-template-columns: repeat(2, 1fr); } .domain-grid { grid-template-columns: 1fr; } }
-	@media (max-width: 560px) { .hero { padding-top: 2.5rem; } .workflow { grid-template-columns: 1fr; } .section-heading { align-items: start; flex-direction: column; } .notes li em { display: none; } }
+	@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .hero-copy { max-width: 680px; } .workflow { grid-template-columns: repeat(2, 1fr); } .domain-grid { grid-template-columns: 1fr; } }
+	@media (max-width: 560px) { .hero { gap: .5rem; padding-top: 2.5rem; } .workflow { grid-template-columns: 1fr; } .section-heading { align-items: start; flex-direction: column; } .notes li em { display: none; } }
 </style>
