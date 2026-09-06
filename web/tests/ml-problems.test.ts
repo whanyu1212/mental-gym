@@ -247,6 +247,28 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const gradientCheck = bySlug.get("246-gradient-check-relative-errors")!;
 	assert.match(gradientCheck.prompt, /epsilon eps > 0/);
 	assert.match(gradientCheck.prompt, /eps is not strictly positive/);
+
+	const binaryCrossEntropyEpsilon = bySlug.get("009-binary-cross-entropy")!;
+	assert.match(binaryCrossEntropyEpsilon.prompt, /clipping epsilon eps in \(0, 0\.5\)/);
+	assert.match(binaryCrossEntropyEpsilon.prompt, /eps is outside \(0, 0\.5\)/);
+
+	const gaussianNaiveBayes = bySlug.get("062-gaussian-naive-bayes-prediction")!;
+	assert.match(gaussianNaiveBayes.prompt, /non-empty collection of per-class log priors/);
+	assert.match(gaussianNaiveBayes.prompt, /there are no classes/);
+
+	const validatedMixtureMStep = bySlug.get("113-gaussian-mixture-m-step")!;
+	assert.match(validatedMixtureMStep.prompt, /every responsibility to be non-negative/);
+	assert.match(validatedMixtureMStep.prompt, /every responsibility row to sum to 1/);
+	assert.match(validatedMixtureMStep.prompt, /feature matrix is empty/);
+
+	const ndcg = bySlug.get("101-normalized-dcg")!;
+	assert.match(ndcg.prompt, /non-negative graded relevance scores/);
+	assert.match(ndcg.prompt, /any relevance score is negative/);
+	assert.match(ndcg.prompt, /k is not positive/);
+
+	const ucb = bySlug.get("127-upper-confidence-bound-scores")!;
+	assert.match(ucb.prompt, /non-negative integer pull counts/);
+	assert.match(ucb.prompt, /count is negative or non-integral/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

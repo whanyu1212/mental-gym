@@ -2494,7 +2494,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"BCE is the loss behind every binary classifier, and a confident wrong prediction sends log(0) to infinity unless you clamp.",
 		prompt:
-			"Given non-empty equal-length lists of predicted probabilities in [0, 1] and binary labels in {0, 1}, return the mean binary cross-entropy: -mean(y*log(p) + (1-y)*log(1-p)). Clip probabilities into [eps, 1-eps] with a small epsilon before taking logarithms so the loss stays finite. Raise a ValueError if the lists are empty, lengths differ, probabilities fall outside [0, 1], or labels are not 0 or 1.",
+			"Given non-empty equal-length lists of predicted probabilities in [0, 1], binary labels in {0, 1}, and a clipping epsilon eps in (0, 0.5), return the mean binary cross-entropy: -mean(y*log(p) + (1-y)*log(1-p)). Clip probabilities into [eps, 1-eps] before taking logarithms so the loss stays finite and deterministic for endpoint probabilities. Raise a ValueError if the lists are empty, lengths differ, eps is outside (0, 0.5), probabilities fall outside [0, 1], or labels are not 0 or 1.",
 		expectations: [
 			"Clip probabilities before the logarithm and explain why it is necessary.",
 			"Select the correct log term per example based on its label.",
@@ -2910,7 +2910,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Working in log space is not an optimization here — multiplying many small densities underflows to zero outright.",
 		prompt:
-			"Given per-class log priors, per-class per-feature means and standard deviations, and a query feature vector, return the predicted class: the one maximizing log_prior[c] + sum over features of the log Gaussian density of x[f] under mean[c][f] and std[c][f]. Work entirely in log space. Raise a ValueError on any dimension mismatch or non-positive standard deviation.",
+			"Given a non-empty collection of per-class log priors, per-class per-feature means and standard deviations, and a query feature vector, return the predicted class: the one maximizing log_prior[c] + sum over features of the log Gaussian density of x[f] under mean[c][f] and std[c][f]. Work entirely in log space. Raise a ValueError if there are no classes, on any dimension mismatch, or for a non-positive standard deviation.",
 		expectations: [
 			"Sum log densities rather than multiplying densities.",
 			"Include the log prior once per class, not once per feature.",
@@ -4126,7 +4126,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The M-step is a weighted version of computing means and variances, which is why EM feels familiar once you see it.",
 		prompt:
-			"Given a feature matrix and a responsibility matrix where entry [i][c] is point i's responsibility for component c, return updated mixture weights, means, and diagonal variances. The effective count of component c is the sum of its responsibilities; its weight is that count over n; its mean is the responsibility-weighted average of points; its variance is the responsibility-weighted average of squared deviations from the new mean. Add a small floor to variances to keep them positive. Raise a ValueError on dimension mismatch or when any component has zero effective count.",
+			"Given a non-empty feature matrix and a responsibility matrix where entry [i][c] is point i's responsibility for component c, return updated mixture weights, means, and diagonal variances. Require every responsibility to be non-negative and every responsibility row to sum to 1 within tolerance. The effective count of component c is the sum of its responsibilities; its weight is that count over n; its mean is the responsibility-weighted average of points; its variance is the responsibility-weighted average of squared deviations from the new mean. Add a small floor to variances to keep them positive. Raise a ValueError if the feature matrix is empty, on dimension mismatch, for an invalid responsibility row, or when any component has zero effective count.",
 		expectations: [
 			"Compute the new mean before using it for the variance.",
 			"Weight every statistic by responsibilities rather than counting points.",
@@ -4798,7 +4798,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Normalization is what makes rankings comparable across queries that have different numbers of relevant results.",
 		prompt:
-			"Given a ranked list of graded relevance scores and a cutoff k, return NDCG: the DCG of the ranking divided by the ideal DCG, computed by sorting the same relevance scores in descending order. Return 0.0 when the ideal DCG is 0, meaning no relevant results exist, and state that convention. The result must lie in [0, 1].",
+			"Given a ranked list of non-negative graded relevance scores and a positive cutoff k, return NDCG: the DCG of the ranking divided by the ideal DCG, computed by sorting the same relevance scores in descending order. Return 0.0 when the ideal DCG is 0, meaning no relevant results exist, and state that convention. The result must lie in [0, 1]. Raise a ValueError if any relevance score is negative or k is not positive.",
 		expectations: [
 			"Compute the ideal DCG from the same scores sorted descending.",
 			"Handle an all-zero relevance list with a documented convention.",
@@ -4926,7 +4926,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"UCB explores in proportion to uncertainty rather than at random, which is why it converges faster than epsilon-greedy.",
 		prompt:
-			"Given per-action mean values, per-action pull counts, the total pull count, and an exploration constant c, return the UCB score for each action: mean + c * sqrt(ln(total) / count). Give an infinite score to any action never pulled, so every action is tried at least once, and state that convention. Raise a ValueError if the list lengths differ or total is not positive.",
+			"Given per-action mean values, per-action non-negative integer pull counts, the total pull count, and an exploration constant c, return the UCB score for each action: mean + c * sqrt(ln(total) / count). Give an infinite score to any action with count 0, so every action is tried at least once, and state that convention. Raise a ValueError if the list lengths differ, any count is negative or non-integral, or total is not positive.",
 		expectations: [
 			"Give unpulled actions an infinite score so they are selected first.",
 			"Use the natural logarithm of the total pull count.",
