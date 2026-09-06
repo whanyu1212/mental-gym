@@ -3326,7 +3326,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Beam search finds higher-likelihood sequences than greedy decoding by deferring commitment, at a cost in compute and diversity.",
 		prompt:
-			"Given a beam width b and a function that returns per-step log probabilities for each candidate sequence, run beam search for a fixed number of steps and return up to b sequences with the highest cumulative log probability. At each step expand every beam, score each extension by adding its log probability to the beam's running total, and keep the best min(b, candidate_count) extensions. If an expansion produces no candidates, return the beams accumulated before that step. Sum log probabilities rather than multiplying probabilities. Raise a ValueError if b is not positive.",
+			"Given a beam width b, a positive integer step limit, and a function that returns per-step log probabilities for each candidate sequence, run beam search for that many steps and return up to b sequences with the highest cumulative log probability. At each step expand every beam, score each extension by adding its log probability to the beam's running total, and keep the best min(b, candidate_count) extensions. If an expansion produces no candidates, return the beams accumulated before that step. Sum log probabilities rather than multiplying probabilities. Raise a ValueError if b or the step limit is not positive.",
 		expectations: [
 			"Accumulate scores in log space by addition, never by multiplying probabilities.",
 			"Prune to at most b beams after each expansion step, without inventing duplicate candidates.",

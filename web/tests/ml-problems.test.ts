@@ -276,8 +276,10 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(positiveKMeans.prompt, /k is not positive/);
 
 	const beamSearch = bySlug.get("030-beam-search")!;
+	assert.match(beamSearch.prompt, /positive integer step limit/);
 	assert.match(beamSearch.prompt, /return up to b sequences/);
 	assert.match(beamSearch.prompt, /min\(b, candidate_count\)/);
+	assert.match(beamSearch.prompt, /b or the step limit is not positive/);
 	assert.match(beamSearch.expectations.join(" "), /at most b beams/);
 
 	const boundedBm25 = bySlug.get("098-bm25-term-score")!;
