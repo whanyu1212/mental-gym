@@ -2625,7 +2625,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 			"Given a feature matrix X of shape (n, d), a weight vector of length d, and a scalar bias, return the vector of n predicted probabilities: sigmoid(dot(X[i], weights) + bias). Use a numerically stable sigmoid that does not overflow for large-magnitude scores. Raise a ValueError if any row's length does not match the weight vector.",
 		expectations: [
 			"Compute the linear score first, then apply the stable sigmoid.",
-			"Return probabilities strictly inside (0, 1).",
+			"Return probabilities in [0, 1], allowing floating-point saturation at exactly 0.0 or 1.0 for extreme scores.",
 			"Reuse a stable sigmoid rather than the naive formula.",
 			"State the complexity as O(n*d) time and O(n) space.",
 		],
@@ -4062,17 +4062,17 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Spreading the initial centroids is what makes k-means reliable rather than a coin flip on initialization.",
 		prompt:
-			"Given a feature matrix, a cluster count k, an index for the first centroid, and a list of uniform random draws to consume, select k initial centroids. After the first, sample each next centroid with probability proportional to its squared distance to the nearest already-chosen centroid, using inverse-CDF sampling with the supplied draws. Take the draws as a parameter so the function is deterministic. Raise a ValueError if k exceeds the point count or too few draws are supplied.",
+			"Given a feature matrix, a cluster count k, an index for the first centroid, and a list of uniform random draws to consume, select k initial centroids. After the first, sample each next centroid with probability proportional to its squared distance to the nearest already-chosen centroid, using inverse-CDF sampling with the supplied draws. If every unused point has zero squared distance because points are duplicated, choose the smallest unused point index instead and do not consume a draw for that deterministic fallback. Take the draws as a parameter so the function is deterministic. Raise a ValueError if k exceeds the point count or too few draws are supplied for the probabilistic selections.",
 		expectations: [
 			"Weight by squared distance to the nearest chosen centroid, not by plain distance.",
 			"Take random draws as a parameter so the selection is reproducible.",
-			"Never select the same point twice.",
+			"Never select the same point twice; use the smallest unused index when all remaining weights are zero.",
 			"State the complexity as O(k * n * d) time.",
 		],
 		hints: [
 			"Squaring the distance sharpens the preference for far-away points.",
 			"After each selection, only distances that shrank need updating.",
-			"Injecting the draws is what makes this unit-testable.",
+			"Injecting the draws makes probabilistic selections testable; an all-zero weight fallback needs no draw.",
 		],
 		followUps: [
 			"Why squared distance rather than distance itself?",
@@ -6334,7 +6334,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"These ranks are what recall@k is computed from when evaluating cross-modal retrieval.",
 		prompt:
-			"Given a square similarity matrix where the correct match for row i is column i, return the 1-based rank of the correct match within each row when columns are sorted by descending similarity. Break ties by preferring the smaller column index, which means a tie with the correct match ranks it first. State that convention. Raise a ValueError if the matrix is not square.",
+			"Given a square similarity matrix where the correct match for row i is column i, return the 1-based rank of the correct match within each row using optimistic tie-breaking: only columns with strictly greater similarity rank ahead of the correct match, so tied items do not worsen its rank. State that convention. Raise a ValueError if the matrix is not square.",
 		expectations: [
 			"Return 1-based ranks so a perfect retrieval gives rank 1.",
 			"State the tie-breaking convention, since it changes reported scores.",
@@ -6343,7 +6343,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		],
 		hints: [
 			"Counting how many similarities strictly exceed the correct one, plus 1, gives the rank directly.",
-			"Optimistic versus pessimistic tie-breaking can shift reported recall noticeably.",
+			"Optimistic tie-breaking gives every item tied with the correct match the same best possible rank.",
 			"A perfect model puts every correct match at rank 1.",
 		],
 		followUps: [

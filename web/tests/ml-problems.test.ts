@@ -79,6 +79,21 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(averagePrecision.prompt, /sum precision@i/);
 	assert.match(averagePrecision.prompt, /divide that sum once/);
 	assert.doesNotMatch(averagePrecision.prompt, /mean of precision@i/);
+
+	const logisticPrediction = bySlug.get("053-logistic-regression-prediction")!;
+	assert.match(logisticPrediction.expectations.join(" "), /probabilities in \[0, 1\]/);
+	assert.match(logisticPrediction.expectations.join(" "), /saturation at exactly 0\.0 or 1\.0/);
+	assert.doesNotMatch(logisticPrediction.expectations.join(" "), /strictly inside/);
+
+	const kMeansPlusPlus = bySlug.get("111-k-means-plus-plus-centroid-selection")!;
+	assert.match(kMeansPlusPlus.prompt, /smallest unused point index/);
+	assert.match(kMeansPlusPlus.prompt, /do not consume a draw/);
+	assert.match(kMeansPlusPlus.expectations.join(" "), /all remaining weights are zero/);
+
+	const pairedRanks = bySlug.get("193-paired-retrieval-ranks")!;
+	assert.match(pairedRanks.prompt, /optimistic tie-breaking/);
+	assert.match(pairedRanks.prompt, /strictly greater similarity/);
+	assert.doesNotMatch(pairedRanks.prompt, /smaller column index/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
