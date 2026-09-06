@@ -2910,11 +2910,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Working in log space is not an optimization here — multiplying many small densities underflows to zero outright.",
 		prompt:
-			"Given a non-empty collection of per-class log priors, per-class per-feature means and standard deviations, and a query feature vector, return the predicted class: the one maximizing log_prior[c] + sum over features of the log Gaussian density of x[f] under mean[c][f] and std[c][f]. Work entirely in log space. Raise a ValueError if there are no classes, on any dimension mismatch, or for a non-positive standard deviation.",
+			"Given a non-empty collection of per-class log priors, per-class per-feature means and standard deviations, and a query feature vector, return the predicted class: the one maximizing log_prior[c] + sum over features of the log Gaussian density of x[f] under mean[c][f] and std[c][f]. Break equal-score ties by returning the smallest class index. Work entirely in log space. Raise a ValueError if there are no classes, on any dimension mismatch, or for a non-positive standard deviation.",
 		expectations: [
 			"Sum log densities rather than multiplying densities.",
 			"Include the log prior once per class, not once per feature.",
-			"Return the class label, not the score.",
+			"Return the class index, choosing the smallest index when scores tie.",
 			"State the complexity as O(c*d) time for c classes and d features.",
 		],
 		hints: [
@@ -3006,9 +3006,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Inference is a single root-to-leaf walk, which is why trees are so much faster to query than to train.",
 		prompt:
-			"Given a tree where each internal node has a feature index, a threshold, and left and right children, and each leaf has a prediction, return the prediction for a query sample. At each internal node, go left when the sample's feature value is less than or equal to the threshold and right otherwise. State that convention. Raise a ValueError if a feature index exceeds the sample's length.",
+			"Given a tree where each internal node has a feature index, a threshold, and left and right children, and each leaf has a prediction, return the prediction for a query sample. At each internal node, go left when the sample's feature value is less than or equal to the threshold and right otherwise. State that convention. Raise a ValueError if any visited feature index is not an integer in [0, len(sample)).",
 		expectations: [
-			"Apply the comparison convention consistently at every node.",
+			"Apply the comparison convention consistently and validate each visited feature index before indexing the sample.",
 			"Terminate at a leaf and return its stored prediction.",
 			"Handle a tree that is a single leaf with no internal nodes.",
 			"State the complexity as O(depth) time and O(1) extra space if iterative.",
@@ -3230,11 +3230,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This is the complete attention operation, and assembling it end to end is where the shape contracts finally have to agree.",
 		prompt:
-			"Given a non-empty query vector of length d, a non-empty list of n key vectors of length d, a non-empty list of n non-empty value vectors of length dv, and an optional boolean mask of length n, return the attention output of length dv: the weight-averaged sum of value vectors, where weights come from a masked softmax over dot(query, key) / sqrt(d). Raise a ValueError if d or dv is 0, key and value counts differ, or any dimension disagrees.",
+			"Given a non-empty query vector of length d, a non-empty list of n key vectors of length d, a non-empty list of n non-empty value vectors of length dv, and an optional boolean mask of length n, return the attention output of length dv: the weight-averaged sum of value vectors, where weights come from a masked softmax over dot(query, key) / sqrt(d). When a mask is supplied, require at least one allowed position so the attention weights form a probability distribution. Raise a ValueError if d or dv is 0, key and value counts differ, the mask is all false, or any dimension disagrees.",
 		expectations: [
 			"Reuse scaled scores, masked softmax, and weighted aggregation as separate steps.",
 			"Return an output of length dv, which may differ from d.",
-			"Validate that the key and value counts match.",
+			"Validate that key and value counts match and that any supplied mask allows at least one position.",
 			"State the complexity as O(n*d + n*dv) time.",
 		],
 		hints: [

@@ -384,6 +384,19 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const immutableKvCache = bySlug.get("094-append-to-a-kv-cache")!;
 	assert.match(immutableKvCache.expectations.join(" "), /O\(n\) time and O\(n\) additional list space/);
 	assert.match(immutableKvCache.expectations.join(" "), /mutable in-place cache would make the append O\(1\) amortized/);
+
+	const deterministicNaiveBayes = bySlug.get("062-gaussian-naive-bayes-prediction")!;
+	assert.match(deterministicNaiveBayes.prompt, /smallest class index/);
+	assert.match(deterministicNaiveBayes.expectations.join(" "), /smallest index when scores tie/);
+
+	const safeTreePrediction = bySlug.get("065-decision-tree-prediction")!;
+	assert.match(safeTreePrediction.prompt, /not an integer in \[0, len\(sample\)\)/);
+	assert.match(safeTreePrediction.expectations.join(" "), /validate each visited feature index/);
+
+	const maskedSingleHead = bySlug.get("027-single-head-attention")!;
+	assert.match(maskedSingleHead.prompt, /require at least one allowed position/);
+	assert.match(maskedSingleHead.prompt, /mask is all false/);
+	assert.match(maskedSingleHead.expectations.join(" "), /mask allows at least one position/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
