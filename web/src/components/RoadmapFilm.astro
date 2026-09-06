@@ -28,16 +28,28 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 				poster={posterSrc}
 				playsinline
 				data-film-video
-				aria-describedby="film-description"
+				aria-describedby="film-description film-transcript"
 			>
 				<source src={videoSrc} type="video/mp4" />
 				Your browser does not support embedded video.
 			</video>
 
 			<footer>
-				<p id="film-description">A silent 24-second overview of the learning loop and four AI engineering paths.</p>
+				<p id="film-description">A silent 24-second overview of the learning loop and four AI engineering paths. A complete text transcript follows.</p>
 				<a href={withBase("/roadmap/")}>Explore the roadmap <span aria-hidden="true">→</span></a>
 			</footer>
+
+			<details class="film-transcript" id="film-transcript">
+				<summary>Video transcript</summary>
+				<ol>
+					<li><strong>0–4 seconds:</strong> Mental Gym connects courses, implementation, interview practice, review, and project evidence to build technical fluency.</li>
+					<li><strong>4–8 seconds:</strong> The learning loop moves through Learn, Implement, Practice, Review, and Retain to build durable fluency.</li>
+					<li><strong>8–12 seconds:</strong> Choose one of four paths: Applied AI / Agents, ML Infrastructure, Model / Post-training, or AI Product. All share one foundation.</li>
+					<li><strong>12–16 seconds:</strong> The 24-week curriculum contains eight foundation weeks, twelve specialization weeks, and four capstone weeks. The weekly budget is five hours of study, five implementation, three interview practice, and two language study.</li>
+					<li><strong>16–20 seconds:</strong> Evidence comes from versioned implementations, tests and metrics, independent explanations and delayed recall, and bounded project applications.</li>
+					<li><strong>20–24 seconds:</strong> Choose a path and build evidence every week. Open the AI engineering roadmap.</li>
+				</ol>
+			</details>
 		</div>
 	</dialog>
 </div>
@@ -195,6 +207,32 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 		white-space: nowrap;
 	}
 
+	.film-transcript {
+		border-top: 1px solid var(--border);
+		color: var(--muted);
+		font: var(--fs-fine) / 1.55 var(--font-sans);
+		padding: 0.85rem 1.2rem 1rem;
+	}
+
+	.film-transcript summary {
+		color: var(--accent);
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.film-transcript ol {
+		margin: 0.8rem 0 0;
+		padding-left: 1.25rem;
+	}
+
+	.film-transcript li + li {
+		margin-top: 0.5rem;
+	}
+
+	.film-transcript strong {
+		color: var(--text);
+	}
+
 	@media (max-width: 600px) {
 		.film-trigger {
 			width: 100%;
@@ -209,7 +247,8 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 		}
 
 		header,
-		footer {
+		footer,
+		.film-transcript {
 			align-items: start;
 			padding: 0.85rem;
 		}

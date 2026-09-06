@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import test from "node:test";
 import { JSDOM } from "jsdom";
 
@@ -41,6 +41,21 @@ function setup() {
 test("the published roadmap film and poster are present", () => {
 	assert.ok(statSync(new URL("mental-gym-intro.mp4", publicMedia)).size > 0);
 	assert.ok(statSync(new URL("mental-gym-intro-poster.png", publicMedia)).size > 0);
+});
+
+test("the silent film has a programmatically associated scene transcript", () => {
+	const component = readFileSync(new URL("../src/components/RoadmapFilm.astro", import.meta.url), "utf8");
+
+	assert.match(component, /aria-describedby="film-description film-transcript"/);
+	for (const content of [
+		"Learn, Implement, Practice, Review, and Retain",
+		"Applied AI / Agents",
+		"eight foundation weeks",
+		"versioned implementations",
+		"Open the AI engineering roadmap",
+	]) {
+		assert.ok(component.includes(content), `transcript is missing: ${content}`);
+	}
 });
 
 test("the roadmap film opens and moves focus to its close button", () => {
