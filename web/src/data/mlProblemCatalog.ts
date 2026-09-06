@@ -2206,10 +2206,10 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Pretrained vision models expect exactly this transform with the statistics of their training set; skipping it silently degrades accuracy.",
 		prompt:
-			"Given a list of channel grids, a list of per-channel means, and a list of per-channel standard deviations, return channels where each value becomes (x - mean[c]) / std[c]. Raise a ValueError if the list lengths disagree or any standard deviation is zero.",
+			"Given a list of channel grids, a list of per-channel means, and a list of per-channel standard deviations, return channels where each value becomes (x - mean[c]) / std[c]. Raise a ValueError if the list lengths disagree or any standard deviation is not strictly positive.",
 		expectations: [
 			"Apply each channel's own statistics, never a shared pair.",
-			"Reject a zero standard deviation rather than dividing by zero.",
+			"Reject a non-positive standard deviation rather than dividing by an invalid scale.",
 			"Preserve the shape of every channel.",
 			"State the complexity as O(c*h*w) time and space.",
 		],
@@ -4702,7 +4702,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"BM25 saturates term frequency so the tenth occurrence adds far less than the second, which is where it beats plain TF-IDF.",
 		prompt:
-			"Given a term's frequency in a document, the document length, the average document length, an IDF weight, and parameters k1 and b in [0, 1], return the BM25 term score: idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len)). Return 0 immediately when tf is 0, before evaluating the fraction. Raise a ValueError if any length is not positive, tf or k1 is negative, or b lies outside [0, 1].",
+			"Given a term's frequency in a document, the document length, the average document length, an IDF weight, a parameter k1 >= 0, and a parameter b in [0, 1], return the BM25 term score: idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len)). Return 0 immediately when tf is 0, before evaluating the fraction. Raise a ValueError if any length is not positive, tf or k1 is negative, or b lies outside [0, 1].",
 		expectations: [
 			"Apply length normalization through the b parameter as specified.",
 			"Return 0 when the term frequency is 0.",
@@ -5022,7 +5022,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Taking the max over next actions is what makes Q-learning off-policy: it learns the optimal policy while following another.",
 		prompt:
-			"Given the current Q value for a state-action pair, the observed reward, the Q values of all actions in the next state, a discount gamma, a learning rate alpha, and a terminal flag, return the updated Q value: q + alpha * (reward + gamma * max_next_q - q), where max_next_q is 0 when the next state is terminal. Raise a ValueError if gamma is outside [0, 1] or alpha is outside (0, 1].",
+			"Given the current Q value for a state-action pair, the observed reward, the Q values of all actions in the next state, a discount gamma, a learning rate alpha, and a terminal flag, return the updated Q value: q + alpha * (reward + gamma * max_next_q - q), where max_next_q is 0 when the next state is terminal. Require at least one next-state action value when the transition is nonterminal; an empty list is valid for a terminal transition because its future value is ignored. Raise a ValueError if a nonterminal transition has no next-action values, gamma is outside [0, 1], or alpha is outside (0, 1].",
 		expectations: [
 			"Take the maximum over next-state action values, not the value of the action actually taken.",
 			"Treat a terminal next state as contributing zero future value.",
@@ -5374,9 +5374,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Dynamic thresholding rescales rather than clipping, which preserves relative structure that hard clipping would flatten.",
 		prompt:
-			"Given a non-empty latent vector and a percentile p in (0, 100], compute s as the p-th percentile of the absolute values, take the maximum of s and 1.0, then return the latents clipped to [-s, s] and divided by s. Explain why s is floored at 1.0. Raise a ValueError if the latent vector is empty or p lies outside (0, 100].",
+			"Given a non-empty latent vector and a percentile p in (0, 100], sort the absolute values and compute the percentile with linear interpolation at zero-based rank r = (p / 100) * (n - 1): interpolate between values at floor(r) and ceil(r). Take the maximum of that percentile and 1.0 as s, then return the latents clipped to [-s, s] and divided by s. Explain why s is floored at 1.0. Raise a ValueError if the latent vector is empty or p lies outside (0, 100].",
 		expectations: [
-			"Compute the percentile over absolute values, not signed values.",
+			"Compute the percentile over sorted absolute values using the stated linear interpolation rule.",
 			"Floor the scale at 1.0 so small-magnitude latents are left alone.",
 			"Clip before dividing, in that order.",
 			"State the complexity as O(d log d) time from the percentile.",

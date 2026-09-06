@@ -281,7 +281,8 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(beamSearch.expectations.join(" "), /at most b beams/);
 
 	const boundedBm25 = bySlug.get("098-bm25-term-score")!;
-	assert.match(boundedBm25.prompt, /parameters k1 and b in \[0, 1\]/);
+	assert.match(boundedBm25.prompt, /parameter k1 >= 0/);
+	assert.match(boundedBm25.prompt, /parameter b in \[0, 1\]/);
 	assert.match(boundedBm25.prompt, /b lies outside \[0, 1\]/);
 
 	const visualContext = bySlug.get("191-attended-visual-context")!;
@@ -314,6 +315,24 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(userItemMatrix.prompt, /Reject duplicate \(user_index, item_index\) pairs/);
 	assert.match(userItemMatrix.prompt, /user-item pair appears more than once/);
 	assert.match(userItemMatrix.expectations.join(" "), /reject duplicate user-item pairs/);
+
+	const channelNormalization = bySlug.get("214-normalize-image-channels")!;
+	assert.match(channelNormalization.prompt, /standard deviation is not strictly positive/);
+	assert.match(channelNormalization.expectations.join(" "), /non-positive standard deviation/);
+
+	const bm25ParameterDomains = bySlug.get("098-bm25-term-score")!;
+	assert.match(bm25ParameterDomains.prompt, /parameter k1 >= 0/);
+	assert.match(bm25ParameterDomains.prompt, /parameter b in \[0, 1\]/);
+
+	const qLearning = bySlug.get("130-q-learning-update")!;
+	assert.match(qLearning.prompt, /at least one next-state action value when the transition is nonterminal/);
+	assert.match(qLearning.prompt, /empty list is valid for a terminal transition/);
+	assert.match(qLearning.prompt, /nonterminal transition has no next-action values/);
+
+	const interpolatedThreshold = bySlug.get("141-dynamic-threshold-latents")!;
+	assert.match(interpolatedThreshold.prompt, /linear interpolation at zero-based rank/);
+	assert.match(interpolatedThreshold.prompt, /r = \(p \/ 100\) \* \(n - 1\)/);
+	assert.match(interpolatedThreshold.prompt, /floor\(r\) and ceil\(r\)/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
