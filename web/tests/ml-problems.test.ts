@@ -152,7 +152,8 @@ test("numerical and ranking prompts state implementable contracts", () => {
 
 	const bm25 = bySlug.get("098-bm25-term-score")!;
 	assert.match(bm25.prompt, /Return 0 immediately when tf is 0/);
-	assert.match(bm25.prompt, /tf, k1, or b is negative/);
+	assert.match(bm25.prompt, /tf or k1 is negative/);
+	assert.match(bm25.prompt, /b lies outside \[0, 1\]/);
 
 	const mape = bySlug.get("229-mean-absolute-percentage-error")!;
 	assert.match(mape.prompt, /non-empty equal-length lists/);
@@ -269,6 +270,23 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const ucb = bySlug.get("127-upper-confidence-bound-scores")!;
 	assert.match(ucb.prompt, /non-negative integer pull counts/);
 	assert.match(ucb.prompt, /count is negative or non-integral/);
+
+	const positiveKMeans = bySlug.get("110-complete-k-means-clustering")!;
+	assert.match(positiveKMeans.prompt, /positive cluster count k/);
+	assert.match(positiveKMeans.prompt, /k is not positive/);
+
+	const beamSearch = bySlug.get("030-beam-search")!;
+	assert.match(beamSearch.prompt, /return up to b sequences/);
+	assert.match(beamSearch.prompt, /min\(b, candidate_count\)/);
+	assert.match(beamSearch.expectations.join(" "), /at most b beams/);
+
+	const boundedBm25 = bySlug.get("098-bm25-term-score")!;
+	assert.match(boundedBm25.prompt, /parameters k1 and b in \[0, 1\]/);
+	assert.match(boundedBm25.prompt, /b lies outside \[0, 1\]/);
+
+	const visualContext = bySlug.get("191-attended-visual-context")!;
+	assert.match(visualContext.prompt, /non-negative attention weights/);
+	assert.match(visualContext.prompt, /any weight is negative/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

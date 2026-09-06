@@ -3326,10 +3326,10 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Beam search finds higher-likelihood sequences than greedy decoding by deferring commitment, at a cost in compute and diversity.",
 		prompt:
-			"Given a beam width b and a function that returns per-step log probabilities for each candidate sequence, run beam search for a fixed number of steps and return the b sequences with the highest cumulative log probability. At each step expand every beam, score each extension by adding its log probability to the beam's running total, and keep the b best overall. Sum log probabilities rather than multiplying probabilities. Raise a ValueError if b is not positive.",
+			"Given a beam width b and a function that returns per-step log probabilities for each candidate sequence, run beam search for a fixed number of steps and return up to b sequences with the highest cumulative log probability. At each step expand every beam, score each extension by adding its log probability to the beam's running total, and keep the best min(b, candidate_count) extensions. If an expansion produces no candidates, return the beams accumulated before that step. Sum log probabilities rather than multiplying probabilities. Raise a ValueError if b is not positive.",
 		expectations: [
 			"Accumulate scores in log space by addition, never by multiplying probabilities.",
-			"Prune to exactly b beams after each expansion step.",
+			"Prune to at most b beams after each expansion step, without inventing duplicate candidates.",
 			"Return beams ordered by cumulative score.",
 			"State the complexity as O(steps * b * vocab) time.",
 		],
@@ -4030,7 +4030,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"K-means is the canonical expectation-maximization loop, and the empty-cluster case is the detail that crashes naive implementations.",
 		prompt:
-			"Given a feature matrix, a cluster count k, initial centroids, and a maximum iteration count, run Lloyd's algorithm: assign each point to its nearest centroid by Euclidean distance, breaking equal-distance ties by the smallest centroid index, then recompute each centroid as the mean of its assigned points. Stop when assignments stop changing or the iteration cap is reached. Leave an empty cluster's centroid unchanged rather than producing NaN, and state both conventions. Return the final centroids and assignments. Raise a ValueError if k does not match the initial centroid count or dimensions disagree.",
+			"Given a feature matrix, a positive cluster count k, initial centroids, and a maximum iteration count, run Lloyd's algorithm: assign each point to its nearest centroid by Euclidean distance, breaking equal-distance ties by the smallest centroid index, then recompute each centroid as the mean of its assigned points. Stop when assignments stop changing or the iteration cap is reached. Leave an empty cluster's centroid unchanged rather than producing NaN, and state both conventions. Return the final centroids and assignments. Raise a ValueError if k is not positive, does not match the initial centroid count, or dimensions disagree.",
 		expectations: [
 			"Alternate assignment and update until assignments stabilize, using the smallest centroid index to break distance ties.",
 			"Handle empty clusters with a documented rule instead of dividing by zero.",
@@ -4702,7 +4702,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"BM25 saturates term frequency so the tenth occurrence adds far less than the second, which is where it beats plain TF-IDF.",
 		prompt:
-			"Given a term's frequency in a document, the document length, the average document length, an IDF weight, and parameters k1 and b, return the BM25 term score: idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len)). Return 0 immediately when tf is 0, before evaluating the fraction. Raise a ValueError if any length is not positive or tf, k1, or b is negative.",
+			"Given a term's frequency in a document, the document length, the average document length, an IDF weight, and parameters k1 and b in [0, 1], return the BM25 term score: idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len)). Return 0 immediately when tf is 0, before evaluating the fraction. Raise a ValueError if any length is not positive, tf or k1 is negative, or b lies outside [0, 1].",
 		expectations: [
 			"Apply length normalization through the b parameter as specified.",
 			"Return 0 when the term frequency is 0.",
@@ -6270,7 +6270,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This weighted sum is what turns a grid of image patches into the single context vector a decoder consumes.",
 		prompt:
-			"Given attention weights summing to 1 and a list of visual feature vectors, return the context vector: the weighted sum of the features. Raise a ValueError if the counts differ or the weights do not sum to 1 within tolerance.",
+			"Given non-negative attention weights summing to 1 and a list of visual feature vectors, return the context vector: the weighted sum of the features. Raise a ValueError if the counts differ, any weight is negative, or the weights do not sum to 1 within tolerance.",
 		expectations: [
 			"Weight each feature vector by its own attention weight.",
 			"Return a vector of the feature dimension, not of the weight count.",
