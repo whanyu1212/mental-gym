@@ -97,6 +97,19 @@ test("each track curates 20 to 30 distinct ML drills", () => {
 	}
 });
 
+test("the roadmap overview explains phase-specific hour allocations", () => {
+	const overview = readFileSync(new URL("web/src/pages/roadmap/index.astro", projectRoot), "utf8");
+
+	for (const statement of [
+		"Shared foundation pacing",
+		"ML Infrastructure and Model / Post-training move the two language hours to implementation",
+		"Capstone weeks use 3 hours of study, 9 implementation, 3 interview practice, and no language block",
+		"Every week remains within 15 hours",
+	]) {
+		assert.ok(overview.includes(statement), `roadmap overview is missing: ${statement}`);
+	}
+});
+
 test("course records cover the planned Stanford material and explain limitations", () => {
 	const courseCodes = new Set(courses.map((course) => course.code));
 	for (const code of ["CS229", "CS230", "CS224N", "CS276", "CS145", "CS229S", "CS336", "CS224V", "CS329S"]) {

@@ -287,6 +287,20 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const visualContext = bySlug.get("191-attended-visual-context")!;
 	assert.match(visualContext.prompt, /non-negative attention weights/);
 	assert.match(visualContext.prompt, /any weight is negative/);
+
+	const adaboost = bySlug.get("066-adaboost-weight-update")!;
+	assert.match(adaboost.prompt, /non-negative current example weights/);
+	assert.match(adaboost.prompt, /any incoming weight is negative/);
+
+	const validatedKMeansPlusPlus = bySlug.get("111-k-means-plus-plus-centroid-selection")!;
+	assert.match(validatedKMeansPlusPlus.prompt, /uniform random draws in \[0, 1\)/);
+	assert.match(validatedKMeansPlusPlus.prompt, /any supplied draw lies outside \[0, 1\)/);
+	assert.match(validatedKMeansPlusPlus.prompt, /first index is out of range/);
+
+	const deterministicMixtureMStep = bySlug.get("113-gaussian-mixture-m-step")!;
+	assert.match(deterministicMixtureMStep.prompt, /variance floor greater than 0/);
+	assert.match(deterministicMixtureMStep.prompt, /max\(variance, variance_floor\)/);
+	assert.match(deterministicMixtureMStep.prompt, /variance floor is not positive/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

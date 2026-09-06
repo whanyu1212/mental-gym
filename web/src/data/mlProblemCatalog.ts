@@ -3038,7 +3038,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This reweighting is what makes boosting sequential: each learner is trained on a distribution shaped by its predecessors' errors.",
 		prompt:
-			"Given current example weights, a weak learner's predictions, the true labels in {-1, +1}, and the learner's coefficient alpha, return the updated normalized weights: multiply each weight by exp(-alpha * y[i] * pred[i]), then divide by the sum so the weights form a distribution. Raise a ValueError if lengths differ, labels are not in {-1, +1}, or the weights do not sum to 1 within tolerance.",
+			"Given non-negative current example weights, a weak learner's predictions, the true labels in {-1, +1}, and the learner's coefficient alpha, return the updated normalized weights: multiply each weight by exp(-alpha * y[i] * pred[i]), then divide by the sum so the weights form a distribution. Raise a ValueError if lengths differ, any incoming weight is negative, labels or predictions are not in {-1, +1}, or the weights do not sum to 1 within tolerance.",
 		expectations: [
 			"Increase weights on misclassified examples and decrease them on correct ones.",
 			"Renormalize so the returned weights sum to 1.",
@@ -4062,7 +4062,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Spreading the initial centroids is what makes k-means reliable rather than a coin flip on initialization.",
 		prompt:
-			"Given a feature matrix, a cluster count k, an index for the first centroid, and a list of uniform random draws to consume, select k initial centroids. After the first, sample each next centroid with probability proportional to its squared distance to the nearest already-chosen centroid, using inverse-CDF sampling with the supplied draws. If every unused point has zero squared distance because points are duplicated, choose the smallest unused point index instead and do not consume a draw for that deterministic fallback. Take the draws as a parameter so the function is deterministic. Raise a ValueError if k exceeds the point count or too few draws are supplied for the probabilistic selections.",
+			"Given a feature matrix, a cluster count k, an index for the first centroid, and a list of uniform random draws in [0, 1) to consume, select k initial centroids. After the first, sample each next centroid with probability proportional to its squared distance to the nearest already-chosen centroid, using inverse-CDF sampling with the supplied draws. If every unused point has zero squared distance because points are duplicated, choose the smallest unused point index instead and do not consume a draw for that deterministic fallback. Take the draws as a parameter so the function is deterministic. Raise a ValueError if k is not positive, k exceeds the point count, the first index is out of range, any supplied draw lies outside [0, 1), or too few draws are supplied for the probabilistic selections.",
 		expectations: [
 			"Weight by squared distance to the nearest chosen centroid, not by plain distance.",
 			"Take random draws as a parameter so the selection is reproducible.",
@@ -4126,11 +4126,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The M-step is a weighted version of computing means and variances, which is why EM feels familiar once you see it.",
 		prompt:
-			"Given a non-empty feature matrix and a responsibility matrix where entry [i][c] is point i's responsibility for component c, return updated mixture weights, means, and diagonal variances. Require every responsibility to be non-negative and every responsibility row to sum to 1 within tolerance. The effective count of component c is the sum of its responsibilities; its weight is that count over n; its mean is the responsibility-weighted average of points; its variance is the responsibility-weighted average of squared deviations from the new mean. Add a small floor to variances to keep them positive. Raise a ValueError if the feature matrix is empty, on dimension mismatch, for an invalid responsibility row, or when any component has zero effective count.",
+			"Given a non-empty feature matrix, a responsibility matrix where entry [i][c] is point i's responsibility for component c, and a variance floor greater than 0, return updated mixture weights, means, and diagonal variances. Require every responsibility to be non-negative and every responsibility row to sum to 1 within tolerance. The effective count of component c is the sum of its responsibilities; its weight is that count over n; its mean is the responsibility-weighted average of points; its variance is the responsibility-weighted average of squared deviations from the new mean, replaced by max(variance, variance_floor) componentwise. Raise a ValueError if the feature matrix is empty, the variance floor is not positive, on dimension mismatch, for an invalid responsibility row, or when any component has zero effective count.",
 		expectations: [
 			"Compute the new mean before using it for the variance.",
 			"Weight every statistic by responsibilities rather than counting points.",
-			"Reject a component with zero effective count; otherwise floor its variances so a collapsed component cannot produce a zero.",
+			"Reject a component with zero effective count; otherwise replace each variance with max(variance, variance_floor).",
 			"State the complexity as O(n*k*d) time.",
 		],
 		hints: [
