@@ -346,6 +346,20 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(autocorrelation.prompt, /Return 1\.0 immediately at lag 0/);
 	assert.match(autocorrelation.prompt, /including for a constant series/);
 	assert.match(autocorrelation.prompt, /For positive lags/);
+
+	const binomial = bySlug.get("107-binomial-probability")!;
+	assert.match(binomial.prompt, /non-negative integer trial count n/);
+	assert.match(binomial.prompt, /integer success count k/);
+	assert.match(binomial.prompt, /n or k is not an integer/);
+
+	const categoricalSampling = bySlug.get("108-categorical-inverse-sampling")!;
+	assert.match(categoricalSampling.prompt, /last index whose probability is positive/);
+	assert.match(categoricalSampling.expectations.join(" "), /last positive-probability category/);
+	assert.match(categoricalSampling.prompt, /no probability is positive/);
+
+	const adamMoments = bySlug.get("249-adam-optimizer-step")!;
+	assert.match(adamMoments.prompt, /non-negative second moment v/);
+	assert.match(adamMoments.prompt, /incoming second-moment value is negative/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

@@ -1022,7 +1022,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The binomial is the model behind A/B test significance, and its factorial term overflows long before the probability does.",
 		prompt:
-			"Given a trial count n, a success count k, and a per-trial success probability p, return the probability of exactly k successes: C(n, k) * p^k * (1-p)^(n-k). Raise a ValueError if n is negative, if k lies outside [0, n], or if p lies outside [0, 1].",
+			"Given a non-negative integer trial count n, an integer success count k, and a per-trial success probability p, return the probability of exactly k successes: C(n, k) * p^k * (1-p)^(n-k). Raise a ValueError if n or k is not an integer, n is negative, k lies outside [0, n], or p lies outside [0, 1].",
 		expectations: [
 			"Validate n, k, and p before computing.",
 			"Compute the binomial coefficient without overflowing on large n.",
@@ -1054,11 +1054,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Inverse-CDF sampling is exactly how a language model picks the next token from its softmax output.",
 		prompt:
-			"Given a list of category probabilities summing to 1 and a uniform random draw u in [0, 1), return the index of the sampled category. Accumulate the probabilities into a running total and return the first index where the cumulative sum exceeds u. Raise a ValueError if any probability is negative, if the probabilities do not sum to 1 within tolerance, or if u lies outside [0, 1).",
+			"Given a non-empty list of category probabilities summing to 1 within tolerance and a uniform random draw u in [0, 1), return the index of the sampled category. Accumulate the probabilities into a running total and return the first index where the cumulative sum exceeds u. If tolerated floating-point drift leaves u above the final cumulative sum, return the last index whose probability is positive. Raise a ValueError if the list is empty, any probability is negative, no probability is positive, the probabilities do not sum to 1 within tolerance, or u lies outside [0, 1).",
 		expectations: [
 			"Take the uniform draw as a parameter so the function is deterministic and testable.",
 			"Use a strict comparison consistently so each category's selected interval has the right width.",
-			"Guarantee a valid index is always returned despite floating-point drift in the final cumulative sum.",
+			"Fall back to the last positive-probability category when tolerated drift leaves the final cumulative sum below u.",
 			"State the complexity as O(n) time and O(1) extra space.",
 		],
 		hints: [
@@ -7262,7 +7262,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Bias correction is what stops Adam from taking near-zero steps in its first few iterations.",
 		prompt:
-			"Given parameters, gradients, first moment m, second moment v, timestep t starting at 1, betas b1 and b2, learning rate, and epsilon, return updated m, v, and parameters. Update m = b1*m + (1-b1)*gradient and v = b2*v + (1-b2)*gradient², bias-correct with m_hat = m / (1 - b1^t) and v_hat = v / (1 - b2^t), then update parameters -= learning_rate * m_hat / (sqrt(v_hat) + eps). Raise a ValueError if t is not at least 1, epsilon is not strictly positive, lengths differ, or either beta is outside [0, 1).",
+			"Given parameters, gradients, first moment m, non-negative second moment v, timestep t starting at 1, betas b1 and b2, learning rate, and epsilon, return updated m, v, and parameters. Update m = b1*m + (1-b1)*gradient and v = b2*v + (1-b2)*gradient², bias-correct with m_hat = m / (1 - b1^t) and v_hat = v / (1 - b2^t), then update parameters -= learning_rate * m_hat / (sqrt(v_hat) + eps). Raise a ValueError if any incoming second-moment value is negative, t is not at least 1, epsilon is not strictly positive, lengths differ, or either beta is outside [0, 1).",
 		expectations: [
 			"Apply bias correction using the timestep, and explain why it is needed.",
 			"Square the gradient elementwise for the second moment.",
