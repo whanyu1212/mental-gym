@@ -1,3 +1,5 @@
+import { mlCatalogProblems } from "./mlProblemCatalog.ts";
+
 export type MLDifficulty = "Easy" | "Medium" | "Hard";
 
 export interface MLProblem {
@@ -19,7 +21,7 @@ export interface MLProblem {
 	};
 }
 
-export const mlProblems: MLProblem[] = [
+const handAuthoredProblems: MLProblem[] = [
 	{
 		id: "1",
 		slug: "logistic-regression-from-scratch",
@@ -191,4 +193,9 @@ class LogisticRegression:
 		],
 		status: "Placeholder",
 	},
+];
+
+export const mlProblems: MLProblem[] = [
+	...handAuthoredProblems,
+	...mlCatalogProblems,
 ];
