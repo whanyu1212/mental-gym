@@ -11,6 +11,7 @@ import {
 	moduleHref,
 	modules,
 	modulesForTrack,
+	noteCourseId,
 	totalHours,
 	tracks,
 	validateRoadmap,
@@ -144,4 +145,13 @@ test("exercise links map to stable site routes", () => {
 	);
 	assert.equal(moduleHref("foundation-01-python-and-complexity"), "/roadmap/applied-ai/#week-1");
 	assert.equal(moduleHref("missing-module"), undefined);
+	assert.equal(
+		noteCourseId({ moduleId: "foundation-01-python-and-complexity" }),
+		"stanford-cs229-2022",
+	);
+	assert.equal(
+		noteCourseId({ courseId: "stanford-cs145-2024", moduleId: "foundation-01-python-and-complexity" }),
+		"stanford-cs145-2024",
+	);
+	assert.equal(noteCourseId({ moduleId: "missing-module" }), undefined);
 });

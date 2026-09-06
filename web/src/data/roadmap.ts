@@ -384,6 +384,12 @@ export function moduleHref(moduleId: string): string | undefined {
 	}
 }
 
+export function noteCourseId(note: { courseId?: string; moduleId?: string }): string | undefined {
+	if (note.courseId) return note.courseId;
+	if (!note.moduleId) return undefined;
+	return modules.find((module) => module.id === note.moduleId)?.resources[0]?.courseId;
+}
+
 export function modulesForTrack(track: RoadmapTrack): RoadmapModule[] {
 	const byId = new Map(modules.map((module) => [module.id, module]));
 	return [...track.foundationIds, ...track.specializationIds, ...track.capstoneIds]

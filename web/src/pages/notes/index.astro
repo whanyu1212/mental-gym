@@ -4,7 +4,7 @@ import Layout from "../../layouts/Layout.astro";
 import { withBase } from "../../lib/url";
 import { readingTimeMinutes } from "../../lib/readingTime";
 import ResumeRow from "../../components/ResumeRow.astro";
-import { courses, moduleHref, modules } from "../../data/roadmap";
+import { courses, moduleHref, modules, noteCourseId } from "../../data/roadmap";
 
 const published = (await getCollection("notes")).filter((note) => note.data.category !== "Meta");
 const templateNotes = published.filter((note) => note.data.kind === "template");
@@ -15,9 +15,10 @@ const moduleById = new Map(modules.map((module) => [module.id, module]));
 const notesByCourse = courses
 	.map((course) => ({
 		course,
-		notes: linkedNotes.filter((note) => note.data.courseId === course.id),
+		notes: linkedNotes.filter((note) => noteCourseId(note.data) === course.id),
 	}))
 	.filter((group) => group.notes.length > 0);
+const ungroupedLinkedNotes = linkedNotes.filter((note) => !noteCourseId(note.data));
 
 // Explicit, pedagogical category order (foundational → reusable → reference),
 // mirroring ALGO_GROUP_ORDER in problems/index.astro. Any category not listed
@@ -45,7 +46,7 @@ const notesByCategory = categories.map((category) => ({
 	<ResumeRow />
 
 	<div class="notes-container">
-		{notesByCourse.length > 0 && (
+		{(notesByCourse.length > 0 || ungroupedLinkedNotes.length > 0) && (
 			<section class="linked-section">
 				<h2 class="category-heading">
 					<span class="category-name">By course / module</span>
@@ -71,6 +72,25 @@ const notesByCategory = categories.map((category) => ({
 						</ul>
 					</div>
 				))}
+				{ungroupedLinkedNotes.length > 0 && (
+					<div class="course-group">
+						<h3 class="course-heading">Module only</h3>
+						<ul class="linked-list">
+							{ungroupedLinkedNotes.map((note) => {
+								const module = note.data.moduleId ? moduleById.get(note.data.moduleId) : undefined;
+								const href = note.data.moduleId ? moduleHref(note.data.moduleId) : undefined;
+								return (
+									<li>
+										<a href={withBase(`/notes/${note.id}/`)}>{note.data.title}</a>
+										{module && href && (
+											<a class="module-link" href={withBase(href)}>{module.title}</a>
+										)}
+									</li>
+								);
+							})}
+						</ul>
+					</div>
+				)}
 			</section>
 		)}
 		{notesByCategory.map((category) => (
