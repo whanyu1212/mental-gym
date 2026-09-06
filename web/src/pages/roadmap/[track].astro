@@ -18,6 +18,9 @@ interface Props {
 
 const { track } = Astro.props;
 const scheduledModules = modulesForTrack(track);
+const foundationModules = scheduledModules.slice(0, 8);
+const specializationModules = scheduledModules.slice(8, 20);
+const capstoneModules = scheduledModules.slice(20);
 ---
 
 <Layout title={`${track.title} Roadmap | Mental Gym`}>
@@ -38,32 +41,73 @@ const scheduledModules = modulesForTrack(track);
 		</div>
 	</section>
 
-	<nav class="week-nav" aria-label="Foundation weeks">
+	<nav class="week-nav" aria-label="Roadmap weeks">
 		{scheduledModules.map((module, index) => (
-			<a href={`#week-${index + 1}`}>{String(index + 1).padStart(2, "0")}</a>
+			<a
+				href={`#week-${index + 1}`}
+				title={`Week ${index + 1}: ${module.title}`}
+				class:list={{
+					specialization: index === 8,
+					capstone: index === 20,
+				}}
+			>
+				{String(index + 1).padStart(2, "0")}
+			</a>
 		))}
 	</nav>
 
-	<section class="foundation-intro">
-		<p class="eyebrow">Weeks 1–8</p>
-		<h2>Shared engineering foundation</h2>
-		<p>Every path begins with the same core. Track-specific weeks build on these stable module IDs without copying the foundation.</p>
+	<section class="phase" id="foundation">
+		<div class="phase-heading">
+			<p class="eyebrow">Weeks 1–8</p>
+			<h2>Shared engineering foundation</h2>
+			<p>Every path begins with the same core. Track-specific weeks build on these stable module IDs without copying the foundation.</p>
+		</div>
+		<div class="weeks">
+			{foundationModules.map((module, index) => <WeekCard module={module} week={index + 1} />)}
+		</div>
 	</section>
 
-	<div class="weeks">
-		{scheduledModules.map((module, index) => <WeekCard module={module} week={index + 1} />)}
-	</div>
+	<section class="phase" id="specialization">
+		<div class="phase-heading">
+			<p class="eyebrow">Weeks 9–20</p>
+			<h2>{track.shortTitle} specialization</h2>
+			<p>Twelve focused weeks connect selected course material to implementations, interview practice, and concrete weekly evidence.</p>
+		</div>
+		<div class="weeks">
+			{specializationModules.map((module, index) => <WeekCard module={module} week={index + 9} />)}
+		</div>
+	</section>
 
-	<section class="next-phase">
-		<p class="eyebrow">Weeks 9–24</p>
-		<h2>The shared foundation is ready.</h2>
-		<p>The specialization and capstone sequence for {track.title} will extend this validated schedule in the next curriculum slice.</p>
+	<section class="phase" id="capstone">
+		<div class="phase-heading">
+			<p class="eyebrow">Weeks 21–24</p>
+			<h2>Capstone and interview evidence</h2>
+			<p>Scope, build, evaluate, and explain one bounded project without exceeding the weekly budget.</p>
+		</div>
+		<div class="weeks">
+			{capstoneModules.map((module, index) => <WeekCard module={module} week={index + 21} />)}
+		</div>
+	</section>
+
+	<section class="adapt-plan">
+		<p class="eyebrow">Adapt without expanding</p>
+		<h2>Change the sequence, not the 15-hour budget</h2>
+		<div>
+			<article>
+				<h3>Switch tracks</h3>
+				<p>Keep completed foundation weeks. Start the new specialization at its first unmet prerequisite; do not complete both specializations in parallel.</p>
+			</article>
+			<article>
+				<h3>Defer a week</h3>
+				<p>Move its required deliverable into a future week by replacing equivalent work. Optional stretch work is dropped first, never carried as debt.</p>
+			</article>
+		</div>
 	</section>
 
 	<section class="switch-track">
 		<p class="eyebrow">Compare paths</p>
-		<h2>Switch the specialization, not the workload</h2>
-		<p>Choose a different path below. The first eight weeks remain shared, so changing direction does not duplicate completed foundation work.</p>
+		<h2>Choose a different specialization</h2>
+		<p>The first eight weeks remain shared, so changing direction does not duplicate completed foundation work.</p>
 		<TrackChooser activeTrackId={track.id} />
 	</section>
 </Layout>
@@ -108,8 +152,8 @@ const scheduledModules = modulesForTrack(track);
 	}
 
 	.hero > p:not(.eyebrow),
-	.foundation-intro > p:last-child,
-	.next-phase > p:last-child,
+	.phase-heading > p:last-child,
+	.adapt-plan article p,
 	.switch-track > p {
 		color: var(--muted);
 		font: var(--fs-base) / 1.65 var(--font-sans);
@@ -164,18 +208,50 @@ const scheduledModules = modulesForTrack(track);
 		color: var(--accent);
 	}
 
-	.foundation-intro,
-	.next-phase,
+	.week-nav a.specialization,
+	.week-nav a.capstone {
+		margin-left: 0.55rem;
+		position: relative;
+	}
+
+	.week-nav a.specialization::before,
+	.week-nav a.capstone::before {
+		background: var(--border);
+		content: "";
+		height: 1.4rem;
+		left: -0.47rem;
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 1px;
+	}
+
+	.phase,
+	.adapt-plan,
 	.switch-track {
-		margin: 3rem 0 1.2rem;
+		margin-top: 3rem;
+	}
+
+	.phase-heading,
+	.switch-track {
 		max-width: 760px;
 	}
 
-	.foundation-intro h2,
-	.next-phase h2,
+	.phase-heading {
+		margin-bottom: 1.2rem;
+	}
+
+	.phase-heading h2,
+	.adapt-plan h2,
 	.switch-track h2 {
 		font-size: var(--fs-h2);
 		margin: 0.35rem 0 0.45rem;
+	}
+
+	.phase-heading > p:last-child,
+	.adapt-plan article p,
+	.switch-track > p {
+		font-size: var(--fs-sm);
 	}
 
 	.weeks {
@@ -183,12 +259,29 @@ const scheduledModules = modulesForTrack(track);
 		gap: 1.25rem;
 	}
 
-	.next-phase {
+	.adapt-plan {
 		background: var(--glass-surface);
 		border: 1px solid var(--glass-border);
-		border-radius: var(--radius-md);
-		max-width: none;
+		border-radius: var(--radius-lg);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
 		padding: 1.5rem;
+	}
+
+	.adapt-plan > div {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		margin-top: 1rem;
+	}
+
+	.adapt-plan article {
+		border-top: 1px solid var(--border);
+		padding-top: 0.9rem;
+	}
+
+	.adapt-plan h3 {
+		font: 600 var(--fs-xl) var(--font-serif);
+		margin: 0 0 0.35rem;
 	}
 
 	.switch-track {
@@ -196,8 +289,13 @@ const scheduledModules = modulesForTrack(track);
 	}
 
 	.switch-track > p {
-		font-size: var(--fs-sm);
 		margin-bottom: 1.2rem;
 		max-width: 720px;
+	}
+
+	@media (max-width: 620px) {
+		.adapt-plan > div {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
