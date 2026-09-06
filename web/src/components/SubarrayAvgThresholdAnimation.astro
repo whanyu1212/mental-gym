@@ -1,4 +1,5 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 // The canonical case from the guide: three windows clear the bar.
@@ -8,7 +9,7 @@ const k = 3;
 const threshold = 4;
 const target = threshold * k;
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     l: 0,
     r: -1,
@@ -147,7 +148,7 @@ const steps = [
     evicted: 2,
     qualifies: true,
     phase: 'test',
-    action: 'confirmed',
+    action: 'confirm',
     exp: 'R=5: add 5, evict arr[2]=2. Sum is exactly 12. Test: 12 >= 12?',
     reason: 'The bound is inclusive — an average landing exactly on the threshold counts.',
     invariant: 'window arr[3..5] = [2,5,5], average exactly 4.',
@@ -173,7 +174,7 @@ const steps = [
     evicted: 2,
     qualifies: true,
     phase: 'test',
-    action: 'confirmed',
+    action: 'confirm',
     exp: 'R=6: add 5, evict arr[3]=2. Sum is 15. Test: 15 >= 12?',
     reason: 'Window arr[4..6] = [5,5,5], average 5.',
     invariant: 'count tracks how many full windows have cleared the bar.',
@@ -195,7 +196,7 @@ const steps = [
     evicted: 5,
     qualifies: true,
     phase: 'test',
-    action: 'confirmed',
+    action: 'confirm',
     exp: 'R=7: add 8, evict arr[4]=5. Sum is 18. Test: 18 >= 12?',
     reason: 'Window arr[5..7] = [5,5,8], average 6.',
     invariant: 'This is the last full window in the array.',
@@ -217,7 +218,7 @@ const steps = [
     evicted: null,
     qualifies: false,
     phase: 'done',
-    action: 'confirmed',
+    action: 'confirm',
     exp: 'Scan complete. Three windows cleared the threshold: [2,5,5], [5,5,5], and [5,5,8].',
     reason: 'Every element was added once and subtracted at most once.',
     invariant: 'O(n) time, O(1) space — no extra structure beyond a sum and a counter.',
@@ -281,6 +282,16 @@ const steps = [
 
 <script>
   class SubarrayAvgThresholdVisuals extends HTMLElement {
+    sumEl!: HTMLElement | null;
+    countEl!: HTMLElement | null;
+    verdictEl!: HTMLElement | null;
+    windowEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    target!: number;
+    totalWindows!: number;
+    updateHighlight!: any;
+    resizeObserver!: ResizeObserver | null;
     connectedCallback() {
       this.sumEl = this.querySelector(".sat-sum");
       this.countEl = this.querySelector(".sat-count");

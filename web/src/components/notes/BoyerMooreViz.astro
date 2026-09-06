@@ -163,6 +163,14 @@ const steps: TeachingStep[] = [
 
 <script>
   class BoyerMooreViz extends HTMLElement {
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    candidateValEl!: HTMLElement | null;
+    countValEl!: HTMLElement | null;
+    candidateBox!: HTMLElement | null;
+    countBox!: HTMLElement | null;
+    voteBarFill!: HTMLElement | null;
+    voteLabel!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.bm-cell'));
       this.ptrs = Array.from(this.querySelectorAll('.bm-ptr-col'));

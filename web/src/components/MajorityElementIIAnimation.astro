@@ -1,10 +1,11 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const nums = [1, 1, 1, 2, 2, 2, 3];
 const threshold = Math.floor(nums.length / 3);
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     phase: 1,
     i: -1,
@@ -390,6 +391,22 @@ const steps = [
 
 <script>
   class MajorityElementIIVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    vptrs!: HTMLElement[];
+    c1El!: HTMLElement | null;
+    c2El!: HTMLElement | null;
+    cnt1El!: HTMLElement | null;
+    cnt2El!: HTMLElement | null;
+    v1El!: HTMLElement | null;
+    v2El!: HTMLElement | null;
+    resultEl!: HTMLElement | null;
+    c1Box!: HTMLElement | null;
+    c2Box!: HTMLElement | null;
+    v1Box!: HTMLElement | null;
+    v2Box!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
+    phaseBadge!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.me2-cell'));
       this.ptrs = Array.from(this.querySelectorAll('.me2-ptr-col'));

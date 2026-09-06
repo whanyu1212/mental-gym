@@ -173,6 +173,12 @@ const steps: TeachingStep[] = [
 
 <script>
   class TwViz extends HTMLElement {
+    cols!: HTMLElement[];
+    lmaxEl!: HTMLElement | null;
+    rmaxEl!: HTMLElement | null;
+    waterEl!: HTMLElement | null;
+    waterBox!: HTMLElement | null;
+    waterUnits!: any;
     connectedCallback() {
       this.cols = Array.from(this.querySelectorAll('.tw-col'));
       this.lmaxEl = this.querySelector('.tw-lmax');

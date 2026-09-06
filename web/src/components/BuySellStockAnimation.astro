@@ -1,10 +1,11 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const prices = [7, 1, 5, 3, 6, 4];
 const maxPrice = Math.max(...prices);
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     i: -1,
     min: null,
@@ -183,6 +184,14 @@ const steps = [
 
 <script>
   class BuySellStockVisuals extends HTMLElement {
+    minEl!: HTMLElement | null;
+    maxpEl!: HTMLElement | null;
+    dayProfitEl!: HTMLElement | null;
+    statusEl!: HTMLElement | null;
+    minLine!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
+    bars!: HTMLElement[];
+    ptrs!: HTMLElement[];
     connectedCallback() {
       this.minEl = this.querySelector('.bss-min');
       this.maxpEl = this.querySelector('.bss-maxp');

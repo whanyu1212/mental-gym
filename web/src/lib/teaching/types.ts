@@ -56,5 +56,26 @@ export type TeachingStep = {
   formula?: FormulaSpec | string;
   highlights?: HighlightSpec[];
   callout?: CalloutSpec;
-  [key: string]: unknown;
+  // Each animation adds its own step fields (pointer indices, partial results,
+  // and so on) that the framework cannot enumerate. `any` rather than `unknown`
+  // so components can read them without casting at every use.
+  [key: string]: any;
 };
+
+/**
+ * Payload of the `step-change` event that `AlgorithmPlayer` dispatches on each
+ * navigation. Declared on the global element event map so animation components
+ * get a typed `event.detail` without casting at every listener.
+ */
+export type StepChangeDetail = {
+  step: TeachingStep;
+  index: number;
+};
+
+export type StepChangeEvent = CustomEvent<StepChangeDetail>;
+
+declare global {
+  interface HTMLElementEventMap {
+    "step-change": StepChangeEvent;
+  }
+}

@@ -366,6 +366,20 @@ const steps: TeachingStep[] = [
 
 <script>
   class TrapWaterVisuals extends HTMLElement {
+    maxlEl!: HTMLElement | null;
+    maxrEl!: HTMLElement | null;
+    indexEl!: HTMLElement | null;
+    waterEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    waterBlocks!: HTMLElement[];
+    solidBlocks!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    maxLeftBox!: HTMLElement | null;
+    maxRightBox!: HTMLElement | null;
+    totalWaterBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
+    formulaBox!: HTMLElement | null;
     connectedCallback() {
       this.maxlEl = this.querySelector(".tw-maxl");
       this.maxrEl = this.querySelector(".tw-maxr");

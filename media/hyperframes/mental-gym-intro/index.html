@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=1920, height=1080" />
+		<title>Mental Gym — Choose Your Path</title>
+		<script src="./node_modules/gsap/dist/gsap.min.js"></script>
+		<style>
+			:root {
+				--bg: #fdfbf6;
+				--panel: rgba(246, 240, 228, 0.82);
+				--panel-strong: #f3ecdf;
+				--text: #201d17;
+				--muted: #6a6254;
+				--border: #d8cfbd;
+				--gold: #8a6d1f;
+				--gold-soft: rgba(138, 109, 31, 0.12);
+				--gold-ring: rgba(138, 109, 31, 0.42);
+				--serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+				--sans: Inter, "Helvetica Neue", Arial, sans-serif;
+				--mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+			}
+
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			html,
+			body {
+				background: var(--bg);
+				color: var(--text);
+				height: 1080px;
+				overflow: hidden;
+				width: 1920px;
+			}
+
+			body {
+				font-family: var(--sans);
+			}
+
+			#root {
+				background:
+					radial-gradient(circle at 78% 18%, rgba(138, 109, 31, 0.11), transparent 28%),
+					linear-gradient(135deg, #fffdf8 0%, var(--bg) 55%, #f5eee1 100%);
+				height: 1080px;
+				overflow: hidden;
+				position: relative;
+				width: 1920px;
+			}
+
+			#root::before {
+				border: 1px solid rgba(138, 109, 31, 0.12);
+				border-radius: 50%;
+				content: "";
+				height: 880px;
+				position: absolute;
+				right: -340px;
+				top: -380px;
+				width: 880px;
+			}
+
+			#root::after {
+				background-image: radial-gradient(rgba(138, 109, 31, 0.3) 0.8px, transparent 0.8px);
+				background-size: 22px 22px;
+				content: "";
+				height: 260px;
+				opacity: 0.25;
+				position: absolute;
+				right: 70px;
+				top: 70px;
+				width: 360px;
+			}
+
+			.scene {
+				align-items: center;
+				display: grid;
+				height: 1080px;
+				inset: 0;
+				padding: 110px 150px;
+				position: absolute;
+				width: 1920px;
+			}
+
+			.brand {
+				align-items: center;
+				display: flex;
+				gap: 18px;
+				left: 150px;
+				position: absolute;
+				top: 78px;
+				z-index: 10;
+			}
+
+			.brand-mark {
+				border: 1px solid var(--gold-ring);
+				border-radius: 50%;
+				height: 26px;
+				position: relative;
+				width: 26px;
+			}
+
+			.brand-mark::before,
+			.brand-mark::after {
+				background: var(--gold);
+				content: "";
+				left: 50%;
+				position: absolute;
+				top: 50%;
+				transform: translate(-50%, -50%);
+			}
+
+			.brand-mark::before {
+				height: 1px;
+				width: 14px;
+			}
+
+			.brand-mark::after {
+				height: 14px;
+				width: 1px;
+			}
+
+			.brand-name {
+				color: var(--gold);
+				font: 600 30px var(--serif);
+				letter-spacing: 0.02em;
+			}
+
+			.frame-count {
+				color: var(--muted);
+				font: 600 16px var(--mono);
+				letter-spacing: 0.12em;
+				position: absolute;
+				right: 150px;
+				top: 84px;
+				z-index: 10;
+			}
+
+			.eyebrow {
+				color: var(--gold);
+				font: 700 18px var(--sans);
+				letter-spacing: 0.18em;
+				text-transform: uppercase;
+			}
+
+			.display {
+				font: 600 100px/0.98 var(--serif);
+				letter-spacing: -0.035em;
+			}
+
+			.lead {
+				color: var(--muted);
+				font: 400 30px/1.55 var(--sans);
+			}
+
+			.gold {
+				color: var(--gold);
+			}
+
+			.scene-hook {
+				grid-template-columns: 1.1fr 0.9fr;
+			}
+
+			.hook-copy {
+				max-width: 920px;
+			}
+
+			.hook-copy .display {
+				font-size: 132px;
+				margin: 28px 0 34px;
+			}
+
+			.hook-copy .lead {
+				max-width: 780px;
+			}
+
+			.hook-visual {
+				align-items: center;
+				display: flex;
+				justify-content: center;
+				position: relative;
+			}
+
+			.hook-ring {
+				align-items: center;
+				border: 1px solid var(--border);
+				border-radius: 50%;
+				display: flex;
+				height: 510px;
+				justify-content: center;
+				position: relative;
+				width: 510px;
+			}
+
+			.hook-ring::before,
+			.hook-ring::after {
+				border: 1px dashed var(--gold-ring);
+				border-radius: 50%;
+				content: "";
+				position: absolute;
+			}
+
+			.hook-ring::before {
+				height: 390px;
+				width: 390px;
+			}
+
+			.hook-ring::after {
+				height: 250px;
+				width: 250px;
+			}
+
+			.hook-center {
+				text-align: center;
+			}
+
+			.hook-center strong {
+				display: block;
+				font: 600 40px var(--serif);
+			}
+
+			.hook-center span {
+				color: var(--gold);
+				display: block;
+				font: 700 14px var(--sans);
+				letter-spacing: 0.16em;
+				margin-top: 12px;
+				text-transform: uppercase;
+			}
+
+			.hook-badge {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				color: var(--muted);
+				font: 600 16px var(--sans);
+				padding: 12px 20px;
+				position: absolute;
+			}
+
+			.hook-badge.one {
+				left: -15px;
+				top: 75px;
+			}
+
+			.hook-badge.two {
+				right: -5px;
+				top: 145px;
+			}
+
+			.hook-badge.three {
+				bottom: 72px;
+				right: 52px;
+			}
+
+			.scene-loop {
+				grid-template-columns: 0.78fr 1.22fr;
+				gap: 80px;
+			}
+
+			.scene-copy .display {
+				font-size: 88px;
+				margin: 24px 0 30px;
+			}
+
+			.loop-diagram {
+				height: 730px;
+				position: relative;
+				width: 930px;
+			}
+
+			.loop-track {
+				border: 2px solid var(--border);
+				border-radius: 50%;
+				height: 590px;
+				left: 170px;
+				position: absolute;
+				top: 66px;
+				width: 590px;
+			}
+
+			.loop-track::before {
+				border: 1px dashed var(--gold-ring);
+				border-radius: 50%;
+				content: "";
+				inset: 16px;
+				position: absolute;
+			}
+
+			.loop-center {
+				align-items: center;
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 50%;
+				display: flex;
+				flex-direction: column;
+				height: 250px;
+				justify-content: center;
+				left: 340px;
+				position: absolute;
+				text-align: center;
+				top: 236px;
+				width: 250px;
+			}
+
+			.loop-center small {
+				color: var(--gold);
+				font: 700 15px var(--sans);
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+			}
+
+			.loop-center strong {
+				font: 600 33px/1.1 var(--serif);
+				margin-top: 12px;
+				max-width: 180px;
+			}
+
+			.loop-node {
+				align-items: center;
+				background: var(--panel-strong);
+				border: 1px solid var(--border);
+				border-radius: 50%;
+				display: flex;
+				flex-direction: column;
+				height: 132px;
+				justify-content: center;
+				position: absolute;
+				width: 132px;
+			}
+
+			.loop-node small {
+				color: var(--gold);
+				font: 700 13px var(--mono);
+				margin-bottom: 8px;
+			}
+
+			.loop-node strong {
+				font: 650 19px var(--sans);
+			}
+
+			.loop-node.learn {
+				left: 399px;
+				top: 0;
+			}
+
+			.loop-node.implement {
+				right: 34px;
+				top: 188px;
+			}
+
+			.loop-node.practice {
+				bottom: 0;
+				right: 138px;
+			}
+
+			.loop-node.review {
+				bottom: 0;
+				left: 138px;
+			}
+
+			.loop-node.retain {
+				left: 34px;
+				top: 188px;
+			}
+
+			.orbit-spinner {
+				height: 590px;
+				left: 170px;
+				position: absolute;
+				top: 66px;
+				width: 590px;
+			}
+
+			.comet {
+				background: var(--gold);
+				border-radius: 50%;
+				box-shadow: 0 0 0 8px var(--gold-soft), 0 0 34px var(--gold);
+				height: 12px;
+				left: 289px;
+				position: absolute;
+				top: -5px;
+				width: 12px;
+			}
+
+			.scene-paths {
+				align-content: center;
+			}
+
+			.scene-paths .scene-copy {
+				margin-bottom: 56px;
+				max-width: 1200px;
+			}
+
+			.scene-paths .display {
+				font-size: 92px;
+			}
+
+			.path-grid {
+				display: grid;
+				gap: 24px;
+				grid-template-columns: repeat(4, 1fr);
+			}
+
+			.path-card {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 24px;
+				min-height: 330px;
+				padding: 38px;
+				position: relative;
+			}
+
+			.path-card::before {
+				background: var(--gold);
+				content: "";
+				height: 3px;
+				left: 38px;
+				position: absolute;
+				top: 0;
+				width: 58px;
+			}
+
+			.path-card small {
+				color: var(--gold);
+				font: 700 14px var(--mono);
+				letter-spacing: 0.12em;
+			}
+
+			.path-card h3 {
+				font: 600 38px/1.08 var(--serif);
+				margin: 42px 0 22px;
+			}
+
+			.path-card p {
+				color: var(--muted);
+				font: 400 21px/1.5 var(--sans);
+			}
+
+			.scene-plan {
+				grid-template-columns: 0.65fr 1.35fr;
+				gap: 90px;
+			}
+
+			.plan-stack {
+				display: grid;
+				gap: 28px;
+			}
+
+			.plan-bar {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 22px;
+				padding: 30px 34px;
+			}
+
+			.plan-bar header {
+				align-items: baseline;
+				display: flex;
+				justify-content: space-between;
+				margin-bottom: 20px;
+			}
+
+			.plan-bar h3 {
+				font: 600 30px var(--serif);
+			}
+
+			.plan-bar span {
+				color: var(--gold);
+				font: 700 16px var(--mono);
+			}
+
+			.timeline {
+				background: rgba(32, 29, 23, 0.08);
+				border-radius: 999px;
+				display: flex;
+				height: 24px;
+				overflow: hidden;
+			}
+
+			.timeline i {
+				display: block;
+				height: 100%;
+			}
+
+			.timeline .foundation {
+				background: var(--gold);
+				width: 33.333%;
+			}
+
+			.timeline .specialization {
+				background: rgba(138, 109, 31, 0.55);
+				width: 50%;
+			}
+
+			.timeline .capstone {
+				background: rgba(138, 109, 31, 0.25);
+				width: 16.667%;
+			}
+
+			.hour-grid {
+				display: grid;
+				gap: 16px;
+				grid-template-columns: repeat(4, 1fr);
+			}
+
+			.hour {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 18px;
+				padding: 24px;
+			}
+
+			.hour strong {
+				display: block;
+				font: 600 38px var(--serif);
+			}
+
+			.hour small {
+				color: var(--muted);
+				font: 700 13px var(--sans);
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+			}
+
+			.budget-note {
+				border-left: 3px solid var(--gold);
+				color: var(--muted);
+				font: 500 21px/1.5 var(--sans);
+				padding-left: 24px;
+			}
+
+			.scene-proof {
+				grid-template-columns: 0.7fr 1.3fr;
+				gap: 100px;
+			}
+
+			.proof-flow {
+				display: grid;
+				gap: 18px;
+				grid-template-columns: repeat(2, 1fr);
+				position: relative;
+			}
+
+			.proof-card {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 22px;
+				min-height: 220px;
+				padding: 32px;
+			}
+
+			.proof-card small {
+				color: var(--gold);
+				font: 700 14px var(--mono);
+			}
+
+			.proof-card h3 {
+				font: 600 32px var(--serif);
+				margin: 22px 0 12px;
+			}
+
+			.proof-card p {
+				color: var(--muted);
+				font: 400 19px/1.45 var(--sans);
+			}
+
+			.proof-arrow {
+				align-items: center;
+				background: var(--gold);
+				border: 8px solid var(--bg);
+				border-radius: 50%;
+				color: white;
+				display: flex;
+				font: 700 24px var(--sans);
+				height: 64px;
+				justify-content: center;
+				left: calc(50% - 32px);
+				position: absolute;
+				top: calc(50% - 32px);
+				width: 64px;
+				z-index: 3;
+			}
+
+			.scene-cta {
+				place-items: center;
+				text-align: center;
+			}
+
+			.cta-wrap {
+				max-width: 1200px;
+			}
+
+			.cta-wrap .display {
+				font-size: 124px;
+				margin: 22px 0 30px;
+			}
+
+			.cta-rule {
+				background: var(--gold);
+				height: 3px;
+				margin: 0 auto 30px;
+				width: 110px;
+			}
+
+			.cta-link {
+				background: var(--gold);
+				border-radius: 999px;
+				color: white;
+				display: inline-flex;
+				font: 700 18px var(--sans);
+				gap: 18px;
+				letter-spacing: 0.12em;
+				margin-top: 40px;
+				padding: 22px 34px;
+				text-transform: uppercase;
+			}
+		</style>
+	</head>
+	<body>
+		<main
+			id="root"
+			data-composition-id="main"
+			data-start="0"
+			data-duration="24"
+			data-fps="30"
+			data-width="1920"
+			data-height="1080"
+		>
+			<div class="brand" aria-hidden="true">
+				<span class="brand-mark"></span>
+				<span class="brand-name">Mental Gym</span>
+			</div>
+			<div class="frame-count" aria-hidden="true">24 WEEKS · 15 HOURS / WEEK</div>
+
+			<section id="scene-hook" class="clip scene scene-hook" data-start="0" data-duration="4" data-track-index="1">
+				<div class="hook-copy">
+					<p class="eyebrow">A deliberate learning system</p>
+					<h1 class="display">Build technical<br /><span class="gold">fluency.</span></h1>
+					<p class="lead">Connect courses, implementation, interview practice, review, and project evidence.</p>
+				</div>
+				<div class="hook-visual">
+					<div class="hook-ring">
+						<div class="hook-center">
+							<strong>Durable<br />knowledge</strong>
+							<span>Not just completion</span>
+						</div>
+						<span class="hook-badge one">Learn deeply</span>
+						<span class="hook-badge two">Build from scratch</span>
+						<span class="hook-badge three">Retrieve later</span>
+					</div>
+				</div>
+			</section>
+
+			<section id="scene-loop" class="clip scene scene-loop" data-start="4" data-duration="4" data-track-index="1">
+				<div class="scene-copy">
+					<p class="eyebrow">The learning loop</p>
+					<h2 class="display">Make every step<br /><span class="gold">compound.</span></h2>
+					<p class="lead">Each stage creates the input for the next.</p>
+				</div>
+				<div class="loop-diagram">
+					<div class="loop-track"></div>
+					<div class="orbit-spinner"><span class="comet"></span></div>
+					<div class="loop-center"><small>Build</small><strong>Durable fluency</strong></div>
+					<div class="loop-node learn"><small>01</small><strong>Learn</strong></div>
+					<div class="loop-node implement"><small>02</small><strong>Implement</strong></div>
+					<div class="loop-node practice"><small>03</small><strong>Practice</strong></div>
+					<div class="loop-node review"><small>04</small><strong>Review</strong></div>
+					<div class="loop-node retain"><small>05</small><strong>Retain</strong></div>
+				</div>
+			</section>
+
+			<section id="scene-paths" class="clip scene scene-paths" data-start="8" data-duration="4" data-track-index="1">
+				<div class="scene-copy">
+					<p class="eyebrow">Choose one primary outcome</p>
+					<h2 class="display">Four paths. <span class="gold">One shared foundation.</span></h2>
+				</div>
+				<div class="path-grid">
+					<article class="path-card"><small>01</small><h3>Applied AI<br />/ Agents</h3><p>Retrieval, tools, evaluation, and reliable agent workflows.</p></article>
+					<article class="path-card"><small>02</small><h3>ML<br />Infrastructure</h3><p>Data, training, serving, observability, and system performance.</p></article>
+					<article class="path-card"><small>03</small><h3>Model /<br />Post-training</h3><p>Transformer internals, optimization, adaptation, and evaluation.</p></article>
+					<article class="path-card"><small>04</small><h3>AI<br />Product</h3><p>User needs, metrics, experimentation, usability, and evidence.</p></article>
+				</div>
+			</section>
+
+			<section id="scene-plan" class="clip scene scene-plan" data-start="12" data-duration="4" data-track-index="1">
+				<div class="scene-copy">
+					<p class="eyebrow">A realistic six-month plan</p>
+					<h2 class="display">Structure creates<br /><span class="gold">momentum.</span></h2>
+					<p class="lead">Required work never exceeds the weekly budget.</p>
+				</div>
+				<div class="plan-stack">
+					<div class="plan-bar">
+						<header><h3>Shared foundation week</h3><span>08 + 12 + 04</span></header>
+						<div class="timeline"><i class="foundation"></i><i class="specialization"></i><i class="capstone"></i></div>
+					</div>
+					<div class="hour-grid">
+						<div class="hour"><strong>5h</strong><small>Study</small></div>
+						<div class="hour"><strong>5h</strong><small>Implement</small></div>
+						<div class="hour"><strong>3h</strong><small>Interview</small></div>
+						<div class="hour"><strong>2h</strong><small>Language</small></div>
+					</div>
+					<p class="budget-note">Specialization and capstone rebalance these hours by track. The total stays 15.</p>
+				</div>
+			</section>
+
+			<section id="scene-proof" class="clip scene scene-proof" data-start="16" data-duration="4" data-track-index="1">
+				<div class="scene-copy">
+					<p class="eyebrow">Evidence over activity</p>
+					<h2 class="display">Show what you<br /><span class="gold">can do.</span></h2>
+					<p class="lead">Completion is not proficiency. Every week ends with something inspectable.</p>
+				</div>
+				<div class="proof-flow">
+					<article class="proof-card"><small>01 · SOURCE</small><h3>Implement</h3><p>Versioned code, explicit constraints, and reproducible commands.</p></article>
+					<article class="proof-card"><small>02 · CHECKS</small><h3>Validate</h3><p>Tests, baselines, metrics, and failure-focused examples.</p></article>
+					<article class="proof-card"><small>03 · RECALL</small><h3>Explain</h3><p>Independent reasoning, delayed retrieval, and clear trade-offs.</p></article>
+					<article class="proof-card"><small>04 · PROJECT</small><h3>Apply</h3><p>A bounded deliverable tied to a real system or user outcome.</p></article>
+					<div class="proof-arrow">→</div>
+				</div>
+			</section>
+
+			<section id="scene-cta" class="clip scene scene-cta" data-start="20" data-duration="4" data-track-index="1">
+				<div class="cta-wrap">
+					<p class="eyebrow">Mental Gym · AI engineering roadmap</p>
+					<h2 class="display">Choose a path.<br /><span class="gold">Build evidence every week.</span></h2>
+					<div class="cta-rule"></div>
+					<p class="lead">Eight shared foundation weeks. Twelve weeks of specialization. Four weeks to ship and explain the work.</p>
+					<span class="cta-link">Open the roadmap <b>→</b></span>
+				</div>
+			</section>
+		</main>
+
+		<script>
+			window.__timelines = window.__timelines || {};
+			const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+
+			tl.from(".hook-ring", { scale: 0.9, opacity: 0, duration: 1.1 }, 0.15)
+				.from(".hook-badge", { y: 18, opacity: 0, stagger: 0.18, duration: 0.65 }, 0.65)
+				.to(".hook-ring", { rotation: 8, duration: 3.6, ease: "none" }, 0.2);
+
+			tl.from("#scene-loop .scene-copy > *", { x: -34, opacity: 0, stagger: 0.14, duration: 0.7 }, 4.05)
+				.from(".loop-track, .loop-center", { scale: 0.86, opacity: 0, stagger: 0.14, duration: 0.8 }, 4.05)
+				.from(".loop-node", { scale: 0.65, opacity: 0, stagger: 0.22, duration: 0.55 }, 4.45)
+				.to(".orbit-spinner", { rotation: 360, duration: 3.6, ease: "none" }, 4.2);
+
+			tl.from("#scene-paths .scene-copy > *", { y: 28, opacity: 0, stagger: 0.14, duration: 0.65 }, 8.05)
+				.from(".path-card", { y: 46, opacity: 0, stagger: 0.16, duration: 0.72 }, 8.55);
+
+			tl.from("#scene-plan .scene-copy > *", { x: -34, opacity: 0, stagger: 0.14, duration: 0.65 }, 12.05)
+				.from(".plan-bar", { y: 28, opacity: 0, duration: 0.65 }, 12.25)
+				.from(".timeline i", { scaleX: 0, transformOrigin: "left center", stagger: 0.14, duration: 0.55 }, 12.6)
+				.from(".hour", { y: 24, opacity: 0, stagger: 0.12, duration: 0.5 }, 13.0)
+				.from(".budget-note", { x: 28, opacity: 0, duration: 0.6 }, 13.4);
+
+			tl.from("#scene-proof .scene-copy > *", { x: -34, opacity: 0, stagger: 0.14, duration: 0.65 }, 16.05)
+				.from(".proof-card", { scale: 0.94, opacity: 0, stagger: 0.16, duration: 0.62 }, 16.35)
+				.from(".proof-arrow", { scale: 0, rotation: -90, duration: 0.6, ease: "back.out(1.7)" }, 17.05);
+
+			tl.from("#scene-cta .eyebrow", { y: 20, opacity: 0, duration: 0.6 }, 20.05)
+				.from("#scene-cta .display", { y: 34, opacity: 0, duration: 0.75 }, 20.2)
+				.from(".cta-rule", { scaleX: 0, duration: 0.55 }, 20.75)
+				.from("#scene-cta .lead", { y: 24, opacity: 0, duration: 0.6 }, 21.0)
+				.from(".cta-link", { y: 20, opacity: 0, scale: 0.96, duration: 0.6 }, 21.35);
+
+			window.__timelines.main = tl;
+		</script>
+	</body>
+</html>

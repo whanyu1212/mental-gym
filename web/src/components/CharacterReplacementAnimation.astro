@@ -145,6 +145,14 @@ const steps: TeachingStep[] = [
 
 <script>
   class CharacterReplacementVisuals extends HTMLElement {
+    lenEl!: HTMLElement | null;
+    maxfEl!: HTMLElement | null;
+    replacementsEl!: HTMLElement | null;
+    windowEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    mapEl!: HTMLElement | null;
+    updateHighlight!: any;
     connectedCallback() {
       this.lenEl = this.querySelector(".cr-len");
       this.maxfEl = this.querySelector(".cr-maxf");

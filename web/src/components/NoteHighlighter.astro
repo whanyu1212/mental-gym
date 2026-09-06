@@ -50,6 +50,7 @@ const { noteId } = Astro.props;
   import type { Highlight, HighlightColor } from "../scripts/highlight-types";
 
   class NoteHighlighter extends HTMLElement {
+    orphanCount!: number;
     private noteId = "";
     private root: HTMLElement | null = null;
     private popover!: HTMLElement;

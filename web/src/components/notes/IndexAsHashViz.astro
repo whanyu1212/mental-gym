@@ -144,6 +144,11 @@ const steps: TeachingStep[] = [
 
 <script>
   class IndexHashViz extends HTMLElement {
+    cells!: HTMLElement[];
+    answerEl!: HTMLElement | null;
+    answerBox!: HTMLElement | null;
+    targetSlotEl!: HTMLElement | null;
+    slotLabels!: HTMLElement[];
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.ih-cell'));
       this.answerEl = this.querySelector('.ih-answer');

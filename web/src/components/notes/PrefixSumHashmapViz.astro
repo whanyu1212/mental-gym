@@ -114,6 +114,11 @@ const steps: TeachingStep[] = [
 
 <script>
   class PrefixSumHashmapViz extends HTMLElement {
+    prefixValEl!: HTMLElement | null;
+    countValEl!: HTMLElement | null;
+    mapValEl!: HTMLElement | null;
+    numCells!: HTMLElement[];
+    countBox!: HTMLElement | null;
     connectedCallback() {
       this.prefixValEl = this.querySelector('.psh-prefix-val');
       this.countValEl = this.querySelector('.psh-count-val');

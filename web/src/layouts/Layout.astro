@@ -38,7 +38,10 @@ const pathname = stripBase(Astro.url.pathname);
 		<header class="site-header">
 			<div class="container">
 				<a class="brand" href={withBase("/")}>Mental Gym</a>
-				<nav>
+				<nav class="site-nav" aria-label="Primary navigation">
+					<a href={withBase("/roadmap")} class={pathname.startsWith("/roadmap") ? "active" : ""}
+						>Roadmap</a
+					>
 					<a href={withBase("/problems")} class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") || pathname.startsWith("/sql") || pathname.startsWith("/system-design") ? "active" : ""}
 						>Practice</a
 					>
@@ -237,13 +240,13 @@ const pathname = stripBase(Astro.url.pathname);
 		opacity: 0.85;
 	}
 
-	nav {
-		display: flex;
+	.site-nav {
 		align-items: center;
+		display: flex;
 		gap: 1.2rem;
 	}
 
-	nav a {
+	.site-nav a {
 		color: var(--muted);
 		font-size: var(--text-eyebrow);
 		font-family: var(--font-sans);
@@ -251,8 +254,8 @@ const pathname = stripBase(Astro.url.pathname);
 		text-transform: uppercase;
 	}
 
-	nav a:hover,
-	nav a.active {
+	.site-nav a:hover,
+	.site-nav a.active {
 		color: var(--accent);
 		text-decoration: none;
 	}
@@ -289,5 +292,33 @@ const pathname = stripBase(Astro.url.pathname);
 	.page-content {
 		padding-top: 1.25rem;
 		padding-bottom: 2.5rem;
+	}
+
+	@media (max-width: 640px) {
+		.site-header .container {
+			gap: 1rem;
+		}
+
+		.brand {
+			flex: 0 0 auto;
+			font-size: var(--fs-lg);
+		}
+
+		.site-nav {
+			gap: 0.8rem;
+			margin-right: -1rem;
+			overflow-x: auto;
+			padding-right: 1rem;
+			scrollbar-width: none;
+		}
+
+		.site-nav::-webkit-scrollbar {
+			display: none;
+		}
+
+		.site-nav a {
+			flex: 0 0 auto;
+			font-size: var(--fs-micro);
+		}
 	}
 </style>

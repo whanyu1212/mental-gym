@@ -146,6 +146,9 @@ const steps: TeachingStep[] = [
 
 <script>
   class MtViz extends HTMLElement {
+    a1Cells!: HTMLElement[];
+    a1Vals!: HTMLElement[];
+    a2Cells!: HTMLElement[];
     connectedCallback() {
       this.a1Cells = Array.from(this.querySelectorAll('.mt-a1-cell'));
       this.a1Vals = Array.from(this.querySelectorAll('.mt-a1-val'));

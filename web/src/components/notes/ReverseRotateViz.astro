@@ -93,6 +93,11 @@ const steps: TeachingStep[] = [
 
 <script>
   class RrViz extends HTMLElement {
+    chars!: HTMLElement[];
+    vals!: HTMLElement[];
+    lLabel!: HTMLElement | null;
+    rLabel!: HTMLElement | null;
+    previousArr!: any;
     connectedCallback() {
       this.chars = Array.from(this.querySelectorAll('.rr-char'));
       this.vals = Array.from(this.querySelectorAll('.rr-val'));

@@ -1,9 +1,10 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const nums = [1, 2, 3, 4];
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     phase: 'init',
     p: -1,
@@ -227,6 +228,16 @@ const steps = [
 
 <script>
   class ProductExceptSelfVisuals extends HTMLElement {
+    phaseValEl!: HTMLElement | null;
+    prefixValEl!: HTMLElement | null;
+    suffixValEl!: HTMLElement | null;
+    resultValEl!: HTMLElement | null;
+    numCells!: HTMLElement[];
+    prefixCells!: HTMLElement[];
+    outCells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    phaseBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.phaseValEl = this.querySelector('.po-phase-val');
       this.prefixValEl = this.querySelector('.po-prefix-val');

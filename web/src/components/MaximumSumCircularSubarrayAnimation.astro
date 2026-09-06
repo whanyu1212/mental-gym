@@ -1,9 +1,10 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
 
 const nums = [5, -3, 5];
 
-const steps = [
+const steps: TeachingStep[] = [
 	{
 		phase: "init",
 		i: -1,
@@ -210,6 +211,15 @@ const steps = [
 
 <script>
 	class MaximumCircularVisuals extends HTMLElement {
+	  globalMaxEl!: HTMLElement | null;
+	  globalMinEl!: HTMLElement | null;
+	  totalEl!: HTMLElement | null;
+	  decisionEl!: HTMLElement | null;
+	  statusEl!: HTMLElement | null;
+	  straightEl!: HTMLElement | null;
+	  wrappedEl!: HTMLElement | null;
+	  cells!: HTMLElement[];
+	  resultBox!: HTMLElement | null;
 		connectedCallback() {
 			this.globalMaxEl = this.querySelector(".mcs-global-max");
 			this.globalMinEl = this.querySelector(".mcs-global-min");

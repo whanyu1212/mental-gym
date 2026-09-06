@@ -290,6 +290,18 @@ const steps: TeachingStep[] = [
 
 <script>
   class ContainerWaterVisuals extends HTMLElement {
+    currentAreaEl!: HTMLElement | null;
+    maxAreaEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    waterOverlay!: HTMLElement | null;
+    blocks!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    currentAreaBox!: HTMLElement | null;
+    maxAreaBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
+    formulaBox!: HTMLElement | null;
+    _updateHighlight!: any;
     connectedCallback() {
       this.currentAreaEl = this.querySelector(".cw-current-area");
       this.maxAreaEl = this.querySelector(".cw-max-area");

@@ -1,0 +1,215 @@
+---
+import TrackChooser from "../../components/roadmap/TrackChooser.astro";
+import { courses } from "../../data/roadmap";
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="AI Engineering Roadmap | Mental Gym">
+	<section class="hero">
+		<p class="eyebrow">Six-month roadmap</p>
+		<h1>Choose a path. Build evidence every week.</h1>
+		<p>
+			Eight shared foundation weeks lead into role-specific study and a capstone. Every week keeps required work within a 15-hour budget.
+		</p>
+	</section>
+
+	<section class="phases" aria-label="Roadmap phases">
+		<article>
+			<span>01</span>
+			<h2>Foundation</h2>
+			<p>Weeks 1–8 · Shared fundamentals in software, data, models, evaluation, and systems.</p>
+		</article>
+		<article>
+			<span>02</span>
+			<h2>Specialization</h2>
+			<p>Weeks 9–20 · Role-specific courses, implementations, interview practice, and deliverables.</p>
+		</article>
+		<article>
+			<span>03</span>
+			<h2>Capstone</h2>
+			<p>Weeks 21–24 · Reproducible project evidence, system design, and interview preparation.</p>
+		</article>
+	</section>
+
+	<section class="tracks">
+		<div class="section-heading">
+			<p class="eyebrow">Four paths</p>
+			<h2>Select your primary outcome</h2>
+			<p>All paths share the same foundation. Choose one specialization rather than expanding the weekly workload.</p>
+		</div>
+		<TrackChooser />
+	</section>
+
+	<section class="principles">
+		<div>
+			<p class="eyebrow">Shared foundation pacing</p>
+			<h2>The budget is a constraint, not a target to exceed.</h2>
+		</div>
+		<ul>
+			<li><strong>5 hours</strong> study</li>
+			<li><strong>5 hours</strong> implementation</li>
+			<li><strong>3 hours</strong> interview practice</li>
+			<li><strong>2 hours</strong> language practice</li>
+		</ul>
+		<p>These figures describe the shared foundation. Applied AI and AI Product specialization keep this split; ML Infrastructure and Model / Post-training move the two language hours to implementation. Capstone weeks use 3 hours of study, 9 implementation, 3 interview practice, and no language block. Every week remains within 15 hours. Optional stretch work stays optional.</p>
+	</section>
+
+	<section class="course-notes">
+		<p class="eyebrow">Course sources</p>
+		<h2>Versioned and honest about access</h2>
+		<div>
+			{courses.map((course) => (
+				<article>
+					<a href={course.url}>{course.code} · {course.title}</a>
+					<p>{course.offering}</p>
+					<small>{course.accessNotes} {course.computeNotes}</small>
+				</article>
+			))}
+		</div>
+	</section>
+</Layout>
+
+<style>
+	.hero {
+		max-width: 760px;
+		padding: 3.5rem 0 2.5rem;
+	}
+
+	.eyebrow,
+	.phases span {
+		color: var(--accent);
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.13em;
+		margin: 0;
+		text-transform: uppercase;
+	}
+
+	h1,
+	h2 {
+		font-family: var(--font-serif);
+		font-weight: 600;
+	}
+
+	h1 {
+		font-size: var(--fs-mega);
+		line-height: 1;
+		margin: 0.5rem 0 1rem;
+	}
+
+	.hero > p:last-child,
+	.section-heading > p:last-child,
+	.principles > p {
+		color: var(--muted);
+		font: var(--fs-lg) / 1.6 var(--font-sans);
+		margin: 0;
+	}
+
+	.phases {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(3, 1fr);
+		margin-bottom: 3.5rem;
+	}
+
+	.phases article,
+	.principles,
+	.course-notes article {
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		padding: 1.25rem;
+	}
+
+	.phases h2 {
+		font-size: var(--fs-xl);
+		margin: 0.6rem 0 0.4rem;
+	}
+
+	.phases p,
+	.course-notes p,
+	.course-notes small {
+		color: var(--muted);
+		font: var(--fs-sm) / 1.55 var(--font-sans);
+		margin: 0;
+	}
+
+	.section-heading {
+		margin-bottom: 1.25rem;
+		max-width: 720px;
+	}
+
+	.section-heading h2,
+	.principles h2,
+	.course-notes h2 {
+		font-size: var(--fs-h2);
+		margin: 0.35rem 0 0.45rem;
+	}
+
+	.section-heading > p:last-child,
+	.principles > p {
+		font-size: var(--fs-sm);
+	}
+
+	.principles {
+		display: grid;
+		gap: 1.5rem;
+		grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
+		margin-top: 3.5rem;
+	}
+
+	.principles ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.principles li {
+		border-bottom: 1px solid var(--border);
+		color: var(--muted);
+		display: flex;
+		font: var(--fs-sm) var(--font-sans);
+		justify-content: space-between;
+		padding: 0.45rem 0;
+	}
+
+	.principles strong {
+		color: var(--text);
+	}
+
+	.principles > p {
+		grid-column: 1 / -1;
+	}
+
+	.course-notes {
+		margin-top: 3.5rem;
+	}
+
+	.course-notes > div {
+		display: grid;
+		gap: 0.75rem;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.course-notes a {
+		color: var(--text);
+		font: 600 var(--fs-base) var(--font-serif);
+	}
+
+	.course-notes small {
+		display: block;
+		font-size: var(--fs-fine);
+		margin-top: 0.5rem;
+	}
+
+	@media (max-width: 720px) {
+		.phases,
+		.course-notes > div {
+			grid-template-columns: 1fr;
+		}
+
+		.principles {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

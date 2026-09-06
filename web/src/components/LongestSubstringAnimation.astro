@@ -366,6 +366,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class LongestSubstringVisuals extends HTMLElement {
+    currentLenEl!: HTMLElement | null;
+    maxLenEl!: HTMLElement | null;
+    setEl!: HTMLElement | null;
+    windowEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrCols!: HTMLElement[];
+    updateHighlight!: any;
     connectedCallback() {
       this.currentLenEl = this.querySelector(".ls-current-len");
       this.maxLenEl = this.querySelector(".ls-max-len");

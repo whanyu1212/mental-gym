@@ -1,10 +1,11 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const words = ['lint', 'code', 'love', 'you'];
 const encodedString = '4#lint4#code4#love3#you';
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     phase: 'encode',
     i: -1,
@@ -228,6 +229,13 @@ const steps = [
 
 <script>
   class EncodeDecodeVisuals extends HTMLElement {
+    inCells!: HTMLElement[];
+    encBox!: HTMLElement | null;
+    outContainer!: HTMLElement | null;
+    phaseVal!: HTMLElement | null;
+    resultVal!: HTMLElement | null;
+    phaseBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.inCells = Array.from(this.querySelectorAll('.ed-in-cell'));
       this.encBox = this.querySelector('.ed-encoded-box');

@@ -1,0 +1,260 @@
+---
+import { withBase } from "../lib/url";
+
+const videoSrc = withBase("/media/mental-gym-intro.mp4");
+const posterSrc = withBase("/media/mental-gym-intro-poster.png");
+---
+
+<div class="film">
+	<button class="film-trigger" type="button" data-film-open>
+		<span class="play-icon" aria-hidden="true">▶</span>
+		<span>Watch how Mental Gym works</span>
+		<small>24 sec</small>
+	</button>
+
+	<dialog class="film-dialog" data-film-dialog aria-labelledby="film-title">
+		<div class="dialog-shell">
+			<header>
+				<div>
+					<p>Mental Gym</p>
+					<h2 id="film-title">Choose your path</h2>
+				</div>
+				<button class="close-button" type="button" data-film-close aria-label="Close video">×</button>
+			</header>
+
+			<video
+				controls
+				preload="none"
+				poster={posterSrc}
+				playsinline
+				data-film-video
+				aria-describedby="film-description film-transcript"
+			>
+				<source src={videoSrc} type="video/mp4" />
+				Your browser does not support embedded video.
+			</video>
+
+			<footer>
+				<p id="film-description">A silent 24-second overview of the learning loop and four AI engineering paths. A complete text transcript follows.</p>
+				<a href={withBase("/roadmap/")}>Explore the roadmap <span aria-hidden="true">→</span></a>
+			</footer>
+
+			<details class="film-transcript" id="film-transcript">
+				<summary>Video transcript</summary>
+				<ol>
+					<li><strong>0–4 seconds:</strong> Mental Gym connects courses, implementation, interview practice, review, and project evidence to build technical fluency.</li>
+					<li><strong>4–8 seconds:</strong> The learning loop moves through Learn, Implement, Practice, Review, and Retain to build durable fluency.</li>
+					<li><strong>8–12 seconds:</strong> Choose one of four paths: Applied AI / Agents, ML Infrastructure, Model / Post-training, or AI Product. All share one foundation.</li>
+					<li><strong>12–16 seconds:</strong> The 24-week curriculum contains eight foundation weeks, twelve specialization weeks, and four capstone weeks. Shared foundation weeks allocate five hours to study, five to implementation, three to interview practice, and two to language study. Infrastructure and model specialization weeks move the two language hours to implementation; capstone weeks allocate three hours to study, nine to implementation, three to interview practice, and none to language study. Every variation keeps the total at 15 hours.</li>
+					<li><strong>16–20 seconds:</strong> Evidence comes from versioned implementations, tests and metrics, independent explanations and delayed recall, and bounded project applications.</li>
+					<li><strong>20–24 seconds:</strong> Choose a path and build evidence every week. Open the AI engineering roadmap.</li>
+				</ol>
+			</details>
+		</div>
+	</dialog>
+</div>
+
+<script>
+	import { initRoadmapFilm } from "../scripts/roadmap-film";
+
+	initRoadmapFilm();
+</script>
+
+<style>
+	.film {
+		margin-top: 1.4rem;
+	}
+
+	.film-trigger {
+		align-items: center;
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border-strong);
+		border-radius: var(--radius-pill);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		color: var(--text);
+		cursor: pointer;
+		display: inline-flex;
+		font: 600 var(--fs-fine) var(--font-sans);
+		gap: 0.65rem;
+		padding: 0.55rem 0.75rem 0.55rem 0.55rem;
+		transition: border-color var(--dur-mid), transform var(--dur-mid);
+	}
+
+	.film-trigger:hover,
+	.film-trigger:focus-visible {
+		border-color: var(--accent);
+		transform: translateY(-1px);
+	}
+
+	.film-trigger:focus-visible,
+	.close-button:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+	}
+
+	.play-icon {
+		align-items: center;
+		background: var(--accent);
+		border-radius: 50%;
+		color: var(--bg);
+		display: inline-flex;
+		font-size: 0.55rem;
+		height: 1.8rem;
+		justify-content: center;
+		padding-left: 0.1rem;
+		width: 1.8rem;
+	}
+
+	.film-trigger small {
+		color: var(--muted);
+		font: var(--fs-micro) var(--font-mono);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.film-dialog {
+		background: transparent;
+		border: 0;
+		color: var(--text);
+		margin: auto;
+		max-height: calc(100dvh - 2rem);
+		max-width: min(1080px, calc(100vw - 2rem));
+		padding: 0;
+		width: 100%;
+	}
+
+	.film-dialog::backdrop {
+		background: rgb(0 0 0 / 72%);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+	}
+
+	.dialog-shell {
+		background: var(--bg);
+		border: 1px solid var(--glass-border-strong);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-lg);
+		overflow: hidden;
+	}
+
+	header,
+	footer {
+		align-items: center;
+		display: flex;
+		gap: 1rem;
+		justify-content: space-between;
+		padding: 1rem 1.2rem;
+	}
+
+	header p {
+		color: var(--accent);
+		font: 600 var(--fs-micro) var(--font-sans);
+		letter-spacing: 0.13em;
+		margin: 0 0 0.15rem;
+		text-transform: uppercase;
+	}
+
+	header h2 {
+		font: 600 var(--fs-xl) var(--font-serif);
+		margin: 0;
+	}
+
+	.close-button {
+		align-items: center;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		color: var(--muted);
+		cursor: pointer;
+		display: inline-flex;
+		flex: 0 0 auto;
+		font: 300 var(--fs-xl) var(--font-sans);
+		height: 2.25rem;
+		justify-content: center;
+		line-height: 1;
+		width: 2.25rem;
+	}
+
+	.close-button:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	video {
+		aspect-ratio: 16 / 9;
+		background: #201d17;
+		display: block;
+		height: auto;
+		width: 100%;
+	}
+
+	footer {
+		align-items: baseline;
+	}
+
+	footer p {
+		color: var(--muted);
+		font: var(--fs-fine) / 1.5 var(--font-sans);
+		margin: 0;
+	}
+
+	footer a {
+		color: var(--accent);
+		flex: 0 0 auto;
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.09em;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	.film-transcript {
+		border-top: 1px solid var(--border);
+		color: var(--muted);
+		font: var(--fs-fine) / 1.55 var(--font-sans);
+		padding: 0.85rem 1.2rem 1rem;
+	}
+
+	.film-transcript summary {
+		color: var(--accent);
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.film-transcript ol {
+		margin: 0.8rem 0 0;
+		padding-left: 1.25rem;
+	}
+
+	.film-transcript li + li {
+		margin-top: 0.5rem;
+	}
+
+	.film-transcript strong {
+		color: var(--text);
+	}
+
+	@media (max-width: 600px) {
+		.film-trigger {
+			width: 100%;
+		}
+
+		.film-trigger small {
+			margin-left: auto;
+		}
+
+		.film-dialog {
+			max-width: calc(100vw - 1rem);
+		}
+
+		header,
+		footer,
+		.film-transcript {
+			align-items: start;
+			padding: 0.85rem;
+		}
+
+		footer {
+			flex-direction: column;
+		}
+	}
+</style>
