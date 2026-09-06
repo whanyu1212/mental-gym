@@ -10,7 +10,9 @@ import { problems } from "../data/problems";
 import Layout from "../layouts/Layout.astro";
 import { withBase } from "../lib/url";
 
-const notes = (await getCollection("notes")).filter((note) => note.data.category !== "Meta");
+const notes = (await getCollection("notes")).filter(
+	(note) => note.data.category !== "Meta" && note.data.kind !== "template",
+);
 const total = problems.length;
 const completedML = mlProblems.filter((problem) => problem.status === "Completed").length;
 ---

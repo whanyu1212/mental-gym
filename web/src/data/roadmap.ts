@@ -363,7 +363,7 @@ export function totalHours(hours: WeeklyHours): number {
 	return hours.study + hours.implementation + hours.interview + hours.language;
 }
 
-export function exerciseHref(reference: ExerciseReference): string {
+export function exerciseHref(reference: Pick<ExerciseReference, "domain" | "slug">): string {
 	switch (reference.domain) {
 		case "algorithm":
 			return `/algorithms/${reference.slug}/`;
@@ -375,6 +375,19 @@ export function exerciseHref(reference: ExerciseReference): string {
 		case "system-design":
 			return `/notes/${reference.slug}/`;
 	}
+}
+
+export function moduleHref(moduleId: string): string | undefined {
+	for (const track of tracks) {
+		const week = modulesForTrack(track).findIndex((module) => module.id === moduleId);
+		if (week >= 0) return `/roadmap/${track.id}/#week-${week + 1}`;
+	}
+}
+
+export function noteCourseId(note: { courseId?: string; moduleId?: string }): string | undefined {
+	if (note.courseId) return note.courseId;
+	if (!note.moduleId) return undefined;
+	return modules.find((module) => module.id === note.moduleId)?.resources[0]?.courseId;
 }
 
 export function modulesForTrack(track: RoadmapTrack): RoadmapModule[] {
