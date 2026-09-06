@@ -133,6 +133,30 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(epsilonGreedy.prompt, /action draw v in \[0, 1\)/);
 	assert.match(epsilonGreedy.prompt, /floor\(v \* action_count\)/);
 	assert.match(epsilonGreedy.prompt, /either draw is outside \[0, 1\)/);
+
+	const nonMaxSuppression = bySlug.get("202-non-max-suppression")!;
+	assert.match(nonMaxSuppression.prompt, /original box index ascending/);
+	assert.match(nonMaxSuppression.expectations.join(" "), /smaller original indices to break equal-score ties/);
+
+	const regressionGradient = bySlug.get("059-linear-regression-gradient")!;
+	assert.match(regressionGradient.prompt, /non-empty feature matrix/);
+	assert.match(regressionGradient.prompt, /X has no rows/);
+
+	const topK = bySlug.get("029-top-k-sampling-distribution")!;
+	assert.match(topK.prompt, /non-empty vector of logits/);
+	assert.match(topK.prompt, /logits are empty/);
+
+	const silhouette = bySlug.get("122-point-silhouette-score")!;
+	assert.match(silhouette.prompt, /max\(a, b\) is 0/);
+	assert.match(silhouette.expectations.join(" "), /zero denominator/);
+
+	const bm25 = bySlug.get("098-bm25-term-score")!;
+	assert.match(bm25.prompt, /Return 0 immediately when tf is 0/);
+	assert.match(bm25.prompt, /tf, k1, or b is negative/);
+
+	const mape = bySlug.get("229-mean-absolute-percentage-error")!;
+	assert.match(mape.prompt, /non-empty equal-length lists/);
+	assert.match(mape.prompt, /lists are empty/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

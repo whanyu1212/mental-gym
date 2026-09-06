@@ -1822,9 +1822,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Every detector emits many boxes per object; NMS is what turns that into one detection each.",
 		prompt:
-			"Given a list of boxes with confidence scores and an IoU threshold, return the indices of the boxes to keep. Sort by score descending, repeatedly take the highest-scoring remaining box, and discard every remaining box whose IoU with it exceeds the threshold. Return indices into the original list, in the order selected. Raise a ValueError if the threshold is outside [0, 1] or lengths differ.",
+			"Given a list of boxes with confidence scores and an IoU threshold, return the indices of the boxes to keep. Sort by score descending and then by original box index ascending, repeatedly take the first remaining box, and discard every remaining box whose IoU with it exceeds the threshold. Return indices into the original list, in the order selected. Raise a ValueError if the threshold is outside [0, 1] or lengths differ.",
 		expectations: [
-			"Return indices into the original list, not into the sorted order.",
+			"Return indices into the original list, using smaller original indices to break equal-score ties.",
 			"Compare each candidate only against boxes already kept.",
 			"Handle an empty input by returning an empty list.",
 			"State the complexity as O(n²) time in the worst case.",
@@ -2814,7 +2814,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This gradient is what gradient descent consumes, and the factor of 2/n is where sign and scale errors hide.",
 		prompt:
-			"Given a feature matrix X of shape (n, d), targets y of length n, a weight vector of length d, and a bias, return the gradient of the mean squared error as a weight gradient of length d and a scalar bias gradient. With residual r[i] = prediction[i] - y[i], the weight gradient is (2/n) * X^T @ r and the bias gradient is (2/n) * sum(r). Raise a ValueError on any dimension mismatch.",
+			"Given a non-empty feature matrix X of shape (n, d), targets y of length n, a weight vector of length d, and a bias, return the gradient of the mean squared error as a weight gradient of length d and a scalar bias gradient. With residual r[i] = prediction[i] - y[i], the weight gradient is (2/n) * X^T @ r and the bias gradient is (2/n) * sum(r). Raise a ValueError if X has no rows or on any dimension mismatch.",
 		expectations: [
 			"Define the residual as prediction minus target and keep that sign throughout.",
 			"Include the 2/n factor consistently in both gradients.",
@@ -3294,7 +3294,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Top-k truncation removes the long tail of low-probability tokens that produce incoherent generations.",
 		prompt:
-			"Given a vector of logits and an integer k, return a probability distribution over the full vocabulary where all but the k highest logits have probability exactly 0 and the survivors are renormalized to sum to 1. Break ties among equal logits by preferring smaller indices. Raise a ValueError if k is not positive; clamp k to the vocabulary size when it is larger.",
+			"Given a non-empty vector of logits and an integer k, return a probability distribution over the full vocabulary where all but the k highest logits have probability exactly 0 and the survivors are renormalized to sum to 1. Break ties among equal logits by preferring smaller indices. Raise a ValueError if the logits are empty or k is not positive; clamp k to the vocabulary size when it is larger.",
 		expectations: [
 			"Return a full-length vector with zeros outside the top k.",
 			"Renormalize so the surviving probabilities sum to 1.",
@@ -4414,11 +4414,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Silhouette scores evaluate clustering without ground-truth labels, which is usually the only option available.",
 		prompt:
-			"Given a feature matrix, cluster assignments, and a point index, return that point's silhouette score: (b - a) / max(a, b), where a is the mean distance to other points in its own cluster and b is the lowest mean distance to any other cluster. Define the score as 0.0 when the point is alone in its cluster, and state that convention. Raise a ValueError if there are fewer than two clusters.",
+			"Given a feature matrix, cluster assignments, and a point index, return that point's silhouette score: (b - a) / max(a, b), where a is the mean distance to other points in its own cluster and b is the lowest mean distance to any other cluster. Define the score as 0.0 when the point is alone in its cluster or when max(a, b) is 0 because all relevant distances are zero, and state those conventions. Raise a ValueError if there are fewer than two clusters.",
 		expectations: [
 			"Exclude the point itself when computing the within-cluster mean distance.",
 			"Take the minimum mean distance across all other clusters for b.",
-			"Handle the singleton-cluster case with a documented convention.",
+			"Return 0.0 for a singleton cluster or a zero denominator, using documented conventions.",
 			"State the complexity as O(n*d) time.",
 		],
 		hints: [
@@ -4702,7 +4702,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"BM25 saturates term frequency so the tenth occurrence adds far less than the second, which is where it beats plain TF-IDF.",
 		prompt:
-			"Given a term's frequency in a document, the document length, the average document length, an IDF weight, and parameters k1 and b, return the BM25 term score: idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len)). Raise a ValueError if any length is not positive or k1 or b is negative.",
+			"Given a term's frequency in a document, the document length, the average document length, an IDF weight, and parameters k1 and b, return the BM25 term score: idf * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_len)). Return 0 immediately when tf is 0, before evaluating the fraction. Raise a ValueError if any length is not positive or tf, k1, or b is negative.",
 		expectations: [
 			"Apply length normalization through the b parameter as specified.",
 			"Return 0 when the term frequency is 0.",
@@ -6622,7 +6622,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"MAPE is scale-free and therefore comparable across series, but it breaks entirely when actuals approach zero.",
 		prompt:
-			"Given equal-length lists of actual and forecast values, return the MAPE: the mean of |actual - forecast| / |actual|, expressed as a fraction rather than a percentage. Raise a ValueError if any actual value is zero, since the error is undefined there, or if the lengths differ.",
+			"Given non-empty equal-length lists of actual and forecast values, return the MAPE: the mean of |actual - forecast| / |actual|, expressed as a fraction rather than a percentage. Raise a ValueError if the lists are empty, any actual value is zero because the error is undefined there, or the lengths differ.",
 		expectations: [
 			"Divide by the actual value, not the forecast.",
 			"Reject zero actuals explicitly rather than producing infinity.",
