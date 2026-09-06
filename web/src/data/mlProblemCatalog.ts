@@ -2046,7 +2046,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Pixel accuracy is the most intuitive segmentation metric and the most misleading one when classes are imbalanced.",
 		prompt:
-			"Given a predicted label grid and a ground-truth label grid of identical shape, return the fraction of positions where the labels agree. Raise a ValueError if the shapes differ or either grid is empty.",
+			"Given a predicted label grid and a ground-truth label grid of identical positive shape, return the fraction of positions where the labels agree. Raise a ValueError if the shapes differ or either grid has no rows or no columns.",
 		expectations: [
 			"Validate that both grids share one shape before comparing.",
 			"Return a value in [0, 1].",
@@ -4926,7 +4926,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"UCB explores in proportion to uncertainty rather than at random, which is why it converges faster than epsilon-greedy.",
 		prompt:
-			"Given per-action mean values, per-action non-negative integer pull counts, the total pull count, and an exploration constant c, return the UCB score for each action: mean + c * sqrt(ln(total) / count). Give an infinite score to any action with count 0, so every action is tried at least once, and state that convention. Raise a ValueError if the list lengths differ, any count is negative or non-integral, or total is not positive.",
+			"Given per-action mean values, per-action non-negative integer pull counts, an integer total pull count of at least 1, and an exploration constant c, return the UCB score for each action: mean + c * sqrt(ln(total) / count). Give an infinite score to any action with count 0, so every action is tried at least once, and state that convention. Raise a ValueError if the list lengths differ, any count is negative or non-integral, or total is not an integer of at least 1.",
 		expectations: [
 			"Give unpulled actions an infinite score so they are selected first.",
 			"Use the natural logarithm of the total pull count.",
@@ -6558,7 +6558,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The autocorrelation function is how season length and dependence structure are discovered from data.",
 		prompt:
-			"Given a series and a lag k, return the autocorrelation at that lag: sum over t from k of (x[t] - mean) * (x[t-k] - mean), divided by sum over all t of (x[t] - mean)². Use the overall series mean for both terms. Return 1.0 at lag 0. Raise a ValueError if k is negative or at least the series length, or if the series is constant.",
+			"Given a non-empty series and a lag k, return the autocorrelation at that lag: sum over t from k of (x[t] - mean) * (x[t-k] - mean), divided by sum over all t of (x[t] - mean)². Use the overall series mean for both terms. Return 1.0 immediately at lag 0, including for a constant series. For positive lags, raise a ValueError if the series is constant. Also raise a ValueError if the series is empty, k is negative, or k is at least the series length.",
 		expectations: [
 			"Use the overall mean for both the lagged and unlagged terms.",
 			"Divide by the total sum of squared deviations, not by a partial one.",
@@ -6568,7 +6568,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		hints: [
 			"This is the standard estimator; using separate means for each term gives a different one.",
 			"A strongly seasonal series shows a peak at its season length.",
-			"A constant series has zero variance, leaving the correlation undefined.",
+			"A constant series has zero variance, so only the explicit lag-zero identity is defined.",
 		],
 		followUps: [
 			"How do you read a season length off an autocorrelation plot?",

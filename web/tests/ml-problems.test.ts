@@ -333,6 +333,19 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(interpolatedThreshold.prompt, /linear interpolation at zero-based rank/);
 	assert.match(interpolatedThreshold.prompt, /r = \(p \/ 100\) \* \(n - 1\)/);
 	assert.match(interpolatedThreshold.prompt, /floor\(r\) and ceil\(r\)/);
+
+	const boundedUcb = bySlug.get("127-upper-confidence-bound-scores")!;
+	assert.match(boundedUcb.prompt, /integer total pull count of at least 1/);
+	assert.match(boundedUcb.prompt, /total is not an integer of at least 1/);
+
+	const pixelAccuracy = bySlug.get("209-segmentation-pixel-accuracy")!;
+	assert.match(pixelAccuracy.prompt, /identical positive shape/);
+	assert.match(pixelAccuracy.prompt, /no rows or no columns/);
+
+	const autocorrelation = bySlug.get("227-lagged-autocorrelation")!;
+	assert.match(autocorrelation.prompt, /Return 1\.0 immediately at lag 0/);
+	assert.match(autocorrelation.prompt, /including for a constant series/);
+	assert.match(autocorrelation.prompt, /For positive lags/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
