@@ -157,6 +157,22 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const mape = bySlug.get("229-mean-absolute-percentage-error")!;
 	assert.match(mape.prompt, /non-empty equal-length lists/);
 	assert.match(mape.prompt, /lists are empty/);
+
+	const cosine = bySlug.get("004-cosine-similarity")!;
+	assert.match(cosine.expectations.join(" "), /equal empty vectors are accepted and return 0\.0/);
+	assert.doesNotMatch(cosine.expectations.join(" "), /same non-zero length/);
+
+	const attentionWeights = bySlug.get("011-scaled-attention-weights")!;
+	assert.match(attentionWeights.prompt, /non-empty query vector/);
+	assert.match(attentionWeights.prompt, /d is 0/);
+
+	const mixtureEStep = bySlug.get("112-gaussian-mixture-e-step")!;
+	assert.match(mixtureEStep.prompt, /non-negative mixture weights that sum to 1/);
+	assert.match(mixtureEStep.prompt, /zero-weight component's log contribution as negative infinity/);
+	assert.match(mixtureEStep.expectations.join(" "), /without taking log\(0\)/);
+
+	const adam = bySlug.get("249-adam-optimizer-step")!;
+	assert.match(adam.prompt, /epsilon is not strictly positive/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

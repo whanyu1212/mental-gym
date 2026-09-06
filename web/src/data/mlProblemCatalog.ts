@@ -32,7 +32,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		prompt:
 			"Given two equal-length numeric vectors a and b, return their cosine similarity: dot(a, b) / (||a||2 * ||b||2). Return a single float. Raise a ValueError if the lengths differ. Define the result as 0.0 when either vector has zero norm, and state that choice explicitly rather than dividing by zero.",
 		expectations: [
-			"Validate that both vectors have the same non-zero length.",
+			"Validate that both vectors have the same length; equal empty vectors are accepted and return 0.0 under the zero-norm convention.",
 			"Compute the dot product and both L2 norms without a similarity library.",
 			"Handle the zero-norm case deterministically instead of returning NaN.",
 			"State the complexity as O(n) time and O(1) extra space.",
@@ -3102,7 +3102,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Dividing by the square root of the key dimension is what keeps softmax out of its saturated regime as models scale.",
 		prompt:
-			"Given a query vector of length d and a list of key vectors each of length d, return the attention weights: softmax over keys of dot(query, key) / sqrt(d). Use a numerically stable softmax. Raise a ValueError if any key length differs from the query length or the key list is empty.",
+			"Given a non-empty query vector of length d and a list of key vectors each of length d, return the attention weights: softmax over keys of dot(query, key) / sqrt(d). Use a numerically stable softmax. Raise a ValueError if d is 0, any key length differs from the query length, or the key list is empty.",
 		expectations: [
 			"Divide by sqrt(d) before applying softmax, not after.",
 			"Return weights that are non-negative and sum to 1.",
@@ -4094,11 +4094,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Responsibilities are k-means assignments made soft, which is exactly what lets GMMs model overlapping clusters.",
 		prompt:
-			"Given a data point, per-component mixture weights, means, and diagonal variances, return the responsibility of each component: its weighted density divided by the total weighted density across components. Compute in log space with a log-sum-exp normalization to avoid underflow. Responsibilities must be non-negative and sum to 1. Raise a ValueError if the parameter lists differ in length or any variance is non-positive.",
+			"Given a data point, per-component mixture weights, means, and diagonal variances, return the responsibility of each component: its weighted density divided by the total weighted density across components. Require at least one component and non-negative mixture weights that sum to 1 within tolerance. Treat a zero-weight component's log contribution as negative infinity. Compute the remaining contributions in log space with a log-sum-exp normalization to avoid underflow. Responsibilities must be non-negative and sum to 1. Raise a ValueError if the parameter lists differ in length, the component list is empty, the weights do not form the required distribution, or any variance is non-positive.",
 		expectations: [
 			"Work in log space and normalize with log-sum-exp.",
 			"Return responsibilities summing to 1 across components.",
-			"Include the mixture weight in each component's contribution.",
+			"Include each mixture weight in its component contribution, mapping a zero weight to zero responsibility without taking log(0).",
 			"State the complexity as O(k*d) time for k components.",
 		],
 		hints: [
@@ -7262,7 +7262,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Bias correction is what stops Adam from taking near-zero steps in its first few iterations.",
 		prompt:
-			"Given parameters, gradients, first moment m, second moment v, timestep t starting at 1, betas b1 and b2, learning rate, and epsilon, return updated m, v, and parameters. Update m = b1*m + (1-b1)*gradient and v = b2*v + (1-b2)*gradient², bias-correct with m_hat = m / (1 - b1^t) and v_hat = v / (1 - b2^t), then update parameters -= learning_rate * m_hat / (sqrt(v_hat) + eps). Raise a ValueError if t is not at least 1, lengths differ, or either beta is outside [0, 1).",
+			"Given parameters, gradients, first moment m, second moment v, timestep t starting at 1, betas b1 and b2, learning rate, and epsilon, return updated m, v, and parameters. Update m = b1*m + (1-b1)*gradient and v = b2*v + (1-b2)*gradient², bias-correct with m_hat = m / (1 - b1^t) and v_hat = v / (1 - b2^t), then update parameters -= learning_rate * m_hat / (sqrt(v_hat) + eps). Raise a ValueError if t is not at least 1, epsilon is not strictly positive, lengths differ, or either beta is outside [0, 1).",
 		expectations: [
 			"Apply bias correction using the timestep, and explain why it is needed.",
 			"Square the gradient elementwise for the second moment.",
