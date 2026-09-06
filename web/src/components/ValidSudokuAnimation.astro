@@ -1,4 +1,5 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const board = [
@@ -13,7 +14,7 @@ const board = [
   ['.', '.', '.', '.', '8', '.', '.', '7', '9'],
 ];
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     r: 0,
     c: 0,
@@ -208,6 +209,13 @@ const steps = [
 
 <script>
   class ValidSudokuVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    rowSetEl!: HTMLElement | null;
+    colSetEl!: HTMLElement | null;
+    boxSetEl!: HTMLElement | null;
+    modeVal!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    statusBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.vs-cell'));
       this.rowSetEl = this.querySelector('.vs-row-set');

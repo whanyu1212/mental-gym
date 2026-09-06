@@ -200,6 +200,14 @@ const steps: TeachingStep[] = [
 
 <script>
   class ContainsDuplicateVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    setEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    answerEl!: HTMLElement | null;
+    answerBox!: HTMLElement | null;
+    setBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll(".cd-cell"));
       this.setEl = this.querySelector(".cd-set");

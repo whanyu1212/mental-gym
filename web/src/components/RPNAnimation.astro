@@ -1,9 +1,10 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const tokens = ['2', '1', '+', '3', '*'];
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     i: -1,
     stack: [],
@@ -142,6 +143,13 @@ const steps = [
 
 <script>
   class RPNVisuals extends HTMLElement {
+    stackEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    calcEl!: HTMLElement | null;
+    resultEl!: HTMLElement | null;
+    calcBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.stackEl = this.querySelector('.rpn-stack');
       this.cells = Array.from(this.querySelectorAll('.rpn-cell'));

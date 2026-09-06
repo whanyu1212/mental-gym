@@ -221,6 +221,12 @@ const steps: TeachingStep[] = [
 
 <script>
   class SlidingWindowMaxVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    windowEl!: HTMLElement | null;
+    dequeEl!: HTMLElement | null;
+    resEl!: HTMLElement | null;
+    updateWindowHighlight!: any;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll(".swm-cell"));
       this.ptrs = Array.from(this.querySelectorAll(".swm-ptr-col"));

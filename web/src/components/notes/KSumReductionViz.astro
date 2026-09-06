@@ -251,6 +251,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class KsViz extends HTMLElement {
+    cells!: HTMLElement[];
+    tripletsEl!: HTMLElement | null;
+    tripletsBox!: HTMLElement | null;
+    pivotLabel!: HTMLElement | null;
+    lLabel!: HTMLElement | null;
+    rLabel!: HTMLElement | null;
+    ptrRow!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.ks-cell'));
       this.tripletsEl = this.querySelector('.ks-triplets');

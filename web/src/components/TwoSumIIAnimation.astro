@@ -169,6 +169,16 @@ const steps: TeachingStep[] = [
 
 <script>
   class TwoSumIIVisuals extends HTMLElement {
+    sumEl!: HTMLElement | null;
+    pairEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    answerEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrCols!: HTMLElement[];
+    sumBox!: HTMLElement | null;
+    pairBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
+    answerBox!: HTMLElement | null;
     connectedCallback() {
       this.sumEl = this.querySelector(".ts-sum");
       this.pairEl = this.querySelector(".ts-pair");

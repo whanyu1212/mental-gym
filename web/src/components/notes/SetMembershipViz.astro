@@ -135,6 +135,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class SetViz extends HTMLElement {
+    cells!: HTMLElement[];
+    setPills!: HTMLElement[];
+    longestEl!: HTMLElement | null;
+    seqValEl!: HTMLElement | null;
+    statusEl!: HTMLElement | null;
+    resultStat!: HTMLElement | null;
+    seqStat!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.sv-cell'));
       this.setPills = Array.from(this.querySelectorAll('.sv-set-pill'));

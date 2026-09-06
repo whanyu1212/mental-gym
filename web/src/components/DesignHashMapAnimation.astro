@@ -212,6 +212,9 @@ const emptyBuckets = [[], [], [], []];
 
 <script>
   class DesignHashMapVisuals extends HTMLElement {
+    opEl!: HTMLElement | null;
+    hashEl!: HTMLElement | null;
+    bucketCells!: HTMLElement[];
     connectedCallback() {
       this.opEl = this.querySelector(".hm-op");
       this.hashEl = this.querySelector(".hm-hash");

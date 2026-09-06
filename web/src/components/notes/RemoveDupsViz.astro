@@ -136,6 +136,12 @@ const steps: TeachingStep[] = [
 
 <script>
   class RdViz extends HTMLElement {
+    cells!: HTMLElement[];
+    vals!: HTMLElement[];
+    keptEl!: HTMLElement | null;
+    keptBox!: HTMLElement | null;
+    slowLabel!: HTMLElement | null;
+    fastLabel!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.rd-cell'));
       this.vals = Array.from(this.querySelectorAll('.rd-val'));

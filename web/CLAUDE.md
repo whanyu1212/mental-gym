@@ -33,7 +33,8 @@ The site has four content sources that feed different pages:
 | Source | How it's used |
 |---|---|
 | `src/data/problems.ts` | Auto-generated. Drives all algorithm problem pages via `getStaticPaths()`. |
-| `src/data/mlProblems.ts` | Hand-authored. ML coding interview problems with prompts, hints, and follow-ups. |
+| `src/data/mlProblems.ts` | Four hand-authored capstone problems, then the drills from `mlProblemCatalog.ts` spread in after them. Import `mlProblems` from here; it is the whole bank. |
+| `src/data/mlProblemCatalog.ts` | Independently authored drills keyed to the joinai.com catalog listing by `sourceNumber`. Slugs are `<3-digit source number>-<kebab title>` so retitling never breaks saved progress. `web/tests/ml-problems.test.ts` enforces unique ids/slugs and non-empty coaching fields. |
 | `src/data/sqlProblems.ts` | Hand-authored SQL exercise metadata. Each imports its reference answer from `src/sql/`. |
 | `../notes/` (outside `web/`) | Markdown files collected via Astro content collections. Rendered with KaTeX math support. |
 

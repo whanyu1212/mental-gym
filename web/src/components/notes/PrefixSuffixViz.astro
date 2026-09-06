@@ -162,6 +162,14 @@ const steps: TeachingStep[] = [
 
 <script>
   class PrefixSuffixViz extends HTMLElement {
+    phaseValEl!: HTMLElement | null;
+    prefixValEl!: HTMLElement | null;
+    suffixValEl!: HTMLElement | null;
+    numCells!: HTMLElement[];
+    outCells!: HTMLElement[];
+    phaseBox!: HTMLElement | null;
+    prefixBox!: HTMLElement | null;
+    suffixBox!: HTMLElement | null;
     connectedCallback() {
       this.phaseValEl = this.querySelector('.ps-phase-val');
       this.prefixValEl = this.querySelector('.ps-prefix-val');

@@ -146,6 +146,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class ColumnwiseViz extends HTMLElement {
+    cells!: HTMLElement[];
+    headers!: HTMLElement[];
+    modeVal!: HTMLElement | null;
+    prefixVal!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    modeBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.cw-cell'));
       this.headers = Array.from(this.querySelectorAll('.cw-header-cell'));

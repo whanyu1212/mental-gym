@@ -206,6 +206,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class TwoSumVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    mapEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    answerEl!: HTMLElement | null;
+    answerBox!: HTMLElement | null;
+    mapBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll(".ts-cell"));
       this.mapEl = this.querySelector(".ts-map");

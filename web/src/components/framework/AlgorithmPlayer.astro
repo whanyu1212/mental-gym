@@ -47,6 +47,19 @@ const stepsJson = JSON.stringify(steps);
   import { applyTeachingHighlights, clearTeachingHighlights } from "../../lib/teaching/highlight";
 
   class AlgoPlayer extends HTMLElement {
+    steps!: any;
+    current!: number;
+    prevBtn!: HTMLElement | null;
+    nextBtn!: HTMLElement | null;
+    stepEl!: HTMLElement | null;
+    explanationEl!: HTMLElement | null;
+    invariantPanel!: HTMLElement | null;
+    invariantList!: HTMLElement | null;
+    decisionPanel!: HTMLElement | null;
+    decisionTitle!: HTMLElement | null;
+    decisionBody!: HTMLElement | null;
+    formulaPanel!: HTMLElement | null;
+    formulaText!: HTMLElement | null;
     connectedCallback() {
       const stepsData = this.dataset.steps;
       if (!stepsData) return;

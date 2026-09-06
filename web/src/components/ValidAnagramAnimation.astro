@@ -397,6 +397,13 @@ const allKeys = ['a', 'g', 'm', 'n', 'r'];
 
 <script>
   class ValidAnagramVisuals extends HTMLElement {
+    sCells!: HTMLElement[];
+    tCells!: HTMLElement[];
+    mapEl!: HTMLElement | null;
+    phaseEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    statusEl!: HTMLElement | null;
+    statusBox!: HTMLElement | null;
     connectedCallback() {
       this.sCells = Array.from(this.querySelectorAll(".va-s-cell"));
       this.tCells = Array.from(this.querySelectorAll(".va-t-cell"));

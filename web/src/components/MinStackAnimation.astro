@@ -1,7 +1,8 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     op: 'init',
     val: null,
@@ -167,6 +168,14 @@ const steps = [
 
 <script>
   class MinStackVisuals extends HTMLElement {
+    mainStackEl!: HTMLElement | null;
+    minStackEl!: HTMLElement | null;
+    opEl!: HTMLElement | null;
+    minReadEl!: HTMLElement | null;
+    outEl!: HTMLElement | null;
+    opBox!: HTMLElement | null;
+    minReadBox!: HTMLElement | null;
+    outBox!: HTMLElement | null;
     connectedCallback() {
       this.mainStackEl = this.querySelector('.ms-main');
       this.minStackEl = this.querySelector('.ms-min');
