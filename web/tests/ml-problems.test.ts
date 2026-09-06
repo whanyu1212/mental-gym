@@ -200,6 +200,53 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const crossModalAttention = bySlug.get("190-cross-modal-attention-weights")!;
 	assert.match(crossModalAttention.prompt, /non-empty query vector/);
 	assert.match(crossModalAttention.prompt, /query dimension is 0/);
+
+	const marginal = bySlug.get("109-marginalize-a-joint-distribution")!;
+	assert.match(marginal.prompt, /any entry is negative/);
+
+	const giniSplit = bySlug.get("063-decision-tree-gini-split")!;
+	assert.match(giniSplit.prompt, /strictly reduces the parent node's Gini impurity/);
+	assert.match(giniSplit.expectations.join(" "), /including for a pure node/);
+
+	const svm = bySlug.get("064-linear-svm-hinge-gradient")!;
+	assert.match(svm.prompt, /non-empty feature matrix/);
+	assert.match(svm.prompt, /X has no rows/);
+
+	const scaledDots = bySlug.get("024-scaled-dot-products")!;
+	assert.match(scaledDots.prompt, /non-empty query vector/);
+	assert.match(scaledDots.prompt, /d is 0/);
+
+	const singleHead = bySlug.get("027-single-head-attention")!;
+	assert.match(singleHead.prompt, /non-empty list of n key vectors/);
+	assert.match(singleHead.prompt, /non-empty list of n non-empty value vectors/);
+	assert.match(singleHead.prompt, /d or dv is 0/);
+
+	const temperature = bySlug.get("028-temperature-scaling")!;
+	assert.match(temperature.prompt, /non-empty vector of logits/);
+	assert.match(temperature.prompt, /logits are empty/);
+
+	const rmsNorm = bySlug.get("089-rms-normalization")!;
+	assert.match(rmsNorm.prompt, /non-empty vector x/);
+	assert.match(rmsNorm.prompt, /x is empty/);
+
+	const topP = bySlug.get("091-top-p-distribution")!;
+	assert.match(topP.prompt, /any input probability is outside \[0, 1\]/);
+
+	const sequenceProbability = bySlug.get("093-sequence-log-probability")!;
+	assert.match(sequenceProbability.prompt, /every row to contain probabilities in \[0, 1\] that sum to 1/);
+	assert.match(sequenceProbability.prompt, /selected probability to lie in \(0, 1\]/);
+
+	const completeKMeans = bySlug.get("110-complete-k-means-clustering")!;
+	assert.match(completeKMeans.prompt, /smallest centroid index/);
+	assert.match(completeKMeans.expectations.join(" "), /smallest centroid index to break distance ties/);
+
+	const averagePrecisionNoDuplicates = bySlug.get("099-average-precision")!;
+	assert.match(averagePrecisionNoDuplicates.prompt, /only the first occurrence of each relevant id/);
+	assert.match(averagePrecisionNoDuplicates.prompt, /each relevant id contributes at most once/);
+
+	const gradientCheck = bySlug.get("246-gradient-check-relative-errors")!;
+	assert.match(gradientCheck.prompt, /epsilon eps > 0/);
+	assert.match(gradientCheck.prompt, /eps is not strictly positive/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

@@ -1086,7 +1086,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Marginalization is how you discard a nuisance variable, and it is the summation step inside every probabilistic graphical model.",
 		prompt:
-			"Given a joint distribution as a matrix where entry [i][j] is P(X=i, Y=j), return the marginal distribution of X as a list where element i is the sum of row i. Raise a ValueError if the matrix is ragged or if its entries do not sum to 1 within a small tolerance.",
+			"Given a joint distribution as a matrix where entry [i][j] is P(X=i, Y=j), return the marginal distribution of X as a list where element i is the sum of row i. Raise a ValueError if the matrix is ragged, any entry is negative, or the entries do not sum to 1 within a small tolerance.",
 		expectations: [
 			"Validate that the joint entries form a distribution summing to 1.",
 			"Return a list whose length is the number of rows, not columns.",
@@ -2942,11 +2942,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This search is the entire training algorithm of a decision tree, repeated recursively at every node.",
 		prompt:
-			"Given a feature matrix and labels, return the (feature_index, threshold) split minimizing the weighted Gini impurity of the two children, where a row goes left when its feature value is less than or equal to the threshold. Gini impurity of a node is 1 - sum of squared class proportions, and the weighted impurity weights each child by its share of rows. Consider only thresholds that appear as values in the data. Return None when no split separates the rows. Raise a ValueError if the inputs are empty or lengths differ.",
+			"Given a feature matrix and labels, return the (feature_index, threshold) split that strictly reduces the parent node's Gini impurity and minimizes the weighted Gini impurity of the two children, where a row goes left when its feature value is less than or equal to the threshold. Gini impurity of a node is 1 - sum of squared class proportions, and the weighted impurity weights each child by its share of rows. Consider only thresholds that appear as values in the data. Return None when no valid split strictly reduces impurity, including for a pure node. Raise a ValueError if the inputs are empty or lengths differ.",
 		expectations: [
 			"Weight each child's impurity by its row count, not by an unweighted average.",
 			"Skip candidate splits that place every row on one side.",
-			"Return None when no valid split exists, such as a pure node.",
+			"Return None when no valid split strictly improves on the parent impurity, including for a pure node.",
 			"State the complexity as O(d * n²) time for the naive scan.",
 		],
 		hints: [
@@ -2974,7 +2974,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Only margin-violating examples contribute a gradient, which is exactly what makes support vectors special.",
 		prompt:
-			"Given a feature matrix X of shape (n, d), labels y in {-1, +1}, a weight vector, and a regularization strength C, return the subgradient of the objective (1/2)||w||² + C * mean(max(0, 1 - y[i] * dot(w, X[i]))). An example contributes -C/n * y[i] * X[i] only when its margin y[i] * dot(w, X[i]) is less than 1; the regularization contributes w. Raise a ValueError if labels are not in {-1, +1} or dimensions disagree.",
+			"Given a non-empty feature matrix X of shape (n, d), labels y in {-1, +1}, a weight vector, and a regularization strength C, return the subgradient of the objective (1/2)||w||² + C * mean(max(0, 1 - y[i] * dot(w, X[i]))). An example contributes -C/n * y[i] * X[i] only when its margin y[i] * dot(w, X[i]) is less than 1; the regularization contributes w. Raise a ValueError if X has no rows, labels are not in {-1, +1}, or dimensions disagree.",
 		expectations: [
 			"Include a term only for examples whose margin is below 1.",
 			"Add the regularization gradient w exactly once, outside the per-example sum.",
@@ -3134,7 +3134,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"These scores are the pre-softmax logits where masking is applied, which is why they are worth computing separately.",
 		prompt:
-			"Given a query vector of length d and a list of key vectors each of length d, return the list of scaled scores dot(query, key) / sqrt(d), one per key. Do not apply softmax. Raise a ValueError if any key length differs from the query length.",
+			"Given a non-empty query vector of length d and a list of key vectors each of length d, return the list of scaled scores dot(query, key) / sqrt(d), one per key. Do not apply softmax. Raise a ValueError if d is 0 or any key length differs from the query length.",
 		expectations: [
 			"Return raw scaled scores without normalizing them.",
 			"Apply the sqrt(d) scaling to every score.",
@@ -3230,7 +3230,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This is the complete attention operation, and assembling it end to end is where the shape contracts finally have to agree.",
 		prompt:
-			"Given a query vector of length d, a list of n key vectors of length d, a list of n value vectors of length dv, and an optional boolean mask of length n, return the attention output of length dv: the weight-averaged sum of value vectors, where weights come from a masked softmax over dot(query, key) / sqrt(d). Raise a ValueError if key and value counts differ or any dimension disagrees.",
+			"Given a non-empty query vector of length d, a non-empty list of n key vectors of length d, a non-empty list of n non-empty value vectors of length dv, and an optional boolean mask of length n, return the attention output of length dv: the weight-averaged sum of value vectors, where weights come from a masked softmax over dot(query, key) / sqrt(d). Raise a ValueError if d or dv is 0, key and value counts differ, or any dimension disagrees.",
 		expectations: [
 			"Reuse scaled scores, masked softmax, and weighted aggregation as separate steps.",
 			"Return an output of length dv, which may differ from d.",
@@ -3262,7 +3262,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Temperature is the primary knob for generation randomness, and dividing rather than multiplying is the detail to get right.",
 		prompt:
-			"Given a vector of logits and a temperature t > 0, return the softmax of logits divided by t. Lower temperatures sharpen the distribution toward the argmax and higher temperatures flatten it toward uniform. Raise a ValueError if t is not strictly positive. Use a stable softmax.",
+			"Given a non-empty vector of logits and a temperature t > 0, return the softmax of logits divided by t. Lower temperatures sharpen the distribution toward the argmax and higher temperatures flatten it toward uniform. Raise a ValueError if the logits are empty or t is not strictly positive. Use a stable softmax.",
 		expectations: [
 			"Divide the logits by the temperature before the softmax.",
 			"Return a valid probability distribution for every positive temperature.",
@@ -3390,7 +3390,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"RMSNorm drops the mean-centering step of LayerNorm and loses nothing measurable, which is why recent LLMs adopt it.",
 		prompt:
-			"Given a vector x of length d, a learned gain vector of length d, and an epsilon, return gain * x / sqrt(mean(x²) + eps), elementwise. Do not subtract the mean. Place epsilon inside the square root. Raise a ValueError if lengths differ or epsilon is not positive.",
+			"Given a non-empty vector x of length d, a learned gain vector of length d, and an epsilon, return gain * x / sqrt(mean(x²) + eps), elementwise. Do not subtract the mean. Place epsilon inside the square root. Raise a ValueError if x is empty, lengths differ, or epsilon is not positive.",
 		expectations: [
 			"Omit mean subtraction and explain how this differs from LayerNorm.",
 			"Put epsilon inside the square root.",
@@ -3454,7 +3454,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Nucleus sampling adapts its candidate count to how confident the model is, which fixed top-k cannot do.",
 		prompt:
-			"Given a probability distribution and a threshold p in (0, 1], return a distribution where only the smallest set of highest-probability tokens whose cumulative probability reaches p is kept, with the rest set to 0 and the survivors renormalized to sum to 1. Always keep at least one token, even when the top token alone exceeds p. Raise a ValueError if p is outside (0, 1] or the input does not sum to 1 within tolerance.",
+			"Given a probability distribution and a threshold p in (0, 1], return a distribution where only the smallest set of highest-probability tokens whose cumulative probability reaches p is kept, with the rest set to 0 and the survivors renormalized to sum to 1. Always keep at least one token, even when the top token alone exceeds p. Raise a ValueError if p is outside (0, 1], any input probability is outside [0, 1], or the input does not sum to 1 within tolerance.",
 		expectations: [
 			"Sort by probability descending and accumulate until the threshold is reached.",
 			"Include the token that crosses the threshold rather than stopping before it.",
@@ -3518,7 +3518,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Summed log probability is how candidate sequences are ranked, and it is why beam search must normalize by length.",
 		prompt:
-			"Given a list of per-step probability distributions and the list of token indices actually selected at each step, return the total log probability of the sequence: the sum of log(distribution[t][token[t]]) across steps. Raise a ValueError if the lengths differ, an index is out of range, or a selected token has probability 0.",
+			"Given a list of per-step probability distributions and the list of token indices actually selected at each step, return the total log probability of the sequence: the sum of log(distribution[t][token[t]]) across steps. Require every row to contain probabilities in [0, 1] that sum to 1 within tolerance, and require each selected probability to lie in (0, 1]. Raise a ValueError if the lengths differ, a row is not a valid distribution, an index is out of range, or a selected probability is not strictly positive.",
 		expectations: [
 			"Sum logarithms rather than multiplying probabilities.",
 			"Return a non-positive value, since log probabilities are at most 0.",
@@ -4030,9 +4030,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"K-means is the canonical expectation-maximization loop, and the empty-cluster case is the detail that crashes naive implementations.",
 		prompt:
-			"Given a feature matrix, a cluster count k, initial centroids, and a maximum iteration count, run Lloyd's algorithm: assign each point to its nearest centroid by Euclidean distance, then recompute each centroid as the mean of its assigned points. Stop when assignments stop changing or the iteration cap is reached. Leave an empty cluster's centroid unchanged rather than producing NaN, and state that choice. Return the final centroids and assignments. Raise a ValueError if k does not match the initial centroid count or dimensions disagree.",
+			"Given a feature matrix, a cluster count k, initial centroids, and a maximum iteration count, run Lloyd's algorithm: assign each point to its nearest centroid by Euclidean distance, breaking equal-distance ties by the smallest centroid index, then recompute each centroid as the mean of its assigned points. Stop when assignments stop changing or the iteration cap is reached. Leave an empty cluster's centroid unchanged rather than producing NaN, and state both conventions. Return the final centroids and assignments. Raise a ValueError if k does not match the initial centroid count or dimensions disagree.",
 		expectations: [
-			"Alternate assignment and update until assignments stabilize.",
+			"Alternate assignment and update until assignments stabilize, using the smallest centroid index to break distance ties.",
 			"Handle empty clusters with a documented rule instead of dividing by zero.",
 			"Terminate on convergence as well as on the iteration cap.",
 			"State the complexity as O(iterations * n * k * d) time.",
@@ -4734,9 +4734,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Average precision rewards ranking relevant results early, which precision@k at a single cutoff cannot capture.",
 		prompt:
-			"Given a ranked list of item ids and a set of relevant ids, return the average precision: sum precision@i at each position i where a relevant item appears, then divide that sum once by the total number of relevant items. Return 0.0 when there are no relevant items. Use 1-based positions.",
+			"Given a ranked list of item ids and a set of relevant ids, return the average precision: on only the first occurrence of each relevant id, sum precision@i at its 1-based position i, then divide that sum once by the total number of relevant items. Ignore duplicate occurrences of an item after its first appearance so each relevant id contributes at most once. Return 0.0 when there are no relevant items.",
 		expectations: [
-			"Compute precision only at positions holding a relevant item.",
+			"Compute precision only at the first occurrence of each relevant item.",
 			"Divide by the total relevant count, including any not retrieved.",
 			"Return a value in [0, 1].",
 			"State the complexity as O(n) time with a running relevant counter.",
@@ -7166,7 +7166,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Relative error is the standard gradient check because absolute error is meaningless without knowing the gradient's scale.",
 		prompt:
-			"Given an analytic gradient and a numerical gradient of the same length, return the elementwise relative error: |analytic - numerical| / max(|analytic| + |numerical|, eps), where eps guards against division by zero when both are zero. Raise a ValueError if the lengths differ.",
+			"Given an analytic gradient and a numerical gradient of the same length, plus an epsilon eps > 0, return the elementwise relative error: |analytic - numerical| / max(|analytic| + |numerical|, eps), where eps guards against division by zero when both are zero. Raise a ValueError if eps is not strictly positive or the lengths differ.",
 		expectations: [
 			"Normalize by the summed magnitudes rather than by either gradient alone.",
 			"Guard the denominator so two zero gradients give zero error.",
