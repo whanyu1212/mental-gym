@@ -3555,12 +3555,12 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 			"Append at the end so cache order matches token order.",
 			"Return new lists rather than mutating the caches in place.",
 			"Validate dimension consistency against existing entries.",
-			"State the complexity as O(1) amortized per token for the append itself.",
+			"State the complexity as O(n) time and O(n) additional list space to copy caches containing n prior tokens; a mutable in-place cache would make the append O(1) amortized.",
 		],
 		hints: [
 			"Order matters — the cache index must correspond to token position.",
 			"Key and value caches must always grow together in lockstep.",
-			"An empty cache is the valid starting state for the first token.",
+			"An empty cache is the valid starting state for the first token; immutable list copies trade simplicity for linear growth work.",
 		],
 		followUps: [
 			"How much memory does a KV cache consume as context length grows?",

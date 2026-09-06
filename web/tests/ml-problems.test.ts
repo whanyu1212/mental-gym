@@ -380,6 +380,10 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const nonNegativeUcb = bySlug.get("127-upper-confidence-bound-scores")!;
 	assert.match(nonNegativeUcb.prompt, /non-negative exploration constant c/);
 	assert.match(nonNegativeUcb.prompt, /c is negative/);
+
+	const immutableKvCache = bySlug.get("094-append-to-a-kv-cache")!;
+	assert.match(immutableKvCache.expectations.join(" "), /O\(n\) time and O\(n\) additional list space/);
+	assert.match(immutableKvCache.expectations.join(" "), /mutable in-place cache would make the append O\(1\) amortized/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
