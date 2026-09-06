@@ -1,0 +1,203 @@
+---
+import TrackChooser from "../../components/roadmap/TrackChooser.astro";
+import WeekCard from "../../components/roadmap/WeekCard.astro";
+import { modulesForTrack, tracks, type RoadmapTrack } from "../../data/roadmap";
+import Layout from "../../layouts/Layout.astro";
+import { withBase } from "../../lib/url";
+
+export function getStaticPaths() {
+	return tracks.map((track) => ({
+		params: { track: track.id },
+		props: { track },
+	}));
+}
+
+interface Props {
+	track: RoadmapTrack;
+}
+
+const { track } = Astro.props;
+const scheduledModules = modulesForTrack(track);
+---
+
+<Layout title={`${track.title} Roadmap | Mental Gym`}>
+	<nav class="breadcrumb" aria-label="Breadcrumb">
+		<a href={withBase("/roadmap/")}>Roadmap</a>
+		<span aria-hidden="true">›</span>
+		<span>{track.title}</span>
+	</nav>
+
+	<section class="hero">
+		<p class="eyebrow">Roadmap · {track.shortTitle}</p>
+		<h1>{track.title}</h1>
+		<p>{track.description} {track.audience}</p>
+		<div class="meta">
+			<span>24 weeks</span>
+			<span>15 hours / week</span>
+			<span>Shared foundation</span>
+		</div>
+	</section>
+
+	<nav class="week-nav" aria-label="Foundation weeks">
+		{scheduledModules.map((module, index) => (
+			<a href={`#week-${index + 1}`}>{String(index + 1).padStart(2, "0")}</a>
+		))}
+	</nav>
+
+	<section class="foundation-intro">
+		<p class="eyebrow">Weeks 1–8</p>
+		<h2>Shared engineering foundation</h2>
+		<p>Every path begins with the same core. Track-specific weeks build on these stable module IDs without copying the foundation.</p>
+	</section>
+
+	<div class="weeks">
+		{scheduledModules.map((module, index) => <WeekCard module={module} week={index + 1} />)}
+	</div>
+
+	<section class="next-phase">
+		<p class="eyebrow">Weeks 9–24</p>
+		<h2>The shared foundation is ready.</h2>
+		<p>The specialization and capstone sequence for {track.title} will extend this validated schedule in the next curriculum slice.</p>
+	</section>
+
+	<section class="switch-track">
+		<p class="eyebrow">Compare paths</p>
+		<h2>Switch the specialization, not the workload</h2>
+		<p>Choose a different path below. The first eight weeks remain shared, so changing direction does not duplicate completed foundation work.</p>
+		<TrackChooser activeTrackId={track.id} />
+	</section>
+</Layout>
+
+<style>
+	.breadcrumb {
+		align-items: center;
+		color: var(--muted);
+		display: flex;
+		font: var(--fs-fine) var(--font-sans);
+		gap: 0.4rem;
+		margin-top: 1rem;
+	}
+
+	.breadcrumb a {
+		color: var(--muted);
+	}
+
+	.hero {
+		max-width: 760px;
+		padding: 2.8rem 0 2rem;
+	}
+
+	.eyebrow {
+		color: var(--accent);
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.13em;
+		margin: 0;
+		text-transform: uppercase;
+	}
+
+	h1,
+	h2 {
+		font-family: var(--font-serif);
+		font-weight: 600;
+	}
+
+	h1 {
+		font-size: var(--fs-mega);
+		line-height: 1;
+		margin: 0.5rem 0 0.8rem;
+	}
+
+	.hero > p:not(.eyebrow),
+	.foundation-intro > p:last-child,
+	.next-phase > p:last-child,
+	.switch-track > p {
+		color: var(--muted);
+		font: var(--fs-base) / 1.65 var(--font-sans);
+		margin: 0;
+	}
+
+	.meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 1.25rem;
+	}
+
+	.meta span {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		color: var(--muted);
+		font: var(--fs-fine) var(--font-sans);
+		padding: 0.25rem 0.65rem;
+	}
+
+	.week-nav {
+		background: color-mix(in srgb, var(--glass-surface-strong) 92%, transparent);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-pill);
+		display: flex;
+		gap: 0.35rem;
+		overflow-x: auto;
+		padding: 0.45rem;
+		position: sticky;
+		scrollbar-width: none;
+		top: 60px;
+		z-index: 5;
+	}
+
+	.week-nav::-webkit-scrollbar {
+		display: none;
+	}
+
+	.week-nav a {
+		border-radius: var(--radius-pill);
+		color: var(--muted);
+		flex: 0 0 auto;
+		font: 600 var(--fs-fine) var(--font-mono);
+		padding: 0.35rem 0.65rem;
+		text-decoration: none;
+	}
+
+	.week-nav a:hover,
+	.week-nav a:focus-visible {
+		background: var(--accent-soft);
+		color: var(--accent);
+	}
+
+	.foundation-intro,
+	.next-phase,
+	.switch-track {
+		margin: 3rem 0 1.2rem;
+		max-width: 760px;
+	}
+
+	.foundation-intro h2,
+	.next-phase h2,
+	.switch-track h2 {
+		font-size: var(--fs-h2);
+		margin: 0.35rem 0 0.45rem;
+	}
+
+	.weeks {
+		display: grid;
+		gap: 1.25rem;
+	}
+
+	.next-phase {
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		max-width: none;
+		padding: 1.5rem;
+	}
+
+	.switch-track {
+		max-width: none;
+	}
+
+	.switch-track > p {
+		font-size: var(--fs-sm);
+		margin-bottom: 1.2rem;
+		max-width: 720px;
+	}
+</style>
