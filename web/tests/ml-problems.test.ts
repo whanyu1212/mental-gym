@@ -62,6 +62,25 @@ test("every problem has non-empty coaching content", () => {
 	}
 });
 
+test("numerical and ranking prompts state implementable contracts", () => {
+	const bySlug = new Map(mlCatalogProblems.map((problem) => [problem.slug, problem]));
+
+	const sigmoid = bySlug.get("001-sigmoid-activation")!;
+	assert.match(sigmoid.prompt, /value in \[0, 1\]/);
+	assert.match(sigmoid.prompt, /saturate to exactly 0\.0 or 1\.0/);
+	assert.doesNotMatch(sigmoid.prompt, /strictly inside/);
+
+	const repetitionPenalty = bySlug.get("092-repetition-penalty")!;
+	assert.match(repetitionPenalty.prompt, /r >= 1/);
+	assert.match(repetitionPenalty.prompt, /r is less than 1/);
+	assert.match(repetitionPenalty.prompt, /r = 1 as a no-op/);
+
+	const averagePrecision = bySlug.get("099-average-precision")!;
+	assert.match(averagePrecision.prompt, /sum precision@i/);
+	assert.match(averagePrecision.prompt, /divide that sum once/);
+	assert.doesNotMatch(averagePrecision.prompt, /mean of precision@i/);
+});
+
 test("difficulty and status stay within the allowed values", () => {
 	for (const problem of mlProblems) {
 		assert.ok(

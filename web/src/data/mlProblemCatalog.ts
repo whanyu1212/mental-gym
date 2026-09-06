@@ -1114,11 +1114,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		category: "Deep Learning",
 		subcategory: "Activations",
 		tags: ["deep-learning", "activations"],
-		summary: "Map any real number into (0, 1) with the logistic function.",
+		summary: "Map any real number toward the interval [0, 1] with the logistic function.",
 		whyItMatters:
 			"Sigmoid is the output layer of binary classifiers, and the naive formula overflows on large negative inputs — a real bug, not a theoretical one.",
 		prompt:
-			"Given a real number x, return sigmoid(x) = 1 / (1 + exp(-x)). Implement it so it does not overflow for large-magnitude inputs in either direction: for negative x, use the algebraically equivalent form exp(x) / (1 + exp(x)). Return a value strictly inside (0, 1).",
+			"Given a real number x, return sigmoid(x) = 1 / (1 + exp(-x)). Implement it so it does not overflow for large-magnitude inputs in either direction: for negative x, use the algebraically equivalent form exp(x) / (1 + exp(x)). Return a value in [0, 1]; ordinary floating-point arithmetic may saturate to exactly 0.0 or 1.0 for extreme inputs.",
 		expectations: [
 			"Branch on the sign of x so exp() never receives a large positive argument.",
 			"Return 0.5 exactly at x = 0.",
@@ -3486,7 +3486,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The asymmetric handling of positive and negative logits is the subtlety that makes this penalty work correctly.",
 		prompt:
-			"Given a vector of logits, a set of already-generated token indices, and a penalty factor r > 1, return adjusted logits where each previously generated token's logit is divided by r if it is positive and multiplied by r if it is negative. Leave other logits unchanged. Raise a ValueError if r is not greater than 0 or any index is out of range.",
+			"Given a vector of logits, a set of already-generated token indices, and a penalty factor r >= 1, return adjusted logits where each previously generated token's logit is divided by r if it is positive and multiplied by r if it is negative. Leave other logits unchanged. Treat r = 1 as a no-op, and raise a ValueError if r is less than 1 or any index is out of range.",
 		expectations: [
 			"Branch on the sign of the logit and apply division or multiplication accordingly.",
 			"Leave logits for unseen tokens untouched.",
@@ -4734,7 +4734,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Average precision rewards ranking relevant results early, which precision@k at a single cutoff cannot capture.",
 		prompt:
-			"Given a ranked list of item ids and a set of relevant ids, return the average precision: the mean of precision@i evaluated at each position i where a relevant item appears, divided by the total number of relevant items. Return 0.0 when there are no relevant items. Use 1-based positions.",
+			"Given a ranked list of item ids and a set of relevant ids, return the average precision: sum precision@i at each position i where a relevant item appears, then divide that sum once by the total number of relevant items. Return 0.0 when there are no relevant items. Use 1-based positions.",
 		expectations: [
 			"Compute precision only at positions holding a relevant item.",
 			"Divide by the total relevant count, including any not retrieved.",
