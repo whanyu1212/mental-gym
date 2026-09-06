@@ -2494,7 +2494,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"BCE is the loss behind every binary classifier, and a confident wrong prediction sends log(0) to infinity unless you clamp.",
 		prompt:
-			"Given equal-length lists of predicted probabilities in [0, 1] and binary labels in {0, 1}, return the mean binary cross-entropy: -mean(y*log(p) + (1-y)*log(1-p)). Clip probabilities into [eps, 1-eps] with a small epsilon before taking logarithms so the loss stays finite. Raise a ValueError if lengths differ, probabilities fall outside [0, 1], or labels are not 0 or 1.",
+			"Given non-empty equal-length lists of predicted probabilities in [0, 1] and binary labels in {0, 1}, return the mean binary cross-entropy: -mean(y*log(p) + (1-y)*log(1-p)). Clip probabilities into [eps, 1-eps] with a small epsilon before taking logarithms so the loss stays finite. Raise a ValueError if the lists are empty, lengths differ, probabilities fall outside [0, 1], or labels are not 0 or 1.",
 		expectations: [
 			"Clip probabilities before the logarithm and explain why it is necessary.",
 			"Select the correct log term per example based on its label.",
@@ -2878,9 +2878,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"KNN has no training phase at all, which makes it the clearest illustration of the memory-versus-compute tradeoff.",
 		prompt:
-			"Given a training feature matrix, training labels, a query point, and a neighbour count k, return the predicted label as the majority vote among the k training points nearest the query by Euclidean distance. Break ties in the vote by choosing the smallest label. Raise a ValueError if k is not positive, exceeds the training set size, or dimensions disagree.",
+			"Given a training feature matrix, training labels, a query point, and a neighbour count k, return the predicted label as the majority vote among the k training points nearest the query by Euclidean distance. Sort neighbours by distance and then by their original training index, so equal-distance points with smaller indices enter the neighbour set first. Break ties in the vote by choosing the smallest label. Raise a ValueError if k is not positive, exceeds the training set size, or dimensions disagree.",
 		expectations: [
-			"Compute the distance to every training point, then select the k smallest.",
+			"Compute the distance to every training point, then select the k smallest using training index to break equal-distance ties.",
 			"Break vote ties by a stated deterministic rule.",
 			"Validate k against the training set size.",
 			"State the complexity as O(n*d + n log n) time.",
@@ -3966,7 +3966,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Perplexity is the standard language model metric, interpretable as how many tokens the model is effectively choosing among.",
 		prompt:
-			"Given the per-token probabilities a model assigned to the tokens actually observed, return the perplexity: exp(-mean(log(p))). Raise a ValueError for an empty list or any probability that is not strictly positive.",
+			"Given the per-token probabilities a model assigned to the tokens actually observed, return the perplexity: exp(-mean(log(p))). Raise a ValueError for an empty list or any probability outside (0, 1].",
 		expectations: [
 			"Average the negative log probabilities before exponentiating.",
 			"Return a value of at least 1.",
@@ -4126,11 +4126,11 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The M-step is a weighted version of computing means and variances, which is why EM feels familiar once you see it.",
 		prompt:
-			"Given a feature matrix and a responsibility matrix where entry [i][c] is point i's responsibility for component c, return updated mixture weights, means, and diagonal variances. The effective count of component c is the sum of its responsibilities; its weight is that count over n; its mean is the responsibility-weighted average of points; its variance is the responsibility-weighted average of squared deviations from the new mean. Add a small floor to variances to keep them positive. Raise a ValueError on dimension mismatch.",
+			"Given a feature matrix and a responsibility matrix where entry [i][c] is point i's responsibility for component c, return updated mixture weights, means, and diagonal variances. The effective count of component c is the sum of its responsibilities; its weight is that count over n; its mean is the responsibility-weighted average of points; its variance is the responsibility-weighted average of squared deviations from the new mean. Add a small floor to variances to keep them positive. Raise a ValueError on dimension mismatch or when any component has zero effective count.",
 		expectations: [
 			"Compute the new mean before using it for the variance.",
 			"Weight every statistic by responsibilities rather than counting points.",
-			"Floor the variances so a collapsed component cannot produce a zero.",
+			"Reject a component with zero effective count; otherwise floor its variances so a collapsed component cannot produce a zero.",
 			"State the complexity as O(n*k*d) time.",
 		],
 		hints: [
@@ -4894,10 +4894,10 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Epsilon-greedy is the simplest resolution of the exploration-exploitation tradeoff, and it never fully stops exploring.",
 		prompt:
-			"Given a list of action values, an exploration rate epsilon in [0, 1], a uniform draw u in [0, 1), and a second draw for uniform action selection, return the chosen action index: explore uniformly when u < epsilon, otherwise take the argmax of the values. Break argmax ties by the smallest index. Take both draws as parameters so the function is deterministic. Raise a ValueError if epsilon is outside [0, 1] or the value list is empty.",
+			"Given a list of action values, an exploration rate epsilon in [0, 1], a uniform branch draw u in [0, 1), and a uniform action draw v in [0, 1), return the chosen action index. When u < epsilon, explore by choosing floor(v * action_count); otherwise take the argmax of the values. Break argmax ties by the smallest index. Take both draws as parameters so the function is deterministic. Raise a ValueError if epsilon is outside [0, 1], either draw is outside [0, 1), or the value list is empty.",
 		expectations: [
 			"Compare the draw strictly against epsilon so epsilon = 0 never explores.",
-			"Take random draws as parameters for testability.",
+			"Map the action draw v to floor(v * action_count), which covers every valid action index.",
 			"Break argmax ties deterministically.",
 			"State the complexity as O(n) time and O(1) extra space.",
 		],

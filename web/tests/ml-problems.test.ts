@@ -113,6 +113,26 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const weightedRating = bySlug.get("235-weighted-neighbor-rating")!;
 	assert.match(weightedRating.hints.join(" "), /single positive-similarity neighbour returns its rating/);
 	assert.match(weightedRating.hints.join(" "), /single negative-similarity neighbour returns the negated rating/);
+
+	const binaryCrossEntropy = bySlug.get("009-binary-cross-entropy")!;
+	assert.match(binaryCrossEntropy.prompt, /non-empty equal-length lists/);
+	assert.match(binaryCrossEntropy.prompt, /lists are empty/);
+
+	const nearestNeighbors = bySlug.get("061-k-nearest-neighbors")!;
+	assert.match(nearestNeighbors.prompt, /original training index/);
+	assert.match(nearestNeighbors.expectations.join(" "), /training index to break equal-distance ties/);
+
+	const perplexity = bySlug.get("086-sequence-perplexity")!;
+	assert.match(perplexity.prompt, /probability outside \(0, 1\]/);
+
+	const mixtureMStep = bySlug.get("113-gaussian-mixture-m-step")!;
+	assert.match(mixtureMStep.prompt, /zero effective count/);
+	assert.match(mixtureMStep.expectations.join(" "), /Reject a component with zero effective count/);
+
+	const epsilonGreedy = bySlug.get("126-epsilon-greedy-action")!;
+	assert.match(epsilonGreedy.prompt, /action draw v in \[0, 1\)/);
+	assert.match(epsilonGreedy.prompt, /floor\(v \* action_count\)/);
+	assert.match(epsilonGreedy.prompt, /either draw is outside \[0, 1\)/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
