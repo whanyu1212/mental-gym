@@ -173,6 +173,33 @@ test("numerical and ranking prompts state implementable contracts", () => {
 
 	const adam = bySlug.get("249-adam-optimizer-step")!;
 	assert.match(adam.prompt, /epsilon is not strictly positive/);
+
+	const nearestResize = bySlug.get("205-nearest-neighbor-resize")!;
+	assert.match(nearestResize.prompt, /non-empty rectangular image/);
+	assert.match(nearestResize.prompt, /source has no rows or columns/);
+	assert.match(nearestResize.prompt, /is ragged/);
+
+	const bellman = bySlug.get("128-bellman-expected-value")!;
+	assert.match(bellman.prompt, /any probability is outside \[0, 1\]/);
+
+	const ppo = bySlug.get("133-ppo-clipped-objective")!;
+	assert.match(ppo.prompt, /non-empty equal-length lists/);
+	assert.match(ppo.prompt, /trajectory is empty/);
+
+	const recoverDiffusion = bySlug.get("139-recover-a-clean-diffusion-sample")!;
+	assert.match(recoverDiffusion.prompt, /cumulative alpha lies outside \(0, 1\]/);
+
+	const dynamicThreshold = bySlug.get("141-dynamic-threshold-latents")!;
+	assert.match(dynamicThreshold.prompt, /non-empty latent vector/);
+	assert.match(dynamicThreshold.prompt, /latent vector is empty/);
+
+	const contrastiveLoss = bySlug.get("186-symmetric-contrastive-loss")!;
+	assert.match(contrastiveLoss.prompt, /non-empty square similarity matrix/);
+	assert.match(contrastiveLoss.prompt, /matrix is empty or not square/);
+
+	const crossModalAttention = bySlug.get("190-cross-modal-attention-weights")!;
+	assert.match(crossModalAttention.prompt, /non-empty query vector/);
+	assert.match(crossModalAttention.prompt, /query dimension is 0/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

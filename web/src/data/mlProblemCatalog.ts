@@ -1918,7 +1918,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Nearest-neighbour is the only resize that invents no new values, which is exactly why it is required for segmentation masks.",
 		prompt:
-			"Given an image of shape (h, w) and a target shape (th, tw), return the resized image. For each output position (i, j), sample the source pixel at row min(h-1, int(i * h / th)) and column min(w-1, int(j * w / tw)). Raise a ValueError if any target dimension is not positive.",
+			"Given a non-empty rectangular image of shape (h, w) and a target shape (th, tw), return the resized image. For each output position (i, j), sample the source pixel at row min(h-1, int(i * h / th)) and column min(w-1, int(j * w / tw)). Raise a ValueError if the source has no rows or columns, is ragged, or any target dimension is not positive.",
 		expectations: [
 			"Clamp computed source indices so they never exceed the input bounds.",
 			"Produce an output of exactly the requested shape.",
@@ -4958,7 +4958,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The Bellman equation is the recursive definition every value-based RL algorithm approximates.",
 		prompt:
-			"Given transition probabilities to successor states, the immediate rewards for those transitions, the current value estimates of those successors, and a discount gamma, return the state value: sum over transitions of probability * (reward + gamma * successor_value). Raise a ValueError if the list lengths differ, gamma is outside [0, 1], or the probabilities do not sum to 1 within tolerance.",
+			"Given transition probabilities to successor states, the immediate rewards for those transitions, the current value estimates of those successors, and a discount gamma, return the state value: sum over transitions of probability * (reward + gamma * successor_value). Raise a ValueError if the list lengths differ, gamma is outside [0, 1], any probability is outside [0, 1], or the probabilities do not sum to 1 within tolerance.",
 		expectations: [
 			"Weight each transition by its probability.",
 			"Discount only the successor value, never the immediate reward.",
@@ -5118,7 +5118,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The minimum of clipped and unclipped terms is what stops a single update from destroying the policy.",
 		prompt:
-			"Given old and new log probabilities of taken actions, their advantages, and a clip parameter eps, return the PPO loss: -mean(min(ratio * advantage, clip(ratio, 1-eps, 1+eps) * advantage)) where ratio = exp(new_log_prob - old_log_prob). Raise a ValueError if the lengths differ or eps is not positive.",
+			"Given non-empty equal-length lists of old and new log probabilities of taken actions and their advantages, plus a clip parameter eps, return the PPO loss: -mean(min(ratio * advantage, clip(ratio, 1-eps, 1+eps) * advantage)) where ratio = exp(new_log_prob - old_log_prob). Raise a ValueError if the trajectory is empty, the lengths differ, or eps is not positive.",
 		expectations: [
 			"Compute the ratio in log space before exponentiating.",
 			"Take the minimum of clipped and unclipped terms, not just the clipped one.",
@@ -5310,7 +5310,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This inversion is how a noise-predicting model produces an image estimate at every denoising step.",
 		prompt:
-			"Given a noised sample, the model's predicted noise, and the cumulative alpha at timestep t, return the estimated clean sample: (noised - sqrt(1 - alpha_cumprod) * predicted_noise) / sqrt(alpha_cumprod). Raise a ValueError if the lengths differ or the cumulative alpha is not strictly positive.",
+			"Given a noised sample, the model's predicted noise, and the cumulative alpha at timestep t, return the estimated clean sample: (noised - sqrt(1 - alpha_cumprod) * predicted_noise) / sqrt(alpha_cumprod). Raise a ValueError if the lengths differ or the cumulative alpha lies outside (0, 1].",
 		expectations: [
 			"Subtract the scaled noise before dividing.",
 			"Reject a cumulative alpha of 0, which would divide by zero.",
@@ -5374,7 +5374,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Dynamic thresholding rescales rather than clipping, which preserves relative structure that hard clipping would flatten.",
 		prompt:
-			"Given a latent vector and a percentile p in (0, 100], compute s as the p-th percentile of the absolute values, take the maximum of s and 1.0, then return the latents clipped to [-s, s] and divided by s. Explain why s is floored at 1.0. Raise a ValueError if p lies outside (0, 100].",
+			"Given a non-empty latent vector and a percentile p in (0, 100], compute s as the p-th percentile of the absolute values, take the maximum of s and 1.0, then return the latents clipped to [-s, s] and divided by s. Explain why s is floored at 1.0. Raise a ValueError if the latent vector is empty or p lies outside (0, 100].",
 		expectations: [
 			"Compute the percentile over absolute values, not signed values.",
 			"Floor the scale at 1.0 so small-magnitude latents are left alone.",
@@ -6110,7 +6110,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"CLIP's loss is symmetric because matching images to text and text to images are different problems that both need supervising.",
 		prompt:
-			"Given a square similarity matrix where the diagonal holds matched pairs and a temperature tau, return the symmetric contrastive loss: the mean of the row-wise and column-wise cross-entropy losses, where logits are similarities divided by tau and the correct label for row i is index i. Use a stable log-softmax. Raise a ValueError if the matrix is not square or tau is not positive.",
+			"Given a non-empty square similarity matrix where the diagonal holds matched pairs and a temperature tau, return the symmetric contrastive loss: the mean of the row-wise and column-wise cross-entropy losses, where logits are similarities divided by tau and the correct label for row i is index i. Use a stable log-softmax. Raise a ValueError if the matrix is empty or not square, or tau is not positive.",
 		expectations: [
 			"Compute cross-entropy along both rows and columns, then average.",
 			"Divide similarities by the temperature before the softmax.",
@@ -6238,7 +6238,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Cross-attention is how a language model grounds its generation in image features.",
 		prompt:
-			"Given a query vector from one modality and a list of key vectors from another, return the attention weights: softmax over keys of dot(query, key) / sqrt(d). Use a stable softmax. Raise a ValueError if any key dimension differs from the query's or the key list is empty.",
+			"Given a non-empty query vector from one modality and a list of key vectors from another, return the attention weights: softmax over keys of dot(query, key) / sqrt(d). Use a stable softmax. Raise a ValueError if the query dimension is 0, any key dimension differs from the query's, or the key list is empty.",
 		expectations: [
 			"Scale by sqrt(d) before the softmax.",
 			"Return weights that are non-negative and sum to 1.",

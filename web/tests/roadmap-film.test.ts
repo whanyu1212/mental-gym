@@ -51,6 +51,9 @@ test("the silent film has a programmatically associated scene transcript", () =>
 		"Learn, Implement, Practice, Review, and Retain",
 		"Applied AI / Agents",
 		"eight foundation weeks",
+		"Infrastructure and model specialization weeks move the two language hours to implementation",
+		"capstone weeks allocate three hours to study, nine to implementation",
+		"Every variation keeps the total at 15 hours",
 		"versioned implementations",
 		"Open the AI engineering roadmap",
 	]) {
