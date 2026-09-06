@@ -1,3 +1,5 @@
+import { specializationModules, specializationSchedules } from "./roadmapCurricula.ts";
+
 export const TRACK_IDS = [
 	"applied-ai",
 	"ml-infrastructure",
@@ -108,6 +110,51 @@ export const courses: Course[] = [
 		url: "https://cs145-fa24.github.io/",
 		accessNotes: "Public site availability is historical and does not imply a current Stanford offering.",
 		computeNotes: "All selected SQL exercises run locally with PostgreSQL or SQLite.",
+	},
+	{
+		id: "stanford-cs276-2019",
+		code: "CS276",
+		title: "Information Retrieval and Web Search",
+		offering: "Spring 2019 public materials",
+		url: "https://web.stanford.edu/class/cs276/",
+		accessNotes: "Public slides mix course iterations; complementary videos and some course services require Canvas or Stanford access.",
+		computeNotes: "Selected indexing and ranking work uses a small local corpus.",
+	},
+	{
+		id: "stanford-cs229s-2024",
+		code: "CS229S",
+		title: "Systems for Machine Learning",
+		offering: "Fall 2024 public slides",
+		url: "https://cs229s.stanford.edu/",
+		accessNotes: "Slides are public; the listed projects are adapted into smaller independent exercises rather than reproduced.",
+		computeNotes: "GPU and multi-node topics are studied through arithmetic, toy implementations, and optional hardware experiments.",
+	},
+	{
+		id: "stanford-cs336-2024",
+		code: "CS336",
+		title: "Language Modeling from Scratch",
+		offering: "Spring 2024 archived public materials",
+		url: "https://cs336.stanford.edu/spring2024/",
+		accessNotes: "Lectures and assignment repositories are public, but this roadmap selects bounded exercises from the intensive five-unit course.",
+		computeNotes: "Full assignments can require GPUs or multiple machines; required roadmap work uses toy models and explicit compute ceilings.",
+	},
+	{
+		id: "stanford-cs224v-2025",
+		code: "CS224V",
+		title: "Conversational Virtual Assistants with Deep Learning",
+		offering: "Autumn 2025 course site",
+		url: "https://cs224v.stanford.edu/",
+		accessNotes: "The site describes a project course with limited enrollment; recordings, complete slides, and homework access can require Canvas.",
+		computeNotes: "Required work uses local corpora, mocks, or user-provided model access; no paid API is required to follow the roadmap.",
+	},
+	{
+		id: "stanford-cs329s-2022",
+		code: "CS329S",
+		title: "Machine Learning Systems Design",
+		offering: "Winter 2022 public materials",
+		url: "https://web.stanford.edu/class/cs329s/",
+		accessNotes: "Slides, notes, and assignments are public, while lecture recordings and course support are enrollment-restricted.",
+		computeNotes: "Roadmap projects scale down the course's involved final-project expectations to the stated weekly budget.",
 	},
 ];
 
@@ -269,7 +316,7 @@ const foundationModules: RoadmapModule[] = [
 	},
 ];
 
-export const modules: RoadmapModule[] = [...foundationModules];
+export const modules: RoadmapModule[] = [...foundationModules, ...specializationModules];
 
 const foundationIds = foundationModules.map((module) => module.id);
 
@@ -281,8 +328,7 @@ export const tracks: RoadmapTrack[] = [
 		description: "Build evaluated retrieval, tool-using, and agentic applications.",
 		audience: "For engineers shipping reliable AI features and agent workflows.",
 		foundationIds,
-		specializationIds: [],
-		capstoneIds: [],
+		...specializationSchedules["applied-ai"],
 	},
 	{
 		id: "ml-infrastructure",
@@ -291,8 +337,7 @@ export const tracks: RoadmapTrack[] = [
 		description: "Build dependable data, training, serving, and observability systems.",
 		audience: "For engineers focused on platforms, reliability, and ML system performance.",
 		foundationIds,
-		specializationIds: [],
-		capstoneIds: [],
+		...specializationSchedules["ml-infrastructure"],
 	},
 	{
 		id: "model-post-training",
@@ -301,8 +346,7 @@ export const tracks: RoadmapTrack[] = [
 		description: "Study transformer internals, optimization, adaptation, and evaluation.",
 		audience: "For engineers working closer to models, training loops, and inference kernels.",
 		foundationIds,
-		specializationIds: [],
-		capstoneIds: [],
+		...specializationSchedules["model-post-training"],
 	},
 	{
 		id: "ai-product",
@@ -311,8 +355,7 @@ export const tracks: RoadmapTrack[] = [
 		description: "Connect model behavior to useful, measurable, and usable product outcomes.",
 		audience: "For engineers building end-to-end AI product experiences.",
 		foundationIds,
-		specializationIds: [],
-		capstoneIds: [],
+		...specializationSchedules["ai-product"],
 	},
 ];
 
@@ -341,7 +384,7 @@ export function modulesForTrack(track: RoadmapTrack): RoadmapModule[] {
 		.filter((module): module is RoadmapModule => module !== undefined);
 }
 
-export function validateRoadmap(catalog?: ReferenceCatalog, requireComplete = false): string[] {
+export function validateRoadmap(catalog?: ReferenceCatalog): string[] {
 	const issues: string[] = [];
 	const courseIds = new Set(courses.map((course) => course.id));
 	const moduleIds = new Set(modules.map((module) => module.id));
@@ -381,7 +424,22 @@ export function validateRoadmap(catalog?: ReferenceCatalog, requireComplete = fa
 			if (!moduleIds.has(moduleId)) issues.push(`${track.id} has unknown module ${moduleId}.`);
 		}
 		if (track.foundationIds.length !== 8) issues.push(`${track.id} must schedule eight foundation weeks.`);
-		if (requireComplete && scheduledIds.length !== 24) issues.push(`${track.id} must schedule 24 weeks.`);
+		if (track.specializationIds.length !== 12) issues.push(`${track.id} must schedule twelve specialization weeks.`);
+		if (track.capstoneIds.length !== 4) issues.push(`${track.id} must schedule four capstone weeks.`);
+		if (scheduledIds.length !== 24) issues.push(`${track.id} must schedule 24 weeks.`);
+
+		for (const [expectedPhase, ids] of [
+			["foundation", track.foundationIds],
+			["specialization", track.specializationIds],
+			["capstone", track.capstoneIds],
+		] as const) {
+			for (const id of ids) {
+				const module = modules.find((candidate) => candidate.id === id);
+				if (module && module.phase !== expectedPhase) {
+					issues.push(`${track.id} schedules ${id} as ${expectedPhase}, but it is ${module.phase}.`);
+				}
+			}
+		}
 	}
 
 	return issues;

@@ -42,31 +42,67 @@ const catalog: ReferenceCatalog = {
 	"system-design": new Set(["sd-real-time-ml-inference"]),
 };
 
-test("the roadmap foundation validates against existing content", () => {
+test("the complete roadmap validates against existing content", () => {
 	assert.deepEqual(validateRoadmap(catalog), []);
 });
 
-test("every track reuses the same eight foundation modules", () => {
+test("every track has 24 ordered weeks and reuses the shared foundation", () => {
 	const sharedIds = tracks[0].foundationIds;
 	assert.equal(sharedIds.length, 8);
 	assert.equal(new Set(sharedIds).size, 8);
+	assert.equal(modules.filter((module) => module.phase === "foundation").length, 8);
 
 	for (const track of tracks) {
+		const scheduled = modulesForTrack(track);
 		assert.deepEqual(track.foundationIds, sharedIds);
-		assert.equal(modulesForTrack(track).length, 8);
+		assert.equal(track.specializationIds.length, 12);
+		assert.equal(track.capstoneIds.length, 4);
+		assert.equal(scheduled.length, 24);
+
+		const weekById = new Map(scheduled.map((module, index) => [module.id, index + 1]));
+		for (const [index, module] of scheduled.entries()) {
+			assert.equal(module.phase, index < 8 ? "foundation" : index < 20 ? "specialization" : "capstone");
+			for (const prerequisiteId of module.prerequisiteIds) {
+				assert.ok(
+					(weekById.get(prerequisiteId) ?? Number.POSITIVE_INFINITY) < index + 1,
+					`${module.id} prerequisite ${prerequisiteId} must appear earlier`,
+				);
+			}
+		}
 	}
-	assert.equal(modules.filter((module) => module.phase === "foundation").length, 8);
 });
 
-test("foundation weeks stay within the required time budget and produce evidence", () => {
+test("every week fits the required budget and produces concrete evidence", () => {
 	for (const module of modules) {
-		assert.equal(totalHours(module.hours), 15, `${module.id} should use the 15-hour foundation budget`);
+		assert.equal(totalHours(module.hours), 15, `${module.id} should use the 15-hour weekly budget`);
+		assert.ok(module.resources.length > 0, `${module.id} is missing selected course material`);
+		assert.ok(module.exercises.length > 0, `${module.id} is missing linked practice`);
 		assert.ok(module.deliverable.trim(), `${module.id} is missing a deliverable`);
 		assert.ok(module.evidence.length > 0, `${module.id} is missing evidence`);
 	}
 });
 
-test("course records are versioned and explain access and compute limits", () => {
+test("each track curates 20 to 30 distinct ML drills", () => {
+	for (const track of tracks) {
+		const mlSlugs = new Set(
+			modulesForTrack(track)
+				.flatMap((module) => module.exercises)
+				.filter((exercise) => exercise.domain === "ml")
+				.map((exercise) => exercise.slug),
+		);
+		assert.ok(
+			mlSlugs.size >= 20 && mlSlugs.size <= 30,
+			`${track.id} curates ${mlSlugs.size} distinct ML drills`,
+		);
+	}
+});
+
+test("course records cover the planned Stanford material and explain limitations", () => {
+	const courseCodes = new Set(courses.map((course) => course.code));
+	for (const code of ["CS229", "CS230", "CS224N", "CS276", "CS145", "CS229S", "CS336", "CS224V", "CS329S"]) {
+		assert.ok(courseCodes.has(code), `missing ${code}`);
+	}
+
 	for (const course of courses) {
 		assert.match(course.offering, /\d{4}/, `${course.id} has no offering year`);
 		assert.match(course.url, /^https:\/\//, `${course.id} has no secure source URL`);
