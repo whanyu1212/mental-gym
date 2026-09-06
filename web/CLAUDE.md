@@ -38,7 +38,7 @@ The site has four content sources that feed different pages:
 | `src/data/sqlProblems.ts` | Hand-authored SQL exercise metadata. Each imports its reference answer from `src/sql/`. |
 | `../notes/` (outside `web/`) | Markdown files collected via Astro content collections. Rendered with KaTeX math support. |
 
-The notes loader globs `**/*.{md,mdx}`, so both extensions are valid. Use `.mdx` **only** when a note imports an Astro component (e.g. `arrays_and_hashing.mdx`, `two_pointers.mdx` embed the `notes/*Viz.astro` visualizations); keep prose-only notes as `.md` so they stay on the lighter Markdown pipeline. Frontmatter is identical for both: `title`, `description`, `category`, optional `order`.
+The notes loader globs `**/*.{md,mdx}`, so both extensions are valid. Use `.mdx` **only** when a note imports an Astro component (e.g. `arrays_and_hashing.mdx`, `two_pointers.mdx` embed the `notes/*Viz.astro` visualizations); keep prose-only notes as `.md` so they stay on the lighter Markdown pipeline. Shared frontmatter: `title`, `description`, `category`, optional `order` / `status` / `tags`. Optional roadmap fields: `kind` (`concept` | `course` | `weekly-review` | `template`), `courseId`, `moduleId`, `relatedExercises`, `sourceUrl`. Templates are listed separately; filled weekly reviews are private and do not belong in `notes/`.
 
 ### SQL practice
 

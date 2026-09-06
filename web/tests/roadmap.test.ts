@@ -8,6 +8,7 @@ import { problems } from "../src/data/problems.ts";
 import {
 	courses,
 	exerciseHref,
+	moduleHref,
 	modules,
 	modulesForTrack,
 	totalHours,
@@ -141,4 +142,6 @@ test("exercise links map to stable site routes", () => {
 		exerciseHref({ domain: "note", slug: "asymptotic-analysis", label: "Analysis" }),
 		"/notes/asymptotic-analysis/",
 	);
+	assert.equal(moduleHref("foundation-01-python-and-complexity"), "/roadmap/applied-ai/#week-1");
+	assert.equal(moduleHref("missing-module"), undefined);
 });

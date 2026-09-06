@@ -4,8 +4,20 @@ import Layout from "../../layouts/Layout.astro";
 import { withBase } from "../../lib/url";
 import { readingTimeMinutes } from "../../lib/readingTime";
 import ResumeRow from "../../components/ResumeRow.astro";
+import { courses, moduleHref, modules } from "../../data/roadmap";
 
-const allNotes = (await getCollection("notes")).filter((note) => note.data.category !== "Meta");
+const published = (await getCollection("notes")).filter((note) => note.data.category !== "Meta");
+const templateNotes = published.filter((note) => note.data.kind === "template");
+const allNotes = published.filter((note) => note.data.kind !== "template");
+const linkedNotes = allNotes.filter((note) => note.data.courseId || note.data.moduleId);
+
+const moduleById = new Map(modules.map((module) => [module.id, module]));
+const notesByCourse = courses
+	.map((course) => ({
+		course,
+		notes: linkedNotes.filter((note) => note.data.courseId === course.id),
+	}))
+	.filter((group) => group.notes.length > 0);
 
 // Explicit, pedagogical category order (foundational → reusable → reference),
 // mirroring ALGO_GROUP_ORDER in problems/index.astro. Any category not listed
@@ -33,6 +45,34 @@ const notesByCategory = categories.map((category) => ({
 	<ResumeRow />
 
 	<div class="notes-container">
+		{notesByCourse.length > 0 && (
+			<section class="linked-section">
+				<h2 class="category-heading">
+					<span class="category-name">By course / module</span>
+					<span class="category-count">{linkedNotes.length}</span>
+				</h2>
+				<p class="linked-copy">Authored notes that declare a roadmap course or module. Templates and private weekly reviews are not mixed in here.</p>
+				{notesByCourse.map(({ course, notes }) => (
+					<div class="course-group">
+						<h3 class="course-heading">{course.code} · {course.title}</h3>
+						<ul class="linked-list">
+							{notes.map((note) => {
+								const module = note.data.moduleId ? moduleById.get(note.data.moduleId) : undefined;
+								const href = note.data.moduleId ? moduleHref(note.data.moduleId) : undefined;
+								return (
+									<li>
+										<a href={withBase(`/notes/${note.id}/`)}>{note.data.title}</a>
+										{module && href && (
+											<a class="module-link" href={withBase(href)}>{module.title}</a>
+										)}
+									</li>
+								);
+							})}
+						</ul>
+					</div>
+				))}
+			</section>
+		)}
 		{notesByCategory.map((category) => (
 			<section class="category-section">
 				<h2 class="category-heading">
@@ -63,6 +103,34 @@ const notesByCategory = categories.map((category) => ({
 				</div>
 			</section>
 		))}
+		{templateNotes.length > 0 && (
+			<section class="category-section">
+				<h2 class="category-heading">
+					<span class="category-name">Templates</span>
+					<span class="category-count">{templateNotes.length}</span>
+				</h2>
+				<p class="linked-copy">Copy these outlines. They are not study journals and do not record anyone’s hours or attempts.</p>
+				<div class="notes-grid">
+					{templateNotes
+						.sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99) || a.data.title.localeCompare(b.data.title))
+						.map((note) => (
+						<a href={withBase(`/notes/${note.id}/`)} class="note-card">
+							<div class="note-content">
+								<div class="note-heading">
+									<h3 class="note-title">{note.data.title}</h3>
+									<span class="status">Template</span>
+								</div>
+								{note.data.description && <p class="note-description">{note.data.description}</p>}
+							</div>
+							<div class="note-footer">
+								<span class="read-time">{readingTimeMinutes(note.body)} min read</span>
+								<span class="read-more">Open outline <span class="arrow">→</span></span>
+							</div>
+						</a>
+					))}
+				</div>
+			</section>
+		)}
 	</div>
 </Layout>
 
@@ -95,6 +163,56 @@ const notesByCategory = categories.map((category) => ({
 		display: flex;
 		flex-direction: column;
 		gap: 3.5rem;
+	}
+
+	.linked-copy {
+		color: var(--muted);
+		font-size: var(--fs-sm);
+		line-height: 1.6;
+		margin: -0.75rem 0 1.25rem;
+	}
+
+	.course-group + .course-group {
+		margin-top: 1.5rem;
+	}
+
+	.course-heading {
+		font: 600 var(--fs-sm) var(--font-sans);
+		margin: 0 0 0.6rem;
+		color: var(--text);
+	}
+
+	.linked-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.linked-list li {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1rem;
+		align-items: baseline;
+		justify-content: space-between;
+		border-bottom: 1px solid var(--border);
+		padding: 0.7rem 0;
+	}
+
+	.linked-list a {
+		color: var(--text);
+		text-decoration: none;
+	}
+
+	.linked-list a:hover {
+		color: var(--accent);
+	}
+
+	.module-link {
+		color: var(--muted) !important;
+		font: var(--fs-eyebrow) var(--font-sans);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 	}
 
 	.category-heading {
