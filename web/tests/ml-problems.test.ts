@@ -360,6 +360,26 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	const adamMoments = bySlug.get("249-adam-optimizer-step")!;
 	assert.match(adamMoments.prompt, /non-negative second moment v/);
 	assert.match(adamMoments.prompt, /incoming second-moment value is negative/);
+
+	const histogram = bySlug.get("049-histogram-counts")!;
+	assert.match(histogram.prompt, /positive integer bin count k/);
+	assert.match(histogram.prompt, /k is not a positive integer/);
+
+	const deterministicAnchors = bySlug.get("220-match-anchor-boxes")!;
+	assert.match(deterministicAnchors.prompt, /smallest original ground-truth index/);
+	assert.match(deterministicAnchors.expectations.join(" "), /smallest ground-truth index on a tie/);
+
+	const deterministicGini = bySlug.get("063-decision-tree-gini-split")!;
+	assert.match(deterministicGini.prompt, /smallest feature index, then the smallest threshold/);
+	assert.match(deterministicGini.expectations.join(" "), /feature index then threshold/);
+
+	const deterministicTopP = bySlug.get("091-top-p-distribution")!;
+	assert.match(deterministicTopP.prompt, /original token index ascending/);
+	assert.match(deterministicTopP.expectations.join(" "), /original token index ascending/);
+
+	const nonNegativeUcb = bySlug.get("127-upper-confidence-bound-scores")!;
+	assert.match(nonNegativeUcb.prompt, /non-negative exploration constant c/);
+	assert.match(nonNegativeUcb.prompt, /c is negative/);
 });
 
 test("difficulty and status stay within the allowed values", () => {

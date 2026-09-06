@@ -766,7 +766,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Binning is the basis of drift detection and calibration plots, and the half-open interval convention is where implementations silently disagree.",
 		prompt:
-			"Given a list of numbers, a bin count k, and a range [lo, hi), return a list of k integer counts of values falling in each equal-width bin. Use half-open bins [lo + i*w, lo + (i+1)*w) where w = (hi - lo) / k, except that the final bin includes hi so that the maximum value is not dropped. Ignore values outside [lo, hi]. Raise a ValueError if k is not positive or hi <= lo.",
+			"Given a list of numbers, a positive integer bin count k, and a range [lo, hi), return a list of k integer counts of values falling in each equal-width bin. Use half-open bins [lo + i*w, lo + (i+1)*w) where w = (hi - lo) / k, except that the final bin includes hi so that the maximum value is not dropped. Ignore values outside [lo, hi]. Raise a ValueError if k is not a positive integer or hi <= lo.",
 		expectations: [
 			"State and apply the half-open bin convention consistently.",
 			"Include the upper endpoint in the final bin rather than discarding it.",
@@ -2398,9 +2398,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Anchor matching creates the training targets for a detector, and the ignore band between thresholds prevents ambiguous anchors from adding noise.",
 		prompt:
-			"Given a list of anchor boxes, a list of ground-truth boxes, a positive IoU threshold, and a negative IoU threshold, return one label per anchor: the index of its best-matching ground-truth box when that best IoU is at or above the positive threshold, -1 for background when the best IoU is below the negative threshold, and -2 to ignore anchors that fall between. Require both thresholds to lie in [0, 1] and the negative threshold not to exceed the positive one. Raise a ValueError if either threshold is outside [0, 1] or their order is invalid. With no ground-truth boxes, label every anchor background.",
+			"Given a list of anchor boxes, a list of ground-truth boxes, a positive IoU threshold, and a negative IoU threshold, return one label per anchor: the index of its best-matching ground-truth box when that best IoU is at or above the positive threshold, -1 for background when the best IoU is below the negative threshold, and -2 to ignore anchors that fall between. Break equal-IoU ground-truth matches by choosing the smallest original ground-truth index. Require both thresholds to lie in [0, 1] and the negative threshold not to exceed the positive one. Raise a ValueError if either threshold is outside [0, 1] or their order is invalid. With no ground-truth boxes, label every anchor background.",
 		expectations: [
-			"Compute each anchor's best IoU across all ground-truth boxes before assigning.",
+			"Compute each anchor's best IoU across all ground-truth boxes, choosing the smallest ground-truth index on a tie, before assigning.",
 			"Apply the three-way split so ambiguous anchors are ignored rather than forced.",
 			"Handle the empty ground-truth case by labelling everything background.",
 			"State the complexity as O(a*g) time for a anchors and g ground-truth boxes.",
@@ -2942,10 +2942,10 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"This search is the entire training algorithm of a decision tree, repeated recursively at every node.",
 		prompt:
-			"Given a feature matrix and labels, return the (feature_index, threshold) split that strictly reduces the parent node's Gini impurity and minimizes the weighted Gini impurity of the two children, where a row goes left when its feature value is less than or equal to the threshold. Gini impurity of a node is 1 - sum of squared class proportions, and the weighted impurity weights each child by its share of rows. Consider only thresholds that appear as values in the data. Return None when no valid split strictly reduces impurity, including for a pure node. Raise a ValueError if the inputs are empty or lengths differ.",
+			"Given a feature matrix and labels, return the (feature_index, threshold) split that strictly reduces the parent node's Gini impurity and minimizes the weighted Gini impurity of the two children, where a row goes left when its feature value is less than or equal to the threshold. Gini impurity of a node is 1 - sum of squared class proportions, and the weighted impurity weights each child by its share of rows. Consider only thresholds that appear as values in the data. Break equal weighted-impurity ties by the smallest feature index, then the smallest threshold. Return None when no valid split strictly reduces impurity, including for a pure node. Raise a ValueError if the inputs are empty or lengths differ.",
 		expectations: [
 			"Weight each child's impurity by its row count, not by an unweighted average.",
-			"Skip candidate splits that place every row on one side.",
+			"Skip candidate splits that place every row on one side, and break equal-quality ties by feature index then threshold.",
 			"Return None when no valid split strictly improves on the parent impurity, including for a pure node.",
 			"State the complexity as O(d * n²) time for the naive scan.",
 		],
@@ -3454,9 +3454,9 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Nucleus sampling adapts its candidate count to how confident the model is, which fixed top-k cannot do.",
 		prompt:
-			"Given a probability distribution and a threshold p in (0, 1], return a distribution where only the smallest set of highest-probability tokens whose cumulative probability reaches p is kept, with the rest set to 0 and the survivors renormalized to sum to 1. Always keep at least one token, even when the top token alone exceeds p. Raise a ValueError if p is outside (0, 1], any input probability is outside [0, 1], or the input does not sum to 1 within tolerance.",
+			"Given a probability distribution and a threshold p in (0, 1], return a distribution where only the smallest set of highest-probability tokens whose cumulative probability reaches p is kept, with the rest set to 0 and the survivors renormalized to sum to 1. Sort by probability descending and then by original token index ascending so equal probabilities are deterministic. Always keep at least one token, even when the top token alone exceeds p. Raise a ValueError if p is outside (0, 1], any input probability is outside [0, 1], or the input does not sum to 1 within tolerance.",
 		expectations: [
-			"Sort by probability descending and accumulate until the threshold is reached.",
+			"Sort by probability descending and original token index ascending, then accumulate until the threshold is reached.",
 			"Include the token that crosses the threshold rather than stopping before it.",
 			"Always keep at least one token.",
 			"State the complexity as O(n log n) time from the sort.",
@@ -4926,7 +4926,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"UCB explores in proportion to uncertainty rather than at random, which is why it converges faster than epsilon-greedy.",
 		prompt:
-			"Given per-action mean values, per-action non-negative integer pull counts, an integer total pull count of at least 1, and an exploration constant c, return the UCB score for each action: mean + c * sqrt(ln(total) / count). Give an infinite score to any action with count 0, so every action is tried at least once, and state that convention. Raise a ValueError if the list lengths differ, any count is negative or non-integral, or total is not an integer of at least 1.",
+			"Given per-action mean values, per-action non-negative integer pull counts, an integer total pull count of at least 1, and a non-negative exploration constant c, return the UCB score for each action: mean + c * sqrt(ln(total) / count). Give an infinite score to any action with count 0, so every action is tried at least once, and state that convention. Raise a ValueError if the list lengths differ, any count is negative or non-integral, total is not an integer of at least 1, or c is negative.",
 		expectations: [
 			"Give unpulled actions an infinite score so they are selected first.",
 			"Use the natural logarithm of the total pull count.",
