@@ -2398,7 +2398,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Anchor matching creates the training targets for a detector, and the ignore band between thresholds prevents ambiguous anchors from adding noise.",
 		prompt:
-			"Given a list of anchor boxes, a list of ground-truth boxes, a positive IoU threshold, and a negative IoU threshold, return one label per anchor: the index of its best-matching ground-truth box when that best IoU is at or above the positive threshold, -1 for background when the best IoU is below the negative threshold, and -2 to ignore anchors that fall between. Raise a ValueError if the negative threshold exceeds the positive one. With no ground-truth boxes, label every anchor background.",
+			"Given a list of anchor boxes, a list of ground-truth boxes, a positive IoU threshold, and a negative IoU threshold, return one label per anchor: the index of its best-matching ground-truth box when that best IoU is at or above the positive threshold, -1 for background when the best IoU is below the negative threshold, and -2 to ignore anchors that fall between. Require both thresholds to lie in [0, 1] and the negative threshold not to exceed the positive one. Raise a ValueError if either threshold is outside [0, 1] or their order is invalid. With no ground-truth boxes, label every anchor background.",
 		expectations: [
 			"Compute each anchor's best IoU across all ground-truth boxes before assigning.",
 			"Apply the three-way split so ambiguous anchors are ignored rather than forced.",
@@ -4030,7 +4030,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"K-means is the canonical expectation-maximization loop, and the empty-cluster case is the detail that crashes naive implementations.",
 		prompt:
-			"Given a feature matrix, a positive cluster count k, initial centroids, and a maximum iteration count, run Lloyd's algorithm: assign each point to its nearest centroid by Euclidean distance, breaking equal-distance ties by the smallest centroid index, then recompute each centroid as the mean of its assigned points. Stop when assignments stop changing or the iteration cap is reached. Leave an empty cluster's centroid unchanged rather than producing NaN, and state both conventions. Return the final centroids and assignments. Raise a ValueError if k is not positive, does not match the initial centroid count, or dimensions disagree.",
+			"Given a feature matrix, a positive cluster count k, initial centroids, and a positive maximum iteration count, run Lloyd's algorithm: assign each point to its nearest centroid by Euclidean distance, breaking equal-distance ties by the smallest centroid index, then recompute each centroid as the mean of its assigned points. Stop when assignments stop changing or the iteration cap is reached. Leave an empty cluster's centroid unchanged rather than producing NaN, and state both conventions. Return the final centroids and assignments. Raise a ValueError if k is not positive, does not match the initial centroid count, the iteration cap is not positive, or dimensions disagree.",
 		expectations: [
 			"Alternate assignment and update until assignments stabilize, using the smallest centroid index to break distance ties.",
 			"Handle empty clusters with a documented rule instead of dividing by zero.",
@@ -6686,17 +6686,17 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The user-item matrix is the standard representation for collaborative filtering, and its extreme sparsity is the field's defining constraint.",
 		prompt:
-			"Given a list of (user_index, item_index, rating) records, a user count, and an item count, return a dense matrix where entry [u][i] is the rating and unrated pairs hold a sentinel of None. State that None marks an absent rating rather than a zero rating. Raise a ValueError if any index is out of range.",
+			"Given a list of (user_index, item_index, rating) records, a user count, and an item count, return a dense matrix where entry [u][i] is the rating and unrated pairs hold a sentinel of None. State that None marks an absent rating rather than a zero rating. Reject duplicate (user_index, item_index) pairs rather than overwriting or aggregating them. Raise a ValueError if any index is out of range or a user-item pair appears more than once.",
 		expectations: [
 			"Distinguish an absent rating from a genuine rating of zero.",
 			"Return a matrix of exactly the stated dimensions.",
-			"Validate every index against the bounds.",
+			"Validate every index against the bounds and reject duplicate user-item pairs.",
 			"State the complexity as O(users*items) time and space.",
 		],
 		hints: [
 			"Using 0 for missing entries would be indistinguishable from a real zero rating.",
 			"Real matrices are typically over 99% empty.",
-			"Later records for the same pair overwrite earlier ones unless you decide otherwise.",
+			"Track seen user-item pairs so a duplicate raises before it can overwrite a rating.",
 		],
 		followUps: [
 			"Why is a dense matrix impractical at production scale?",

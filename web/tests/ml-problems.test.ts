@@ -301,6 +301,19 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(deterministicMixtureMStep.prompt, /variance floor greater than 0/);
 	assert.match(deterministicMixtureMStep.prompt, /max\(variance, variance_floor\)/);
 	assert.match(deterministicMixtureMStep.prompt, /variance floor is not positive/);
+
+	const anchorMatching = bySlug.get("220-match-anchor-boxes")!;
+	assert.match(anchorMatching.prompt, /both thresholds to lie in \[0, 1\]/);
+	assert.match(anchorMatching.prompt, /either threshold is outside \[0, 1\]/);
+
+	const boundedKMeans = bySlug.get("110-complete-k-means-clustering")!;
+	assert.match(boundedKMeans.prompt, /positive maximum iteration count/);
+	assert.match(boundedKMeans.prompt, /iteration cap is not positive/);
+
+	const userItemMatrix = bySlug.get("231-build-a-user-item-matrix")!;
+	assert.match(userItemMatrix.prompt, /Reject duplicate \(user_index, item_index\) pairs/);
+	assert.match(userItemMatrix.prompt, /user-item pair appears more than once/);
+	assert.match(userItemMatrix.expectations.join(" "), /reject duplicate user-item pairs/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
