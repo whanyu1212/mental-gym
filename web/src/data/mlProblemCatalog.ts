@@ -1278,10 +1278,10 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"The identity s' = s(1-s) is why frameworks cache activations, and its peak of 0.25 is the arithmetic behind vanishing gradients.",
 		prompt:
-			"Given a vector of sigmoid outputs s (already in (0, 1)), return the elementwise derivative s * (1 - s). Take the outputs rather than the pre-activations as input, and explain why that is sufficient. Raise a ValueError if any value lies outside [0, 1].",
+			"Given a vector of sigmoid outputs s in [0, 1], return the elementwise derivative s * (1 - s). Endpoint values can occur through floating-point saturation and produce a derivative of 0. Take the outputs rather than the pre-activations as input, and explain why that is sufficient. Raise a ValueError if any value lies outside [0, 1].",
 		expectations: [
 			"Use the cached-output identity rather than recomputing sigmoid.",
-			"Return values in (0, 0.25], with the maximum at s = 0.5.",
+			"Return values in [0, 0.25], with zero at saturated endpoints and the maximum at s = 0.5.",
 			"Validate that inputs are legal sigmoid outputs.",
 			"State the complexity as O(n) time and O(n) space.",
 		],
@@ -1378,7 +1378,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		expectations: [
 			"Divide surviving activations by (1 - p) rather than leaving them unscaled.",
 			"Take the mask as a parameter so the function is testable without randomness.",
-			"Return the input unchanged when p = 0.",
+			"Return the input unchanged when p = 0 and the supplied mask keeps every activation.",
 			"State the complexity as O(n) time and O(n) space.",
 		],
 		hints: [
@@ -5504,7 +5504,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		prompt:
 			"Given an adjacency list and a node feature matrix, return a matrix where row i is the componentwise mean of node i's neighbours' features. Return a zero vector for isolated nodes, and state that convention. Note that the node's own features are excluded unless a self-loop exists. Raise a ValueError if dimensions disagree.",
 		expectations: [
-			"Average only over neighbours, excluding the node itself.",
+			"Average only over listed neighbours; exclude the node itself unless its adjacency list contains a self-loop.",
 			"Handle isolated nodes with a documented convention rather than dividing by zero.",
 			"Preserve the feature dimension.",
 			"State the complexity as O(e*d) time.",
@@ -5822,7 +5822,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		whyItMatters:
 			"Zero-crossing rate cheaply separates voiced from unvoiced speech, since fricatives cross zero far more often.",
 		prompt:
-			"Given an audio frame, return the zero-crossing rate: the count of adjacent sample pairs with opposite signs, divided by the number of pairs. Treat a sample of exactly 0 as non-negative so it does not create a crossing on its own. State that convention. Raise a ValueError for a frame shorter than 2 samples.",
+			"Given an audio frame, return the zero-crossing rate: the count of adjacent sample pairs with strictly opposite signs, divided by the number of pairs. A pair containing a sample of exactly 0 does not count as a crossing. State that convention. Raise a ValueError for a frame shorter than 2 samples.",
 		expectations: [
 			"Count sign changes between adjacent pairs, not sign values.",
 			"State how exact zeros are handled.",
@@ -6824,7 +6824,7 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		hints: [
 			"Using signed similarities in the denominator can produce wild predictions.",
 			"Neighbours who did not rate the item must be excluded from both sums.",
-			"A single neighbour returns that neighbour's rating exactly.",
+			"A single positive-similarity neighbour returns its rating; a single negative-similarity neighbour returns the negated rating under this formula.",
 		],
 		followUps: [
 			"Why use absolute similarities in the denominator?",

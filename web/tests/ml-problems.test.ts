@@ -94,6 +94,25 @@ test("numerical and ranking prompts state implementable contracts", () => {
 	assert.match(pairedRanks.prompt, /optimistic tie-breaking/);
 	assert.match(pairedRanks.prompt, /strictly greater similarity/);
 	assert.doesNotMatch(pairedRanks.prompt, /smaller column index/);
+
+	const sigmoidDerivative = bySlug.get("069-sigmoid-derivative")!;
+	assert.match(sigmoidDerivative.prompt, /outputs s in \[0, 1\]/);
+	assert.match(sigmoidDerivative.expectations.join(" "), /values in \[0, 0\.25\]/);
+	assert.match(sigmoidDerivative.expectations.join(" "), /zero at saturated endpoints/);
+
+	const dropout = bySlug.get("072-inverted-dropout")!;
+	assert.match(dropout.expectations.join(" "), /p = 0 and the supplied mask keeps every activation/);
+
+	const zeroCrossing = bySlug.get("177-zero-crossing-rate")!;
+	assert.match(zeroCrossing.prompt, /strictly opposite signs/);
+	assert.match(zeroCrossing.prompt, /pair containing a sample of exactly 0 does not count/);
+
+	const neighborAggregation = bySlug.get("167-mean-neighbor-aggregation")!;
+	assert.match(neighborAggregation.expectations.join(" "), /unless its adjacency list contains a self-loop/);
+
+	const weightedRating = bySlug.get("235-weighted-neighbor-rating")!;
+	assert.match(weightedRating.hints.join(" "), /single positive-similarity neighbour returns its rating/);
+	assert.match(weightedRating.hints.join(" "), /single negative-similarity neighbour returns the negated rating/);
 });
 
 test("difficulty and status stay within the allowed values", () => {
