@@ -139,3 +139,7 @@ jobs:
       - name: Build Astro site
         working-directory: web
         run: npm run build
+
+      - name: Verify note routes and highlight keys
+        working-directory: web
+        run: npm run verify:notes

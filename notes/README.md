@@ -36,7 +36,7 @@ notes/
 └── templates/              # copy-paste outlines; kind: template
 ```
 
-A note's URL is `/notes/<id>/`. By default the id is its path under `notes/` without the extension (for example `recommendation-system/metrics`). Notes in `foundations/`, `patterns/`, `toolkits/`, `ml/` and `system-design/` were filed there after they were published, so each pins its original id with a frontmatter `slug:` (for example `slug: two_pointers`). That id is part of public URLs, cross-links in `web/src/data/`, and the key for saved highlights in IndexedDB. Keep an existing note's `slug:` when you move or rename the file.
+A note's URL is `/notes/<id>/`. The id comes from `noteId` in `web/src/lib/note-id.ts`, which `web/src/content.config.ts` passes to the loader as `generateId`. By default the id is the note's path under `notes/` without the extension (for example `recommendation-system/metrics`). Notes in `foundations/`, `patterns/`, `toolkits/`, `ml/` and `system-design/` were filed there after they were published, so each pins its original id with a frontmatter `slug:` (for example `slug: two_pointers`). That id is part of public URLs, cross-links in `web/src/data/`, and the key for saved highlights in IndexedDB. Keep an existing note's `slug:` when you move or rename the file.
 
 New notes in those folders can omit `slug:` and use the folder path as their id, or set `slug:` to a short root-level id. Either way, `web/tests/notes.test.ts` fails if two notes publish the same id.
 

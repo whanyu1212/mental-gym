@@ -1,8 +1,16 @@
 import { glob } from "astro/loaders";
 import { defineCollection, z } from "astro:content";
 
+import { noteId } from "./lib/note-id";
+
 const notes = defineCollection({
-  loader: glob({ pattern: "**/*.{md,mdx}", base: "../notes" }),
+  loader: glob({
+    pattern: "**/*.{md,mdx}",
+    base: "../notes",
+    // Explicit so a note's id (its /notes/<id>/ URL and IndexedDB highlight key)
+    // never depends on undocumented loader defaults. See notes/README.md.
+    generateId: ({ entry, data }) => noteId(entry, data),
+  }),
   schema: z.object({
     title: z.string(),
     description: z.string().optional(),

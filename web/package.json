@@ -10,12 +10,14 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "verify:notes": "node scripts/verify-note-routes.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
     "astro": "^6.0.4",
     "chart.js": "^4.5.1",
+    "github-slugger": "^2.0.0",
     "katex": "^0.16.38",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
