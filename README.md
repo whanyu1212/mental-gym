@@ -33,13 +33,13 @@ Each DSA topic follows the same loop. Pick a row and work left to right:
 
 1. **Read the note** for the core idea, the invariant, and when the pattern applies.
 2. **Implement it from scratch** without looking, then compare against the reference.
-3. **Solve the problems** on the site. Each problem page shows the invariant, complexity, and a step-by-step animation.
+3. **Solve the problems** on the site. Each problem page shows the invariant and complexity; most (38 of 47) also have a step-by-step animation.
 4. **Check yourself** with the tests, then let spaced repetition schedule the review.
 
 | Topic | 1. Note | 2. From scratch | 3. Problems | 4. Tests |
 | --- | --- | --- | --- | --- |
 | Arrays & Hashing | [Arrays & Hashing](https://whanyu1212.github.io/mental-gym/notes/arrays_and_hashing/) · [Prefix Sum](https://whanyu1212.github.io/mental-gym/notes/prefix_sum_pattern/) · [Kadane's Algorithm](https://whanyu1212.github.io/mental-gym/notes/kadane_algorithm/) | [`arrays/`](src/dsa_from_scratch/python/arrays/) · [`hash_map/`](src/dsa_from_scratch/python/hash_map/) | [22 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-arrays-hashing) · [`src`](src/leetcode/arrays_hashing/) | [`test_arrays_hashing.py`](tests/leetcode/test_arrays_hashing.py) |
-| Two Pointers | [Two Pointers](https://whanyu1212.github.io/mental-gym/notes/two_pointers/) | [`three_pointers/`](src/dsa_from_scratch/python/three_pointers/) | [14 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-two-pointers) · [`src`](src/leetcode/two_pointers/) | [`test_two_pointers.py`](tests/leetcode/test_two_pointers.py) |
+| Two Pointers | [Two Pointers](https://whanyu1212.github.io/mental-gym/notes/two_pointers/) | — (see [`three_pointers/`](src/dsa_from_scratch/python/three_pointers/) for the related three-way partition) | [14 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-two-pointers) · [`src`](src/leetcode/two_pointers/) | [`test_two_pointers.py`](tests/leetcode/test_two_pointers.py) |
 | Sliding Window | [Sliding Window](https://whanyu1212.github.io/mental-gym/notes/sliding_window/) | [`sliding_window/`](src/dsa_from_scratch/python/sliding_window/) | [5 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-sliding-window) · [`src`](src/leetcode/sliding_window/) | [`test_sliding_window.py`](tests/leetcode/test_sliding_window.py) |
 | Stack | — | [`list_adt/`](src/dsa_from_scratch/python/list_adt/) (stacks, queues, linked lists) | [6 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-stack) · [`src`](src/leetcode/stack/) | [`test_stack.py`](tests/leetcode/test_stack.py) |
 
