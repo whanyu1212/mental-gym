@@ -9,8 +9,9 @@ class Solution:
         return s_dict == t_dict
 
 
-# Example usage
-solution = Solution.isAnagram("anagram", "nagaram")
-print(solution)  # Output: True
-solution = Solution.isAnagram("rat", "car")
-print(solution)  # Output: False
+if __name__ == "__main__":
+    # Example usage
+    solution = Solution().isAnagram("anagram", "nagaram")
+    print(solution)  # Output: True
+    solution = Solution().isAnagram("rat", "car")
+    print(solution)  # Output: False
