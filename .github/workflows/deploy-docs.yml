@@ -59,6 +59,10 @@ jobs:
         working-directory: web
         run: npm run build
 
+      - name: Verify note routes and highlight keys
+        working-directory: web
+        run: npm run verify:notes
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

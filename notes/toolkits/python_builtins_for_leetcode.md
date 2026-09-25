@@ -1,5 +1,6 @@
 ---
 title: Python Standard Library for DSA
+slug: python_builtins_for_leetcode
 description: A module-oriented reference for Python core types, built-in functions, and standard-library APIs commonly used in DSA problems.
 category: Languages
 order: 2

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
-import { extname } from "node:path";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { mlProblems } from "../src/data/mlProblems.ts";
 import { problems } from "../src/data/problems.ts";
 import { courses, modules } from "../src/data/roadmap.ts";
+import { noteFiles } from "./note-files.ts";
 
 const projectRoot = new URL("../..", import.meta.url);
 const notesRoot = new URL("notes/", projectRoot);
@@ -22,25 +22,6 @@ const catalog = {
 	note: new Set<string>(),
 	"system-design": new Set(["sd-real-time-ml-inference"]),
 };
-
-interface NoteFile {
-	id: string;
-	frontmatter: string;
-}
-
-function noteFiles(directory: URL, prefix = ""): NoteFile[] {
-	return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-		if (entry.name === "README.md") return [];
-		if (entry.isDirectory()) return noteFiles(new URL(`${entry.name}/`, directory), prefix ? `${prefix}/${entry.name}` : entry.name);
-		const extension = extname(entry.name);
-		if (extension !== ".md" && extension !== ".mdx") return [];
-		const id = `${prefix ? `${prefix}/` : ""}${entry.name.slice(0, -extension.length)}`;
-		const text = readFileSync(new URL(entry.name, directory), "utf8");
-		const fence = text.match(/^---\n([\s\S]*?)\n---/);
-		assert.ok(fence, `${id} is missing frontmatter`);
-		return [{ id, frontmatter: fence[1] }];
-	});
-}
 
 function scalar(frontmatter: string, name: string): string | undefined {
 	const match = frontmatter.match(new RegExp(`^${name}:\\s*(.+)\\s*$`, "m"));
@@ -72,6 +53,35 @@ test("existing note URLs stay stable", () => {
 	]) {
 		assert.ok(catalog.note.has(id), `missing published note ${id}`);
 	}
+});
+
+test("topic-folder notes keep their original root-level URLs", () => {
+	// These notes were filed into topic folders after launch. Their ids are part
+	// of public URLs and key saved highlights, so each pins its old id via `slug:`.
+	for (const id of [
+		"asymptotic-analysis",
+		"time-complexity",
+		"time_complexity_interview_questions",
+		"space-complexity",
+		"space-complexity-questions",
+		"arrays_and_hashing",
+		"two_pointers",
+		"sliding_window",
+		"prefix_sum_pattern",
+		"kadane_algorithm",
+		"python-dsa-toolkit",
+		"python_builtins_for_leetcode",
+		"python-big-o-cheatsheet",
+		"typescript-dsa-toolkit",
+		"ml-logistic-regression",
+		"sd-real-time-ml-inference",
+	]) {
+		assert.ok(catalog.note.has(id), `missing published note ${id}`);
+	}
+});
+
+test("note ids are unique", () => {
+	assert.equal(catalog.note.size, notes.length, "two notes publish the same id");
 });
 
 test("roadmap course and module IDs on notes are real", () => {

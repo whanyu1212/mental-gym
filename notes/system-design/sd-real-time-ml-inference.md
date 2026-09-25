@@ -1,5 +1,6 @@
 ---
 title: Real-Time ML Inference Platform
+slug: sd-real-time-ml-inference
 description: Design a low-latency prediction service with versioned models, online features, safe rollouts, and observable feedback loops.
 category: System Design
 order: 1

@@ -1,5 +1,6 @@
 ---
 title: Kadane's Algorithm
+slug: kadane_algorithm
 description: A one-pass dynamic-programming pattern for maximum or minimum contiguous subarray problems, with a roadmap to its core variants.
 category: Patterns
 order: 4

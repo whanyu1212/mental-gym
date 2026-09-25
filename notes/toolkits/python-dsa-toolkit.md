@@ -1,5 +1,6 @@
 ---
 title: Python DSA Quick Reference
+slug: python-dsa-toolkit
 description: A fast task-to-tool lookup for choosing Python types and standard-library helpers while solving DSA problems.
 category: Languages
 order: 1

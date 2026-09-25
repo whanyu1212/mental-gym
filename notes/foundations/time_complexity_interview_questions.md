@@ -1,5 +1,6 @@
 ---
 title: Time Complexity Interview Questions & Cheat Sheet
+slug: time_complexity_interview_questions
 description: A comprehensive guide to time complexity analysis for DSA interviews, covering common questions, patterns, and quick reference tables.
 category: Complexity
 order: 4

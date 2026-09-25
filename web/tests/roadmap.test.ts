@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
-import { basename, extname } from "node:path";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { mlProblems } from "../src/data/mlProblems.ts";
@@ -17,6 +16,7 @@ import {
 	validateRoadmap,
 	type ReferenceCatalog,
 } from "../src/data/roadmap.ts";
+import { noteFiles } from "./note-files.ts";
 
 const projectRoot = new URL("../..", import.meta.url);
 
@@ -25,22 +25,11 @@ function slugsFromSource(relativePath: string): Set<string> {
 	return new Set([...source.matchAll(/\bslug:\s*"([^"]+)"/g)].map((match) => match[1]));
 }
 
-function noteSlugs(directory: URL, prefix = ""): string[] {
-	return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-		if (entry.name === "README.md") return [];
-		const childPrefix = prefix ? `${prefix}/${entry.name}` : entry.name;
-		if (entry.isDirectory()) return noteSlugs(new URL(`${entry.name}/`, directory), childPrefix);
-		const extension = extname(entry.name);
-		if (extension !== ".md" && extension !== ".mdx") return [];
-		return [`${prefix ? `${prefix}/` : ""}${basename(entry.name, extension)}`];
-	});
-}
-
 const catalog: ReferenceCatalog = {
 	algorithm: new Set(problems.map((problem) => problem.slug)),
 	ml: new Set(mlProblems.map((problem) => problem.slug)),
 	sql: slugsFromSource("web/src/data/sqlProblems.ts"),
-	note: new Set(noteSlugs(new URL("notes/", projectRoot))),
+	note: new Set(noteFiles(new URL("notes/", projectRoot)).map((note) => note.id)),
 	"system-design": new Set(["sd-real-time-ml-inference"]),
 };
 
