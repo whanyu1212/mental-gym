@@ -10,9 +10,10 @@ class TreeNode:
 
 
 def sorted_list_to_balanced_bst(values: list) -> TreeNode:
-    """Convert a sorted list to a balanced binary search tree
-    using recursion. A balanced BST has lower height and search
-    time complexity as compared to an unbalanced BST.
+    """
+    Convert a sorted list to a balanced binary search tree using
+    recursion. A balanced BST has lower height and search time
+    complexity as compared to an unbalanced BST.
 
     Args:
         values (list): input list of values
@@ -37,8 +38,9 @@ def sorted_list_to_balanced_bst(values: list) -> TreeNode:
 
 
 def find_value_or_closest_smaller(root: TreeNode, num: int) -> int:
-    """Find the value in the BST that is closest to the target number
-    and smaller than the target number.
+    """
+    Find the value in the BST that is closest to the target number and
+    smaller than the target number.
 
     Args:
         root (TreeNode): starting root node

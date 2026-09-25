@@ -3,7 +3,8 @@
 
 
 def count_passes(input_str: str) -> int:
-    """Given a string of characters, return the number of pairs of people
+    """
+    Given a string of characters, return the number of pairs of people
     that pass each other.
 
     Args:
