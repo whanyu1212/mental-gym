@@ -92,4 +92,4 @@ Two GitHub Actions workflows: a test workflow (`pytest` over the Kattis suite, a
 
 ## Tooling
 
-Python code is enforced with `black`, `isort`, `flake8`, and `docformatter` (docstring formatting and wrapping) via pre-commit hooks. The Astro site is TypeScript-checked with `astro check`.
+Python code is enforced with `ruff` (linting, import sorting, and formatting) and `docformatter` (docstring formatting and wrapping) via pre-commit hooks. The Astro site is TypeScript-checked with `astro check`.

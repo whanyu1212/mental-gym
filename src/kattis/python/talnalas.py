@@ -6,8 +6,9 @@ from collections import deque
 
 
 def generate_list_of_neighbors(current_state: str, n_digits: int) -> list[str]:
-    """Generate a list of possible neighbors of the current state by changing one digit
-    at a time (+1 or -1).
+    """
+    Generate a list of possible neighbors of the current state by
+    changing one digit at a time (+1 or -1).
 
     Args:
         current_state (str): the state of the numbers of the digital lock as a string
@@ -34,7 +35,8 @@ def generate_list_of_neighbors(current_state: str, n_digits: int) -> list[str]:
 def check_allowed_neighbors(
     neighbors: list[str], allowed_passcodes: list[int]
 ) -> list[str]:
-    """Check if the neighbors are allowed passcodes.
+    """
+    Check if the neighbors are allowed passcodes.
 
     Args:
         neighbors (list[str]): a list of possible neighbors of the current state
@@ -47,8 +49,9 @@ def check_allowed_neighbors(
 
 
 def bfs(initial_state: str, actual_passcode: str, allowed_passcodes: list[int]) -> int:
-    """Breadth-first search to find the shortest path from the initial state to the
-    actual passcode.
+    """
+    Breadth-first search to find the shortest path from the initial
+    state to the actual passcode.
 
     Args:
         initial_state (str): the initial state of the digital lock

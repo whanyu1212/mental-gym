@@ -9,9 +9,6 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.10"
 pytest = "^8.2.2"
-black = "^24.4.2"
-flake8 = "^7.1.0"
-isort = "^5.13.2"
 docformatter = "^1.7.5"
 pre-commit = "^3.7.1"
 numpy = "^2.0.1"
@@ -22,6 +19,25 @@ scikit-learn = ">=1.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+ruff = "^0.16.9"
+
+[tool.ruff]
+line-length = 89
+target-version = "py310"
+# Scratch notebooks are gitignored; keep pre-commit (which passes tracked
+# files explicitly) consistent with `ruff check .` (which skips them).
+extend-exclude = ["*.ipynb"]
+force-exclude = true
+
+[tool.ruff.lint]
+# Parity with the previous flake8 (pycodestyle + pyflakes) + isort setup.
+select = ["E", "W", "F", "I"]
+
+[tool.ruff.format]
+# Parity with the previous black --skip-string-normalization.
+quote-style = "preserve"
+# Leave code snippets in teaching notes as written; black never touched them.
+exclude = ["*.md"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src/kattis/python", "src/leetcode/arrays_hashing", "src/leetcode/two_pointers", "src/leetcode/sliding_window", "src/leetcode/stack"]

@@ -8,7 +8,6 @@ class Pair:
 
 
 class HashMapOpenAddressing:
-
     def __init__(self):
         self.size = 0  # Number of key-value pairs, 0 to begin with
         self.capacity = 4  # Hash table capacity

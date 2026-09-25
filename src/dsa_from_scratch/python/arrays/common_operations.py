@@ -1,12 +1,11 @@
 import random
-from typing import List, Union
 
 from colorama import Fore, Style, init
 
 init(autoreset=True)
 
 
-def initialize_array(length: int) -> List[Union[int, float, str, None]]:
+def initialize_array(length: int) -> list[int | float | str | None]:
     """
     Initialize an array of length `length` with None values. 0 is not
     used as it can be a valid value in some cases but if we want to

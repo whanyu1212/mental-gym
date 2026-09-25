@@ -1,5 +1,4 @@
 class PrefixSum:
-
     def __init__(self, nums):
         self.prefix = []
         total = 0
@@ -14,7 +13,6 @@ class PrefixSum:
 
 
 class PrefixSum2D:
-
     def __init__(self, matrix):
         rows = len(matrix)
         cols = len(matrix[0]) if rows > 0 else 0
@@ -43,7 +41,6 @@ class PrefixSum2D:
 
 
 class PrefixSum3D:
-
     def __init__(self, cube):
         self.x_len = len(cube)
         self.y_len = len(cube[0]) if self.x_len > 0 else 0

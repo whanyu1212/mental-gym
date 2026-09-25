@@ -150,7 +150,8 @@ def dfs_cycle_detection_directed(
 
     Third level of recursion:
     dfs_directed(graph, 'D', {'A', 'B', 'C'}, {'A', 'B', 'C'})
-    Add 'D' to visited set: visited = {'A', 'B', 'C', 'D'} and rec_stack = {'A', 'B', 'C', 'D'}  # noqa: E501
+    Add 'D' to visited set: visited = {'A', 'B', 'C', 'D'}
+    and rec_stack = {'A', 'B', 'C', 'D'}
 
     Fourth level of recursion:
     dfs_directed(graph, 'B', {'A', 'B', 'C', 'D'}, {'A', 'B', 'C', 'D'})

@@ -3,12 +3,12 @@ class Solution:
         def is_pali(sub: str) -> bool:
             return sub == sub[::-1]
 
-        l, r = 0, len(s) - 1
-        while l < r:
-            if s[l] != s[r]:
-                # Try skipping s[l] OR skipping s[r]
-                return is_pali(s[l + 1 : r + 1]) or is_pali(s[l:r])
-            l += 1
-            r -= 1
+        left, right = 0, len(s) - 1
+        while left < right:
+            if s[left] != s[right]:
+                # Try skipping s[left] OR skipping s[right]
+                return is_pali(s[left + 1 : right + 1]) or is_pali(s[left:right])
+            left += 1
+            right -= 1
 
         return True

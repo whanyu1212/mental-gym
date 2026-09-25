@@ -2,7 +2,9 @@ import sys
 
 
 def process_text_ubbi_dubbi(text: str, vowel_list: set, mode: str) -> str:
-    """Process the string of text to convert to Ubbi Dubbi language or vice versa.
+    """
+    Process the string of text to convert to Ubbi Dubbi language or vice
+    versa.
 
     Args:
         text (str): string of text to be processed (may or may not contain vowels)
@@ -45,7 +47,8 @@ def process_text_list_ubbi_dubbi(
     lst: list[str],
     mode: str,
 ) -> None:
-    """Loop through the list of text to process each string of text.
+    """
+    Loop through the list of text to process each string of text.
 
     Args:
         lst (list[str]): list of text to be processed

@@ -68,13 +68,13 @@ def counting_sort(nums: list[int]) -> None:
         print(f"{Fore.GREEN}nums[{i}]: {nums[i]}{Style.RESET_ALL}")
         num = nums[i]
         print(
-            f"{Fore.GREEN}Total occurrences before {num}: {counter[num]-1}{Style.RESET_ALL}"  # noqa: E501
+            f"{Fore.GREEN}Total occurrences before {num}: {counter[num] - 1}{Style.RESET_ALL}"  # noqa: E501
         )
         res[counter[num] - 1] = num  # Place num at the corresponding index
-        print(f"{Fore.GREEN}Placing {num} at index {counter[num]-1}{Style.RESET_ALL}")
-        counter[
-            num
-        ] -= 1  # Decrement the prefix sum by 1, getting the next index to place num
+        print(f"{Fore.GREEN}Placing {num} at index {counter[num] - 1}{Style.RESET_ALL}")
+        counter[num] -= (
+            1  # Decrement the prefix sum by 1, getting the next index to place num
+        )
         print(f"{Fore.GREEN}Updated prefix sum: {counter}{Style.RESET_ALL}\n")
     # Use result array res to overwrite the original array nums
     for i in range(n):

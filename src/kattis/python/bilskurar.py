@@ -10,7 +10,8 @@ def merge_and_count_inversion(
     merge stage.
 
     Args:
-        nums (list[int]): input list of integers (index of the respective garage for each house in the list)  # noqa: E501
+        nums (list[int]): input list of integers (index of the respective
+            garage for each house in the list)
         tmp (list[int]): temporary list to store the sorted elements
         left (int): left boundary of the sort interval
         mid (int): middle index of the sort interval
@@ -60,7 +61,8 @@ def sort_and_count_inversion(
     A recursive function to count the number of inversions in a numsay.
 
     Args:
-        nums (list[int]): a list of index of the respective garage for each house in the list  # noqa: E501
+        nums (list[int]): a list of index of the respective garage for
+            each house in the list
         tmp (list[int]): temporary list to store the sorted elements
         left (int): left boundary of the sort interval
         right (int): right boundary of the sort interval
