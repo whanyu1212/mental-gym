@@ -10,5 +10,5 @@
     "verbatimModuleSyntax": true,
     "types": ["bun"]
   },
-  "include": ["src/leetcode/**/*.ts", "src/patterns/**/*.ts"]
+  "include": ["src/leetcode/**/*.ts"]
 }
