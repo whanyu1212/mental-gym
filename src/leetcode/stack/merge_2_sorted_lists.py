@@ -35,6 +35,9 @@ class Solution:
                 list2 = list2.next
             current = current.next
 
+        # At most one list still has nodes, and they are already sorted.
+        current.next = list1 or list2
+
         return dummy.next  # 1 based indexing
 
 
