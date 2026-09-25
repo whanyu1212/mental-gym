@@ -1,5 +1,6 @@
 ---
 title: Space Complexity
+slug: space-complexity
 description: A systematic guide to space complexity — auxiliary vs total space, sources of memory usage, the call stack, data structure costs, and the time-space trade-off.
 category: Complexity
 order: 3

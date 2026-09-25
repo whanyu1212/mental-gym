@@ -1,5 +1,6 @@
 ---
 title: Prefix Sum Pattern
+slug: prefix_sum_pattern
 description: A guide to the Prefix Sum pattern for efficient range sum queries in 1D, 2D, and 3D arrays.
 category: Patterns
 order: 2

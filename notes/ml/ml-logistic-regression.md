@@ -1,5 +1,6 @@
 ---
 title: Logistic Regression from Scratch
+slug: ml-logistic-regression
 description: Build a binary classifier with a vectorized forward pass, binary cross-entropy, and gradient descent.
 category: Machine Learning
 order: 10

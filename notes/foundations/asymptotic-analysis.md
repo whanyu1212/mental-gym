@@ -1,5 +1,6 @@
 ---
 title: Asymptotic Analysis
+slug: asymptotic-analysis
 description: How algorithm complexity is measured and reasoned about — Big O, Omega, Theta, recurrences, the Master Theorem, and space analysis.
 category: Complexity
 order: 1

@@ -22,18 +22,23 @@ Link related solutions and implementations when they provide useful practice con
 
 ## Organization
 
-Existing notes remain at this directory's root. For new topic collections, introduce a domain directory when it contains multiple related notes:
+Notes are filed by topic:
 
 ```text
 notes/
-├── dsa/
-├── ml/
-├── recommendation-system/
-├── roadmap/examples/   # labeled course-note examples linked to a module
-└── templates/          # copy-paste outlines; kind: template
+├── foundations/            # complexity analysis and interview questions
+├── patterns/               # DSA patterns: arrays & hashing, two pointers, sliding window, …
+├── toolkits/               # language references (Python, TypeScript)
+├── ml/                     # model foundations and from-scratch implementations
+├── system-design/          # architecture case studies
+├── recommendation-system/  # experimentation and metrics collection
+├── roadmap/examples/       # labeled course-note examples linked to a module
+└── templates/              # copy-paste outlines; kind: template
 ```
 
-Do not move existing notes solely to match this convention. Preserve links and migrate deliberately when a domain needs a fuller reorganization.
+A note's URL is `/notes/<id>/`. By default the id is its path under `notes/` without the extension (for example `recommendation-system/metrics`). Notes in `foundations/`, `patterns/`, `toolkits/`, `ml/` and `system-design/` were filed there after they were published, so each pins its original id with a frontmatter `slug:` (for example `slug: two_pointers`). That id is part of public URLs, cross-links in `web/src/data/`, and the key for saved highlights in IndexedDB. Keep an existing note's `slug:` when you move or rename the file.
+
+New notes in those folders can omit `slug:` and use the folder path as their id, or set `slug:` to a short root-level id. Either way, `web/tests/notes.test.ts` fails if two notes publish the same id.
 
 ## File Naming
 
@@ -78,6 +83,7 @@ Optional fields, all backward-compatible:
 
 | Field | Meaning |
 | --- | --- |
+| `slug` | Published id and URL segment. Omit to use the path under `notes/`; see [Organization](#organization). |
 | `kind` | `concept` (default if omitted), `course`, `weekly-review`, or `template`. |
 | `courseId` | Must match `courses[].id` in `web/src/data/roadmap.ts`. |
 | `moduleId` | Must match a `RoadmapModule.id`. |

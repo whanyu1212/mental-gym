@@ -1,5 +1,6 @@
 ---
 title: TypeScript DSA Quick Reference
+slug: typescript-dsa-toolkit
 description: A task-to-tool lookup for TypeScript built-ins, syntax, and Python-to-TS translations while solving LeetCode.
 category: Languages
 order: 4

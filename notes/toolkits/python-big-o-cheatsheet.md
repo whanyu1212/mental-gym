@@ -1,5 +1,6 @@
 ---
 title: Python Big O Cheatsheet
+slug: python-big-o-cheatsheet
 description: A quick reference for the time complexity of common Python operations across Lists, Dictionaries, Sets, Strings, Deques, and Heaps.
 category: Languages
 order: 3
