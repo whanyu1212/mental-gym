@@ -25,7 +25,7 @@ Most problems are solved with an explicit invariant and complexity justification
 | ML from scratch | A NumPy-only logistic regression implementation (vectorized forward pass, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
 | Technical notes | 16 long-form guides on complexity analysis, algorithmic patterns, ML foundations, and system design, rendered with KaTeX math support | `notes/` |
-| Pattern references | Reusable algorithmic templates independent of any single problem | `src/patterns/` |
+| DSA from scratch | Data structures and reusable algorithmic pattern templates (prefix sum, Kadane, sliding window, three pointers, backtracking), grouped by topic | `src/dsa_from_scratch/python/` |
 
 ## The practice site
 
