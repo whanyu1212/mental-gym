@@ -20,7 +20,7 @@ Most problems are solved with an explicit invariant and complexity justification
 
 | Area | Scope | Where |
 | --- | --- | --- |
-| DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution; 16 also have a Julia port; TypeScript ports start from the repo-root Bun project | `src/leetcode/` |
+| DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution covered by pytest in CI; 16 also have a Julia port; TypeScript ports start from the repo-root Bun project | `src/leetcode/`, `tests/leetcode/` |
 | Competitive programming (Kattis) | 27 unique solved problems (26 Python, 1 Julia-only), 10 with pytest coverage in CI | `src/kattis/`, `tests/kattis/` |
 | ML from scratch | A NumPy-only logistic regression implementation (vectorized forward pass, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
@@ -52,7 +52,7 @@ src/
 notes/                # Technical knowledge notes — see notes/README.md
 web/                  # Astro practice site (problems, notes, spaced repetition)
 scripts/              # Problem-data generation and content validation
-tests/                # pytest (Kattis) and Julia test suites
+tests/                # pytest (LeetCode, Kattis) and Julia test suites
 .github/workflows/    # CI: test suite + GitHub Pages deploy
 ```
 
@@ -62,7 +62,7 @@ tests/                # pytest (Kattis) and Julia test suites
 
 ```bash
 poetry install
-poetry run pytest tests/kattis/ -v
+poetry run pytest tests/ -v
 ```
 
 **Astro site:**
@@ -88,7 +88,7 @@ bun src/leetcode/sliding_window/contains_duplicate_2.ts
 
 ## CI
 
-Two GitHub Actions workflows: a test workflow (`pytest` over the Kattis suite, a guide-content validator, and the Julia test suite) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
+Two GitHub Actions workflows: a test workflow (`pytest` over the LeetCode and Kattis suites, a guide-content validator, and the Julia test suite) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
 
 ## Tooling
 

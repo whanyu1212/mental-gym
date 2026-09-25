@@ -51,7 +51,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          poetry run pytest tests/kattis/ -v --tb=short
+          poetry run pytest tests/ -v --tb=short
 
       - name: Validate algorithm guides
         run: |
