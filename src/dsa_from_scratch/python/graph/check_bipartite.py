@@ -9,7 +9,6 @@ def is_bipartite(graph):
     # Looping through nodes in the graph
     # Just in case there are disconnected components
     for node in graph:
-
         if node not in color:
             # Start BFS from this node
 

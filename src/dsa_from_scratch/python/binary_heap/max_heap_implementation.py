@@ -106,7 +106,6 @@ class MaxHeap:
 
         cur = len(self.heap - 1) // 2
         while cur > 0:
-
             i = cur
 
             while 2 * i < len(self.heap):  # while the left child exists

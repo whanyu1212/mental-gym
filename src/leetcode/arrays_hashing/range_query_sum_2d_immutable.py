@@ -16,7 +16,6 @@ from typing import List
 
 
 class NumMatrix:
-
     def __init__(self, matrix: List[List[int]]):
         # O(1) requirement means you cannot iterate over the lists
         # You need to have a matrix that stores the prefix

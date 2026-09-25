@@ -86,26 +86,26 @@ class Solution:
         if n <= 2:
             return 0
 
-        l, r = 0, n - 1
+        left, right = 0, n - 1
 
         max_left, max_right = 0, 0
         total_water = 0
 
-        while l < r:
-            if height[l] < height[r]:
-                if height[l] >= max_left:
-                    max_left = height[l]
+        while left < right:
+            if height[left] < height[right]:
+                if height[left] >= max_left:
+                    max_left = height[left]
                 else:
-                    total_water += max_left - height[l]
+                    total_water += max_left - height[left]
 
-                l += 1
+                left += 1
             else:
-                if height[r] >= max_right:
-                    max_right = height[r]
+                if height[right] >= max_right:
+                    max_right = height[right]
                 else:
-                    total_water += max_right - height[r]
+                    total_water += max_right - height[right]
 
-                r -= 1
+                right -= 1
 
         return total_water
 

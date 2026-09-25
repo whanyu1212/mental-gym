@@ -1,5 +1,4 @@
 class MyHashMap:
-
     def __init__(self):
         # Similar to HashSet, we use a fixed size array for buckets.
         self.key_space = 1000000

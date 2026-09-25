@@ -1,5 +1,4 @@
 class MyHashSet:
-
     def __init__(self):
         # Choose a large prime or power of 10 to minimize collisions.
         # Trade-off: Larger key_space uses more memory but reduces collisions (faster
