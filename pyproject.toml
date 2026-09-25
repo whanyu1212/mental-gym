@@ -9,9 +9,6 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.10"
 pytest = "^8.2.2"
-black = "^24.4.2"
-flake8 = "^7.1.0"
-isort = "^5.13.2"
 docformatter = "^1.7.5"
 pre-commit = "^3.7.1"
 numpy = "^2.0.1"
@@ -22,6 +19,7 @@ scikit-learn = ">=1.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
+ruff = "^0.16.9"
 
 [tool.ruff]
 line-length = 89
