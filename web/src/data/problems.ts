@@ -1531,11 +1531,12 @@ println("Running tests...")`,
         return s_dict == t_dict
 
 
-# Example usage
-solution = Solution.isAnagram("anagram", "nagaram")
-print(solution)  # Output: True
-solution = Solution.isAnagram("rat", "car")
-print(solution)  # Output: False`,
+if __name__ == "__main__":
+    # Example usage
+    solution = Solution().isAnagram("anagram", "nagaram")
+    print(solution)  # Output: True
+    solution = Solution().isAnagram("rat", "car")
+    print(solution)  # Output: False`,
       julia: `"""
     isAnagram(s::String, t::String) -> Bool
 
@@ -1749,7 +1750,6 @@ numMatrix.sumRegion(1, 2, 2, 4); // return 12 (i.e sum of the blue rectangle)
 
 
 class NumMatrix:
-
     def __init__(self, matrix: List[List[int]]):
         # O(1) requirement means you cannot iterate over the lists
         # You need to have a matrix that stores the prefix
@@ -2019,7 +2019,6 @@ myHashSet.contains(2); // return False, (already removed)</pre>
 `,
     solutions: {
       python: `class MyHashSet:
-
     def __init__(self):
         # Choose a large prime or power of 10 to minimize collisions.
         # Trade-off: Larger key_space uses more memory but reduces collisions (faster
@@ -2127,7 +2126,6 @@ myHashMap.get(2);    // return -1 (i.e., not found), The map is now [[1,1]]
 `,
     solutions: {
       python: `class MyHashMap:
-
     def __init__(self):
         # Similar to HashSet, we use a fixed size array for buckets.
         self.key_space = 1000000
@@ -3199,6 +3197,9 @@ class Solution:
                 list2 = list2.next
             current = current.next
 
+        # At most one list still has nodes, and they are already sorted.
+        current.next = list1 or list2
+
         return dummy.next  # 1 based indexing
 
 
@@ -3736,18 +3737,18 @@ if __name__ == "__main__":
 class Solution:
     def maxArea(self, height: List[int]) -> int:
 
-        l, r = 0, len(height) - 1
+        left, right = 0, len(height) - 1
 
         max_area = 0
 
-        while l < r:
-            current_area = (r - l) * min(height[l], height[r])
+        while left < right:
+            current_area = (right - left) * min(height[left], height[right])
             max_area = max(current_area, max_area)
 
-            if height[l] < height[r]:
-                l += 1
+            if height[left] < height[right]:
+                left += 1
             else:
-                r -= 1
+                right -= 1
 
         return max_area
 
@@ -4259,26 +4260,26 @@ class Solution:
         if n <= 2:
             return 0
 
-        l, r = 0, n - 1
+        left, right = 0, n - 1
 
         max_left, max_right = 0, 0
         total_water = 0
 
-        while l < r:
-            if height[l] < height[r]:
-                if height[l] >= max_left:
-                    max_left = height[l]
+        while left < right:
+            if height[left] < height[right]:
+                if height[left] >= max_left:
+                    max_left = height[left]
                 else:
-                    total_water += max_left - height[l]
+                    total_water += max_left - height[left]
 
-                l += 1
+                left += 1
             else:
-                if height[r] >= max_right:
-                    max_right = height[r]
+                if height[right] >= max_right:
+                    max_right = height[right]
                 else:
-                    total_water += max_right - height[r]
+                    total_water += max_right - height[right]
 
-                r -= 1
+                right -= 1
 
         return total_water
 
@@ -4648,17 +4649,17 @@ Since an empty string reads the same forward and backward, it is a palindrome.
 
         # return output == output[::-1]
 
-        l, r = 0, len(s) - 1
+        left, right = 0, len(s) - 1
 
-        while l < r:
-            while l < r and not s[l].isalnum():
-                l += 1
-            while l < r and not s[r].isalnum():
-                r -= 1
-            if s[l].lower() != s[r].lower():
+        while left < right:
+            while left < right and not s[left].isalnum():
+                left += 1
+            while left < right and not s[right].isalnum():
+                right -= 1
+            if s[left].lower() != s[right].lower():
                 return False
-            l += 1
-            r -= 1
+            left += 1
+            right -= 1
         return True
 
 
@@ -4784,6 +4785,134 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
   },
   {
+    id: "189",
+    slug: "189-rotate-array",
+    leetcodeSlug: "rotate-array",
+    title: "Rotate Array",
+    difficulty: "Medium",
+    group: "Two Pointers",
+    topics: ["array", "math", "two-pointers"],
+    description: `<p>Given an integer array <code>nums</code>, rotate the array to the right by <code>k</code> steps, where <code>k</code> is non-negative.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [1,2,3,4,5,6,7], k = 3
+<strong>Output:</strong> [5,6,7,1,2,3,4]
+<strong>Explanation:</strong>
+rotate 1 steps to the right: [7,1,2,3,4,5,6]
+rotate 2 steps to the right: [6,7,1,2,3,4,5]
+rotate 3 steps to the right: [5,6,7,1,2,3,4]
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> nums = [-1,-100,3,99], k = 2
+<strong>Output:</strong> [3,99,-1,-100]
+<strong>Explanation:</strong>
+rotate 1 steps to the right: [99,-1,-100,3]
+rotate 2 steps to the right: [3,99,-1,-100]
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
+	<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>
+	<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong></p>
+
+<ul>
+	<li>Try to come up with as many solutions as you can. There are at least <strong>three</strong> different ways to solve this problem.</li>
+	<li>Could you do it in-place with <code>O(1)</code> extra space?</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def rotate(self, nums: List[int], k: int) -> None:
+        """
+        Rotate the array to the right by \`\`k\`\` steps in-place.
+
+        Do not return anything, modify \`\`nums\`\` in-place instead.
+        """
+        # =====================================================================
+        # INTUITION & ALGEBRAIC FOUNDATION:
+        # =====================================================================
+        #
+        # 1. Block Representation:
+        #    Let n = len(nums), and normalize k = k % n
+        #    (rotating n times is an identity).
+        #    Split the array into two blocks:
+        #      - X = nums[0 : n - k]    (the first n - k elements)
+        #      - Y = nums[n - k : n]    (the last k elements)
+        #
+        #    Original array:  Array = X Y
+        #    Target array:    Target = Y X   (suffix Y moves to the front)
+        #
+        # 2. Properties of the Reversal Operator R(·):
+        #    - Involution (Self-inverse):
+        #        (A^R)^R = A
+        #    - Anti-distributivity over concatenation (Shoes & Socks):
+        #        (A B)^R = B^R A^R
+        #
+        # 3. The 3-Step Reversal Algorithm:
+        #    - Step 1: Reverse the entire array (X Y)^R
+        #              (X Y)^R = Y^R X^R
+        #              Now the blocks are in the correct relative positions
+        #              (Y's elements are at the front, X's at the back),
+        #              but the elements inside each block are inverted.
+        #
+        #    - Step 2: Reverse the first k elements (Y^R)^R
+        #              (Y^R)^R X^R = Y X^R
+        #              The prefix Y is now in its original, correct order.
+        #
+        #    - Step 3: Reverse the remaining n - k elements (X^R)^R
+        #              Y (X^R)^R = Y X
+        #              The suffix X is restored, yielding the rotated array.
+        #
+        # Complexity:
+        #    - Time:  O(n) - each element is reversed/swapped at most twice.
+        #    - Space: O(1) - purely in-place modifications with two pointers.
+        #
+        # Trace Example: nums = [1, 2, 3, 4, 5, 6, 7], k = 3
+        #    n = 7, k = 3  =>  X = [1, 2, 3, 4], Y = [5, 6, 7]
+        #    Step 1: reverse(0, 6) -> [7, 6, 5, 4, 3, 2, 1]  (Y^R X^R)
+        #    Step 2: reverse(0, 2) -> [5, 6, 7, 4, 3, 2, 1]  (Y   X^R)
+        #    Step 3: reverse(3, 6) -> [5, 6, 7, 1, 2, 3, 4]  (Y   X  )
+        # =====================================================================
+
+        k %= len(nums)
+
+        def reverse_helper(left: int, right: int, nums: List[int]) -> None:
+            while left < right:
+                nums[left], nums[right] = nums[right], nums[left]
+                left, right = left + 1, right - 1
+
+        reverse_helper(0, len(nums) - 1, nums)
+        reverse_helper(0, k - 1, nums)
+        reverse_helper(k, len(nums) - 1, nums)
+
+
+if __name__ == "__main__":
+    nums = [1, 2, 3, 4, 5, 6, 7]
+    k = 3
+    Solution().rotate(nums, k)
+    print(f"Result: {nums}")
+    # Expected: [5, 6, 7, 1, 2, 3, 4]`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/rotate-array/",
+  },
+  {
     id: "344",
     slug: "344-reverse-string",
     leetcodeSlug: "reverse-string",
@@ -4817,11 +4946,11 @@ if __name__ == "__main__":
 
 class Solution:
     def reverseString(self, s: List[str]) -> None:
-        l, r = 0, len(s) - 1
-        while l < r:
-            s[l], s[r] = s[r], s[l]
-            l += 1
-            r -= 1
+        left, right = 0, len(s) - 1
+        while left < right:
+            s[left], s[right] = s[right], s[left]
+            left += 1
+            right -= 1
 
 
 if __name__ == "__main__":
@@ -4879,18 +5008,134 @@ if __name__ == "__main__":
         def is_pali(sub: str) -> bool:
             return sub == sub[::-1]
 
-        l, r = 0, len(s) - 1
-        while l < r:
-            if s[l] != s[r]:
-                # Try skipping s[l] OR skipping s[r]
-                return is_pali(s[l + 1 : r + 1]) or is_pali(s[l:r])
-            l += 1
-            r -= 1
+        left, right = 0, len(s) - 1
+        while left < right:
+            if s[left] != s[right]:
+                # Try skipping s[left] OR skipping s[right]
+                return is_pali(s[left + 1 : right + 1]) or is_pali(s[left:right])
+            left += 1
+            right -= 1
 
         return True`,
       julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/valid-palindrome-ii/",
+  },
+  {
+    id: "881",
+    slug: "881-boats-to-save-people",
+    leetcodeSlug: "boats-to-save-people",
+    title: "Boats to Save People",
+    difficulty: "Medium",
+    group: "Two Pointers",
+    topics: ["array", "two-pointers", "greedy", "sorting", "timsort"],
+    description: `<p>You are given an array <code>people</code> where <code>people[i]</code> is the weight of the <code>i<sup>th</sup></code> person, and an <strong>infinite number of boats</strong> where each boat can carry a maximum weight of <code>limit</code>. Each boat carries at most two people at the same time, provided the sum of the weight of those people is at most <code>limit</code>.</p>
+
+<p>Return <em>the minimum number of boats to carry every given person</em>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> people = [1,2], limit = 3
+<strong>Output:</strong> 1
+<strong>Explanation:</strong> 1 boat (1, 2)
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> people = [3,2,2,1], limit = 3
+<strong>Output:</strong> 3
+<strong>Explanation:</strong> 3 boats (1, 2), (2) and (3)
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> people = [3,5,3,4], limit = 5
+<strong>Output:</strong> 4
+<strong>Explanation:</strong> 4 boats (3), (3), (4), (5)
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= people.length &lt;= 5 * 10<sup>4</sup></code></li>
+	<li><code>1 &lt;= people[i] &lt;= limit &lt;= 3 * 10<sup>4</sup></code></li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+
+class Solution:
+    def numRescueBoats(self, people: List[int], limit: int) -> int:
+        """
+        Return the minimum number of boats to carry every given person.
+
+        Constraints:
+        - Each boat can carry at most 2 people at the same time.
+        - The combined weight of people in a boat cannot exceed \`\`limit\`\`.
+        """
+        # =====================================================================
+        # INTUITION: GREEDY + TWO POINTERS
+        # =====================================================================
+        #
+        # 1. Why Greedy?
+        #    - Focus on the heaviest person currently waiting (at \`right\`).
+        #    - That person MUST get on a boat.
+        #    - To minimize boats, try to pair them with someone.
+        #    - Best chance of pairing is with the lightest available person
+        #      (at \`left\`).
+        #    - If people[left] + people[right] > limit, the heaviest person
+        #      cannot pair with ANYONE, so they MUST take a boat alone.
+        #    - If people[left] + people[right] <= limit, pairing them is
+        #      optimal because it saves a boat while leaving heavier remaining
+        #      spots for other medium-weight people.
+        #
+        # 2. Algorithm:
+        #    - Sort \`people\` in ascending order.
+        #    - Initialize two pointers: \`left = 0\`, \`right = len(people) - 1\`.
+        #    - While \`left <= right\`:
+        #        - If \`people[left] + people[right] <= limit\`, lightest person
+        #          shares the boat -> advance \`left += 1\`.
+        #        - Heaviest person ALWAYS takes this boat -> \`right -= 1\`.
+        #        - Increment the boat count.
+        #
+        # 3. Complexity:
+        #    - Time:  O(n log n) due to sorting (two-pointer pass is O(n)).
+        #    - Space: O(1) auxiliary space (or O(n) based on sort).
+        # =====================================================================
+        people.sort()
+        boats = 0
+
+        left, right = 0, len(people) - 1
+        while left <= right:
+            remaining = limit - people[right]
+            right -= 1
+            boats += 1
+
+            if left <= right and remaining >= people[left]:
+                left += 1
+        return boats
+
+
+if __name__ == "__main__":
+    test_cases = [
+        ([1, 2], 3, 1),
+        ([3, 2, 2, 1], 3, 3),
+        ([3, 5, 3, 4], 5, 4),
+    ]
+
+    sol = Solution()
+    for p_arr, lim, expected in test_cases:
+        result = sol.numRescueBoats(p_arr.copy(), lim)
+        print(f"people={p_arr}, limit={lim} -> {result} (exp: {expected})")`,
+      julia: ``,
+    },
+    sourceUrl: "https://leetcode.com/problems/boats-to-save-people/",
   },
   {
     id: "1768",
@@ -4961,142 +5206,5 @@ merged: a p b q c   d
       julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/merge-strings-alternately/",
-  },
-  {
-    id: "189",
-    slug: "189-rotate-array",
-    leetcodeSlug: "rotate-array",
-    title: "Rotate Array",
-    difficulty: "Medium",
-    group: "Two Pointers",
-    topics: ["array", "math", "two-pointers"],
-    description: `<p>Given an integer array <code>nums</code>, rotate the array to the right by <code>k</code> steps, where <code>k</code> is non-negative.</p>
-
-<p>&nbsp;</p>
-<p><strong class="example">Example 1:</strong></p>
-
-<pre>
-<strong>Input:</strong> nums = [1,2,3,4,5,6,7], k = 3
-<strong>Output:</strong> [5,6,7,1,2,3,4]
-<strong>Explanation:</strong>
-rotate 1 steps to the right: [7,1,2,3,4,5,6]
-rotate 2 steps to the right: [6,7,1,2,3,4,5]
-rotate 3 steps to the right: [5,6,7,1,2,3,4]
-</pre>
-
-<p><strong class="example">Example 2:</strong></p>
-
-<pre>
-<strong>Input:</strong> nums = [-1,-100,3,99], k = 2
-<strong>Output:</strong> [3,99,-1,-100]
-<strong>Explanation:</strong>
-rotate 1 steps to the right: [99,-1,-100,3]
-rotate 2 steps to the right: [3,99,-1,-100]
-</pre>
-
-<p>&nbsp;</p>
-<p><strong>Constraints:</strong></p>
-
-<ul>
-	<li><code>1 &lt;= nums.length &lt;= 10<sup>5</sup></code></li>
-	<li><code>-2<sup>31</sup> &lt;= nums[i] &lt;= 2<sup>31</sup> - 1</code></li>
-	<li><code>0 &lt;= k &lt;= 10<sup>5</sup></code></li>
-</ul>
-
-<p>&nbsp;</p>
-<p><strong>Follow up:</strong></p>
-
-<ul>
-	<li>Try to come up with as many solutions as you can. There are at least three different ways to solve this problem.</li>
-	<li>Could you do it in-place with <code>O(1)</code> extra space?</li>
-</ul>`,
-    solutions: {
-      python: `from typing import List
-
-
-class Solution:
-    def rotate(self, nums: List[int], k: int) -> None:
-        """
-        Do not return anything, modify nums in-place instead.
-        """
-        n = len(nums)
-        k %= n
-
-        def reverse(l: int, r: int) -> None:
-            while l < r:
-                nums[l], nums[r] = nums[r], nums[l]
-                l, r = l + 1, r - 1
-
-        reverse(0, n - 1)
-        reverse(0, k - 1)
-        reverse(k, n - 1)`,
-      julia: ``,
-    },
-    sourceUrl: "https://leetcode.com/problems/rotate-array/",
-  },
-  {
-    id: "881",
-    slug: "881-boats-to-save-people",
-    leetcodeSlug: "boats-to-save-people",
-    title: "Boats to Save People",
-    difficulty: "Medium",
-    group: "Two Pointers",
-    topics: ["array", "two-pointers", "greedy", "sorting"],
-    description: `<p>You are given an array <code>people</code> where <code>people[i]</code> is the weight of the <code>i<sup>th</sup></code> person, and an <strong>infinite number of boats</strong> where each boat can carry a maximum weight of <code>limit</code>. Each boat carries at most two people at the same time, provided the sum of the weight of those people is at most <code>limit</code>.</p>
-
-<p>Return <em>the minimum number of boats to carry every given person</em>.</p>
-
-<p>&nbsp;</p>
-<p><strong class="example">Example 1:</strong></p>
-
-<pre>
-<strong>Input:</strong> people = [1,2], limit = 3
-<strong>Output:</strong> 1
-<strong>Explanation:</strong> 1 boat (1, 2)
-</pre>
-
-<p><strong class="example">Example 2:</strong></p>
-
-<pre>
-<strong>Input:</strong> people = [3,2,2,1], limit = 3
-<strong>Output:</strong> 3
-<strong>Explanation:</strong> 3 boats (1, 2), (2) and (3)
-</pre>
-
-<p><strong class="example">Example 3:</strong></p>
-
-<pre>
-<strong>Input:</strong> people = [3,5,3,4], limit = 5
-<strong>Output:</strong> 4
-<strong>Explanation:</strong> 4 boats (3), (3), (4), (5)
-</pre>
-
-<p>&nbsp;</p>
-<p><strong>Constraints:</strong></p>
-
-<ul>
-	<li><code>1 &lt;= people.length &lt;= 5 * 10<sup>4</sup></code></li>
-	<li><code>1 &lt;= people[i] &lt;= limit &lt;= 3 * 10<sup>4</sup></code></li>
-</ul>`,
-    solutions: {
-      python: `from typing import List
-
-
-class Solution:
-    def numRescueBoats(self, people: List[int], limit: int) -> int:
-        people.sort()
-        left, right = 0, len(people) - 1
-        boats = 0
-
-        while left <= right:
-            if people[left] + people[right] <= limit:
-                left += 1
-            right -= 1
-            boats += 1
-
-        return boats`,
-      julia: ``,
-    },
-    sourceUrl: "https://leetcode.com/problems/boats-to-save-people/",
   },
 ];
