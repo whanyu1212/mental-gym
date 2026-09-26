@@ -239,7 +239,7 @@ const steps: TeachingStep[] = [
 ];
 ---
 
-<container-water-visuals>
+<container-water-visuals data-max-height={maxH}>
   <AlgorithmPlayer title="heights = [1, 8, 6, 2, 5, 4, 8, 3, 7]" steps={steps}>
     <div class="stats-row cw-stats-row">
       <div class="stat-box" data-teach-target="formula-box">
@@ -316,6 +316,9 @@ const steps: TeachingStep[] = [
       this.formulaBox = this.querySelector('[data-teach-target="formula-box"]');
 
       let lastStep = null;
+      // maxH lives in the component frontmatter, which runs at build time; this
+      // client script cannot see it, so it is passed through a data attribute.
+      const maxH = Number(this.dataset.maxHeight) || 1;
 
       this._updateHighlight = () => {
         if (!lastStep || !this.waterOverlay) return;

@@ -609,6 +609,14 @@ const stepsJson = JSON.stringify(steps);
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
+  /* Stat boxes are at least 6rem wide, so three or more overflow a phone
+     unless the row wraps. Scoped to narrow screens so desktop layouts, which
+     some animations size around a single row, are unchanged. */
+  @media (max-width: 640px) {
+    algo-player .stats-row {
+      flex-wrap: wrap;
+    }
+  }
   algo-player .stat-box {
     background: var(--surface-base);
     border: 1px solid var(--border);

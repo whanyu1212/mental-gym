@@ -99,7 +99,7 @@ const steps: TeachingStep[] = [
 ];
 ---
 
-<merge-sorted-lists-visuals>
+<merge-sorted-lists-visuals data-list1={JSON.stringify(list1)} data-list2={JSON.stringify(list2)}>
   <AlgorithmPlayer title="list1 = [1, 2, 4], list2 = [1, 3, 4]" steps={steps}>
     <div class="stats-row msl-meta-row">
       <div class="stat-box msl-rule-box" data-teach-target="rule-box">
@@ -175,6 +175,10 @@ const steps: TeachingStep[] = [
     compareBox!: HTMLElement | null;
     resultBox!: HTMLElement | null;
     connectedCallback() {
+      // These live in the frontmatter, which runs at build time; the client
+      // script cannot see them, so they arrive through data attributes.
+      const list1 = JSON.parse(this.dataset.list1 ?? "null");
+      const list2 = JSON.parse(this.dataset.list2 ?? "null");
       this.l1Cells = Array.from(this.querySelectorAll('.msl-l1-cell'));
       this.l2Cells = Array.from(this.querySelectorAll('.msl-l2-cell'));
       this.l1Ptrs = Array.from(this.querySelectorAll('.msl-l1-ptr'));
