@@ -159,3 +159,48 @@ def test_matches_reference_on_small_graphs(n, directed, edges):
     stdin = graph_input(n, directed, edges)
     expected = [str(x) for x in reference(n, directed, edges)]
     assert tokens(run_solution("graphds1", stdin)) == expected
+
+
+# N is up to 100,000, far beyond Python's default recursion limit of 1,000, so
+# every search must be iterative. Each case is a long path or cycle that forces
+# a deep search in one of the three places graphds1 walks the graph.
+LONG = 100_000
+
+
+def path_edges(n):
+    return [(i, i + 1) for i in range(n - 1)]
+
+
+@pytest.mark.parametrize(
+    "n, directed, edges, expected",
+    [
+        # Undirected path: a tree (is_tree's undirected search), bipartite, not
+        # a DAG because it has edges.
+        pytest.param(LONG, 1, path_edges(LONG), [1, 0, 1, 0], id="undirected-path"),
+        # Directed path: a rooted tree (is_tree's directed search from the root),
+        # a DAG (is_DAG), and not bipartite since inner vertices have in and out.
+        pytest.param(LONG, 2, path_edges(LONG), [1, 0, 0, 1], id="directed-path"),
+        # Directed cycle closing back to 0: no root, so is_tree stops early, but
+        # is_DAG must walk the whole cycle to find the back edge.
+        pytest.param(
+            LONG,
+            2,
+            path_edges(LONG) + [(LONG - 1, 0)],
+            [0, 0, 0, 0],
+            id="directed-cycle",
+        ),
+        # Odd undirected cycle: is_tree's search walks every vertex before it
+        # meets the back edge.
+        pytest.param(
+            LONG - 1,
+            1,
+            path_edges(LONG - 1) + [(LONG - 2, 0)],
+            [0, 0, 0, 0],
+            id="undirected-odd-cycle",
+        ),
+    ],
+)
+def test_deep_graphs_do_not_overflow_the_stack(n, directed, edges, expected):
+    assert reference(n, directed, edges) == expected  # guard the oracle itself
+    stdin = graph_input(n, directed, edges)
+    assert tokens(run_solution("graphds1", stdin)) == [str(x) for x in expected]

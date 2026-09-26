@@ -102,14 +102,26 @@ def dfs_cycle_detection_undirected(graph: dict, vertex, visited: set, parent) ->
     dfs_undirected(graph, 'A', {'A', 'B', 'C'}, 'C')
     'A' is already in visited set, but 'A' is not the parent of 'C',
     so return False
+
+    The "levels of recursion" above are simulated with an explicit stack
+    of (vertex, parent, neighbor iterator) frames, so the visiting order is
+    the same but a long path cannot exceed Python's recursion limit.
     """
     visited.add(vertex)
-    for neighbor in graph[vertex]:
-        if neighbor not in visited:
-            if not dfs_cycle_detection_undirected(graph, neighbor, visited, vertex):
+    stack = [(vertex, parent, iter(graph[vertex]))]
+    while stack:
+        current, current_parent, neighbors = stack[-1]
+        for neighbor in neighbors:
+            if neighbor not in visited:
+                # Descend: equivalent to the recursive call on neighbor.
+                visited.add(neighbor)
+                stack.append((neighbor, current, iter(graph[neighbor])))
+                break
+            if neighbor != current_parent:
                 return False
-        elif neighbor != parent:
-            return False
+        else:
+            # Every neighbor handled: equivalent to returning from the call.
+            stack.pop()
     return True
 
 
@@ -161,19 +173,33 @@ def dfs_cycle_detection_directed(
     Fourth level of recursion:
     dfs_directed(graph, 'B', {'A', 'B', 'C', 'D'}, {'A', 'B', 'C', 'D'})
     'B' is already in rec_stack, so return False
+
+    The "levels of recursion" above are simulated with an explicit stack
+    of (vertex, neighbor iterator) frames, so the visiting order is the same
+    but a long path cannot exceed Python's recursion limit. rec_stack holds
+    exactly the vertices whose frames are still on that stack.
     """
     visited.add(vertex)
     rec_stack.add(vertex)
+    stack = [(vertex, iter(graph[vertex]))]
 
     # Execute until there is no neighbor left at the last vertex
     # Start backtracking
-    for neighbor in graph[vertex]:
-        if neighbor not in visited:
-            if not dfs_cycle_detection_directed(graph, neighbor, visited, rec_stack):
+    while stack:
+        current, neighbors = stack[-1]
+        for neighbor in neighbors:
+            if neighbor not in visited:
+                # Descend: equivalent to the recursive call on neighbor.
+                visited.add(neighbor)
+                rec_stack.add(neighbor)
+                stack.append((neighbor, iter(graph[neighbor])))
+                break
+            if neighbor in rec_stack:
                 return False
-        elif neighbor in rec_stack:
-            return False
-    rec_stack.remove(vertex)
+        else:
+            # Every neighbor handled: backtrack out of current.
+            stack.pop()
+            rec_stack.remove(current)
     return True
 
 
