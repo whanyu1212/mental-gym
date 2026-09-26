@@ -207,8 +207,12 @@ export function compactionSteps(input: number[], keep: 1 | 2): ArrayFrame[] {
 					stale: [],
 					exp: `read = ${read} sees ${value}. ${compareNote} ${free ? "" : `${value} is different, so this copy is allowed. `}Copy it to nums[${wrote}] and advance write to ${write}.`,
 					reason: free
-						? `Fewer than ${keep} values are kept, so no value can have too many copies yet.`
-						: `If ${value} differed from the value ${keep} slot${keep === 1 ? "" : "s"} back, the answer holds fewer than ${keep + 1} copies of it even after this one.`,
+						? keep === 1
+							? "Nothing is kept yet, so this value cannot be a repeat."
+							: `Only ${wrote} value${wrote === 1 ? " is" : "s are"} kept so far, fewer than ${keep}, so no value can have too many copies yet.`
+						: keep === 1
+							? `The answer is sorted, so its last kept value, nums[${look(wrote)}], is the only place ${value} could already be. It is not, so this is the first copy.`
+							: `The answer is sorted, so any earlier copies of ${value} sit at its end. nums[${look(wrote)}] is not ${value}, so at most ${keep - 1} ${keep - 1 === 1 ? "copy is" : "copies are"} kept and this one is allowed.`,
 					invariant,
 					action: "write",
 					highlights: [
