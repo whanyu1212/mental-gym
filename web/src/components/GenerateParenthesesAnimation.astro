@@ -1,0 +1,218 @@
+---
+import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
+import { generateParenthesisSteps, type ParenNode } from "../lib/teaching/traces/harderTraces";
+
+const n = 3;
+const steps = generateParenthesisSteps(n);
+const nodes: ParenNode[] = steps[0].nodes;
+
+// Tidy layout: leaves get consecutive columns in DFS order, and each parent
+// sits above the middle of its children. Depth is the row.
+const children = new Map<number, number[]>();
+for (const node of nodes) {
+	if (node.parent !== null) children.set(node.parent, [...(children.get(node.parent) ?? []), node.id]);
+}
+const column = new Map<number, number>();
+let nextLeaf = 0;
+const place = (id: number): number => {
+	const kids = children.get(id) ?? [];
+	const x = kids.length === 0 ? nextLeaf++ : kids.map(place).reduce((a, b) => a + b, 0) / kids.length;
+	column.set(id, x);
+	return x;
+};
+place(0);
+
+const COL = 92;
+const ROW = 56;
+const PAD_X = 50;
+const PAD_Y = 26;
+const width = PAD_X * 2 + (nextLeaf - 1) * COL;
+const height = PAD_Y * 2 + (2 * n) * ROW;
+const pos = (id: number) => ({ x: PAD_X + column.get(id)! * COL, y: PAD_Y + nodes[id].depth * ROW });
+const label = (node: ParenNode) => (node.prefix === "" ? "∅" : node.prefix);
+---
+
+<paren-tree-visuals>
+	<AlgorithmPlayer title={`n = ${n}`} steps={steps}>
+		<div class="stats-row">
+			<div class="stat-box">
+				<span class="stat-label">path stack</span>
+				<span class="stat-val pt-path" data-stat="path">∅</span>
+			</div>
+			<div class="stat-box">
+				<span class="stat-label">opened / closed</span>
+				<span class="stat-val" data-stat="counts">0 / 0</span>
+			</div>
+			<div class="stat-box">
+				<span class="stat-label">results</span>
+				<span class="stat-val" data-stat="results">0</span>
+			</div>
+		</div>
+
+		<div class="anim-row">
+			<p class="anim-label">recursion tree: every node is a valid prefix (left = push "(", right = push ")")</p>
+			<div class="pt-scroll">
+				<svg class="pt-tree" viewBox={`0 0 ${width} ${height}`} width={width} height={height} role="img" aria-label={`Recursion tree for n = ${n}`}>
+					{
+						nodes
+							.filter((node) => node.parent !== null)
+							.map((node) => {
+								const a = pos(node.parent!);
+								const b = pos(node.id);
+								// Bottom edge of the parent box to the top edge of the child box, so a
+								// line never crosses a label (node fills can be translucent).
+								return <line class="pt-edge" data-edge={node.id} x1={a.x} y1={a.y + 15} x2={b.x} y2={b.y - 15} />;
+							})
+					}
+					{
+						nodes.map((node) => {
+							const { x, y } = pos(node.id);
+							return (
+								<g class="pt-node" data-node={node.id} data-teach-target={`node:${node.id}`} data-complete={node.complete ? "1" : undefined}>
+									<rect x={x - 38} y={y - 15} width="76" height="30" rx="6" />
+									<text x={x} y={y + 5}>
+										{label(node)}
+									</text>
+								</g>
+							);
+						})
+					}
+				</svg>
+			</div>
+		</div>
+
+		<div class="anim-row">
+			<p class="anim-label">results</p>
+			<div class="hashmap-row" data-results>
+				<span class="hashmap-empty">none yet</span>
+			</div>
+		</div>
+	</AlgorithmPlayer>
+</paren-tree-visuals>
+
+<script>
+	class ParenTreeVisuals extends HTMLElement {
+		connectedCallback() {
+			const nodeEls = Array.from(this.querySelectorAll<SVGGElement>("[data-node]"));
+			const edgeEls = Array.from(this.querySelectorAll<SVGLineElement>("[data-edge]"));
+			const results = this.querySelector<HTMLElement>("[data-results]");
+			const stat = (name: string) => this.querySelector<HTMLElement>(`[data-stat="${name}"]`);
+
+			this.addEventListener("step-change", (event) => {
+				const step = event.detail.step;
+				const visited = new Set<number>(step.visited);
+				const onPath = new Set<number>(step.path);
+
+				nodeEls.forEach((el) => {
+					const id = Number(el.dataset.node);
+					el.classList.toggle("pt-unvisited", !visited.has(id));
+					el.classList.toggle("pt-on-path", onPath.has(id));
+					el.classList.toggle("pt-current", id === step.current);
+					el.classList.toggle("pt-answer", visited.has(id) && el.dataset.complete === "1");
+				});
+				edgeEls.forEach((el) => {
+					const id = Number(el.dataset.edge);
+					el.classList.toggle("pt-unvisited", !visited.has(id));
+					el.classList.toggle("pt-on-path", onPath.has(id));
+				});
+
+				const current = step.current >= 0 ? step.nodes[step.current] : null;
+				const path = stat("path");
+				if (path) path.textContent = current ? current.prefix || "∅" : "∅";
+				const counts = stat("counts");
+				if (counts) counts.textContent = current ? `${current.opened} / ${current.closed}` : "-";
+				const count = stat("results");
+				if (count) count.textContent = String(step.results.length);
+
+				if (results) {
+					results.replaceChildren(
+						...(step.results.length
+							? step.results.map((r: string) => {
+									const chip = document.createElement("span");
+									chip.className = "hashmap-entry";
+									chip.textContent = r;
+									return chip;
+								})
+							: [Object.assign(document.createElement("span"), { className: "hashmap-empty", textContent: "none yet" })]),
+					);
+				}
+			});
+		}
+	}
+
+	if (!customElements.get("paren-tree-visuals")) {
+		customElements.define("paren-tree-visuals", ParenTreeVisuals);
+	}
+</script>
+
+<style>
+	paren-tree-visuals {
+		display: block;
+	}
+
+	.pt-scroll {
+		overflow-x: auto;
+		padding-bottom: 0.5rem;
+	}
+
+	.pt-tree {
+		display: block;
+		max-width: none;
+	}
+
+	.pt-path {
+		font-size: var(--fs-base);
+		min-width: 4.5rem;
+		text-align: center;
+	}
+
+	.pt-edge {
+		stroke: var(--border);
+		stroke-width: 1.5;
+		transition: stroke 0.2s, opacity 0.2s;
+	}
+
+	.pt-edge.pt-on-path {
+		stroke: var(--accent);
+		stroke-width: 2.5;
+	}
+
+	.pt-node rect {
+		fill: var(--surface-base);
+		stroke: var(--border);
+		stroke-width: 1;
+		transition: fill 0.2s, stroke 0.2s, opacity 0.2s;
+	}
+
+	.pt-node text {
+		fill: var(--text);
+		font-family: var(--font-mono);
+		font-size: 14px;
+		text-anchor: middle;
+	}
+
+	.pt-unvisited {
+		opacity: 0.18;
+	}
+
+	.pt-node.pt-on-path rect {
+		stroke: var(--accent);
+		stroke-width: 1.5;
+	}
+
+	.pt-node.pt-current rect {
+		fill: var(--accent-dim);
+		stroke: var(--accent);
+		stroke-width: 2.5;
+	}
+
+	.pt-node.pt-answer rect {
+		fill: color-mix(in srgb, var(--status-easy) 15%, transparent);
+		stroke: var(--status-easy);
+		stroke-width: 2;
+	}
+
+	.pt-node.pt-answer text {
+		fill: var(--status-easy);
+	}
+</style>

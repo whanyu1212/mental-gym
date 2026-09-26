@@ -45,6 +45,10 @@ import RemoveDuplicatesIIAnimation from "../../components/RemoveDuplicatesIIAnim
 import MergeSortedArrayAnimation from "../../components/MergeSortedArrayAnimation.astro";
 import ReverseStringAnimation from "../../components/ReverseStringAnimation.astro";
 import MergeStringsAlternatelyAnimation from "../../components/MergeStringsAlternatelyAnimation.astro";
+import RotateArrayAnimation from "../../components/RotateArrayAnimation.astro";
+import BoatsToSavePeopleAnimation from "../../components/BoatsToSavePeopleAnimation.astro";
+import FourSumAnimation from "../../components/FourSumAnimation.astro";
+import GenerateParenthesesAnimation from "../../components/GenerateParenthesesAnimation.astro";
 import RecallRating from "../../components/RecallRating.astro";
 import AttemptMode from "../../components/AttemptMode.astro";
 import LastVisited from "../../components/LastVisited.astro";
@@ -108,6 +112,10 @@ const animationBySlug = {
 	"88-merge-sorted-array": MergeSortedArrayAnimation,
 	"344-reverse-string": ReverseStringAnimation,
 	"1768-merge-strings-alternately": MergeStringsAlternatelyAnimation,
+	"189-rotate-array": RotateArrayAnimation,
+	"881-boats-to-save-people": BoatsToSavePeopleAnimation,
+	"18-4sum": FourSumAnimation,
+	"22-generate-parentheses": GenerateParenthesesAnimation,
 } as const;
 
 const Animation = animationBySlug[problem.slug as keyof typeof animationBySlug];

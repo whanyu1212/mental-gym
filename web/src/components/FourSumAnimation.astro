@@ -1,0 +1,28 @@
+---
+import PointerArrayPlayer from "./framework/PointerArrayPlayer.astro";
+import { fourSumSteps } from "../lib/teaching/traces/harderTraces";
+
+const nums = [1, 0, -1, 0, -2, 2];
+const target = 0;
+
+const steps = fourSumSteps(nums, target).map((step) => ({
+	...step,
+	stats: [
+		["sum", step.sum ?? "-"],
+		["target", target],
+		["found", step.found.length ? step.found.map((q) => `[${q.join(",")}]`).join(" ") : "none yet"],
+	],
+}));
+---
+
+<PointerArrayPlayer
+	title={`nums = [${nums.join(", ")}], target = ${target} (sorted below)`}
+	steps={steps}
+	mainLabel="sorted nums: i, j are anchors; L, R search the rest"
+	pointers={[
+		{ name: "i", label: "i", tone: "hard" },
+		{ name: "j", label: "j", tone: "medium" },
+		{ name: "left", label: "L", tone: "info" },
+		{ name: "right", label: "R", tone: "easy" },
+	]}
+/>

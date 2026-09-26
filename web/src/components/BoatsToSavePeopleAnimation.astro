@@ -1,0 +1,172 @@
+---
+import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
+import { boatsSteps } from "../lib/teaching/traces/harderTraces";
+
+const people = [3, 5, 3, 4];
+const limit = 5;
+const steps = boatsSteps(people, limit);
+const sorted = steps[0].cells as number[];
+const maxBoats = steps.at(-1)!.boats.length;
+---
+
+<boats-visuals>
+	<AlgorithmPlayer title={`people = [${people.join(", ")}], limit = ${limit}`} steps={steps}>
+		<div class="stats-row">
+			<div class="stat-box">
+				<span class="stat-label">boats</span>
+				<span class="stat-val" data-stat="boats">0</span>
+			</div>
+			<div class="stat-box">
+				<span class="stat-label">limit</span>
+				<span class="stat-val">{limit}</span>
+			</div>
+		</div>
+
+		<div class="anim-row">
+			<p class="anim-label">sorted weights (dashed = already on a boat)</p>
+			<div class="array-row">
+				{
+					sorted.map((weight, i) => (
+						<div class="array-col">
+							<div class="array-cell">
+								<span class="cell-val" data-person={i} data-teach-target={`cell:${i}`}>
+									{weight}
+								</span>
+								<span class="cell-idx">{i}</span>
+							</div>
+							<div class="pointers-row">
+								<span class="ptr bt-tone-info hidden" data-ptr="left" data-idx={i} data-teach-target="pointer:left">
+									L
+								</span>
+								<span class="ptr bt-tone-easy hidden" data-ptr="right" data-idx={i} data-teach-target="pointer:right">
+									R
+								</span>
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		<div class="anim-row">
+			<p class="anim-label">boats (each holds at most 2 people and {limit} weight)</p>
+			<div class="bt-boats">
+				{
+					Array.from({ length: maxBoats }, (_, b) => (
+						<div class="bt-boat bt-empty" data-boat={b} data-teach-target={`boat:${b}`}>
+							<span class="bt-boat-label">boat {b + 1}</span>
+							<span class="bt-riders" data-riders={b} />
+							<span class="bt-load" data-load={b} />
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</AlgorithmPlayer>
+</boats-visuals>
+
+<script>
+	class BoatsVisuals extends HTMLElement {
+		connectedCallback() {
+			const people = Array.from(this.querySelectorAll<HTMLElement>("[data-person]"));
+			const pointers = Array.from(this.querySelectorAll<HTMLElement>("[data-ptr]"));
+			const boats = Array.from(this.querySelectorAll<HTMLElement>("[data-boat]"));
+			const count = this.querySelector<HTMLElement>('[data-stat="boats"]');
+
+			this.addEventListener("step-change", (event) => {
+				const step = event.detail.step;
+				const settled = new Set<number>(step.settled);
+
+				people.forEach((el, i) => el.classList.toggle("bt-boarded", settled.has(i)));
+				pointers.forEach((el) => {
+					const at = step.pointers[el.dataset.ptr ?? ""];
+					// Once the pointers cross, everyone is seated and neither points anywhere.
+					const crossed = step.pointers.left > step.pointers.right;
+					el.classList.toggle("hidden", crossed || at !== Number(el.dataset.idx));
+				});
+				boats.forEach((el, b) => {
+					const riders: number[] | undefined = step.boats[b];
+					el.classList.toggle("bt-empty", !riders);
+					const ridersEl = el.querySelector<HTMLElement>("[data-riders]");
+					const loadEl = el.querySelector<HTMLElement>("[data-load]");
+					if (ridersEl) ridersEl.textContent = riders ? riders.join(" + ") : "";
+					if (loadEl) loadEl.textContent = riders ? `= ${riders.reduce((a, c) => a + c, 0)} / ${step.limit}` : "";
+				});
+				if (count) count.textContent = String(step.boats.length);
+			});
+		}
+	}
+
+	if (!customElements.get("boats-visuals")) {
+		customElements.define("boats-visuals", BoatsVisuals);
+	}
+</script>
+
+<style>
+	boats-visuals {
+		display: block;
+	}
+
+	.cell-val.bt-boarded {
+		opacity: var(--dim-soft);
+		border-style: dashed;
+	}
+
+	.cell-val.bt-boarded.teach-write {
+		opacity: 1;
+		border-style: solid;
+	}
+
+	.bt-boats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.bt-boat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		min-width: 6.5rem;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-xs);
+		background: var(--surface-base);
+		font-family: var(--font-mono);
+	}
+
+	.bt-boat.bt-empty {
+		opacity: 0.35;
+		border-style: dashed;
+	}
+
+	.bt-boat-label {
+		font-size: var(--fs-micro);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--muted);
+		font-family: var(--font-sans);
+	}
+
+	.bt-riders {
+		font-size: var(--fs-base);
+		color: var(--text);
+		min-height: 1.4em;
+	}
+
+	.bt-load {
+		font-size: var(--fs-fine);
+		color: var(--muted);
+	}
+
+	.bt-tone-info {
+		background: color-mix(in srgb, var(--status-info) 20%, transparent);
+		color: var(--status-info);
+	}
+
+	.bt-tone-easy {
+		background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+		color: var(--status-easy);
+	}
+</style>
