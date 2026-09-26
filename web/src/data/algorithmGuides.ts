@@ -1565,7 +1565,7 @@ export const guides = {
 			"Convert infix to postfix (the shunting-yard algorithm) — why is the stack central there too?",
 			"Basic Calculator (#224): how do parentheses and precedence reintroduce a second stack?",
 		],
-		relatedNotes: ["python_builtins_for_leetcode", "time-complexity"],
+		relatedNotes: ["stack", "python_builtins_for_leetcode", "time-complexity"],
 	},
 	"155-min-stack": {
 		slug: "155-min-stack",
@@ -1613,7 +1613,7 @@ export const guides = {
 			"Can you do it with ONE stack by storing (value, min-so-far) tuples? Or by encoding deltas?",
 			"Design a Max Stack — what changes, and what new ambiguity (popMax) appears?",
 		],
-		relatedNotes: ["python_builtins_for_leetcode", "space-complexity", "time-complexity"],
+		relatedNotes: ["stack", "python_builtins_for_leetcode", "space-complexity", "time-complexity"],
 	},
 	"22-generate-parentheses": {
 		slug: "22-generate-parentheses",
@@ -1662,7 +1662,7 @@ export const guides = {
 			"Why is the number of results the Catalan number? Can you derive the recurrence?",
 			"How would you adapt this to generate valid combinations for k different bracket types?",
 		],
-		relatedNotes: ["time-complexity", "space-complexity"],
+		relatedNotes: ["stack", "time-complexity", "space-complexity"],
 	},
 	"21-merge-two-sorted-lists": {
 		slug: "21-merge-two-sorted-lists",
@@ -1802,7 +1802,7 @@ export const guides = {
 			"Implement the monotonic-deque version for true O(n) — how does it keep candidates in decreasing order?",
 			"When is the heap approach actually preferable despite the extra log factor?",
 		],
-		relatedNotes: ["sliding_window", "python_builtins_for_leetcode", "time-complexity", "space-complexity"],
+		relatedNotes: ["stack", "sliding_window", "python_builtins_for_leetcode", "time-complexity", "space-complexity"],
 	},
 	"53-maximum-subarray": {
 		slug: "53-maximum-subarray",
