@@ -40,6 +40,11 @@ import MaximumSubarrayAnimation from "../../components/MaximumSubarrayAnimation.
 import MaximumSumCircularSubarrayAnimation from "../../components/MaximumSumCircularSubarrayAnimation.astro";
 import SubarraySumAnimation from "../../components/notes/PrefixSumHashmapViz.astro";
 import XorQueriesAnimation from "../../components/notes/PrefixXorViz.astro";
+import RemoveDuplicatesAnimation from "../../components/RemoveDuplicatesAnimation.astro";
+import RemoveDuplicatesIIAnimation from "../../components/RemoveDuplicatesIIAnimation.astro";
+import MergeSortedArrayAnimation from "../../components/MergeSortedArrayAnimation.astro";
+import ReverseStringAnimation from "../../components/ReverseStringAnimation.astro";
+import MergeStringsAlternatelyAnimation from "../../components/MergeStringsAlternatelyAnimation.astro";
 import RecallRating from "../../components/RecallRating.astro";
 import AttemptMode from "../../components/AttemptMode.astro";
 import LastVisited from "../../components/LastVisited.astro";
@@ -98,6 +103,11 @@ const animationBySlug = {
 	"918-maximum-sum-circular-subarray": MaximumSumCircularSubarrayAnimation,
 	"560-subarray-sum-equals-k": SubarraySumAnimation,
 	"1310-xor-queries-of-a-subarray": XorQueriesAnimation,
+	"26-remove-duplicates-from-sorted-array": RemoveDuplicatesAnimation,
+	"80-remove-duplicates-from-sorted-array-ii": RemoveDuplicatesIIAnimation,
+	"88-merge-sorted-array": MergeSortedArrayAnimation,
+	"344-reverse-string": ReverseStringAnimation,
+	"1768-merge-strings-alternately": MergeStringsAlternatelyAnimation,
 } as const;
 
 const Animation = animationBySlug[problem.slug as keyof typeof animationBySlug];

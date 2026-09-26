@@ -1,0 +1,161 @@
+---
+import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
+import { mergeAlternatelySteps } from "../lib/teaching/traces/twoPointerTraces";
+
+const word1 = "ab";
+const word2 = "pqrs";
+const steps = mergeAlternatelySteps(word1, word2);
+const outLength = word1.length + word2.length;
+---
+
+<merge-alternately-visuals>
+	<AlgorithmPlayer title={`word1 = "${word1}", word2 = "${word2}"`} steps={steps}>
+		<div class="stats-row">
+			<div class="stat-box">
+				<span class="stat-label">i (word1)</span>
+				<span class="stat-val" data-stat="i">0</span>
+			</div>
+			<div class="stat-box">
+				<span class="stat-label">j (word2)</span>
+				<span class="stat-val" data-stat="j">0</span>
+			</div>
+			<div class="stat-box">
+				<span class="stat-label">result length</span>
+				<span class="stat-val" data-stat="len">0</span>
+			</div>
+		</div>
+
+		{
+			[
+				["word1", word1, "w1", "i", "info"],
+				["word2", word2, "w2", "j", "easy"],
+			].map(([label, word, key, pointer, tone]) => (
+				<div class="anim-row">
+					<p class="anim-label">{label}</p>
+					<div class="array-row">
+						{[...word].map((ch, t) => (
+							<div class="array-col">
+								<div class="array-cell">
+									<span class={`cell-val ma-${key}`} data-src={key} data-idx={t} data-teach-target={`${key}:${t}`}>
+										{ch}
+									</span>
+									<span class="cell-idx">{t}</span>
+								</div>
+								<div class="pointers-row">
+									<span class={`ptr ma-tone-${tone} hidden`} data-ptr={pointer} data-idx={t}>
+										{pointer}
+									</span>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			))
+		}
+
+		<div class="anim-row">
+			<p class="anim-label">result (blue = from word1, green = from word2)</p>
+			<div class="array-row">
+				{
+					Array.from({ length: outLength }, (_, t) => (
+						<div class="array-col">
+							<div class="array-cell">
+								<span class="cell-val ma-out ma-empty" data-out={t} data-teach-target={`out:${t}`} />
+								<span class="cell-idx">{t}</span>
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</AlgorithmPlayer>
+</merge-alternately-visuals>
+
+<script>
+	class MergeAlternatelyVisuals extends HTMLElement {
+		connectedCallback() {
+			const inputs = Array.from(this.querySelectorAll<HTMLElement>("[data-src]"));
+			const pointers = Array.from(this.querySelectorAll<HTMLElement>("[data-ptr]"));
+			const outs = Array.from(this.querySelectorAll<HTMLElement>("[data-out]"));
+			const stat = (name: string) => this.querySelector<HTMLElement>(`[data-stat="${name}"]`);
+
+			this.addEventListener("step-change", (event) => {
+				const step = event.detail.step;
+				const consumed = { w1: step.i, w2: step.j } as Record<string, number>;
+				const fromSecond = new Set<number>(step.fromSecond);
+
+				inputs.forEach((el) => {
+					const used = Number(el.dataset.idx) < consumed[el.dataset.src ?? ""];
+					el.classList.toggle("ma-used", used);
+				});
+				pointers.forEach((el) => {
+					const at = el.dataset.ptr === "i" ? step.i : step.j;
+					el.classList.toggle("hidden", at !== Number(el.dataset.idx));
+				});
+				outs.forEach((el, t) => {
+					const filled = t < step.result.length;
+					el.textContent = filled ? step.result[t] : "";
+					el.classList.toggle("ma-empty", !filled);
+					el.classList.toggle("ma-from-w1", filled && !fromSecond.has(t));
+					el.classList.toggle("ma-from-w2", filled && fromSecond.has(t));
+				});
+				const set = (name: string, value: number) => {
+					const el = stat(name);
+					if (el) el.textContent = String(value);
+				};
+				set("i", step.i);
+				set("j", step.j);
+				set("len", step.result.length);
+			});
+		}
+	}
+
+	if (!customElements.get("merge-alternately-visuals")) {
+		customElements.define("merge-alternately-visuals", MergeAlternatelyVisuals);
+	}
+</script>
+
+<style>
+	merge-alternately-visuals {
+		display: block;
+	}
+
+	.cell-val.ma-used {
+		opacity: var(--dim-soft);
+		border-style: dashed;
+	}
+
+	/* A character consumed on this very step stays fully visible so the
+	   highlight shows where it came from; it dims from the next step on. */
+	.cell-val.ma-used.teach-write {
+		opacity: 1;
+		border-style: solid;
+	}
+
+	.cell-val.ma-empty {
+		border-style: dashed;
+		opacity: 0.5;
+	}
+
+	.cell-val.ma-from-w1 {
+		border-color: var(--status-info);
+		color: var(--status-info);
+		background: color-mix(in srgb, var(--status-info) 12%, transparent);
+	}
+
+	.cell-val.ma-from-w2 {
+		border-color: var(--status-easy);
+		color: var(--status-easy);
+		background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+	}
+
+	.ma-tone-info {
+		background: color-mix(in srgb, var(--status-info) 20%, transparent);
+		color: var(--status-info);
+	}
+
+	.ma-tone-easy {
+		background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+		color: var(--status-easy);
+	}
+</style>
