@@ -13,6 +13,8 @@ export function freeIdentifiers(code: string): Set<string> {
 
 	// Each scope is the set of names declared directly in it.
 	const scopes: Set<string>[] = [new Set<string>()];
+	const isVar = (list: ts.VariableDeclarationList): boolean =>
+		(list.flags & (ts.NodeFlags.Let | ts.NodeFlags.Const | ts.NodeFlags.Using | ts.NodeFlags.AwaitUsing)) === 0;
 	const bound = (name: string) => scopes.some((s) => s.has(name));
 
 	const declarePattern = (node: ts.BindingName | undefined, into: Set<string>): void => {
@@ -22,12 +24,15 @@ export function freeIdentifiers(code: string): Set<string> {
 			for (const el of node.elements) if (!ts.isOmittedExpression(el)) declarePattern(el.name, into);
 	};
 
-	// Hoist function/var/class/let/const declarations to the start of their block,
-	// so a name used before its declaration line still counts as bound.
+	// Hoist function/class/let/const declarations to the start of their block,
+	// so a name used before its declaration line still counts as bound. `var`
+	// is function-scoped instead and is collected by functionVars below.
 	const hoist = (statements: readonly ts.Statement[], into: Set<string>): void => {
 		for (const st of statements) {
 			if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st)) && st.name) into.add(st.name.text);
-			else if (ts.isVariableStatement(st)) for (const d of st.declarationList.declarations) declarePattern(d.name, into);
+			else if (ts.isVariableStatement(st)) {
+				if (!isVar(st.declarationList)) for (const d of st.declarationList.declarations) declarePattern(d.name, into);
+			}
 			else if (ts.isImportDeclaration(st) && st.importClause) {
 				const c = st.importClause;
 				if (c.name) into.add(c.name.text);
@@ -42,6 +47,21 @@ export function freeIdentifiers(code: string): Set<string> {
 		scopes.push(names);
 		fn();
 		scopes.pop();
+	};
+
+	/**
+	 * Every `var` name declared anywhere in `root` (in nested blocks, loop
+	 * heads, try/catch, switch cases), stopping at inner functions and class
+	 * static blocks, which get their own var scope. These all belong to the
+	 * enclosing function or script.
+	 */
+	const functionVars = (root: ts.Node, into: Set<string>): void => {
+		const walk = (node: ts.Node): void => {
+			if (node !== root && (ts.isFunctionLike(node) || ts.isClassStaticBlockDeclaration(node))) return;
+			if (ts.isVariableDeclarationList(node) && isVar(node)) for (const d of node.declarations) declarePattern(d.name, into);
+			ts.forEachChild(node, walk);
+		};
+		walk(root);
 	};
 
 	// Is this identifier a read, as opposed to a name that is declared, a
@@ -89,8 +109,14 @@ export function freeIdentifiers(code: string): Set<string> {
 			const names = new Set<string>();
 			const statements: readonly ts.Statement[] = ts.isCaseBlock(node) ? node.clauses.flatMap((c) => [...c.statements]) : node.statements;
 			hoist(statements, names);
+			// The script itself is a var scope, and so is a function body, which is
+			// the Block directly under a function. Other blocks are not.
+			const isVarScope = ts.isSourceFile(node) || (ts.isBlock(node) && (ts.isFunctionLike(node.parent) || ts.isClassStaticBlockDeclaration(node.parent)));
+			if (isVarScope) functionVars(node, names);
 			return withScope(names, () => ts.forEachChild(node, visit));
 		}
+
+		if (ts.isClassStaticBlockDeclaration(node)) return visit(node.body);
 
 		if (ts.isFunctionLike(node) && !ts.isTypeNode(node)) {
 			const names = new Set<string>();
@@ -129,7 +155,9 @@ export function freeIdentifiers(code: string): Set<string> {
 		if (ts.isForStatement(node) || ts.isForOfStatement(node) || ts.isForInStatement(node)) {
 			const names = new Set<string>();
 			const init = node.initializer;
-			if (init && ts.isVariableDeclarationList(init)) for (const d of init.declarations) declarePattern(d.name, names);
+			// `for (let ...)` scopes to the loop; `for (var ...)` was already hoisted
+			// to the enclosing function by functionVars.
+			if (init && ts.isVariableDeclarationList(init) && !isVar(init)) for (const d of init.declarations) declarePattern(d.name, names);
 			return withScope(names, () => ts.forEachChild(node, visit));
 		}
 
