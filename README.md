@@ -21,7 +21,7 @@ Most problems are solved with an explicit invariant and complexity justification
 | Area | Scope | Where |
 | --- | --- | --- |
 | DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution covered by pytest in CI; 16 also have a Julia port; TypeScript ports start from the repo-root Bun project | `src/leetcode/`, `tests/leetcode/` |
-| Competitive programming (Kattis) | 27 unique solved problems (26 Python, 1 Julia-only), 10 with pytest coverage in CI | `src/kattis/`, `tests/kattis/` |
+| Competitive programming (Kattis) | 26 unique solved problems (25 Python, 1 Julia-only), 10 with pytest coverage in CI | `src/kattis/`, `tests/kattis/` |
 | ML from scratch | A NumPy-only logistic regression implementation (vectorized forward pass, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
 | Technical notes | 16 long-form guides on complexity analysis, algorithmic patterns, ML foundations, and system design, rendered with KaTeX math support | `notes/` |
