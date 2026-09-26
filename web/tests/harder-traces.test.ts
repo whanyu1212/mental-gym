@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -228,4 +229,17 @@ test("22 generate parentheses: results match the Python solution; the tree only 
 			assert.deepEqual(step.path, chain, `${step.id}: path stack`);
 		}
 	}
+});
+
+test("881 boats: the example shown on the site demonstrates pair, reject and solo", () => {
+	// Read the example straight from the component so this cannot drift from what
+	// students actually see.
+	const source = readFileSync(new URL("../src/components/BoatsToSavePeopleAnimation.astro", import.meta.url), "utf8");
+	const people = JSON.parse(/const people = (\[[^\]]*\]);/.exec(source)![1]) as number[];
+	const limit = Number(/const limit = (\d+);/.exec(source)![1]);
+	const actions = boatsSteps(people, limit)
+		.filter((step) => step.id?.startsWith("boat"))
+		.map((step) => step.action);
+	assert.ok(actions.includes("write"), "no successful two-person boat is shown");
+	assert.ok(actions.includes("discard"), "no rejected pairing is shown");
 });

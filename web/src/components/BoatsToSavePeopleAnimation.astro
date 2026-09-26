@@ -2,7 +2,10 @@
 import AlgorithmPlayer from "./framework/AlgorithmPlayer.astro";
 import { boatsSteps } from "../lib/teaching/traces/harderTraces";
 
-const people = [3, 5, 3, 4];
+// Chosen so the walk-through shows every branch: a rejection (5 is too heavy
+// for anyone), two successful pairings that advance both pointers, and a
+// final solo seat. [3, 5, 3, 4] with limit 5 only ever rejected.
+const people = [1, 2, 3, 4, 5];
 const limit = 5;
 const steps = boatsSteps(people, limit);
 const sorted = steps[0].cells as number[];
@@ -11,7 +14,7 @@ const maxBoats = steps.at(-1)!.boats.length;
 
 <boats-visuals>
 	<AlgorithmPlayer title={`people = [${people.join(", ")}], limit = ${limit}`} steps={steps}>
-		<div class="stats-row">
+		<div class="stats-row bt-stats">
 			<div class="stat-box">
 				<span class="stat-label">boats</span>
 				<span class="stat-val" data-stat="boats">0</span>
@@ -105,6 +108,10 @@ const maxBoats = steps.at(-1)!.boats.length;
 <style>
 	boats-visuals {
 		display: block;
+	}
+
+	.bt-stats {
+		flex-wrap: wrap;
 	}
 
 	.cell-val.bt-boarded {

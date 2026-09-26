@@ -34,7 +34,7 @@ const label = (node: ParenNode) => (node.prefix === "" ? "∅" : node.prefix);
 
 <paren-tree-visuals>
 	<AlgorithmPlayer title={`n = ${n}`} steps={steps}>
-		<div class="stats-row">
+		<div class="stats-row pt-stats">
 			<div class="stat-box">
 				<span class="stat-label">path stack</span>
 				<span class="stat-val pt-path" data-stat="path">∅</span>
@@ -148,6 +148,12 @@ const label = (node: ParenNode) => (node.prefix === "" ? "∅" : node.prefix);
 <style>
 	paren-tree-visuals {
 		display: block;
+	}
+
+	/* The shared .stats-row does not wrap; three 6rem boxes plus gaps overflow
+	   a 320-375px phone. The tree itself already scrolls inside .pt-scroll. */
+	.pt-stats {
+		flex-wrap: wrap;
 	}
 
 	.pt-scroll {
