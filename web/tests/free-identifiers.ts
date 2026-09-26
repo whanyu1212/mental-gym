@@ -117,3 +117,29 @@ export function freeIdentifiers(code: string): Set<string> {
 	visit(file);
 	return free;
 }
+
+/**
+ * Every name a script declares at its top level: `const`/`let`/`var` including
+ * multiple declarators and destructuring, plus functions, classes and imports.
+ * Used for component frontmatter, whose top-level names exist only at build time.
+ */
+export function topLevelBindings(code: string): Set<string> {
+	const file = ts.createSourceFile("frontmatter.ts", code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+	const names = new Set<string>();
+	const addPattern = (node: ts.BindingName): void => {
+		if (ts.isIdentifier(node)) names.add(node.text);
+		else for (const el of node.elements) if (!ts.isOmittedExpression(el)) addPattern(el.name);
+	};
+	for (const st of file.statements) {
+		if (ts.isVariableStatement(st)) for (const d of st.declarationList.declarations) addPattern(d.name);
+		else if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st) || ts.isEnumDeclaration(st)) && st.name) names.add(st.name.text);
+		else if (ts.isImportDeclaration(st) && st.importClause && st.importClause.phaseModifier !== ts.SyntaxKind.TypeKeyword) {
+			const c = st.importClause;
+			if (c.name) names.add(c.name.text);
+			const b = c.namedBindings;
+			if (b && ts.isNamespaceImport(b)) names.add(b.name.text);
+			if (b && ts.isNamedImports(b)) for (const s of b.elements) if (!s.isTypeOnly) names.add(s.name.text);
+		}
+	}
+	return names;
+}

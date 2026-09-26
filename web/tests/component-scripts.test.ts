@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 
-import { freeIdentifiers } from "./free-identifiers.ts";
+import { freeIdentifiers, topLevelBindings } from "./free-identifiers.ts";
 
 /**
  * An Astro component's frontmatter runs at build time and its <script> runs in
@@ -29,7 +29,9 @@ test("client scripts do not read build-time frontmatter constants", () => {
 		const source = readFileSync(file, "utf8");
 		const frontmatter = /^---\n([\s\S]*?)\n---/.exec(source)?.[1];
 		if (!frontmatter) continue;
-		const buildNames = [...frontmatter.matchAll(/^(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*[:=]/gm)].map((m) => m[1]);
+		// Every top-level binding, parsed rather than pattern-matched, so
+		// `const a = 1, maxH = 2` and `const { maxH } = config` are included.
+		const buildNames = topLevelBindings(frontmatter);
 		for (const script of source.matchAll(/<script(?![^>]*is:inline)[^>]*>([\s\S]*?)<\/script>/g)) {
 			const free = freeIdentifiers(script[1]);
 			for (const name of buildNames) {
@@ -38,6 +40,27 @@ test("client scripts do not read build-time frontmatter constants", () => {
 		}
 	}
 	assert.deepEqual(problems, []);
+});
+
+test("topLevelBindings finds every frontmatter binding", () => {
+	const names = topLevelBindings(`
+import Player from "./Player.astro";
+import type { Step } from "./types";
+import { a, type B } from "./x";
+const first = 1, maxH = 2;
+const { maxPrice, nested: { allKeys } } = config;
+const [list1, , list2] = pair;
+let mutable = 0;
+function helper() {}
+class Model {}
+`);
+	for (const name of ["Player", "a", "first", "maxH", "maxPrice", "allKeys", "list1", "list2", "mutable", "helper", "Model"]) {
+		assert.ok(names.has(name), `missing ${name}`);
+	}
+	// Type-only imports, destructured property keys and the skipped hole are not bindings.
+	for (const name of ["Step", "B", "nested", "config", "pair"]) {
+		assert.ok(!names.has(name), `unexpected ${name}`);
+	}
 });
 
 test("freeIdentifiers tells reads from bindings", () => {
