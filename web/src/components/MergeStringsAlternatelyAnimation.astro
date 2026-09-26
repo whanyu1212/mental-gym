@@ -10,7 +10,7 @@ const outLength = word1.length + word2.length;
 
 <merge-alternately-visuals>
 	<AlgorithmPlayer title={`word1 = "${word1}", word2 = "${word2}"`} steps={steps}>
-		<div class="stats-row">
+		<div class="stats-row ma-stats">
 			<div class="stat-box">
 				<span class="stat-label">i (word1)</span>
 				<span class="stat-val" data-stat="i">0</span>
@@ -118,6 +118,12 @@ const outLength = word1.length + word2.length;
 <style>
 	merge-alternately-visuals {
 		display: block;
+	}
+
+	/* The shared .stats-row does not wrap; three 6rem stat boxes plus gaps
+	   overflow a 320-375px phone. Wrap, as PointerArrayPlayer does. */
+	.ma-stats {
+		flex-wrap: wrap;
 	}
 
 	.cell-val.ma-used {
