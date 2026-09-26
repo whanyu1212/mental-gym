@@ -190,9 +190,11 @@ export function boatsSteps(input: number[], limit: number): BoatsFrame[] {
 					: `Boat ${boats.length}: ${people[heavy]} + ${people[light]} = ${people[heavy] + people[light]} > ${limit}. Even the lightest person does not fit, so ${people[heavy]} goes alone.`,
 			reason: pair
 				? "Pairing the heaviest with the lightest never hurts: anyone else who could join the heaviest is at least as heavy, so is no better a partner."
-				: "If the lightest person cannot join, nobody can, so the heaviest person needs a boat of their own either way.",
+				: light === heavy
+					? "left and right point at the same person, so there is nobody to pair with. Every person needs a seat, so this boat is required."
+					: "If the lightest person cannot join, nobody can, so the heaviest person needs a boat of their own either way.",
 			invariant,
-			action: pair ? "write" : "discard",
+			action: pair ? "write" : light === heavy ? "confirm" : "discard",
 			highlights: [
 				{ target: cell(heavy), kind: "write" },
 				...(pair ? [{ target: cell(light), kind: "write" as const }] : light !== heavy ? [{ target: cell(light), kind: "compare" as const }] : []),

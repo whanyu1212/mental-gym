@@ -115,6 +115,11 @@ test("881 boats: boat count matches the Python solution, and every boat is legal
 			const { left, right } = step.pointers;
 			const outside = step.cells.map((_, i) => i).filter((i) => i < left || i > right);
 			assert.deepEqual(step.settled, outside, `${step.id}: settled must be exactly the people outside [left, right]`);
+			// A solo boat for the last remaining person tested no pairing, so its
+			// explanation must not claim the lightest person failed to fit.
+			if (step.id?.startsWith("boat") && step.exp.includes("only") && step.exp.includes("left")) {
+				assert.doesNotMatch(String(step.reason), /lightest person cannot join/, `${step.id}: solo boat given a failed-pairing reason`);
+			}
 		}
 	});
 });

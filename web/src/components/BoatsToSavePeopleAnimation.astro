@@ -112,6 +112,13 @@ const maxBoats = steps.at(-1)!.boats.length;
 		border-style: dashed;
 	}
 
+	/* Each cell holds both an L and an R badge. The shared .ptr.hidden only
+	   fades, so the hidden one would still take width and push the visible
+	   badge off-centre. Same fix as PointerArrayPlayer. */
+	boats-visuals .ptr.hidden {
+		display: none;
+	}
+
 	.cell-val.bt-boarded.teach-write {
 		opacity: 1;
 		border-style: solid;
