@@ -189,6 +189,17 @@ export function topLevelBindings(code: string): Set<string> {
 		if (ts.isIdentifier(node)) names.add(node.text);
 		else for (const el of node.elements) if (!ts.isOmittedExpression(el)) addPattern(el.name);
 	};
+	// A `var` anywhere in the frontmatter (inside if/for/try/switch too) is a
+	// top-level binding, because var is scoped to the whole script. Stop at
+	// nested functions and class static blocks, which own their vars.
+	const collectVars = (node: ts.Node): void => {
+		if (node !== file && (ts.isFunctionLike(node) || ts.isClassStaticBlockDeclaration(node))) return;
+		if (ts.isVariableDeclarationList(node) && (node.flags & (ts.NodeFlags.Let | ts.NodeFlags.Const | ts.NodeFlags.Using | ts.NodeFlags.AwaitUsing)) === 0) {
+			for (const d of node.declarations) addPattern(d.name);
+		}
+		ts.forEachChild(node, collectVars);
+	};
+	collectVars(file);
 	for (const st of file.statements) {
 		if (ts.isVariableStatement(st)) for (const d of st.declarationList.declarations) addPattern(d.name);
 		else if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st) || ts.isEnumDeclaration(st)) && st.name) names.add(st.name.text);

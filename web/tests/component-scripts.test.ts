@@ -115,8 +115,28 @@ export function clientScripts(source: string): { body: string; provided: Set<str
 
 /** The raw `type` attribute value, or null when the attribute is absent. */
 function scriptType(attrs: string): string | null {
-	const m = /(?:^|\s)type\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(attrs);
-	return m ? (m[1] ?? m[2] ?? m[3] ?? "") : null;
+	const at = /(?:^|\s)type\s*=\s*/i.exec(attrs);
+	if (!at) return null;
+	const rest = attrs.slice(at.index + at[0].length);
+	// Astro also accepts an expression: `type={"module"}` or `type={kind}`.
+	if (rest.startsWith("{")) {
+		const close = matchingBrace(rest, 0);
+		const literal = literalString(rest.slice(1, close < 0 ? rest.length : close));
+		// A value we cannot resolve statically might be executable, so treat it
+		// as a classic script and analyse the body rather than skip it.
+		return literal ?? "";
+	}
+	const m = /^(?:"([^"]*)"|'([^']*)'|([^\s>]+))/.exec(rest);
+	return m ? (m[1] ?? m[2] ?? m[3] ?? "") : "";
+}
+
+/** The value of a string-literal expression (`"a"`, `'a'`, `` `a` ``), or null. */
+function literalString(expr: string): string | null {
+	const parsed = ts.createSourceFile("t.ts", `(${expr});`, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+	const st = parsed.statements[0];
+	let value = st && ts.isExpressionStatement(st) ? st.expression : undefined;
+	while (value && ts.isParenthesizedExpression(value)) value = value.expression;
+	return value && (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) ? value.text : null;
 }
 
 // The HTML spec's JavaScript MIME type essence matches, all run as classic
@@ -214,6 +234,17 @@ test("script types follow the HTML spec's executable-type rule", () => {
 <script is:inline type="application/json">{"d": 1}</script>
 `).map((s) => s.body);
 	assert.deepEqual(bodies, ["a();", "b();", "c();"]);
+
+	// Astro's expression form: literal values are resolved, and a value that
+	// cannot be resolved statically is analysed rather than skipped.
+	const fromExpressions = clientScripts(`
+<script is:inline type={"module"}>a();</script>
+<script is:inline type={'text/javascript'}>b();</script>
+<script is:inline type={kind}>c();</script>
+<script is:inline type={"application/json"}>{"d": 1}</script>
+<script is:inline data-type="application/json">e();</script>
+`).map((s) => s.body);
+	assert.deepEqual(fromExpressions, ["a();", "b();", "c();", "e();"], "data-type is not the type attribute");
 });
 
 test("topLevelBindings finds every frontmatter binding", () => {
@@ -235,6 +266,21 @@ class Model {}
 	for (const name of ["Step", "B", "nested", "config", "pair"]) {
 		assert.ok(!names.has(name), `unexpected ${name}`);
 	}
+
+	// `var` is script-scoped wherever it appears; let/const and inner functions' vars are not.
+	const nested = topLevelBindings(`
+if (enabled) { var a = 8; }
+for (var b = 0; b < 3; b++) {}
+for (var c of xs) {}
+try { var d = 1; } catch { var e = 2; } finally { var f = 3; }
+switch (x) { case 1: var g = 1; }
+{ let blockLet = 1; const blockConst = 2; }
+function inner() { var hidden = 1; }
+const arrow = () => { var hidden2 = 1; };
+class K { static { var hidden3 = 1; } }
+`);
+	for (const name of ["a", "b", "c", "d", "e", "f", "g", "inner", "arrow", "K"]) assert.ok(nested.has(name), `missing ${name}`);
+	for (const name of ["blockLet", "blockConst", "hidden", "hidden2", "hidden3"]) assert.ok(!nested.has(name), `unexpected ${name}`);
 });
 
 test("freeIdentifiers tells reads from bindings", () => {
