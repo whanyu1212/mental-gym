@@ -129,7 +129,7 @@ const steps: TeachingStep[] = [
 ];
 ---
 
-<buy-sell-stock-visuals>
+<buy-sell-stock-visuals data-max-price={JSON.stringify(maxPrice)}>
   <AlgorithmPlayer title="prices = [7, 1, 5, 3, 6, 4]" steps={steps}>
     <div class="stats-row bss-meta-row">
       <div class="stat-box bss-rule-box" data-teach-target="rule-box">
@@ -193,6 +193,9 @@ const steps: TeachingStep[] = [
     bars!: HTMLElement[];
     ptrs!: HTMLElement[];
     connectedCallback() {
+      // These live in the frontmatter, which runs at build time; the client
+      // script cannot see them, so they arrive through data attributes.
+      const maxPrice = JSON.parse(this.dataset.maxPrice ?? "null");
       this.minEl = this.querySelector('.bss-min');
       this.maxpEl = this.querySelector('.bss-maxp');
       this.dayProfitEl = this.querySelector('.bss-day-profit');

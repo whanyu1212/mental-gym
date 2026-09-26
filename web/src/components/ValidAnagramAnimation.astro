@@ -339,7 +339,7 @@ const steps: TeachingStep[] = [
 const allKeys = ['a', 'g', 'm', 'n', 'r'];
 ---
 
-<valid-anagram-visuals>
+<valid-anagram-visuals data-keys={JSON.stringify(allKeys)}>
   <AlgorithmPlayer title='s = "anagram", t = "nagaram"' steps={steps}>
     <div class="stats-row va-stats-row">
       <div class="stat-box" data-teach-target="phase-box">
@@ -405,6 +405,9 @@ const allKeys = ['a', 'g', 'm', 'n', 'r'];
     statusEl!: HTMLElement | null;
     statusBox!: HTMLElement | null;
     connectedCallback() {
+      // These live in the frontmatter, which runs at build time; the client
+      // script cannot see them, so they arrive through data attributes.
+      const allKeys = JSON.parse(this.dataset.keys ?? "null");
       this.sCells = Array.from(this.querySelectorAll(".va-s-cell"));
       this.tCells = Array.from(this.querySelectorAll(".va-t-cell"));
       this.mapEl = this.querySelector(".va-map");
