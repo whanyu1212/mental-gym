@@ -1,5 +1,5 @@
 import sys
-from collections import defaultdict, deque
+from collections import deque
 
 # 1. Detecting a Tree
 # A tree is an undirected graph that is connected and acyclic.
@@ -33,7 +33,7 @@ from collections import defaultdict, deque
 # Check for Cycles: Use DFS to detect cycles by tracking the recursion stack.
 
 
-def convert_input_to_graph(edge_list: list, directed: int) -> dict:
+def convert_input_to_graph(edge_list: list, directed: int, n_vertices: int = 0) -> dict:
     """
     Convert an edge list, i.e a list of tuples (A-B), to a graph
     represented as a dictionary.
@@ -43,16 +43,21 @@ def convert_input_to_graph(edge_list: list, directed: int) -> dict:
         directed (bool): whether it is a directed graph or not,
         if undirected, vertex will be appended to both vertices.
         Otherwise, it will only be appended to the first vertex.
+        n_vertices (int): vertices are numbered 0..n_vertices-1. Every one
+        gets an entry, so isolated and sink-only vertices are not lost.
 
     Returns:
         dict: a dictionary representing the graph.
     """
-    graph = defaultdict(list)
+    # A plain dict with every vertex present: a defaultdict would silently add
+    # keys on lookup, which breaks iteration and hides missing vertices.
+    graph = {str(v): [] for v in range(n_vertices)}
 
-    for edge in edge_list:
-        graph[edge[0]].append(edge[1])
+    for u, v in edge_list:
+        graph.setdefault(u, []).append(v)
+        graph.setdefault(v, [])
         if directed == 1:
-            graph[edge[1]].append(edge[0])
+            graph[v].append(u)
     return graph
 
 
@@ -187,18 +192,20 @@ def is_tree(graph: dict, directed: int) -> int:
     start_vertex = next(iter(graph))
 
     if directed == 2:
-        rec_stack = set()
-        if not dfs_cycle_detection_directed(graph, start_vertex, visited, rec_stack):
-            return 0
-
         # Check for exactly one root (node with no incoming edges)
         in_degree = {vertex: 0 for vertex in graph}
         for vertex in graph:
             for neighbor in graph[vertex]:
                 in_degree[neighbor] += 1
 
-        root_count = sum(1 for vertex in in_degree if in_degree[vertex] == 0)
-        if root_count != 1:
+        roots = [vertex for vertex in in_degree if in_degree[vertex] == 0]
+        if len(roots) != 1:
+            return 0
+
+        # Search from the root, not an arbitrary vertex: a directed tree is only
+        # fully reachable from its root.
+        rec_stack = set()
+        if not dfs_cycle_detection_directed(graph, roots[0], visited, rec_stack):
             return 0
 
         # Check if all vertices are visited (graph is connected)
@@ -278,17 +285,26 @@ def check_neighbor_color_bfs(graph: dict, start: int, color: dict) -> bool:
     return True
 
 
-def is_bipartite(graph: dict) -> int:
+def is_bipartite(graph: dict, directed: int = 1) -> int:
     """
     Check if the graph is bipartite by coloring the neighbors of the
     vertices.
 
     Args:
         graph (dict): graph represented as an adjacency list.
+        directed (int): 1 for undirected, 2 for directed.
 
     Returns:
         int: 1 if the graph is bipartite, 0 otherwise.
     """
+    if directed == 2:
+        # Directed bipartite requires every edge to go from U to V, so no
+        # vertex may have both an outgoing and an incoming edge. Colouring the
+        # out-edges alone would give an arbitrary answer here.
+        has_out = {vertex for vertex, neighbors in graph.items() if neighbors}
+        has_in = {neighbor for neighbors in graph.values() for neighbor in neighbors}
+        return int(not has_out & has_in)
+
     color = {}
 
     for vertex in graph:
@@ -313,9 +329,19 @@ def is_DAG(graph: dict, directed: int) -> int:
         int: 1 if the graph is a DAG, 0 otherwise.
     """
     if directed != 2:
-        return 0
+        # "An undirected graph with at least one undirected edge is not a DAG",
+        # so an edgeless undirected graph still is one.
+        return int(not any(graph.values()))
     # return is_tree(graph, directed)
-    return int(dfs_cycle_detection_directed(graph, next(iter(graph)), set(), set()))
+    # Start a search from every unvisited vertex: a cycle need not be reachable
+    # from the first vertex.
+    visited = set()
+    for vertex in graph:
+        if vertex not in visited and not dfs_cycle_detection_directed(
+            graph, vertex, visited, set()
+        ):
+            return 0
+    return 1
 
 
 def check_special_graphs(graph: dict, direction: int) -> list:
@@ -333,7 +359,7 @@ def check_special_graphs(graph: dict, direction: int) -> list:
 
     results.append(is_tree(graph, direction))
     results.append(check_completeness_of_graph(graph))
-    results.append(is_bipartite(graph))
+    results.append(is_bipartite(graph, direction))
     results.append(is_DAG(graph, direction))
 
     return results
@@ -351,7 +377,7 @@ if __name__ == "__main__":
 
     edge_list = [(edges[i], edges[i + 1]) for i in range(0, len(edges), 2)]
 
-    graph = convert_input_to_graph(edge_list, directed=direction)
+    graph = convert_input_to_graph(edge_list, directed=direction, n_vertices=vert)
 
     output = check_special_graphs(graph, direction)
 
