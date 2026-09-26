@@ -119,6 +119,18 @@ test("freeIdentifiers tells reads from bindings", () => {
 		"const o = { maxH };",
 		"class A extends HTMLElement { go() { return 1 / maxH; } }",
 		"function f(a = maxH) { return a; }",
+		// Defaults and computed keys inside a destructured binding.
+		"function f({ scale = maxH } = {}) { return scale; }",
+		"const f = ({ a: { b = maxH } = {} }) => b;",
+		"function f([a = maxH]) { return a; }",
+		"const f = ({ [maxH]: v }) => v;",
+		"try {} catch ({ message = maxH }) { log(message); }",
+		"const { a = maxH } = cfg;",
+		// Class positions evaluated at runtime.
+		"class A extends maxH {}",
+		"class A { [maxH]() {} }",
+		"class A { x = maxH; }",
+		"class A { static { use(maxH); } }",
 	]) {
 		assert.ok(flags(code), `should flag: ${code}`);
 	}
@@ -138,6 +150,11 @@ test("freeIdentifiers tells reads from bindings", () => {
 		"let a: maxH;",
 		"// maxH\nconst s = 'maxH';",
 		"use(maxH); function maxH() {}",
+		"function f(a, { b = a } = {}) { return b; }",
+		"function f(maxH, { b = maxH } = {}) { return b; }",
+		"function f({ maxH: renamed }) { return renamed; }",
+		"class A implements maxH {}",
+		"class A { maxH() {} }",
 	]) {
 		assert.ok(!flags(code), `should not flag: ${code}`);
 	}

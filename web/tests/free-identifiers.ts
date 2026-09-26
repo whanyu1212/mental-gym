@@ -61,7 +61,27 @@ export function freeIdentifiers(code: string): Set<string> {
 		return true;
 	};
 
+	// Visit the expressions a binding pattern evaluates: element defaults
+	// (`{ a = expr }`, `[a = expr]`) and computed keys (`{ [expr]: a }`). The
+	// bound names themselves are declarations, handled by declarePattern.
+	const visitPattern = (node: ts.BindingName): void => {
+		if (ts.isIdentifier(node)) return;
+		for (const el of node.elements) {
+			if (ts.isOmittedExpression(el)) continue;
+			if (el.propertyName && ts.isComputedPropertyName(el.propertyName)) visit(el.propertyName.expression);
+			if (el.initializer) visit(el.initializer);
+			visitPattern(el.name);
+		}
+	};
+
 	const visit = (node: ts.Node): void => {
+		// `class A extends expr` evaluates expr at runtime. The parser wraps it in
+		// an ExpressionWithTypeArguments, which also counts as a type node, so
+		// handle it before the type check below. `implements` is types only.
+		if (ts.isExpressionWithTypeArguments(node) && ts.isHeritageClause(node.parent)) {
+			if (node.parent.token === ts.SyntaxKind.ExtendsKeyword && ts.isClassLike(node.parent.parent)) visit(node.expression);
+			return;
+		}
 		// Types never run, so identifiers inside them are not reads.
 		if (ts.isTypeNode(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) return;
 
@@ -76,9 +96,17 @@ export function freeIdentifiers(code: string): Set<string> {
 			const names = new Set<string>();
 			if (ts.isFunctionExpression(node) && node.name) names.add(node.name.text);
 			const fn = node as ts.SignatureDeclaration & { body?: ts.Node };
+			// A method's computed name (`[expr]() {}`) is evaluated in the
+			// enclosing scope, not the method's own.
+			if (fn.name && ts.isComputedPropertyName(fn.name)) visit(fn.name.expression);
 			for (const p of fn.parameters ?? []) declarePattern(p.name, names);
 			return withScope(names, () => {
-				for (const p of fn.parameters ?? []) if (p.initializer) visit(p.initializer);
+				for (const p of fn.parameters ?? []) {
+					// Defaults and computed keys can sit inside the pattern itself,
+					// as in `({ scale = maxH } = {})`, not only in the outer default.
+					visitPattern(p.name);
+					if (p.initializer) visit(p.initializer);
+				}
 				if (fn.body) visit(fn.body);
 			});
 		}
@@ -92,7 +120,10 @@ export function freeIdentifiers(code: string): Set<string> {
 		if (ts.isCatchClause(node)) {
 			const names = new Set<string>();
 			if (node.variableDeclaration) declarePattern(node.variableDeclaration.name, names);
-			return withScope(names, () => visit(node.block));
+			return withScope(names, () => {
+				if (node.variableDeclaration) visitPattern(node.variableDeclaration.name);
+				visit(node.block);
+			});
 		}
 
 		if (ts.isForStatement(node) || ts.isForOfStatement(node) || ts.isForInStatement(node)) {
