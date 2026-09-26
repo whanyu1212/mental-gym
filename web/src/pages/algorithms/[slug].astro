@@ -1305,4 +1305,19 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 			justify-self: start;
 		}
 	}
+
+	/* Three pill tabs at 1.25rem side padding need ~21rem, wider than a
+	   320-375px phone after page padding. Stretch the bar to the container
+	   and let the tabs share it, with tighter padding. */
+	@media (max-width: 480px) {
+		.content-tabs {
+			display: flex;
+			max-width: 100%;
+		}
+		.content-tab {
+			flex: 1 1 0;
+			min-width: 0;
+			padding: 0.4rem 0.5rem;
+		}
+	}
 </style>

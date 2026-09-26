@@ -217,6 +217,17 @@ const { domain, slug, title, difficulty, group } = Astro.props;
     gap: 0.5rem;
   }
 
+  /* Four buttons plus gaps overflow a 320px phone. Two per row keeps each
+     label and hint readable instead of squeezing them. */
+  @media (max-width: 400px) {
+    .recall-buttons {
+      flex-wrap: wrap;
+    }
+    .recall-btn {
+      flex: 1 1 calc(50% - 0.25rem);
+    }
+  }
+
   .recall-btn {
     flex: 1;
     display: flex;
