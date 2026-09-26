@@ -486,7 +486,10 @@ export function generateParenthesisSteps(n: number): ParenFrame[] {
 		if (node === 0) {
 			exp = `Start with an empty path. opened = 0, closed = 0, n = ${n}.`;
 		} else if (cur.complete) {
-			exp = `"${cur.prefix}" uses all ${n} pairs, so record it. Pop back up to try the other branch.`;
+			const lastVisit = index === order.length - 1;
+			exp = lastVisit
+				? `"${cur.prefix}" uses all ${n} pairs, so record it. Every branch has now been explored.`
+				: `"${cur.prefix}" uses all ${n} pairs, so record it. Pop back up to the nearest prefix that still has an untried branch.`;
 		} else {
 			const last = cur.prefix.at(-1);
 			const options = [canOpen && `"(" (opened ${cur.opened} < ${n})`, canClose && `")" (closed ${cur.closed} < opened ${cur.opened})`]

@@ -213,6 +213,13 @@ test("22 generate parentheses: results match the Python solution; the tree only 
 		const parents = new Set(nodes.map((nd) => nd.parent));
 		for (const node of nodes) if (!parents.has(node.id)) assert.ok(node.complete, `dead end at ${node.prefix}`);
 
+		// Only a leaf with more of the search still to come may promise to pop back up.
+		const visits = steps.filter((s) => s.current >= 0);
+		visits.forEach((step, index) => {
+			const last = index === visits.length - 1;
+			if (last) assert.doesNotMatch(step.exp, /[Pp]op back/, `${step.id}: final leaf promises another branch`);
+		});
+
 		for (const step of steps) {
 			if (step.current < 0) continue;
 			// The path stack is the chain of parents from the root to the current node.
