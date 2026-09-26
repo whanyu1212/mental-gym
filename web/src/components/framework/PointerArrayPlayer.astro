@@ -165,6 +165,14 @@ const stats: [string, unknown][] = first.stats ?? [];
 		flex-wrap: wrap;
 	}
 
+	/* Each column carries one badge per pointer. The shared .ptr.hidden only
+	   fades a badge out, so hidden badges still take width and push a visible
+	   one off-centre (by up to a badge per extra pointer, as in 4Sum). Remove
+	   them from layout instead so the visible badge sits under its cell. */
+	pointer-array-visuals .ptr.hidden {
+		display: none;
+	}
+
 	.cell-val.pa-settled {
 		border-color: var(--status-easy);
 		color: var(--status-easy);
