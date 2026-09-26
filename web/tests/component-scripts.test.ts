@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 
+import ts from "typescript";
+
 import { freeIdentifiers, topLevelBindings } from "./free-identifiers.ts";
 
 /**
@@ -30,13 +32,59 @@ function astroFiles(dir: URL): URL[] {
  */
 export function defineVarsNames(attrs: string): Set<string> {
 	const names = new Set<string>();
-	const body = /define:vars=\{\{([\s\S]*?)\}\}/.exec(attrs)?.[1];
-	if (!body) return names;
-	for (const part of body.split(",")) {
-		const key = /^\s*(?:["']([^"']+)["']|([A-Za-z_$][\w$]*))\s*(?::|$)/.exec(part);
-		if (key) names.add(key[1] ?? key[2]);
+	const start = attrs.search(/define:vars\s*=\s*\{/);
+	if (start < 0) return names;
+	// The attribute value is a JSX-style `{expr}`; take it by brace matching so
+	// nested objects and strings containing `}` do not end it early.
+	const open = attrs.indexOf("{", start);
+	const close = matchingBrace(attrs, open);
+	if (close < 0) return names;
+	const expr = attrs.slice(open + 1, close);
+	const parsed = ts.createSourceFile("vars.ts", `(${expr});`, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+	const st = parsed.statements[0];
+	let value = st && ts.isExpressionStatement(st) ? st.expression : undefined;
+	while (value && ts.isParenthesizedExpression(value)) value = value.expression;
+	if (!value || !ts.isObjectLiteralExpression(value)) return names;
+	// Only top-level properties become variables in the script.
+	for (const prop of value.properties) {
+		if (ts.isShorthandPropertyAssignment(prop)) names.add(prop.name.text);
+		else if (ts.isPropertyAssignment(prop)) {
+			const key = prop.name;
+			if (ts.isIdentifier(key) || ts.isStringLiteral(key) || ts.isNoSubstitutionTemplateLiteral(key)) names.add(key.text);
+		}
 	}
 	return names;
+}
+
+/** Index of the `}` matching the `{` at `open`, skipping string and template literals. */
+function matchingBrace(text: string, open: number): number {
+	let depth = 0;
+	for (let i = open; i < text.length; i++) {
+		const ch = text[i];
+		if (ch === '"' || ch === "'" || ch === "`") {
+			for (i++; i < text.length && text[i] !== ch; i++) if (text[i] === "\\") i++;
+			continue;
+		}
+		if (ch === "{") depth++;
+		else if (ch === "}" && --depth === 0) return i;
+	}
+	return -1;
+}
+
+/** End of an opening tag starting at `from`: the first `>` outside `{...}` and quotes. */
+function openingTagEnd(text: string, from: number): number {
+	for (let i = from; i < text.length; i++) {
+		const ch = text[i];
+		if (ch === ">") return i;
+		if (ch === "{") {
+			const close = matchingBrace(text, i);
+			if (close < 0) return -1;
+			i = close;
+		} else if (ch === '"' || ch === "'") {
+			for (i++; i < text.length && text[i] !== ch; i++);
+		}
+	}
+	return -1;
 }
 
 /**
@@ -45,9 +93,24 @@ export function defineVarsNames(attrs: string): Set<string> {
  * bindings; the only names an inline script is given are its `define:vars`.
  */
 export function clientScripts(source: string): { body: string; provided: Set<string> }[] {
-	return [...source.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g)]
-		.filter((m) => isExecutableScriptType(scriptType(m[1] ?? "")))
-		.map((m) => ({ body: m[2], provided: defineVarsNames(m[1] ?? "") }));
+	const scripts: { body: string; provided: Set<string> }[] = [];
+	const opener = /<script(?=[\s>])/g;
+	for (let m = opener.exec(source); m; m = opener.exec(source)) {
+		// Find the tag's real end: `define:vars={{ a: { b: 1 } }}` contains `>`-free
+		// but brace-nested values, and a naive `[^>]*` would still be fooled by
+		// a `>` inside an expression such as `{ ok: a > b }`.
+		const attrsStart = m.index + m[0].length;
+		const tagEnd = openingTagEnd(source, attrsStart);
+		if (tagEnd < 0) break;
+		const bodyEnd = source.indexOf("</script>", tagEnd);
+		if (bodyEnd < 0) break;
+		const attrs = source.slice(attrsStart, tagEnd);
+		if (isExecutableScriptType(scriptType(attrs))) {
+			scripts.push({ body: source.slice(tagEnd + 1, bodyEnd), provided: defineVarsNames(attrs) });
+		}
+		opener.lastIndex = bodyEnd + "</script>".length;
+	}
+	return scripts;
 }
 
 /** The raw `type` attribute value, or null when the attribute is absent. */
@@ -113,6 +176,24 @@ test("inline scripts are checked, and define:vars names count as provided", () =
 	assert.ok(freeIdentifiers(scripts[1].body).has("b"), "an is:inline body is analysed like any other");
 	assert.deepEqual([...scripts[2].provided].sort(), ["list1", "maxH", "total"]);
 	assert.equal(scripts[0].provided.size, 0);
+});
+
+test("define:vars counts only the object's top-level keys", () => {
+	const names = (attrs: string) => [...defineVarsNames(attrs)].sort();
+	// Nested keys are not injected: only `config` becomes a variable.
+	assert.deepEqual(names(` is:inline define:vars={{ config: { ok: true, maxH: 1 } }}`), ["config"]);
+	assert.deepEqual(names(` define:vars={{ a, "b": 1, c: [1, { d: 2 }], e: fn(x, { f: 1 }) }}`), ["a", "b", "c", "e"]);
+	// Commas, braces and `>` inside strings or expressions do not confuse it.
+	assert.deepEqual(names(` define:vars={{ label: "x, }, y", ok: a > b }}`), ["label", "ok"]);
+	assert.deepEqual(names(" define:vars={{ t: `a,${b}` }}"), ["t"]);
+	assert.deepEqual(names(` is:inline`), []);
+
+	// End to end: the nested `maxH` is not treated as provided, so a read of it
+	// in the body is still caught; a `>` in the attribute does not end the tag.
+	const [script] = clientScripts(`<script is:inline define:vars={{ config: { ok: a > b, maxH: 1 } }}>draw(maxH);</script>`);
+	assert.deepEqual([...script.provided], ["config"]);
+	assert.equal(script.body, "draw(maxH);");
+	assert.ok(freeIdentifiers(script.body).has("maxH") && !script.provided.has("maxH"));
 });
 
 test("script types follow the HTML spec's executable-type rule", () => {
@@ -182,6 +263,12 @@ test("freeIdentifiers tells reads from bindings", () => {
 		"class A { [maxH]() {} }",
 		"class A { x = maxH; }",
 		"class A { static { use(maxH); } }",
+		// ...but it never escapes its function, and let/const stay block-scoped.
+		"function f() { var maxH = 1; } draw(maxH);",
+		"const f = () => { var maxH = 1; }; draw(maxH);",
+		"class A { static { var maxH = 1; } } draw(maxH);",
+		"if (enabled) { let maxH = 1; } draw(maxH);",
+		"for (let maxH = 0; maxH < 3; maxH++) {} draw(maxH);",
 	]) {
 		assert.ok(flags(code), `should flag: ${code}`);
 	}
@@ -206,6 +293,13 @@ test("freeIdentifiers tells reads from bindings", () => {
 		"function f({ maxH: renamed }) { return renamed; }",
 		"class A implements maxH {}",
 		"class A { maxH() {} }",
+		// `var` is function-scoped: declared in a nested block, it is bound after it.
+		"if (enabled) { var maxH = 1; } draw(maxH);",
+		"for (var maxH = 0; maxH < 3; maxH++) {} draw(maxH);",
+		"try { var maxH = 1; } catch {} draw(maxH);",
+		"switch (x) { case 1: var maxH = 1; } draw(maxH);",
+		"draw(maxH); var maxH = 1;",
+		"class A { m() { if (x) { var maxH = 1; } return maxH; } }",
 	]) {
 		assert.ok(!flags(code), `should not flag: ${code}`);
 	}
