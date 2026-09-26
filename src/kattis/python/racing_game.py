@@ -1,4 +1,5 @@
 import heapq
+import sys
 
 
 def parse_score(input_list):
@@ -23,16 +24,7 @@ def parse_score(input_list):
 
 
 if __name__ == "__main__":
-    # input_data = sys.stdin.read().strip().split()
-    # flattened_list = list(map(int, input_data[1:]))
-    # results = parse_score(flattened_list)
-    # sys.stdout.write("\n".join(map(str, results)) + "\n")
-
-    with open("input.txt", "r") as file:
-        input_data = file.read().strip().split()
-
+    input_data = sys.stdin.read().strip().split()
     flattened_list = list(map(int, input_data[1:]))
     results = parse_score(flattened_list)
-
-    with open("output.txt", "w") as file:
-        file.write("\n".join(map(str, results)) + "\n")
+    sys.stdout.write("\n".join(map(str, results)) + "\n")

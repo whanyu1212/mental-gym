@@ -65,6 +65,24 @@ def find_value_or_closest_smaller(root: TreeNode, num: int) -> int:
     return closest_value
 
 
+def winner_for(root: TreeNode, names_by_guess: dict, idea: int) -> str:
+    """
+    Name of the contestant who wins if ``idea`` is the true value, or
+    ``:(`` if every guess is above it.
+
+    Args:
+        root (TreeNode): balanced BST of all guesses
+        names_by_guess (dict): guess -> contestant name
+        idea (int): the hypothetical true value
+
+    Returns:
+        str: the winner's name, or ":(" when nobody wins
+    """
+    val = find_value_or_closest_smaller(root, idea)
+    # Compare with None, not truthiness: 0 is a legal winning guess.
+    return names_by_guess[val] if val is not None else ":("
+
+
 # def print_tree(node, level=0):
 #     if node:
 #         print_tree(node.right, level + 1)
@@ -96,8 +114,4 @@ if __name__ == "__main__":
     # print_tree(root)
 
     for i in ideas:
-        val = find_value_or_closest_smaller(root, i)
-        if val:
-            print(d[val])
-        else:
-            print(":(")
+        print(winner_for(root, d, i))

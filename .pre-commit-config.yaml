@@ -2,8 +2,11 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
+      # Official Kattis sample files are kept byte-for-byte as published.
       - id: trailing-whitespace
+        exclude: ^tests/kattis/samples/
       - id: end-of-file-fixer
+        exclude: ^tests/kattis/samples/
       - id: check-yaml
       - id: check-merge-conflict
       - id: check-toml
