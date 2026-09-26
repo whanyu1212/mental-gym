@@ -111,10 +111,27 @@ test("881 boats: boat count matches the Python solution, and every boat is legal
 			assert.ok(boat.reduce((a, b) => a + b, 0) <= limit, `boat ${JSON.stringify(boat)} is over ${limit}`);
 		}
 		assert.deepEqual(last.boats.flat().sort((a, b) => a - b), [...people].sort((a, b) => a - b), "everyone boards exactly once");
+		let prevBoats = 0;
 		for (const step of steps) {
 			const { left, right } = step.pointers;
-			const outside = step.cells.map((_, i) => i).filter((i) => i < left || i > right);
-			assert.deepEqual(step.settled, outside, `${step.id}: settled must be exactly the people outside [left, right]`);
+			if (step.id?.startsWith("boat")) {
+				// Badges sit on the pair this boat was decided from: R on the person
+				// who just boarded (the heaviest), L on the lightest candidate.
+				const boat = step.boats.at(-1)!;
+				assert.equal(step.boats.length, prevBoats + 1, `${step.id}: exactly one new boat`);
+				assert.equal(step.cells[right], boat[0], `${step.id}: R is not on the heaviest rider`);
+				if (boat.length === 2) assert.equal(step.cells[left], boat[1], `${step.id}: L is not on the paired rider`);
+				assert.ok(step.settled.includes(right), `${step.id}: the boarded person is not marked settled`);
+				// Nobody inside the still-open range (left, right) has boarded yet.
+				for (let p = left + 1; p < right; p++) assert.ok(!step.settled.includes(p), `${step.id}: ${p} boarded early`);
+				// The explanation's arithmetic uses exactly the two badged values.
+				const m = /(\d+) \+ (\d+) = (\d+)/.exec(step.exp);
+				if (m) assert.deepEqual([Number(m[1]), Number(m[2])], [step.cells[right], step.cells[left]], `${step.id}: text sum is not the badged pair`);
+			} else if (left <= right) {
+				const outside = step.cells.map((_, i) => i).filter((i) => i < left || i > right);
+				assert.deepEqual(step.settled, outside, `${step.id}: settled must be exactly the people outside [left, right]`);
+			}
+			prevBoats = step.boats.length;
 			// A solo boat for the last remaining person tested no pairing, so its
 			// explanation must not claim the lightest person failed to fit.
 			if (step.id?.startsWith("boat") && step.exp.includes("only") && step.exp.includes("left")) {
@@ -166,6 +183,10 @@ test("18 4Sum: quadruplets match the Python solution, each found once", () => {
 			}
 			if (step.pointers.left >= 0 && step.pointers.right >= 0) {
 				assert.ok(step.pointers.left < step.pointers.right, `${step.id}: pair pointers shown crossed`);
+			}
+			// Only say "meet" when the pointers actually land on the same index.
+			if (/They meet/.test(step.exp) || /They cross/.test(step.exp)) {
+				assert.equal(step.pointers.left, -1, `${step.id}: pair badges should be hidden once the search ends`);
 			}
 		}
 	});

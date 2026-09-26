@@ -146,11 +146,13 @@ export function boatsSteps(input: number[], limit: number): BoatsFrame[] {
 	let left = 0;
 	let right = n - 1;
 
-	const push = (fields: Fields) =>
+	// `at` overrides where the badges are drawn, so a boat frame can show the
+	// pair it describes rather than where the pointers move to afterwards.
+	const push = (fields: Fields & { at?: { left: number; right: number } }) =>
 		steps.push({
 			...fields,
 			cells: [...people],
-			pointers: { left, right },
+			pointers: fields.at ?? { left, right },
 			settled: [...boarded].sort((a, b) => a - b),
 			boats: boats.map((b) => [...b]),
 			limit,
@@ -183,6 +185,9 @@ export function boatsSteps(input: number[], limit: number): BoatsFrame[] {
 		}
 		push({
 			id: `boat-${boats.length}`,
+			// The pair this boat was decided from: right on the heaviest, left on
+			// the lightest candidate. The next frame shows where they moved to.
+			at: { left: light, right: heavy },
 			exp: pair
 				? `Boat ${boats.length}: ${people[heavy]} + ${people[light]} = ${people[heavy] + people[light]} <= ${limit}, so the heaviest and lightest share it.`
 				: light === heavy
@@ -391,7 +396,7 @@ export function fourSumSteps(input: number[], target: number): FourSumFrame[] {
 						exp:
 							left < right
 								? `Move both pointers inward${skipped > 0 ? `, skipping ${skipped} repeated value${skipped === 1 ? "" : "s"}` : ""}: left = ${left}, right = ${right}.`
-								: `Move both pointers inward. They meet, so the search for anchors ${nums[i]}, ${nums[j]} is finished.`,
+								: `Move both pointers inward. They ${left === right ? "meet" : "cross"}, so no pair is left and the search for anchors ${nums[i]}, ${nums[j]} is finished.`,
 						reason: "Keeping either matched value would only find the same quadruplet again, so both ends move past every copy of it.",
 						invariant,
 						action: "shrink",
