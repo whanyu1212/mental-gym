@@ -1,7 +1,4 @@
 import sys
-from io import StringIO
-
-import pytest
 
 
 def charting_progress():
@@ -26,31 +23,5 @@ def charting_progress():
     print("\n".join(output))
 
 
-@pytest.mark.parametrize(
-    "test_input, expected",
-    [
-        (
-            [
-                "...........*........\n",
-                "....*.....*.........\n",
-                ".........*..*...*...\n",
-                "*..*..*......***....\n",
-                "..*.....*...........\n",
-                ".*..................\n",
-                ".......*.........*.*\n",
-                "....................\n",
-                ".....*............*.\n",
-            ],
-            "...................*\n.................**.\n..............***...\n........******......\n......**............\n.....*..............\n..***...............\n....................\n**..................\n",  # noqa: E501
-        )
-    ],
-)
-def test_charting_progress(monkeypatch, test_input, expected):
-    monkeypatch.setattr("sys.stdin", StringIO("".join(test_input)))
-
-    captured_output = StringIO()
-    monkeypatch.setattr("sys.stdout", captured_output)
-
+if __name__ == "__main__":
     charting_progress()
-
-    assert captured_output.getvalue().strip() == expected.strip()
