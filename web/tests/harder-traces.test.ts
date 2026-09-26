@@ -151,12 +151,13 @@ test("18 4Sum: quadruplets match the Python solution, each found once", () => {
 		for (const step of steps) {
 			const { i, j, left } = step.pointers;
 			if (i >= 0 && j >= 0 && left >= 0) assert.ok(i < j && j < left, `${step.id}: anchors must precede the pair`);
-			if (step.id?.startsWith("found")) {
-				// A match frame shows the pointers on the four matched values.
-				assert.equal(step.sum, target);
+			if (step.sum !== null) {
+				// Whenever a sum is shown, the four visible pointers are the values
+				// that produced it. Covers comparison frames as well as matches.
 				const { right } = step.pointers;
 				const at = (index: number) => Number(step.cells[index]);
-				assert.equal(at(i) + at(j) + at(left) + at(right), target, `${step.id}: pointers not on the match`);
+				assert.equal(at(i) + at(j) + at(left) + at(right), step.sum, `${step.id}: shown sum disagrees with the pointers`);
+				if (step.id?.startsWith("found")) assert.equal(step.sum, target);
 			}
 			if (step.pointers.left >= 0 && step.pointers.right >= 0) {
 				assert.ok(step.pointers.left < step.pointers.right, `${step.id}: pair pointers shown crossed`);

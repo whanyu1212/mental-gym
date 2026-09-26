@@ -320,13 +320,14 @@ export function fourSumSteps(input: number[], target: number): FourSumFrame[] {
 				const l0 = left;
 				const r0 = right;
 				if (sum < target) {
-					left += 1;
+					// Record the comparison with the pointers where it happened;
+					// the next frame (compare, match or anchor change) shows the move.
 					push({
 						id: `move-left-${i}-${j}-${l0}-${r0}`,
 						i,
 						j,
-						left,
-						right,
+						left: l0,
+						right: r0,
 						sum,
 						exp: `${nums[i]} + ${nums[j]} + ${nums[l0]} + ${nums[r0]} = ${sum} < ${target}. Move left right to grow the sum.`,
 						reason: `Even the largest partner, nums[${r0}], is too small with nums[${l0}], so nums[${l0}] cannot be in any answer here.`,
@@ -337,14 +338,14 @@ export function fourSumSteps(input: number[], target: number): FourSumFrame[] {
 							{ target: cell(r0), kind: "compare" },
 						],
 					});
+					left += 1;
 				} else if (sum > target) {
-					right -= 1;
 					push({
 						id: `move-right-${i}-${j}-${l0}-${r0}`,
 						i,
 						j,
-						left,
-						right,
+						left: l0,
+						right: r0,
 						sum,
 						exp: `${nums[i]} + ${nums[j]} + ${nums[l0]} + ${nums[r0]} = ${sum} > ${target}. Move right left to shrink the sum.`,
 						reason: `Even the smallest partner, nums[${l0}], is too large with nums[${r0}], so nums[${r0}] cannot be in any answer here.`,
@@ -355,6 +356,7 @@ export function fourSumSteps(input: number[], target: number): FourSumFrame[] {
 							{ target: cell(r0), kind: "discard" },
 						],
 					});
+					right -= 1;
 				} else {
 					found.push([nums[i], nums[j], nums[left], nums[right]]);
 					// Show the match with the pointers still on it; the move past
