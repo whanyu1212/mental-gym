@@ -30,12 +30,11 @@ def valid_parenthesis(input_str: str) -> None:
             print("Neibb")
             return
 
-    if not stack:
-        print("Neibb")
-    else:
-        print(str(stack.count("p")))
-        print(str(stack.count("g")))
-        print(str(stack.count("o")))
+    # Every demand was met, so the journey is complete. An empty bag is a
+    # valid ending (0 0 0), not a failure.
+    print(str(stack.count("p")))
+    print(str(stack.count("g")))
+    print(str(stack.count("o")))
 
 
 if __name__ == "__main__":

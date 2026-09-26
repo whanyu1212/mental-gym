@@ -40,7 +40,7 @@ quote-style = "preserve"
 exclude = ["*.md"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src/kattis/python", "src/leetcode/arrays_hashing", "src/leetcode/two_pointers", "src/leetcode/sliding_window", "src/leetcode/stack"]
+pythonpath = ["tests/kattis", "src/kattis/python", "src/leetcode/arrays_hashing", "src/leetcode/two_pointers", "src/leetcode/sliding_window", "src/leetcode/stack"]
 
 [build-system]
 requires = ["poetry-core"]
