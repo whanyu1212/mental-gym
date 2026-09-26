@@ -14,32 +14,74 @@ import { freeIdentifiers, topLevelBindings } from "./free-identifiers.ts";
  * like `draw(maxH)` is told apart from a binding like `(maxH) => ...`.
  */
 
-const componentsDir = new URL("../src/components/", import.meta.url);
+// Pages and layouts have the same frontmatter/script split as components.
+const srcDir = new URL("../src/", import.meta.url);
 
-function componentFiles(dir: URL): URL[] {
+function astroFiles(dir: URL): URL[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-		if (entry.isDirectory()) return componentFiles(new URL(`${entry.name}/`, dir));
+		if (entry.isDirectory()) return astroFiles(new URL(`${entry.name}/`, dir));
 		return entry.name.endsWith(".astro") ? [new URL(entry.name, dir)] : [];
 	});
 }
 
+/**
+ * Names a `<script define:vars={{ a, b: expr }}>` tag injects into its body.
+ * Astro serialises exactly these into the script, so they are bound there.
+ */
+export function defineVarsNames(attrs: string): Set<string> {
+	const names = new Set<string>();
+	const body = /define:vars=\{\{([\s\S]*?)\}\}/.exec(attrs)?.[1];
+	if (!body) return names;
+	for (const part of body.split(",")) {
+		const key = /^\s*(?:["']([^"']+)["']|([A-Za-z_$][\w$]*))\s*(?::|$)/.exec(part);
+		if (key) names.add(key[1] ?? key[2]);
+	}
+	return names;
+}
+
+/**
+ * Every client script in an .astro file. Bundled (processed) scripts and
+ * `is:inline` scripts both run in the browser without the frontmatter's
+ * bindings; the only names an inline script is given are its `define:vars`.
+ */
+export function clientScripts(source: string): { body: string; provided: Set<string> }[] {
+	return [...source.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+		.filter((m) => !/\btype=["'](?!module|text\/javascript)/.test(m[1] ?? "")) // skip JSON/ld+json etc.
+		.map((m) => ({ body: m[2], provided: defineVarsNames(m[1] ?? "") }));
+}
+
 test("client scripts do not read build-time frontmatter constants", () => {
 	const problems: string[] = [];
-	for (const file of componentFiles(componentsDir)) {
+	for (const file of astroFiles(srcDir)) {
 		const source = readFileSync(file, "utf8");
 		const frontmatter = /^---\n([\s\S]*?)\n---/.exec(source)?.[1];
 		if (!frontmatter) continue;
 		// Every top-level binding, parsed rather than pattern-matched, so
 		// `const a = 1, maxH = 2` and `const { maxH } = config` are included.
 		const buildNames = topLevelBindings(frontmatter);
-		for (const script of source.matchAll(/<script(?![^>]*is:inline)[^>]*>([\s\S]*?)<\/script>/g)) {
-			const free = freeIdentifiers(script[1]);
+		for (const { body, provided } of clientScripts(source)) {
+			const free = freeIdentifiers(body);
 			for (const name of buildNames) {
-				if (free.has(name)) problems.push(`${file.pathname.split("/src/")[1]}: '${name}' is a frontmatter const used in the client script`);
+				if (free.has(name) && !provided.has(name)) {
+					problems.push(`${file.pathname.split("/src/")[1]}: '${name}' is a frontmatter const used in a client script`);
+				}
 			}
 		}
 	}
 	assert.deepEqual(problems, []);
+});
+
+test("inline scripts are checked, and define:vars names count as provided", () => {
+	const scripts = clientScripts(`
+<script>draw(a);</script>
+<script is:inline>draw(b);</script>
+<script is:inline define:vars={{ maxH, "list1": first, total: n + 1 }}>draw(maxH, list1, total);</script>
+<script type="application/ld+json">{"maxH": 1}</script>
+`);
+	assert.equal(scripts.length, 3, "processed and inline scripts are included; JSON data scripts are not");
+	assert.ok(freeIdentifiers(scripts[1].body).has("b"), "an is:inline body is analysed like any other");
+	assert.deepEqual([...scripts[2].provided].sort(), ["list1", "maxH", "total"]);
+	assert.equal(scripts[0].provided.size, 0);
 });
 
 test("topLevelBindings finds every frontmatter binding", () => {
