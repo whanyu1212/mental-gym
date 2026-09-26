@@ -2,13 +2,16 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 
+import { freeIdentifiers } from "./free-identifiers.ts";
+
 /**
  * An Astro component's frontmatter runs at build time and its <script> runs in
  * the browser, so a name declared in the frontmatter does not exist in the
  * script. Using one throws a ReferenceError in the browser, which is how five
  * animations broke (maxH, maxPrice, allKeys, list1/list2). This test catches
- * that: any frontmatter `const` read inside the client script must be declared
- * there too (typically parsed from a data- attribute).
+ * that: a frontmatter `const` must not be a free (unbound) identifier in any
+ * client script. The script is parsed with the TypeScript parser, so a read
+ * like `draw(maxH)` is told apart from a binding like `(maxH) => ...`.
  */
 
 const componentsDir = new URL("../src/components/", import.meta.url);
@@ -20,22 +23,6 @@ function componentFiles(dir: URL): URL[] {
 	});
 }
 
-/**
- * Strip comments and string literals so names inside them do not count. The
- * `${...}` parts of template literals are real code (that is exactly where
- * `${(s.min / maxPrice) * 100}%` hid), so keep them and drop only the text.
- */
-function codeOnly(source: string): string {
-	return source
-		.replace(/\/\*[\s\S]*?\*\//g, " ")
-		.replace(/(^|[^:\\])\/\/[^\n]*/g, "$1 ")
-		.replace(/`(?:\\[\s\S]|\$\{[^}]*\}|[^`\\])*`/g, (literal) =>
-			[...literal.matchAll(/\$\{([^}]*)\}/g)].map((m) => ` ${m[1]} `).join(""),
-		)
-		.replace(/"(?:\\.|[^"\\\n])*"/g, '""')
-		.replace(/'(?:\\.|[^'\\\n])*'/g, "''");
-}
-
 test("client scripts do not read build-time frontmatter constants", () => {
 	const problems: string[] = [];
 	for (const file of componentFiles(componentsDir)) {
@@ -44,20 +31,49 @@ test("client scripts do not read build-time frontmatter constants", () => {
 		if (!frontmatter) continue;
 		const buildNames = [...frontmatter.matchAll(/^(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*[:=]/gm)].map((m) => m[1]);
 		for (const script of source.matchAll(/<script(?![^>]*is:inline)[^>]*>([\s\S]*?)<\/script>/g)) {
-			const code = codeOnly(script[1]);
+			const free = freeIdentifiers(script[1]);
 			for (const name of buildNames) {
-				// Declared in the script itself: const/let/var/function/class, a
-				// parameter or destructured binding (`(k`, `[k,`, `{k}`), or a
-				// class field (`name!:` / `name:` at the start of a line).
-				const declared = new RegExp(
-					`(?:\\b(?:const|let|var|function|class)\\s+|[({[,]\\s*)${name}\\b|^\\s*${name}\\s*!?\\s*:`,
-					"m",
-				).test(code);
-				// Read as a bare identifier, not as a property (`.name`) or object key (`name:`).
-				const used = new RegExp(`(?<![\\w$.])${name}(?![\\w$])(?!\\s*:)`).test(code);
-				if (used && !declared) problems.push(`${file.pathname.split("/src/")[1]}: '${name}' is a frontmatter const used in the client script`);
+				if (free.has(name)) problems.push(`${file.pathname.split("/src/")[1]}: '${name}' is a frontmatter const used in the client script`);
 			}
 		}
 	}
 	assert.deepEqual(problems, []);
+});
+
+test("freeIdentifiers tells reads from bindings", () => {
+	const flags = (code: string) => freeIdentifiers(code).has("maxH");
+	// Reads with nothing binding them: must be flagged. Several of these slipped
+	// past the earlier regex-based check.
+	for (const code of [
+		"draw(maxH);",
+		"const a = [maxH];",
+		"f(a, maxH);",
+		"const o = { v: maxH };",
+		"const x = (maxH / 2);",
+		"const s = `${(n / maxH) * 100}%`;",
+		"const o = { maxH };",
+		"class A extends HTMLElement { go() { return 1 / maxH; } }",
+		"function f(a = maxH) { return a; }",
+	]) {
+		assert.ok(flags(code), `should flag: ${code}`);
+	}
+	// Bindings, properties, keys, types, strings and comments: must not be flagged.
+	for (const code of [
+		"const maxH = 3; use(maxH);",
+		"const f = (maxH) => maxH * 2;",
+		"const f = maxH => maxH;",
+		"function f(a, maxH) { return maxH; }",
+		"const { maxH } = cfg; use(maxH);",
+		"const [maxH, b] = pair; use(maxH);",
+		"for (const maxH of xs) use(maxH);",
+		"try {} catch (maxH) { log(maxH); }",
+		"this.maxH = 1; use(this.maxH);",
+		"const o = { maxH: 1 };",
+		"class A {\n  maxH!: number;\n  go() { return this.maxH; }\n}",
+		"let a: maxH;",
+		"// maxH\nconst s = 'maxH';",
+		"use(maxH); function maxH() {}",
+	]) {
+		assert.ok(!flags(code), `should not flag: ${code}`);
+	}
 });
