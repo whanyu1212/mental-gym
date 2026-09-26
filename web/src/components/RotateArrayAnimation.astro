@@ -1,0 +1,34 @@
+---
+import PointerArrayPlayer from "./framework/PointerArrayPlayer.astro";
+import { rotateArraySteps } from "../lib/teaching/traces/harderTraces";
+
+const nums = [1, 2, 3, 4, 5, 6, 7];
+const k = 3;
+
+const PHASE_LABEL: Record<string, string> = {
+	start: "plan",
+	"reverse-all": "1. reverse all",
+	"reverse-front": "2. reverse first k",
+	"reverse-back": "3. reverse the rest",
+	done: "done",
+};
+
+const steps = rotateArraySteps(nums, k).map((step) => ({
+	...step,
+	stats: [
+		["phase", PHASE_LABEL[step.phase]],
+		["block", step.block ? `[${step.block[0]}..${step.block[1]}]` : "-"],
+		["k", k],
+	],
+}));
+---
+
+<PointerArrayPlayer
+	title={`nums = [${nums.join(", ")}], k = ${k}`}
+	steps={steps}
+	mainLabel="nums"
+	pointers={[
+		{ name: "left", label: "L", tone: "info" },
+		{ name: "right", label: "R", tone: "easy" },
+	]}
+/>
