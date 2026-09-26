@@ -1,0 +1,215 @@
+---
+/**
+ * A reusable array-plus-pointers visual for step generators in
+ * src/lib/teaching/traces/. Each step supplies the cell values, pointer
+ * indices and which cells are settled or stale; this component only renders
+ * what the current step says, so it holds no algorithm logic of its own.
+ *
+ * Optional per-step fields:
+ * - `stats`: [label, value][] shown as stat boxes (labels come from step 1).
+ * - `second` / `secondUsed`: a second array (e.g. nums2 in Merge Sorted Array)
+ *   and the indices of it already consumed.
+ */
+import AlgorithmPlayer from "./AlgorithmPlayer.astro";
+import type { TeachingStep } from "../../lib/teaching/types";
+
+export interface PointerSpec {
+	name: string;
+	label: string;
+	tone: "info" | "easy" | "medium" | "hard";
+	row?: "main" | "second";
+}
+
+interface Props {
+	title: string;
+	steps: TeachingStep[];
+	pointers: PointerSpec[];
+	mainLabel: string;
+	secondLabel?: string;
+}
+
+const { title, steps, pointers, mainLabel, secondLabel } = Astro.props;
+const first = steps[0];
+const mainPointers = pointers.filter((p) => (p.row ?? "main") === "main");
+const secondPointers = pointers.filter((p) => p.row === "second");
+const stats: [string, unknown][] = first.stats ?? [];
+---
+
+<pointer-array-visuals>
+	<AlgorithmPlayer title={title} steps={steps}>
+		{
+			stats.length > 0 && (
+				<div class="stats-row pa-stats">
+					{stats.map(([label], index) => (
+						<div class="stat-box">
+							<span class="stat-label">{label}</span>
+							<span class="stat-val" data-stat={index}>
+								-
+							</span>
+						</div>
+					))}
+				</div>
+			)
+		}
+
+		<div class="anim-row">
+			<p class="anim-label">{mainLabel}</p>
+			<div class="array-row">
+				{
+					first.cells.map((value: unknown, i: number) => (
+						<div class="array-col">
+							<div class="array-cell">
+								<span class="cell-val" data-row="main" data-idx={i} data-teach-target={`cell:${i}`}>
+									{String(value)}
+								</span>
+								<span class="cell-idx">{i}</span>
+							</div>
+							<div class="pointers-row">
+								{mainPointers.map((p) => (
+									<span
+										class={`ptr pa-tone-${p.tone} hidden`}
+										data-ptr={p.name}
+										data-idx={i}
+										data-teach-target={`pointer:${p.name}`}
+									>
+										{p.label}
+									</span>
+								))}
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</div>
+
+		{
+			first.second && (
+				<div class="anim-row">
+					<p class="anim-label">{secondLabel}</p>
+					<div class="array-row">
+						{first.second.map((value: unknown, i: number) => (
+							<div class="array-col">
+								<div class="array-cell">
+									<span class="cell-val" data-row="second" data-idx={i} data-teach-target={`second:${i}`}>
+										{String(value)}
+									</span>
+									<span class="cell-idx">{i}</span>
+								</div>
+								<div class="pointers-row">
+									{secondPointers.map((p) => (
+										<span
+											class={`ptr pa-tone-${p.tone} hidden`}
+											data-ptr={p.name}
+											data-idx={i}
+											data-teach-target={`pointer:${p.name}`}
+										>
+											{p.label}
+										</span>
+									))}
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)
+		}
+	</AlgorithmPlayer>
+</pointer-array-visuals>
+
+<script>
+	class PointerArrayVisuals extends HTMLElement {
+		connectedCallback() {
+			const main = Array.from(this.querySelectorAll<HTMLElement>('.cell-val[data-row="main"]'));
+			const second = Array.from(this.querySelectorAll<HTMLElement>('.cell-val[data-row="second"]'));
+			const pointers = Array.from(this.querySelectorAll<HTMLElement>("[data-ptr]"));
+			const stats = Array.from(this.querySelectorAll<HTMLElement>("[data-stat]"));
+
+			this.addEventListener("step-change", (event) => {
+				const step = event.detail.step;
+				const settled = new Set<number>(step.settled ?? []);
+				const stale = new Set<number>(step.stale ?? []);
+				const used = new Set<number>(step.secondUsed ?? []);
+
+				main.forEach((el, i) => {
+					el.textContent = String(step.cells[i]);
+					el.classList.toggle("pa-settled", settled.has(i));
+					el.classList.toggle("pa-stale", stale.has(i));
+				});
+				second.forEach((el, i) => {
+					if (step.second) el.textContent = String(step.second[i]);
+					el.classList.toggle("pa-used", used.has(i));
+				});
+				pointers.forEach((el) => {
+					const at = step.pointers?.[el.dataset.ptr ?? ""];
+					el.classList.toggle("hidden", at !== Number(el.dataset.idx));
+				});
+				stats.forEach((el) => {
+					const entry = step.stats?.[Number(el.dataset.stat)];
+					el.textContent = entry ? String(entry[1]) : "-";
+				});
+			});
+		}
+	}
+
+	if (!customElements.get("pointer-array-visuals")) {
+		customElements.define("pointer-array-visuals", PointerArrayVisuals);
+	}
+</script>
+
+<style>
+	pointer-array-visuals {
+		display: block;
+	}
+
+	.pa-stats {
+		flex-wrap: wrap;
+	}
+
+	/* Each column carries one badge per pointer. The shared .ptr.hidden only
+	   fades a badge out, so hidden badges still take width and push a visible
+	   one off-centre (by up to a badge per extra pointer, as in 4Sum). Remove
+	   them from layout instead so the visible badge sits under its cell. */
+	pointer-array-visuals .ptr.hidden {
+		display: none;
+	}
+
+	.cell-val.pa-settled {
+		border-color: var(--status-easy);
+		color: var(--status-easy);
+		background: color-mix(in srgb, var(--status-easy) 12%, transparent);
+	}
+
+	.cell-val.pa-stale,
+	.cell-val.pa-used {
+		opacity: var(--dim-soft);
+		border-style: dashed;
+	}
+
+	/* A value read on this very step stays fully visible so the highlight
+	   shows where it came from; it dims from the next step on. */
+	.cell-val.pa-used.teach-compare,
+	.cell-val.pa-stale.teach-compare {
+		opacity: 1;
+		border-style: solid;
+	}
+
+	.pa-tone-info {
+		background: color-mix(in srgb, var(--status-info) 20%, transparent);
+		color: var(--status-info);
+	}
+
+	.pa-tone-easy {
+		background: color-mix(in srgb, var(--status-easy) 20%, transparent);
+		color: var(--status-easy);
+	}
+
+	.pa-tone-medium {
+		background: color-mix(in srgb, var(--status-medium) 20%, transparent);
+		color: var(--status-medium);
+	}
+
+	.pa-tone-hard {
+		background: color-mix(in srgb, var(--status-hard) 20%, transparent);
+		color: var(--status-hard);
+	}
+</style>

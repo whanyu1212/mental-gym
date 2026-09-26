@@ -1,0 +1,36 @@
+---
+import PointerArrayPlayer from "./framework/PointerArrayPlayer.astro";
+import { mergeSortedArraySteps } from "../lib/teaching/traces/twoPointerTraces";
+
+const nums1 = [1, 2, 3, 0, 0, 0];
+const m = 3;
+const nums2 = [2, 5, 6];
+const n = 3;
+
+const steps = mergeSortedArraySteps(nums1, m, nums2, n).map((step) => {
+	const { i, j, k } = step.pointers;
+	return {
+		...step,
+		// Slots between the read pointer i and the write pointer k are free:
+		// padding, or nums1 values already copied further right.
+		stale: Array.from({ length: Math.max(0, k - i) }, (_, t) => i + 1 + t),
+		stats: [
+			["i (nums1)", i >= 0 ? i : "done"],
+			["j (nums2)", j >= 0 ? j : "done"],
+			["k (write)", k >= 0 ? k : "done"],
+		],
+	};
+});
+---
+
+<PointerArrayPlayer
+	title={`nums1 = [${nums1.join(", ")}], m = ${m}; nums2 = [${nums2.join(", ")}], n = ${n}`}
+	steps={steps}
+	mainLabel="nums1 (green = final, dashed = free slot)"
+	secondLabel="nums2 (dashed = already merged)"
+	pointers={[
+		{ name: "i", label: "i", tone: "info" },
+		{ name: "k", label: "k", tone: "medium" },
+		{ name: "j", label: "j", tone: "easy", row: "second" },
+	]}
+/>

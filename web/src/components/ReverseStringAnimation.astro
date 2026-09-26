@@ -1,0 +1,25 @@
+---
+import PointerArrayPlayer from "./framework/PointerArrayPlayer.astro";
+import { reverseStringSteps } from "../lib/teaching/traces/twoPointerTraces";
+
+const s = ["h", "e", "l", "l", "o"];
+
+const steps = reverseStringSteps(s).map((step) => ({
+	...step,
+	stats: [
+		["left", step.pointers.left],
+		["right", step.pointers.right],
+		["settled", `${step.settled.length} / ${s.length}`],
+	],
+}));
+---
+
+<PointerArrayPlayer
+	title={`s = [${s.map((c) => `"${c}"`).join(", ")}]`}
+	steps={steps}
+	mainLabel="s (green = in final reversed position)"
+	pointers={[
+		{ name: "left", label: "L", tone: "info" },
+		{ name: "right", label: "R", tone: "easy" },
+	]}
+/>
