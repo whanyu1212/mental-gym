@@ -46,8 +46,39 @@ export function defineVarsNames(attrs: string): Set<string> {
  */
 export function clientScripts(source: string): { body: string; provided: Set<string> }[] {
 	return [...source.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g)]
-		.filter((m) => !/\btype=["'](?!module|text\/javascript)/.test(m[1] ?? "")) // skip JSON/ld+json etc.
+		.filter((m) => isExecutableScriptType(scriptType(m[1] ?? "")))
 		.map((m) => ({ body: m[2], provided: defineVarsNames(m[1] ?? "") }));
+}
+
+/** The raw `type` attribute value, or null when the attribute is absent. */
+function scriptType(attrs: string): string | null {
+	const m = /(?:^|\s)type\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(attrs);
+	return m ? (m[1] ?? m[2] ?? m[3] ?? "") : null;
+}
+
+// The HTML spec's JavaScript MIME type essence matches, all run as classic
+// scripts: https://html.spec.whatwg.org/multipage/scripting.html#javascript-mime-type
+const JS_MIME_TYPES = new Set(
+	[
+		"application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript",
+		"text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2",
+		"text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript",
+		"text/x-ecmascript", "text/x-javascript",
+	],
+);
+
+/**
+ * Whether a browser executes a <script> with this `type`, per the HTML spec:
+ * absent or empty (after trimming) runs as a classic script, `module` runs as
+ * a module, and a JavaScript MIME type essence (case-insensitive, parameters
+ * such as `;charset=utf-8` ignored) runs as classic. Anything else, such as
+ * `application/json` or `application/ld+json`, is a data block and never runs.
+ */
+export function isExecutableScriptType(type: string | null): boolean {
+	if (type === null) return true;
+	const trimmed = type.trim().toLowerCase();
+	if (trimmed === "" || trimmed === "module") return true;
+	return JS_MIME_TYPES.has(trimmed.split(";")[0].trim());
 }
 
 test("client scripts do not read build-time frontmatter constants", () => {
@@ -82,6 +113,26 @@ test("inline scripts are checked, and define:vars names count as provided", () =
 	assert.ok(freeIdentifiers(scripts[1].body).has("b"), "an is:inline body is analysed like any other");
 	assert.deepEqual([...scripts[2].provided].sort(), ["list1", "maxH", "total"]);
 	assert.equal(scripts[0].provided.size, 0);
+});
+
+test("script types follow the HTML spec's executable-type rule", () => {
+	const runs: (string | null)[] = [
+		null, "", "  ", "module", "MODULE",
+		"text/javascript", "application/javascript", "application/x-javascript", "text/ecmascript",
+		"TEXT/JavaScript", " text/javascript ", "text/javascript; charset=utf-8", "text/jscript", "text/javascript1.5",
+	];
+	const dataOnly = ["application/json", "application/ld+json", "text/plain", "text/html", "importmap", "speculationrules", "text/x-template"];
+	for (const t of runs) assert.ok(isExecutableScriptType(t), `should run: ${JSON.stringify(t)}`);
+	for (const t of dataOnly) assert.ok(!isExecutableScriptType(t), `should be data: ${t}`);
+
+	// And end to end through the tag parser, with every quoting style.
+	const bodies = clientScripts(`
+<script is:inline type="application/javascript">a();</script>
+<script is:inline type=''>b();</script>
+<script type=module>c();</script>
+<script is:inline type="application/json">{"d": 1}</script>
+`).map((s) => s.body);
+	assert.deepEqual(bodies, ["a();", "b();", "c();"]);
 });
 
 test("topLevelBindings finds every frontmatter binding", () => {
