@@ -217,17 +217,6 @@ const { domain, slug, title, difficulty, group } = Astro.props;
     gap: 0.5rem;
   }
 
-  /* Four buttons plus gaps overflow a 320px phone. Two per row keeps each
-     label and hint readable instead of squeezing them. */
-  @media (max-width: 400px) {
-    .recall-buttons {
-      flex-wrap: wrap;
-    }
-    .recall-btn {
-      flex: 1 1 calc(50% - 0.25rem);
-    }
-  }
-
   .recall-btn {
     flex: 1;
     display: flex;
@@ -240,6 +229,18 @@ const { domain, slug, title, difficulty, group } = Astro.props;
     border-radius: var(--radius-xs);
     cursor: pointer;
     transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+  }
+
+  /* Four buttons plus gaps overflow a 320px phone. Two per row keeps each
+     label and hint readable instead of squeezing them. This must come after
+     the base .recall-btn rule: same specificity, so the later rule wins. */
+  @media (max-width: 400px) {
+    .recall-buttons {
+      flex-wrap: wrap;
+    }
+    .recall-btn {
+      flex: 1 1 calc(50% - 0.25rem);
+    }
   }
 
   .recall-btn:hover:not(:disabled) {
