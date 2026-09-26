@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import { guides } from "../src/data/algorithmGuides.ts";
 import { mlProblems } from "../src/data/mlProblems.ts";
 import { problems } from "../src/data/problems.ts";
 import { courses, modules } from "../src/data/roadmap.ts";
@@ -122,4 +123,12 @@ test("notes README documents the collection schema", () => {
 	assert.match(readme, /kind: template/);
 	assert.match(readme, /Use `\.mdx` \*\*only\*\*/);
 	assert.match(readme, /Keep prose-only notes as `\.md`/);
+});
+
+test("algorithm guides only link to published notes", () => {
+	for (const [slug, guide] of Object.entries(guides)) {
+		for (const noteId of guide.relatedNotes) {
+			assert.ok(catalog.note.has(noteId), `${slug} links to unknown note ${noteId}`);
+		}
+	}
 });
