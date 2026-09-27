@@ -43,23 +43,33 @@ test("reduced motion lists every stage caption instead of hiding them", () => {
 	const caption = declarations(reduced, ".stage-caption");
 	assert.match(caption, /animation:\s*none/);
 	assert.match(caption, /opacity:\s*1/, "captions must be visible without animation or hover");
-	assert.match(caption, /grid-area:\s*auto/, "captions must stack as a list, not overlap");
+	assert.match(declarations(reduced, ".marker"), /display:\s*none/, "the marker only makes sense while it moves");
 });
 
 test("hover pinning only applies while captions cycle", () => {
 	const outside = css.replace(/@media \(prefers-reduced-motion: no-preference\)\s*\{[\s\S]*?\n\t\}/g, "");
 	assert.doesNotMatch(outside, /:has\(/, "a :has() hover rule would hide the reduced-motion list");
-	const [motion] = mediaBlocks("(prefers-reduced-motion: no-preference)");
-	assert.match(motion ?? "", /:has\(\.loop-node\[data-stage="retain"\]/);
+	const motion = mediaBlocks("(prefers-reduced-motion: no-preference)").join("\n");
+	assert.match(motion, /:has\(\[data-stage="retain"\] \.stage-word/);
 });
 
 test("only hovering a stage link pins a caption", () => {
-	// Captions share one grid cell and carry data-stage too, so an unqualified
-	// [data-stage] hover target would match a hidden caption under the pointer.
+	// A stage's row also holds its hidden caption, so a hover target of the row
+	// itself would pin a caption when the pointer is over empty caption space.
 	for (const match of css.matchAll(/:has\(([^)]*)\)/g)) {
-		if (match[1].includes("data-stage")) {
-			assert.match(match[1], /\.loop-node\[data-stage=/, `unqualified hover target: ${match[1]}`);
+		if (match[1].includes("data-stage") || match[1].includes(":hover")) {
+			assert.match(match[1], /\.stage-word/, `hover target is not a stage link: ${match[1]}`);
 		}
 	}
 	assert.match(declarations(css, ".stage-caption"), /pointer-events:\s*none/, "hidden captions must not catch the pointer");
+});
+
+test("at narrow widths the animated caption leaves the fixed-height rows", () => {
+	// A narrow second column wraps sentences past the row height, so while the
+	// cycle runs the lit sentence moves to a reserved line under the stack.
+	const motion = mediaBlocks("(prefers-reduced-motion: no-preference)").join("\n");
+	const narrow = motion.slice(motion.indexOf("@container"));
+	assert.ok(motion.includes("@container"), "no narrow-width rule for the animated layout");
+	assert.match(declarations(narrow, ".stage-caption"), /position:\s*absolute/);
+	assert.match(declarations(narrow, ".stack"), /padding-bottom:/, "the stack must reserve room for the caption");
 });
