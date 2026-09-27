@@ -1,0 +1,398 @@
+---
+import { tracks, type RoadmapPhase, type TrackId, type WeeklyHours } from "../../data/roadmap";
+import { HOUR_KINDS } from "../../lib/roadmap-hours";
+import { roadmapPlan } from "../../lib/roadmap-plan";
+import { hourBlocks, planSummary, type PlanCopy } from "../../scripts/roadmap-plan";
+
+const plan = roadmapPlan(tracks);
+const buildHeavy = tracks
+	.filter((track) => plan.hours[track.id].specialization.language < plan.hours[track.id].foundation.language)
+	.map((track) => track.title);
+const capstone = plan.hours[tracks[0].id].capstone;
+const copy: PlanCopy = {
+	phaseLabels: { foundation: "Foundation", specialization: "Specialization", capstone: "Capstone" },
+	phaseDetails: {
+		foundation: "Shared fundamentals in software, data, models, evaluation, and systems. Every path takes the same weeks.",
+		specialization: `Role-specific courses, implementations, interview practice, and deliverables. ${buildHeavy.join(" and ")} move the language hours to implementation.`,
+		capstone: `Reproducible project evidence, system design, and interview preparation. Every path spends ${capstone.implementation} of its ${plan.weeklyLimit} hours on implementation and drops the language block.`,
+	},
+	trackTitles: Object.fromEntries(tracks.map((track) => [track.id, track.title])) as Record<TrackId, string>,
+	kindLabels: { study: "Study", implementation: "Implementation", interview: "Interview practice", language: "Language practice" },
+};
+const firstPhase: RoadmapPhase = plan.phases[0].id;
+const firstTrack: TrackId = tracks[0].id;
+const initialHours: WeeklyHours = plan.hours[firstTrack][firstPhase];
+const initialBlocks = hourBlocks(initialHours, plan.weeklyLimit);
+---
+
+<section
+	class="plan"
+	data-roadmap-plan
+	data-phase={firstPhase}
+	data-plan={JSON.stringify(plan)}
+	data-copy={JSON.stringify(copy)}
+	aria-labelledby="plan-title"
+>
+	<div class="plan-heading">
+		<p class="eyebrow">How the six months work</p>
+		<h2 id="plan-title">Three phases, one {plan.weeklyLimit}-hour week</h2>
+		<p>Pick a phase and a path to see where each week's hours go. The budget is a ceiling: when a phase needs more building, something else gives way.</p>
+	</div>
+
+	<fieldset class="phase-picker">
+		<legend>Phase</legend>
+		<div class="timeline" style={`--total-weeks: ${plan.totalWeeks}`}>
+			{plan.phases.map((phase, phaseIndex) => (
+				<label class="phase-segment" data-phase={phase.id} style={`--weeks: ${phase.weeks}`}>
+					<input type="radio" name="plan-phase" value={phase.id} checked={phaseIndex === 0} />
+					<span class="week-ticks" aria-hidden="true">
+						{Array.from({ length: phase.weeks }, (_, index) => (
+							<i style={`--i: ${phase.firstWeek - 1 + index}`}></i>
+						))}
+					</span>
+					<span class="segment-label">
+						<strong>{copy.phaseLabels[phase.id]}</strong>
+						<small>Weeks {phase.firstWeek}–{phase.lastWeek}</small>
+					</span>
+				</label>
+			))}
+		</div>
+	</fieldset>
+
+	<fieldset class="track-picker">
+		<legend>Path</legend>
+		<div class="track-options">
+			{tracks.map((track, index) => (
+				<label>
+					<input type="radio" name="plan-track" value={track.id} checked={index === 0} />
+					<span>{track.shortTitle}</span>
+				</label>
+			))}
+		</div>
+		<p class="shared-note">Foundation weeks are the same for every path.</p>
+	</fieldset>
+
+	<div class="week-budget">
+		<div class="hour-bar" aria-hidden="true">
+			{initialBlocks.map((kind, index) => (
+				<span class="hour-block" data-hour-block data-kind={kind} style={`--i: ${index}`}></span>
+			))}
+		</div>
+		<ul class="hour-legend">
+			{HOUR_KINDS.map((kind) => (
+				<li data-kind={kind}>
+					<span class="swatch" aria-hidden="true"></span>
+					{copy.kindLabels[kind]}
+					<strong data-hours-kind={kind}>{initialHours[kind]} h</strong>
+				</li>
+			))}
+		</ul>
+	</div>
+
+	<p class="plan-summary" aria-live="polite" data-plan-summary>{planSummary(plan, copy, firstPhase, firstTrack)}</p>
+	<p class="plan-detail" data-plan-detail>{copy.phaseDetails[firstPhase]}</p>
+</section>
+
+<script>
+	import { initRoadmapPlan } from "../../scripts/roadmap-plan";
+
+	initRoadmapPlan();
+</script>
+
+<style>
+	.plan {
+		--kind-study: var(--accent);
+		--kind-implementation: rgb(var(--accent-rgb) / 55%);
+		--kind-interview: color-mix(in srgb, var(--text) 45%, transparent);
+		--kind-language: rgb(var(--accent-rgb) / 22%);
+
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		display: grid;
+		gap: 1.5rem;
+		margin-bottom: 3.5rem;
+		padding: 1.5rem;
+	}
+
+	.plan-heading {
+		max-width: 720px;
+	}
+
+	.eyebrow {
+		color: var(--accent);
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.13em;
+		margin: 0;
+		text-transform: uppercase;
+	}
+
+	.plan-heading h2 {
+		font: 600 var(--fs-h2) var(--font-serif);
+		margin: 0.4rem 0 0.5rem;
+	}
+
+	.plan-heading p:last-child,
+	.plan-detail {
+		color: var(--muted);
+		font: var(--fs-base) / 1.6 var(--font-sans);
+		margin: 0;
+	}
+
+	fieldset {
+		border: 0;
+		margin: 0;
+		min-width: 0;
+		padding: 0;
+	}
+
+	legend {
+		color: var(--muted);
+		font: 600 var(--fs-micro) var(--font-sans);
+		letter-spacing: 0.13em;
+		margin-bottom: 0.6rem;
+		padding: 0;
+		text-transform: uppercase;
+	}
+
+	input[type="radio"] {
+		opacity: 0;
+		pointer-events: none;
+		position: absolute;
+	}
+
+	/* --- Timeline: one segment per phase, sized by its week count -------- */
+	.timeline {
+		display: grid;
+		gap: 0.5rem;
+		grid-template-columns: repeat(var(--total-weeks, 24), minmax(0, 1fr));
+	}
+
+	.phase-segment {
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		display: grid;
+		gap: 0.55rem;
+		grid-column: span var(--weeks);
+		padding: 0.5rem;
+		transition: background-color var(--dur-mid), border-color var(--dur-mid);
+	}
+
+	.phase-segment:hover {
+		background: var(--accent-glow);
+	}
+
+	.phase-segment:has(input:checked) {
+		background: var(--accent-soft);
+		border-color: rgb(var(--accent-rgb) / 45%);
+	}
+
+	.phase-segment:has(input:focus-visible),
+	.track-options label:has(input:focus-visible) {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.week-ticks {
+		display: grid;
+		gap: 3px;
+		grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
+		height: 2.25rem;
+	}
+
+	.week-ticks i {
+		border-radius: 3px;
+		transform-origin: bottom;
+		transition:
+			transform 0.45s var(--ease-out) calc(var(--i) * 30ms),
+			background-color var(--dur-mid);
+	}
+
+	/* Weeks stay neutral so they don't read as hour categories; the chosen phase turns gold. */
+	.week-ticks i {
+		background: color-mix(in srgb, var(--text) 16%, transparent);
+	}
+
+	.phase-segment:has(input:checked) .week-ticks i {
+		background: var(--accent);
+	}
+
+	.segment-label {
+		display: grid;
+		gap: 0.1rem;
+	}
+
+	.segment-label strong {
+		font: 600 var(--fs-base) var(--font-sans);
+	}
+
+	.segment-label small {
+		color: var(--muted);
+		font: var(--fs-micro) var(--font-mono);
+		letter-spacing: 0.04em;
+	}
+
+	/* --- Path picker ------------------------------------------------------- */
+	.track-options {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.track-options label {
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		cursor: pointer;
+		font: 600 var(--fs-fine) var(--font-sans);
+		padding: 0.4rem 0.85rem;
+		transition: border-color var(--dur-mid), background-color var(--dur-mid);
+	}
+
+	.track-options label:hover {
+		border-color: var(--accent);
+	}
+
+	.track-options label:has(input:checked) {
+		background: var(--accent-soft);
+		border-color: var(--accent);
+		color: var(--text);
+	}
+
+	.shared-note {
+		color: var(--muted);
+		font: var(--fs-fine) var(--font-sans);
+		margin: 0.5rem 0 0;
+		visibility: hidden;
+	}
+
+	.plan[data-phase="foundation"] .shared-note {
+		visibility: visible;
+	}
+
+	.plan[data-phase="foundation"] .track-options {
+		opacity: 0.55;
+	}
+
+	/* --- Weekly budget: fifteen one-hour blocks ---------------------------- */
+	.week-budget {
+		display: grid;
+		gap: 0.9rem;
+	}
+
+	.hour-bar {
+		display: grid;
+		gap: 4px;
+		grid-template-columns: repeat(15, minmax(0, 1fr));
+	}
+
+	.hour-block {
+		border-radius: 4px;
+		height: 2.5rem;
+		transition: background-color 0.4s var(--ease-out) calc(var(--i) * 25ms);
+	}
+
+	.hour-block[data-kind="free"] {
+		box-shadow: inset 0 0 0 1px var(--border);
+	}
+
+	.hour-block[data-kind="study"],
+	.hour-legend [data-kind="study"] .swatch {
+		background: var(--kind-study);
+	}
+
+	.hour-block[data-kind="implementation"],
+	.hour-legend [data-kind="implementation"] .swatch {
+		background: var(--kind-implementation);
+	}
+
+	.hour-block[data-kind="interview"],
+	.hour-legend [data-kind="interview"] .swatch {
+		background: var(--kind-interview);
+	}
+
+	.hour-block[data-kind="language"],
+	.hour-legend [data-kind="language"] .swatch {
+		background: var(--kind-language);
+		box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 45%);
+	}
+
+	.hour-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.4rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.hour-legend li {
+		align-items: center;
+		color: var(--muted);
+		display: inline-flex;
+		font: var(--fs-fine) var(--font-sans);
+		gap: 0.45rem;
+	}
+
+	.hour-legend strong {
+		color: var(--text);
+		font: 600 var(--fs-fine) var(--font-mono);
+	}
+
+	.swatch {
+		border-radius: 3px;
+		height: 0.8rem;
+		width: 0.8rem;
+	}
+
+	.plan-summary {
+		font: 600 var(--fs-base) / 1.5 var(--font-sans);
+		margin: 0;
+	}
+
+	/* --- Entrance: weeks rise and hours fill once the section is in view -- */
+	.plan[data-animate]:not([data-visible]) .week-ticks i {
+		transform: scaleY(0);
+	}
+
+	.plan[data-animate]:not([data-visible]) .hour-block {
+		background: transparent;
+		box-shadow: inset 0 0 0 1px var(--border);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.week-ticks i,
+		.hour-block {
+			transition: none;
+		}
+
+	}
+
+	@media (max-width: 720px) {
+		.plan {
+			padding: 1.1rem;
+		}
+
+		.timeline {
+			grid-template-columns: 1fr;
+		}
+
+		.phase-segment {
+			grid-column: auto;
+		}
+
+		.week-ticks {
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			height: auto;
+		}
+
+		.week-ticks i {
+			height: 0.9rem;
+		}
+
+		.hour-block {
+			height: 2rem;
+		}
+	}
+</style>
