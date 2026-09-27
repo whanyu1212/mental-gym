@@ -92,6 +92,21 @@ directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
 The data structure does not provide the traversal invariant. For full BFS, DFS, monotonic-stack, and graph reasoning, use the corresponding pattern note.
 
+### Check yourself
+
+1. `freq = Counter("banana")`. What is `freq["z"]`, and does reading it add `"z"` to `freq`?
+2. Your BFS dequeues with `queue.pop(0)` on a list. What does that cost per dequeue, and what do you use instead?
+3. Spot the bug: `visited = set(); visited.add([row, col])`
+
+<details>
+<summary>Answer</summary>
+
+1. `0`, and no. `Counter` returns 0 for a missing key without inserting it. A `defaultdict(int)` would insert `"z"` on the read.
+2. O(n), because every remaining item shifts left. Use `deque` and `popleft()`, which is O(1).
+3. It raises `TypeError: unhashable type: 'list'`. Lists are mutable, so they can't be set members. Use a tuple: `visited.add((row, col))`.
+
+</details>
+
 ## Heaps and Top-K
 
 ```python
@@ -135,6 +150,29 @@ occurrences = right - left
 
 `bisect` handles ordinary sorted-list boundaries. Write a custom binary-search loop when the search condition is a monotone predicate rather than direct value ordering.
 
+### Check yourself
+
+1. Predict the output:
+
+   ```python
+   heap = []
+   for x in [5, 1, 3]:
+       heapq.heappush(heap, x)
+   print(heapq.heappop(heap), heap[0])
+   ```
+
+2. `nums = [1, 2, 2, 2, 5]`. What are `bisect_left(nums, 2)` and `bisect_right(nums, 2)`, and how many 2s does that tell you there are?
+3. You keep the `k` largest values with a size-`k` min-heap. What does `heap[0]` hold at the end?
+
+<details>
+<summary>Answer</summary>
+
+1. `1 3`. `heappop` removes the smallest value (1), and `heap[0]` is now the new smallest (3).
+2. `1` and `4`. Their difference, `4 - 1 = 3`, is the number of 2s.
+3. The k-th largest value. It's the smallest of the k values you kept.
+
+</details>
+
 ## Sorting and Original Indices
 
 ```python
@@ -172,6 +210,21 @@ for row, col in product(range(rows), range(cols)):
 ```
 
 These helpers reduce indexing mistakes, but they do not improve the size of the generated search space. `combinations` and `product` can still produce quadratic or exponential work.
+
+### Check yourself
+
+1. Sort `records = [("ana", 31), ("bo", 25), ("cy", 31)]` by age descending, then name ascending, in one call.
+2. Predict: `list(pairwise([1, 4, 9]))`
+3. `prefix = [0] + list(accumulate([3, 1, 4, 1, 5]))`. Which expression gives the sum of `nums[1:4]`, and what is it?
+
+<details>
+<summary>Answer</summary>
+
+1. `sorted(records, key=lambda r: (-r[1], r[0]))` gives `[("ana", 31), ("cy", 31), ("bo", 25)]`. Negating the age flips its order, and the name breaks ties.
+2. `[(1, 4), (4, 9)]`
+3. `prefix[4] - prefix[1]`, which is `9 - 3 = 6` (that is, `1 + 4 + 1`).
+
+</details>
 
 ## Memoization and DP Storage
 
@@ -212,6 +265,28 @@ Prefer an iterative solution for recursion depths near Python's limit. Raising t
 
 For complete operation costs, see [Python Big O Cheatsheet](../python-big-o-cheatsheet/).
 
+### Check yourself
+
+1. Predict the output:
+
+   ```python
+   grid = [[0] * 3] * 2
+   grid[0][0] = 1
+   print(grid)
+   ```
+
+2. `@lru_cache` on `def solve(i, path)` raises `TypeError` when `path` is a list. Why, and what's the fix?
+3. Which is faster for repeated lookups in a 10^5-item collection: `x in some_list` or `x in some_set`? What does each cost?
+
+<details>
+<summary>Answer</summary>
+
+1. `[[1, 0, 0], [1, 0, 0]]`. Both rows are the same list object. Build rows with `[[0] * 3 for _ in range(2)]`.
+2. The cache hashes its arguments, and lists aren't hashable. Pass a tuple (`tuple(path)`), or keep `path` out of the cached arguments.
+3. `x in some_set` is O(1) on average. `x in some_list` scans, so it's O(n).
+
+</details>
+
 ## Pattern Routing
 
 The helper is not the algorithm. Use this table to jump from a Python tool to the pattern that explains correctness.
@@ -233,5 +308,6 @@ The helper is not the algorithm. Use this table to jump from a Python tool to th
 - [Python Standard Library for DSA](../python_builtins_for_leetcode/) — complete APIs and module behavior
 - [Python Big O Cheatsheet](../python-big-o-cheatsheet/) — operation and data-structure costs
 - [TypeScript DSA Quick Reference](../typescript-dsa-toolkit/) — the same job when solving in TypeScript
+- [Rust DSA Quick Reference](../rust-dsa-toolkit/) — the same job when solving in Rust
 - [Two Pointers](../two_pointers/) — invariants and pointer-movement families
 - [Arrays & Hashing](../arrays_and_hashing/) — lookup, counting, grouping, and canonical-key patterns

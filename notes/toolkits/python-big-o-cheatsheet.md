@@ -70,6 +70,26 @@ if x in my_set:  # $O(1)$ lookup
     ...
 ```
 
+### Check yourself
+
+1. What does this cost for `q` queries against a list of `n` numbers, and how do you fix it?
+
+   ```python
+   hits = [x for x in queries if x in nums]
+   ```
+
+2. What does `result = result + [x]` inside a loop over `n` items cost in total?
+3. What do `lst[::-1]` and `lst.reverse()` each cost in time and extra space?
+
+<details>
+<summary>Answer</summary>
+
+1. O(q · n), because each `in` scans the list. Build `num_set = set(nums)` once, which is O(n), and then each check is O(1) on average, for O(n + q) in total.
+2. O(n²). `+` builds a new list each time. `result.append(x)` makes it O(n) in total.
+3. Both take O(n) time. The slice builds a new list, so it uses O(n) extra space. `reverse()` works in place with O(1) extra space.
+
+</details>
+
 ## Dictionary Operations
 
 Dictionaries are implemented as Hash Tables. They provide incredible $O(1)$ average lookup and insertion speeds.
@@ -139,6 +159,21 @@ def unique_ordered(arr):
     return result
 ```
 
+### Check yourself
+
+1. What do time and space cost for `has_duplicates` above?
+2. Why can a `dict` lookup be O(n) in the worst case?
+3. You need to remove arbitrary items from a set that may not contain them. Which method avoids an exception?
+
+<details>
+<summary>Answer</summary>
+
+1. O(n) average time to build the set, and O(n) extra space for it.
+2. If many keys hash to the same slot, a lookup has to probe past all of them. Python's hashing makes that rare in practice.
+3. `set.discard(x)`. `set.remove(x)` raises `KeyError` when `x` is missing.
+
+</details>
+
 ## String Operations
 
 Strings in Python are immutable sequences of characters. Modifying a string always results in allocating a brand new string.
@@ -179,6 +214,25 @@ for word in words:
 word_set = set(words)  # $O(\text{total chars in words})$
 # Then do single pass of long_string
 ```
+
+### Check yourself
+
+1. What does this cost for a string of length `n`?
+
+   ```python
+   while s:
+       s = s[1:]
+   ```
+
+2. You build a string of `n` characters. Why is `"".join(parts)` preferred over `result += ch`?
+
+<details>
+<summary>Answer</summary>
+
+1. O(n²). Each slice copies the rest of the string, and there are n slices. Walk an index `i` instead.
+2. `join` computes the final size once and copies each character once, so it's O(n). `+=` may copy the growing string each time, which is O(n²) in the worst case. CPython sometimes optimizes `+=` in place, but that isn't guaranteed.
+
+</details>
 
 ## Deque Operations (`collections.deque`)
 
@@ -228,6 +282,21 @@ heapq.heappush(max_heap, -3)
 heapq.heappush(max_heap, -1)
 largest = -heapq.heappop(max_heap)  # Returns 3
 ```
+
+### Check yourself
+
+1. You have all `n` values up front. What does `heapify(values)` cost, compared with `n` calls to `heappush`?
+2. You need the 10 largest out of 10^6 numbers. Compare `heapq.nlargest(10, nums)` with `sorted(nums)[-10:]`.
+3. What does `dq[len(dq) // 2]` cost on a `deque`, and why?
+
+<details>
+<summary>Answer</summary>
+
+1. `heapify` is O(n). Pushing one at a time is O(n log n).
+2. `nlargest` is O(n log k) with k = 10, which is close to linear. `sorted` is O(n log n) and builds a full sorted copy.
+3. O(n). A deque is a linked list of blocks, so reaching the middle means walking from one end. Use a `list` when you need random access.
+
+</details>
 
 ## Sorting Comparison
 
@@ -287,3 +356,10 @@ for x in arr:
 | Sorted container | `sortedcontainers.SortedList` | $O(\log n)$ insert (3rd party) |
 | Default values | `collections.defaultdict` | $O(1)$ |
 | Preserve insertion order | `dict` (Python 3.7+) | $O(1)$ |
+
+## See Also
+
+- [Python DSA Quick Reference](../python-dsa-toolkit/) — choosing the tool
+- [Python Standard Library for DSA](../python_builtins_for_leetcode/) — syntax and APIs
+- [TypeScript Big O Cheatsheet](../typescript-big-o-cheatsheet/) — the same costs in TypeScript
+- [Rust Big O Cheatsheet](../rust-big-o-cheatsheet/) — the same costs in Rust
