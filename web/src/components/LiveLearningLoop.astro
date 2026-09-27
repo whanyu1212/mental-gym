@@ -1,323 +1,247 @@
 ---
 import { withBase } from "../lib/url";
 
-// `delay` is when the comet reaches the node on its 9s orbit (the node's
-// arc-length position along the loop path), so the halo and the caption light
-// up as the comet arrives. Practice is followed by the longest stretch of
-// path, so its caption stays up longer.
-const steps = [
-	{ id: "learn", label: "Learn", detail: "Build the model", summary: "Patterns, invariants, and complexity in the notes.", href: "/notes", x: 320, y: 62, delay: "0s" },
-	{ id: "implement", label: "Implement", detail: "Make it concrete", summary: "ML models and algorithms written from first principles.", href: "/machine-learning", x: 505, y: 158, delay: "1.74s" },
-	{ id: "practice", label: "Practice", detail: "Work unaided", summary: "DSA, ML coding, and system-design prompts.", href: "/problems", x: 455, y: 342, delay: "3.38s", long: true },
-	{ id: "review", label: "Review", detail: "Retrieve later", summary: "Return to solved work on a spaced schedule.", href: "/#review", x: 185, y: 342, delay: "5.62s" },
-	{ id: "retain", label: "Retain", detail: "Keep it durable", summary: "See what is sticking in your local progress.", href: "/progress", x: 135, y: 158, delay: "7.26s" },
+// One stage is lit at a time for STEP seconds, top to bottom, then the marker
+// sweeps back to Learn and the cycle repeats.
+const STEP = 2.5;
+
+const stages = [
+	{ id: "learn", label: "Learn", summary: "Patterns, invariants, and complexity, in the notes.", href: "/notes" },
+	{ id: "implement", label: "Implement", summary: "Models and algorithms, written from first principles.", href: "/machine-learning" },
+	{ id: "practice", label: "Practice", summary: "DSA, ML coding, and system design, worked unaided.", href: "/problems" },
+	{ id: "review", label: "Review", summary: "Solved work comes back on a spaced schedule.", href: "/#review" },
+	{ id: "retain", label: "Retain", summary: "Your progress shows what is sticking.", href: "/progress" },
 ];
 ---
 
-<nav class="learning-loop" aria-label="Mental Gym learning loop">
-	<svg viewBox="0 0 640 420" aria-labelledby="loop-title loop-description">
-		<title id="loop-title">The Mental Gym learning loop</title>
-		<desc id="loop-description">
-			Learn, implement, practice, review, and retain. Each stage links to the relevant area of Mental Gym.
-		</desc>
-
-		<defs>
-			<filter id="comet-glow" x="-300%" y="-300%" width="700%" height="700%">
-				<feGaussianBlur stdDeviation="5" result="blur" />
-				<feMerge>
-					<feMergeNode in="blur" />
-					<feMergeNode in="SourceGraphic" />
-				</feMerge>
-			</filter>
-		</defs>
-
-		<path
-			class="loop-track"
-			d="M 320 62 C 405 62 475 96 505 158 C 535 220 515 300 455 342 C 390 388 250 388 185 342 C 125 300 105 220 135 158 C 165 96 235 62 320 62 Z"
-		/>
-		<path
-			class="loop-flow"
-			d="M 320 62 C 405 62 475 96 505 158 C 535 220 515 300 455 342 C 390 388 250 388 185 342 C 125 300 105 220 135 158 C 165 96 235 62 320 62 Z"
-		/>
-
-		<circle class="comet" r="4" cx="0" cy="0" filter="url(#comet-glow)" />
-
-		<g class="loop-core" aria-hidden="true">
-			<circle cx="320" cy="220" r="79" />
-			<circle class="core-ring" cx="320" cy="220" r="63" />
-			<text class="core-kicker" x="320" y="211">Build</text>
-			<text class="core-title" x="320" y="238">Durable fluency</text>
-		</g>
-
-		{steps.map((step, index) => (
-			<a
-				class="loop-node"
-				href={withBase(step.href)}
-				aria-label={`${step.label}: ${step.detail}. ${step.summary}`}
-				data-stage={step.id}
-				style={`--node-delay: ${step.delay}`}
-			>
-				<circle class="node-halo" cx={step.x} cy={step.y} r="45" />
-				<circle class="node-surface" cx={step.x} cy={step.y} r="38" />
-				<text class="node-index" x={step.x} y={step.y - 8}>
-					{String(index + 1).padStart(2, "0")}
-				</text>
-				<text class="node-label" x={step.x} y={step.y + 13}>{step.label}</text>
-			</a>
-		))}
-	</svg>
-	<div class="stage-captions" aria-hidden="true">
-		{steps.map((step, index) => (
-			<p
-				class:list={["stage-caption", { long: step.long }]}
-				data-stage={step.id}
-				style={`--node-delay: ${step.delay}`}
-			>
-				<span class="caption-index">{String(index + 1).padStart(2, "0")}</span>
-				<strong>{step.label}</strong> · {step.detail}.
-				<span class="caption-summary">{step.summary}</span>
-			</p>
-		))}
+<nav class="learning-loop" aria-label="Mental Gym learning loop" style={`--cycle: ${STEP * stages.length}s`}>
+	<div class="stack">
+		<span class="marker" aria-hidden="true"></span>
+		<ol class="stages">
+			{stages.map((stage, index) => (
+				<li class="stage" data-stage={stage.id} style={`--at: ${index * STEP}s`}>
+					<a class="stage-word" href={withBase(stage.href)} aria-label={`${stage.label}: ${stage.summary}`}>
+						{stage.label}
+					</a>
+					<p class:list={["stage-caption"]} aria-hidden="true">{stage.summary}</p>
+				</li>
+			))}
+		</ol>
 	</div>
-	<p class="loop-caption">Select a stage to open it.</p>
+	<p class="loop-hint">The cycle repeats. Select a stage to open it.</p>
 </nav>
 
 <style>
 	.learning-loop {
-		position: relative;
-		width: 100%;
+		/* 50% keeps the resting words above 3:1 contrast for large text in both themes. */
+		--dim: color-mix(in srgb, var(--text) 50%, var(--bg));
+
+		container-type: inline-size;
 		min-width: 0;
-	}
-
-	svg {
-		display: block;
-		height: auto;
-		overflow: visible;
+		padding-left: clamp(0rem, 3vw, 2.5rem);
 		width: 100%;
 	}
 
-	.loop-track,
-	.loop-flow {
-		fill: none;
-		stroke-linecap: round;
+	/* Sized by the component's own width (see the container queries below). */
+	.stack {
+		--word-size: 3rem;
+		--row: calc(var(--word-size) * 1.16);
+
+		padding-left: 1.4rem;
+		position: relative;
 	}
 
-	.loop-track {
-		stroke: var(--glass-border-strong);
-		stroke-width: 2;
+	/* The rule the marker rides on. */
+	.stack::before {
+		background: var(--border);
+		bottom: 0;
+		content: "";
+		left: 0;
+		position: absolute;
+		top: 0;
+		width: 1px;
 	}
 
-	.loop-flow {
-		animation: flow 9s linear infinite;
-		stroke: var(--accent);
-		stroke-dasharray: 2 15;
-		stroke-width: 1.5;
-		opacity: 0.45;
+	.marker {
+		background: var(--accent);
+		border-radius: 2px;
+		height: var(--row);
+		left: -1px;
+		position: absolute;
+		top: 0;
+		width: 3px;
 	}
 
-	.comet {
-		animation: orbit 9s linear infinite;
-		fill: var(--accent);
-		offset-path: path("M 320 62 C 405 62 475 96 505 158 C 535 220 515 300 455 342 C 390 388 250 388 185 342 C 125 300 105 220 135 158 C 165 96 235 62 320 62 Z");
-		transform-box: fill-box;
-		transform-origin: center;
-	}
-
-	.loop-core circle {
-		fill: var(--glass-surface);
-		stroke: var(--glass-border);
-		stroke-width: 1;
-	}
-
-	.loop-core .core-ring {
-		fill: none;
-		stroke: var(--accent-ring);
-		stroke-dasharray: 1 7;
-		stroke-linecap: round;
-	}
-
-	.loop-core text,
-	.loop-node text {
-		pointer-events: none;
-		text-anchor: middle;
-	}
-
-	.core-kicker,
-	.node-index {
-		fill: var(--accent);
-		font: 600 var(--fs-micro) var(--font-sans);
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-	}
-
-	.core-title {
-		fill: var(--text);
-		font: 600 var(--fs-xl) var(--font-serif);
-	}
-
-	.loop-node {
-		outline: none;
-	}
-
-	.node-halo {
-		animation: breathe 9s var(--ease-out) infinite;
-		animation-delay: var(--node-delay);
-		fill: var(--accent-glow);
-		opacity: 0;
-		transform-box: fill-box;
-		transform-origin: center;
-	}
-
-	.node-surface {
-		fill: color-mix(in srgb, var(--glass-surface-strong) 94%, transparent);
-		stroke: var(--glass-border-strong);
-		stroke-width: 1.5;
-		transition: fill var(--dur-mid), stroke var(--dur-mid), transform var(--dur-mid);
-		transform-box: fill-box;
-		transform-origin: center;
-	}
-
-	.node-label {
-		fill: var(--text);
-		font: 600 var(--fs-sm) var(--font-sans);
-		letter-spacing: 0.02em;
-		text-transform: capitalize;
-	}
-
-	.loop-node:hover .node-surface,
-	.loop-node:focus-visible .node-surface {
-		fill: var(--accent-soft);
-		stroke: var(--accent);
-		transform: scale(1.08);
-	}
-
-	.loop-node:hover .node-halo,
-	.loop-node:focus-visible .node-halo {
-		animation: none;
-		opacity: 1;
-		transform: scale(1.12);
-	}
-
-	.loop-node:focus-visible .node-surface {
-		stroke-width: 3;
-	}
-
-	/* Captions share one grid cell, so the block is as tall as the longest one. */
-	.stage-captions {
+	.stages {
 		display: grid;
-		margin: -0.25rem auto 0;
-		max-width: 30rem;
-		text-align: center;
+		grid-auto-rows: var(--row);
+		grid-template-columns: max-content minmax(0, 1fr);
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.stage {
+		align-items: center;
+		column-gap: 1.6rem;
+		display: grid;
+		grid-column: 1 / -1;
+		grid-template-columns: subgrid;
+	}
+
+	.stage-word {
+		color: var(--dim);
+		font: 600 var(--word-size) / 1 var(--font-serif);
+		letter-spacing: -0.01em;
+		text-decoration: none;
+		transition: color var(--dur-mid);
+	}
+
+	.stage-word:hover {
+		color: var(--accent);
+		text-decoration: none;
+	}
+
+	.stage-word:focus-visible {
+		border-radius: var(--radius-xs);
+		color: var(--accent);
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
 	}
 
 	.stage-caption {
-		animation: caption 9s linear infinite;
-		pointer-events: none;
-		animation-delay: var(--node-delay);
 		color: var(--muted);
-		font: var(--fs-sm) / 1.5 var(--font-sans);
-		grid-area: 1 / 1;
+		font: var(--fs-sm) / 1.45 var(--font-sans);
 		margin: 0;
+		max-width: 17rem;
 		opacity: 0;
+		pointer-events: none;
 	}
 
-	.stage-caption.long {
-		animation-name: caption-long;
-	}
-
-	.stage-caption strong {
-		color: var(--text);
-		font-weight: 600;
-	}
-
-	.caption-index {
-		color: var(--accent);
-		font: 600 var(--fs-micro) var(--font-sans);
-		letter-spacing: 0.14em;
-		margin-right: 0.35rem;
-	}
-
-	.caption-summary {
-		display: block;
-	}
-
-	/* While captions cycle, hovering or focusing a stage pins its caption. */
-	@media (prefers-reduced-motion: no-preference) {
-		.learning-loop:has(.loop-node:hover, .loop-node:focus-visible) .stage-caption {
-			animation: none;
-			opacity: 0;
-		}
-
-		.learning-loop:has(.loop-node[data-stage="learn"]:is(:hover, :focus-visible)) .stage-caption[data-stage="learn"],
-		.learning-loop:has(.loop-node[data-stage="implement"]:is(:hover, :focus-visible)) .stage-caption[data-stage="implement"],
-		.learning-loop:has(.loop-node[data-stage="practice"]:is(:hover, :focus-visible)) .stage-caption[data-stage="practice"],
-		.learning-loop:has(.loop-node[data-stage="review"]:is(:hover, :focus-visible)) .stage-caption[data-stage="review"],
-		.learning-loop:has(.loop-node[data-stage="retain"]:is(:hover, :focus-visible)) .stage-caption[data-stage="retain"] {
-			opacity: 1;
-		}
-	}
-
-	.loop-caption {
+	.loop-hint {
 		color: var(--muted);
 		font: var(--fs-fine) var(--font-sans);
-		letter-spacing: 0.03em;
-		margin: 0.4rem 0 0;
+		margin: 1rem 0 0 1.4rem;
 		opacity: 0.8;
-		text-align: center;
 	}
 
-	@keyframes flow {
-		to {
-			stroke-dashoffset: -68;
+	/* One stage at a time: the word lights, its sentence appears beside it, the marker follows. */
+	@media (prefers-reduced-motion: no-preference) {
+		.marker {
+			animation: marker var(--cycle) cubic-bezier(0.65, 0, 0.35, 1) infinite;
 		}
-	}
 
-	@keyframes orbit {
-		from {
-			offset-distance: 0%;
+		.stage-word {
+			animation: word var(--cycle) linear var(--at) infinite;
 		}
-		to {
-			offset-distance: 100%;
-		}
-	}
 
-	/* 9s cycles, offset per node by --node-delay. The shortest stretch between
-	   nodes is 18.2% of the loop, so each window closes before the next opens. */
-	@keyframes breathe {
-		0%,
-		18%,
-		100% {
+		.stage-caption {
+			animation: caption var(--cycle) linear var(--at) infinite;
+		}
+
+		/* Hovering or focusing a stage stops the cycle on that stage. */
+		.learning-loop:has(.stage-word:hover, .stage-word:focus-visible) :is(.marker, .stage-word, .stage-caption) {
+			animation: none;
+		}
+
+		.learning-loop:has(.stage-word:hover, .stage-word:focus-visible) .stage-caption {
 			opacity: 0;
-			transform: scale(0.82);
 		}
-		3%,
-		12% {
-			opacity: 0.8;
-			transform: scale(1.12);
+
+		.stage:has(.stage-word:hover, .stage-word:focus-visible) .stage-caption {
+			opacity: 1;
+		}
+
+		.learning-loop:has([data-stage="implement"] .stage-word:is(:hover, :focus-visible)) .marker {
+			transform: translateY(100%);
+		}
+
+		.learning-loop:has([data-stage="practice"] .stage-word:is(:hover, :focus-visible)) .marker {
+			transform: translateY(200%);
+		}
+
+		.learning-loop:has([data-stage="review"] .stage-word:is(:hover, :focus-visible)) .marker {
+			transform: translateY(300%);
+		}
+
+		.learning-loop:has([data-stage="retain"] .stage-word:is(:hover, :focus-visible)) .marker {
+			transform: translateY(400%);
+		}
+	}
+
+	@keyframes marker {
+		0%,
+		17% {
+			transform: translateY(0);
+		}
+		20%,
+		37% {
+			transform: translateY(100%);
+		}
+		40%,
+		57% {
+			transform: translateY(200%);
+		}
+		60%,
+		77% {
+			transform: translateY(300%);
+		}
+		80%,
+		97% {
+			transform: translateY(400%);
+		}
+		100% {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes word {
+		0% {
+			color: var(--dim);
+		}
+		2%,
+		18% {
+			color: var(--text);
+		}
+		21%,
+		100% {
+			color: var(--dim);
 		}
 	}
 
 	@keyframes caption {
-		0%,
-		18.2%,
+		0% {
+			opacity: 0;
+			transform: translateX(-6px);
+		}
+		2.5%,
+		18% {
+			opacity: 1;
+			transform: none;
+		}
+		20.5%,
 		100% {
 			opacity: 0;
-		}
-		1.5%,
-		16.5% {
-			opacity: 1;
 		}
 	}
 
-	@keyframes caption-long {
-		0%,
-		24.9%,
-		100% {
-			opacity: 0;
+	@container (max-width: 460px) {
+		.stack {
+			--word-size: 2.6rem;
 		}
-		1.5%,
-		23.2% {
-			opacity: 1;
+
+		.stage {
+			column-gap: 1.1rem;
+		}
+
+		.stage-caption {
+			font-size: var(--fs-fine);
+		}
+	}
+
+	@container (max-width: 360px) {
+		.stack {
+			--word-size: 2.2rem;
 		}
 	}
 
@@ -329,34 +253,24 @@ const steps = [
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.loop-flow,
-		.comet,
-		.node-halo {
-			animation: none;
+		/* Without the cycle, every stage and its sentence show as a still list. */
+		.marker {
+			display: none;
 		}
 
-		/* Without the cycle, list every stage so the captions stay readable on touch screens too. */
-		.stage-captions {
-			gap: 0.15rem;
+		/* No marker to line up with, so rows can grow to fit wrapped sentences. */
+		.stages {
+			grid-auto-rows: auto;
+			row-gap: 0.55rem;
+		}
+
+		.stage-word {
+			color: var(--text);
 		}
 
 		.stage-caption {
 			animation: none;
-			font-size: var(--fs-fine);
-			grid-area: auto;
 			opacity: 1;
-		}
-
-		.caption-summary {
-			display: none;
-		}
-
-		.loop-flow {
-			stroke-dasharray: 2 15;
-		}
-
-		.comet {
-			display: none;
 		}
 	}
 </style>
