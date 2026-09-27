@@ -50,5 +50,16 @@ test("hover pinning only applies while captions cycle", () => {
 	const outside = css.replace(/@media \(prefers-reduced-motion: no-preference\)\s*\{[\s\S]*?\n\t\}/g, "");
 	assert.doesNotMatch(outside, /:has\(/, "a :has() hover rule would hide the reduced-motion list");
 	const [motion] = mediaBlocks("(prefers-reduced-motion: no-preference)");
-	assert.match(motion ?? "", /:has\(\[data-stage="retain"\]/);
+	assert.match(motion ?? "", /:has\(\.loop-node\[data-stage="retain"\]/);
+});
+
+test("only hovering a stage link pins a caption", () => {
+	// Captions share one grid cell and carry data-stage too, so an unqualified
+	// [data-stage] hover target would match a hidden caption under the pointer.
+	for (const match of css.matchAll(/:has\(([^)]*)\)/g)) {
+		if (match[1].includes("data-stage")) {
+			assert.match(match[1], /\.loop-node\[data-stage=/, `unqualified hover target: ${match[1]}`);
+		}
+	}
+	assert.match(declarations(css, ".stage-caption"), /pointer-events:\s*none/, "hidden captions must not catch the pointer");
 });
