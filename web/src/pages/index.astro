@@ -3,7 +3,6 @@ import { getCollection } from "astro:content";
 import DueForReview from "../components/DueForReview.astro";
 import LiveLearningLoop from "../components/LiveLearningLoop.astro";
 import ProgressSummary from "../components/ProgressSummary.astro";
-import RoadmapFilm from "../components/RoadmapFilm.astro";
 import ResumeRow from "../components/ResumeRow.astro";
 import { mlProblems } from "../data/mlProblems";
 import { problems } from "../data/problems";
@@ -25,7 +24,7 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 			<p class="description">
 				A workspace for deliberate practice, first-principles implementation, and durable technical knowledge.
 			</p>
-			<RoadmapFilm />
+			<a class="roadmap-link" href={withBase("/roadmap/")}>Explore the AI engineering roadmap <span aria-hidden="true">→</span></a>
 		</div>
 		<LiveLearningLoop />
 	</section>
@@ -102,7 +101,7 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 			<a class="domain-card" href={withBase("/system-design")}>
 				<h3>System design</h3>
 				<p>Design ML and AI systems across data, training, serving, monitoring, and feedback loops.</p>
-				<span>Explore the roadmap <b>→</b></span>
+				<span>Explore system design <b>→</b></span>
 			</a>
 		</div>
 	</section>
@@ -139,6 +138,10 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
 	h1 { font-size: var(--fs-mega); line-height: .95; letter-spacing: -.02em; margin: 0; }
 	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0 0; max-width: 520px; }
+	.roadmap-link { align-items: center; background: var(--glass-surface); border: 1px solid var(--glass-border-strong); border-radius: var(--radius-pill); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--accent); display: inline-flex; font: 600 var(--fs-eyebrow) var(--font-sans); gap: .5rem; letter-spacing: .08em; margin-top: 1.4rem; padding: .7rem 1rem; text-decoration: none; text-transform: uppercase; transition: border-color .2s, transform .2s; }
+	.roadmap-link:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
+	.roadmap-link span { transition: transform .15s; }
+	.roadmap-link:hover span { transform: translateX(4px); }
 	.workflow, .domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
 	.workflow { margin: 1rem 0 3rem; }
 	.workflow-card, .domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
