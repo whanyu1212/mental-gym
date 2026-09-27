@@ -18,9 +18,9 @@ Use this note when you already know the algorithm and need the TypeScript spelli
 
 > **Choose your reference**
 >
-> - Choosing a TS tool → **TypeScript DSA Quick Reference** (this note)
-> - Choosing a Python tool → [Python DSA Quick Reference](../python-dsa-toolkit/)
-> - Checking Python operation costs → [Python Big O Cheatsheet](../python-big-o-cheatsheet/)
+> - Choosing a tool → **TypeScript DSA Quick Reference** (this note)
+> - Looking up syntax and APIs → [TypeScript Standard Library for DSA](../typescript-standard-library/)
+> - Checking operation costs → [TypeScript Big O Cheatsheet](../typescript-big-o-cheatsheet/)
 
 Run a solution from the repo root with the Bun project (`bun install`, then `bun src/leetcode/<pattern>/<name>.ts`). Do not hang algorithm files off `web/`.
 
@@ -400,10 +400,31 @@ The helper is not the algorithm.
 
 ---
 
+## Check Yourself
+
+1. You need "have I seen this value before?" in O(1). Which structure, and which method do you call?
+2. What does `[3, 20, 100].sort()` return, and how do you fix it?
+3. A grid BFS stores visited cells as `visited.add([r, c])` and checks with `visited.has([r, c])`. What goes wrong?
+4. Translate Python's `-7 // 2` into TypeScript.
+
+<details>
+<summary>Answers</summary>
+
+1. A `Set`, with `seen.has(x)`. The `in` operator checks object keys, not set membership.
+2. `[100, 20, 3]`, because the default sort compares numbers as strings. Pass `(a, b) => a - b`.
+3. `has` never finds anything. Each `[r, c]` is a new array, and arrays compare by identity. Encode the cell as a string (`` `${r},${c}` ``) or a number (`r * cols + c`).
+4. `Math.floor(-7 / 2)`, which is `-4`. `Math.trunc` would give `-3`.
+
+</details>
+
+---
+
 ## See Also
 
+- [TypeScript Standard Library for DSA](../typescript-standard-library/) — full API behavior, plus heap, queue, and binary-search substitutes
+- [TypeScript Big O Cheatsheet](../typescript-big-o-cheatsheet/) — operation costs and engine differences
 - [Python DSA Quick Reference](../python-dsa-toolkit/) — the same job in Python
-- [Python Standard Library for DSA](../python_builtins_for_leetcode/) — fuller Python APIs when you are comparing the two
+- [Rust DSA Quick Reference](../rust-dsa-toolkit/) — the same job in Rust
 - [Sliding Window](../sliding_window/)
 - [Two Pointers](../two_pointers/)
 - [Arrays & Hashing](../arrays_and_hashing/)

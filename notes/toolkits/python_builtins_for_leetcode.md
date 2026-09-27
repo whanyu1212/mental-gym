@@ -67,6 +67,21 @@ f"{value}"                    # f-strings (Python 3.6+)
 "{:.2f}".format(3.14159)     # Format to 2 decimal places
 ```
 
+### Check yourself
+
+1. Predict: `"a,b,,c".split(",")` and `" a  b ".split()`
+2. `"banana".find("x")` returns `-1`. What does `"banana".index("x")` do?
+3. Predict: `chr(ord("a") + 25)`
+
+<details>
+<summary>Answer</summary>
+
+1. `["a", "b", "", "c"]` and `["a", "b"]`. With an explicit separator you get an empty string between the two commas. With no argument, `split` treats any run of whitespace as one separator and ignores leading and trailing space.
+2. It raises `ValueError`. Use `find` when "not found" is a normal outcome.
+3. `"z"`
+
+</details>
+
 ---
 
 ## Sequence Operations
@@ -114,6 +129,21 @@ buckets[0].append(1)
 
 **Reason:** The `*` operator copies the *reference* of the mutable list `[]`, whereas the list comprehension executes the expression `[]` `n` times, creating `n` new lists.
 
+### Check yourself
+
+1. `lst = [1, 2, 3, 4, 5]`. Predict `lst[1:4]` and `lst[::-2]`.
+2. Spot the bug: `ordered = nums.sort()`
+3. Predict: `lst = [1, 2, 3, 2]; lst.remove(2); print(lst)`
+
+<details>
+<summary>Answer</summary>
+
+1. `[2, 3, 4]` and `[5, 3, 1]`
+2. `list.sort()` sorts in place and returns `None`, so `ordered` is `None`. Use `ordered = sorted(nums)` to keep `nums` unchanged, or call `nums.sort()` on its own line.
+3. `[1, 3, 2]`. `remove` deletes only the first match.
+
+</details>
+
 ---
 
 ## Built-in Functions for Iterables
@@ -143,6 +173,21 @@ buckets[0].append(1)
 - `set(iterable)` - Create set from iterable
 - `dict(iterable)` / `dict(**kwargs)` - Create dictionary
 - `range(stop)` / `range(start, stop, step)` - Integer sequence
+
+### Check yourself
+
+1. Predict: `max(["pear", "fig", "banana"], key=len)`
+2. Predict: `list(zip([1, 2, 3], "ab"))`
+3. What are `any([])` and `all([])`?
+
+<details>
+<summary>Answer</summary>
+
+1. `"banana"`
+2. `[(1, "a"), (2, "b")]`. `zip` stops at the shortest input.
+3. `False` and `True`. No element is truthy, and no element is falsy.
+
+</details>
 
 ---
 
@@ -188,6 +233,21 @@ round(x, n)                         # Round to n places (built-in)
 bin(x)                  # Convert to binary string
 hex(x)                  # Convert to hexadecimal string
 ```
+
+### Check yourself
+
+1. Predict: `-7 // 2`, `-7 % 3`, `divmod(17, 5)`
+2. Predict: `5 & 3`, `5 ^ 3`, `1 << 4`
+3. `bin(10)` returns `"0b1010"`. How do you get just `"1010"`?
+
+<details>
+<summary>Answer</summary>
+
+1. `-4`, `2`, `(3, 2)`. `//` rounds toward negative infinity, and `%` takes the sign of the divisor.
+2. `1`, `6`, `16`
+3. `bin(10)[2:]`, or `format(10, "b")`.
+
+</details>
 
 ---
 
@@ -261,6 +321,23 @@ def fib(n): ...
 
 sorted(items, key=cmp_to_key(func)) # Custom comparator
 ```
+
+### Check yourself
+
+1. Predict: `Counter("banana").most_common(1)`
+2. Predict: `dq = deque([1, 2, 3]); dq.rotate(1); print(dq)`
+3. `arr = [1, 3, 3, 5]`. After `insort(arr, 3)`, what is `bisect_right(arr, 3)`?
+4. You need the 3 largest values of a list. Which one call does it?
+
+<details>
+<summary>Answer</summary>
+
+1. `[("a", 3)]`
+2. `deque([3, 1, 2])`. `rotate(1)` moves the last item to the front.
+3. `4`. `arr` is now `[1, 3, 3, 3, 5]`, and the first index past the 3s is 4.
+4. `heapq.nlargest(3, nums)`
+
+</details>
 
 ---
 
@@ -361,6 +438,8 @@ print(f"{x:.2f}")                   # Formatted output
 
 - [Python DSA Quick Reference](../python-dsa-toolkit/) — task-to-tool decisions and minimal idioms
 - [Python Big O Cheatsheet](../python-big-o-cheatsheet/) — operation costs and performance trade-offs
+- [TypeScript Standard Library for DSA](../typescript-standard-library/) — the same reference for TypeScript
+- [Rust Standard Library for DSA](../rust-standard-library/) — the same reference for Rust
 - [Two Pointers](../two_pointers/) — pointer invariants and movement rules
 - [Arrays & Hashing](../arrays_and_hashing/) — lookup, counting, and grouping patterns
 

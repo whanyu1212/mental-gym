@@ -28,7 +28,7 @@ Notes are filed by topic:
 notes/
 ├── foundations/            # complexity analysis and interview questions
 ├── patterns/               # DSA patterns: arrays & hashing, two pointers, sliding window, …
-├── toolkits/               # language references (Python, TypeScript)
+├── toolkits/               # language references (Python, TypeScript, Rust)
 ├── ml/                     # model foundations and from-scratch implementations
 ├── system-design/          # architecture case studies
 ├── recommendation-system/  # experimentation and metrics collection

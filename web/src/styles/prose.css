@@ -170,6 +170,32 @@
   max-width: var(--measure);
 }
 
+/* --- Disclosure (hidden answers in "Check yourself" exercises) ---------- */
+/* Native <details>: no script, keeps the browser's disclosure marker. */
+.prose :where(details) {
+  background: color-mix(in srgb, var(--surface-strong) 55%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 var(--space-5);
+}
+
+.prose :where(summary) {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.prose :where(summary:focus-visible) {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.prose :where(details[open] > summary) {
+  margin-bottom: var(--space-2);
+}
+
 /* --- Semantic callouts emitted by generate_problems.py ------------------ */
 /* The generator wraps LeetCode "Example N:" pre blocks and the constraints
    list in .prose-example / .prose-constraints so they read as distinct
