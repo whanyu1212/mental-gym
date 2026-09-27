@@ -11,12 +11,14 @@ This repo is the user's practice workspace and knowledge base. Coaching behaviou
 - Practice drills leave the insight-bearing lines as `# TODO` for the user to write; don't fill them in unless asked.
 - Review attempts go in `<snake_case_name>_review.py` next to the original and are deleted afterwards unless the user wants them kept.
 - Run a problem with `poetry run python src/leetcode/<folder>/<file>.py`.
+- Every finished solution is covered by pytest in CI (see `README.md`): add parametrized cases for it to `tests/leetcode/test_<folder>.py`, following the existing modules, and run `poetry run pytest tests/leetcode`. Add the tests once the solution is complete, not while it still has a `# TODO` drill, and don't commit `_review.py` files.
 
 ### Adding a new pattern folder
 
 When the first problem in a new pattern arrives (e.g. `binary_search`, `linked_list`, `trees`):
 1. Add the folder to `CATEGORY_TITLE_MAP` in `scripts/generate_problems.py`.
 2. Add it to `pythonpath` under `[tool.pytest.ini_options]` in `pyproject.toml`.
+3. Create `tests/leetcode/test_<folder>.py` with test cases for the new problem, so CI actually exercises it.
 
 ## Publishing a solved problem to the site (only when the user asks)
 
