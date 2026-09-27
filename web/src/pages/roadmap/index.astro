@@ -1,4 +1,5 @@
 ---
+import RoadmapPlan from "../../components/roadmap/RoadmapPlan.astro";
 import TrackChooser from "../../components/roadmap/TrackChooser.astro";
 import { courses } from "../../data/roadmap";
 import Layout from "../../layouts/Layout.astro";
@@ -13,22 +14,20 @@ import Layout from "../../layouts/Layout.astro";
 		</p>
 	</section>
 
-	<section class="phases" aria-label="Roadmap phases">
-		<article>
-			<span>01</span>
-			<h2>Foundation</h2>
-			<p>Weeks 1–8 · Shared fundamentals in software, data, models, evaluation, and systems.</p>
-		</article>
-		<article>
-			<span>02</span>
-			<h2>Specialization</h2>
-			<p>Weeks 9–20 · Role-specific courses, implementations, interview practice, and deliverables.</p>
-		</article>
-		<article>
-			<span>03</span>
-			<h2>Capstone</h2>
-			<p>Weeks 21–24 · Reproducible project evidence, system design, and interview preparation.</p>
-		</article>
+	<RoadmapPlan />
+
+	<section class="evidence" aria-labelledby="evidence-title">
+		<div class="section-heading">
+			<p class="eyebrow">Evidence over activity</p>
+			<h2 id="evidence-title">Every week ends with something inspectable</h2>
+			<p>Each week lists a deliverable and the evidence to keep. Good evidence covers four steps.</p>
+		</div>
+		<ol>
+			<li><span>01 · Source</span><h3>Implement</h3><p>Versioned code, explicit constraints, and reproducible commands.</p></li>
+			<li><span>02 · Checks</span><h3>Validate</h3><p>Tests, baselines, metrics, and failure-focused examples.</p></li>
+			<li><span>03 · Recall</span><h3>Explain</h3><p>Independent reasoning, delayed recall, and clear trade-offs.</p></li>
+			<li><span>04 · Project</span><h3>Apply</h3><p>A bounded deliverable tied to a real system or user outcome.</p></li>
+		</ol>
 	</section>
 
 	<section class="tracks">
@@ -38,20 +37,6 @@ import Layout from "../../layouts/Layout.astro";
 			<p>All paths share the same foundation. Choose one specialization rather than expanding the weekly workload.</p>
 		</div>
 		<TrackChooser />
-	</section>
-
-	<section class="principles">
-		<div>
-			<p class="eyebrow">Shared foundation pacing</p>
-			<h2>The budget is a constraint, not a target to exceed.</h2>
-		</div>
-		<ul>
-			<li><strong>5 hours</strong> study</li>
-			<li><strong>5 hours</strong> implementation</li>
-			<li><strong>3 hours</strong> interview practice</li>
-			<li><strong>2 hours</strong> language practice</li>
-		</ul>
-		<p>These figures describe the shared foundation. Applied AI and AI Product specialization keep this split; ML Infrastructure and Model / Post-training move the two language hours to implementation. Capstone weeks use 3 hours of study, 9 implementation, 3 interview practice, and no language block. Every week remains within 15 hours. Optional stretch work stays optional.</p>
 	</section>
 
 	<section class="course-notes">
@@ -76,7 +61,7 @@ import Layout from "../../layouts/Layout.astro";
 	}
 
 	.eyebrow,
-	.phases span {
+	.evidence li span {
 		color: var(--accent);
 		font: 600 var(--fs-eyebrow) var(--font-sans);
 		letter-spacing: 0.13em;
@@ -97,22 +82,26 @@ import Layout from "../../layouts/Layout.astro";
 	}
 
 	.hero > p:last-child,
-	.section-heading > p:last-child,
-	.principles > p {
+	.section-heading > p:last-child {
 		color: var(--muted);
 		font: var(--fs-lg) / 1.6 var(--font-sans);
 		margin: 0;
 	}
 
-	.phases {
-		display: grid;
-		gap: 1rem;
-		grid-template-columns: repeat(3, 1fr);
+	.evidence {
 		margin-bottom: 3.5rem;
 	}
 
-	.phases article,
-	.principles,
+	.evidence ol {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.evidence li,
 	.course-notes article {
 		background: var(--glass-surface);
 		border: 1px solid var(--glass-border);
@@ -121,12 +110,12 @@ import Layout from "../../layouts/Layout.astro";
 		padding: 1.25rem;
 	}
 
-	.phases h2 {
-		font-size: var(--fs-xl);
+	.evidence h3 {
+		font: 600 var(--fs-xl) var(--font-serif);
 		margin: 0.6rem 0 0.4rem;
 	}
 
-	.phases p,
+	.evidence li p,
 	.course-notes p,
 	.course-notes small {
 		color: var(--muted);
@@ -140,45 +129,13 @@ import Layout from "../../layouts/Layout.astro";
 	}
 
 	.section-heading h2,
-	.principles h2,
 	.course-notes h2 {
 		font-size: var(--fs-h2);
 		margin: 0.35rem 0 0.45rem;
 	}
 
-	.section-heading > p:last-child,
-	.principles > p {
+	.section-heading > p:last-child {
 		font-size: var(--fs-sm);
-	}
-
-	.principles {
-		display: grid;
-		gap: 1.5rem;
-		grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
-		margin-top: 3.5rem;
-	}
-
-	.principles ul {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.principles li {
-		border-bottom: 1px solid var(--border);
-		color: var(--muted);
-		display: flex;
-		font: var(--fs-sm) var(--font-sans);
-		justify-content: space-between;
-		padding: 0.45rem 0;
-	}
-
-	.principles strong {
-		color: var(--text);
-	}
-
-	.principles > p {
-		grid-column: 1 / -1;
 	}
 
 	.course-notes {
@@ -202,13 +159,15 @@ import Layout from "../../layouts/Layout.astro";
 		margin-top: 0.5rem;
 	}
 
-	@media (max-width: 720px) {
-		.phases,
-		.course-notes > div {
-			grid-template-columns: 1fr;
+	@media (max-width: 900px) {
+		.evidence ol {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
+	}
 
-		.principles {
+	@media (max-width: 720px) {
+		.evidence ol,
+		.course-notes > div {
 			grid-template-columns: 1fr;
 		}
 	}

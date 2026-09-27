@@ -89,15 +89,18 @@ test("each track curates 20 to 30 distinct ML drills", () => {
 });
 
 test("the roadmap overview explains phase-specific hour allocations", () => {
+	// The overview's plan diagram derives these statements from the schedule; see roadmap-plan.test.ts for its data.
 	const overview = readFileSync(new URL("web/src/pages/roadmap/index.astro", projectRoot), "utf8");
+	const plan = readFileSync(new URL("web/src/components/roadmap/RoadmapPlan.astro", projectRoot), "utf8");
 
+	assert.match(overview, /<RoadmapPlan \/>/);
 	for (const statement of [
-		"Shared foundation pacing",
-		"ML Infrastructure and Model / Post-training move the two language hours to implementation",
-		"Capstone weeks use 3 hours of study, 9 implementation, 3 interview practice, and no language block",
-		"Every week remains within 15 hours",
+		"Three phases, one {plan.weeklyLimit}-hour week",
+		"The budget is a ceiling",
+		"move the language hours to implementation",
+		"Foundation weeks are the same for every path",
 	]) {
-		assert.ok(overview.includes(statement), `roadmap overview is missing: ${statement}`);
+		assert.ok(plan.includes(statement), `roadmap plan is missing: ${statement}`);
 	}
 });
 
