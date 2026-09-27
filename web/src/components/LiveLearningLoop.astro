@@ -240,18 +240,20 @@ const steps = [
 		display: block;
 	}
 
-	/* Hovering or focusing a stage pins its caption and hides the cycle. */
-	.learning-loop:has(.loop-node:hover, .loop-node:focus-visible) .stage-caption {
-		animation: none;
-		opacity: 0;
-	}
+	/* While captions cycle, hovering or focusing a stage pins its caption. */
+	@media (prefers-reduced-motion: no-preference) {
+		.learning-loop:has(.loop-node:hover, .loop-node:focus-visible) .stage-caption {
+			animation: none;
+			opacity: 0;
+		}
 
-	.learning-loop:has([data-stage="learn"]:is(:hover, :focus-visible)) .stage-caption[data-stage="learn"],
-	.learning-loop:has([data-stage="implement"]:is(:hover, :focus-visible)) .stage-caption[data-stage="implement"],
-	.learning-loop:has([data-stage="practice"]:is(:hover, :focus-visible)) .stage-caption[data-stage="practice"],
-	.learning-loop:has([data-stage="review"]:is(:hover, :focus-visible)) .stage-caption[data-stage="review"],
-	.learning-loop:has([data-stage="retain"]:is(:hover, :focus-visible)) .stage-caption[data-stage="retain"] {
-		opacity: 1;
+		.learning-loop:has([data-stage="learn"]:is(:hover, :focus-visible)) .stage-caption[data-stage="learn"],
+		.learning-loop:has([data-stage="implement"]:is(:hover, :focus-visible)) .stage-caption[data-stage="implement"],
+		.learning-loop:has([data-stage="practice"]:is(:hover, :focus-visible)) .stage-caption[data-stage="practice"],
+		.learning-loop:has([data-stage="review"]:is(:hover, :focus-visible)) .stage-caption[data-stage="review"],
+		.learning-loop:has([data-stage="retain"]:is(:hover, :focus-visible)) .stage-caption[data-stage="retain"] {
+			opacity: 1;
+		}
 	}
 
 	.loop-caption {
@@ -328,9 +330,24 @@ const steps = [
 	@media (prefers-reduced-motion: reduce) {
 		.loop-flow,
 		.comet,
-		.node-halo,
+		.node-halo {
+			animation: none;
+		}
+
+		/* Without the cycle, list every stage so the captions stay readable on touch screens too. */
+		.stage-captions {
+			gap: 0.15rem;
+		}
+
 		.stage-caption {
 			animation: none;
+			font-size: var(--fs-fine);
+			grid-area: auto;
+			opacity: 1;
+		}
+
+		.caption-summary {
+			display: none;
 		}
 
 		.loop-flow {
