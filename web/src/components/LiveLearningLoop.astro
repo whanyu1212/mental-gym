@@ -1,12 +1,16 @@
 ---
 import { withBase } from "../lib/url";
 
+// `delay` is when the comet reaches the node on its 9s orbit (the node's
+// arc-length position along the loop path), so the halo and the caption light
+// up as the comet arrives. Practice is followed by the longest stretch of
+// path, so its caption stays up longer.
 const steps = [
-	{ label: "Learn", detail: "Build the model", href: "/notes", x: 320, y: 62, delay: "0s" },
-	{ label: "Implement", detail: "Make it concrete", href: "/machine-learning", x: 505, y: 158, delay: "1.2s" },
-	{ label: "Practice", detail: "Work unaided", href: "/problems", x: 455, y: 342, delay: "2.4s" },
-	{ label: "Review", detail: "Retrieve later", href: "/#review", x: 185, y: 342, delay: "3.6s" },
-	{ label: "Retain", detail: "Keep it durable", href: "/progress", x: 135, y: 158, delay: "4.8s" },
+	{ id: "learn", label: "Learn", detail: "Build the model", summary: "Patterns, invariants, and complexity in the notes.", href: "/notes", x: 320, y: 62, delay: "0s" },
+	{ id: "implement", label: "Implement", detail: "Make it concrete", summary: "ML models and algorithms written from first principles.", href: "/machine-learning", x: 505, y: 158, delay: "1.74s" },
+	{ id: "practice", label: "Practice", detail: "Work unaided", summary: "DSA, ML coding, and system-design prompts.", href: "/problems", x: 455, y: 342, delay: "3.38s", long: true },
+	{ id: "review", label: "Review", detail: "Retrieve later", summary: "Return to solved work on a spaced schedule.", href: "/#review", x: 185, y: 342, delay: "5.62s" },
+	{ id: "retain", label: "Retain", detail: "Keep it durable", summary: "See what is sticking in your local progress.", href: "/progress", x: 135, y: 158, delay: "7.26s" },
 ];
 ---
 
@@ -49,7 +53,8 @@ const steps = [
 			<a
 				class="loop-node"
 				href={withBase(step.href)}
-				aria-label={`${step.label}: ${step.detail}`}
+				aria-label={`${step.label}: ${step.detail}. ${step.summary}`}
+				data-stage={step.id}
 				style={`--node-delay: ${step.delay}`}
 			>
 				<circle class="node-halo" cx={step.x} cy={step.y} r="45" />
@@ -61,7 +66,20 @@ const steps = [
 			</a>
 		))}
 	</svg>
-	<p class="loop-caption">Select a stage to continue your training.</p>
+	<div class="stage-captions" aria-hidden="true">
+		{steps.map((step, index) => (
+			<p
+				class:list={["stage-caption", { long: step.long }]}
+				data-stage={step.id}
+				style={`--node-delay: ${step.delay}`}
+			>
+				<span class="caption-index">{String(index + 1).padStart(2, "0")}</span>
+				<strong>{step.label}</strong> · {step.detail}.
+				<span class="caption-summary">{step.summary}</span>
+			</p>
+		))}
+	</div>
+	<p class="loop-caption">Select a stage to open it.</p>
 </nav>
 
 <style>
@@ -142,7 +160,7 @@ const steps = [
 	}
 
 	.node-halo {
-		animation: breathe 6s var(--ease-out) infinite;
+		animation: breathe 9s var(--ease-out) infinite;
 		animation-delay: var(--node-delay);
 		fill: var(--accent-glow);
 		opacity: 0;
@@ -184,11 +202,67 @@ const steps = [
 		stroke-width: 3;
 	}
 
+	/* Captions share one grid cell, so the block is as tall as the longest one. */
+	.stage-captions {
+		display: grid;
+		margin: -0.25rem auto 0;
+		max-width: 30rem;
+		text-align: center;
+	}
+
+	.stage-caption {
+		animation: caption 9s linear infinite;
+		pointer-events: none;
+		animation-delay: var(--node-delay);
+		color: var(--muted);
+		font: var(--fs-sm) / 1.5 var(--font-sans);
+		grid-area: 1 / 1;
+		margin: 0;
+		opacity: 0;
+	}
+
+	.stage-caption.long {
+		animation-name: caption-long;
+	}
+
+	.stage-caption strong {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.caption-index {
+		color: var(--accent);
+		font: 600 var(--fs-micro) var(--font-sans);
+		letter-spacing: 0.14em;
+		margin-right: 0.35rem;
+	}
+
+	.caption-summary {
+		display: block;
+	}
+
+	/* While captions cycle, hovering or focusing a stage pins its caption. */
+	@media (prefers-reduced-motion: no-preference) {
+		.learning-loop:has(.loop-node:hover, .loop-node:focus-visible) .stage-caption {
+			animation: none;
+			opacity: 0;
+		}
+
+		.learning-loop:has(.loop-node[data-stage="learn"]:is(:hover, :focus-visible)) .stage-caption[data-stage="learn"],
+		.learning-loop:has(.loop-node[data-stage="implement"]:is(:hover, :focus-visible)) .stage-caption[data-stage="implement"],
+		.learning-loop:has(.loop-node[data-stage="practice"]:is(:hover, :focus-visible)) .stage-caption[data-stage="practice"],
+		.learning-loop:has(.loop-node[data-stage="review"]:is(:hover, :focus-visible)) .stage-caption[data-stage="review"],
+		.learning-loop:has(.loop-node[data-stage="retain"]:is(:hover, :focus-visible)) .stage-caption[data-stage="retain"] {
+			opacity: 1;
+		}
+	}
+
 	.loop-caption {
 		color: var(--muted);
 		font: var(--fs-fine) var(--font-sans);
 		letter-spacing: 0.03em;
-		margin: -0.25rem 0 0;
+		margin: 0.4rem 0 0;
+		opacity: 0.8;
 		text-align: center;
 	}
 
@@ -207,17 +281,43 @@ const steps = [
 		}
 	}
 
+	/* 9s cycles, offset per node by --node-delay. The shortest stretch between
+	   nodes is 18.2% of the loop, so each window closes before the next opens. */
 	@keyframes breathe {
 		0%,
-		70%,
+		18%,
 		100% {
 			opacity: 0;
 			transform: scale(0.82);
 		}
-		8%,
-		24% {
+		3%,
+		12% {
 			opacity: 0.8;
 			transform: scale(1.12);
+		}
+	}
+
+	@keyframes caption {
+		0%,
+		18.2%,
+		100% {
+			opacity: 0;
+		}
+		1.5%,
+		16.5% {
+			opacity: 1;
+		}
+	}
+
+	@keyframes caption-long {
+		0%,
+		24.9%,
+		100% {
+			opacity: 0;
+		}
+		1.5%,
+		23.2% {
+			opacity: 1;
 		}
 	}
 
@@ -233,6 +333,22 @@ const steps = [
 		.comet,
 		.node-halo {
 			animation: none;
+		}
+
+		/* Without the cycle, list every stage so the captions stay readable on touch screens too. */
+		.stage-captions {
+			gap: 0.15rem;
+		}
+
+		.stage-caption {
+			animation: none;
+			font-size: var(--fs-fine);
+			grid-area: auto;
+			opacity: 1;
+		}
+
+		.caption-summary {
+			display: none;
 		}
 
 		.loop-flow {

@@ -41,32 +41,6 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 		<ProgressSummary />
 	</section>
 
-	<section class="workflow" aria-label="Learning workflow">
-		<a class="workflow-card practice" href={withBase("/problems")}>
-			<p class="card-index">01</p>
-			<h2>Practice</h2>
-			<p>Work through DSA, ML coding, and system-design prompts with the current problem bank.</p>
-			<span class="card-link">Open practice <span>→</span></span>
-		</a>
-		<a class="workflow-card learn" href={withBase("/notes")}>
-			<p class="card-index">02</p>
-			<h2>Learn</h2>
-			<p>Review patterns, complexity, invariants, and implementation ideas worth retaining.</p>
-			<span class="card-link">Explore notes <span>→</span></span>
-		</a>
-		<a class="workflow-card review" href={withBase("/#review")}>
-			<p class="card-index">03</p>
-			<h2>Review</h2>
-			<p>Return to problems on a spaced schedule and turn solved work into recall practice.</p>
-			<span class="card-link">Review queue <span>→</span></span>
-		</a>
-		<a class="workflow-card progress" href={withBase("/progress")}>
-			<p class="card-index">04</p>
-			<h2>Progress</h2>
-			<p>Use the problem bank to see coverage by domain, pattern, difficulty, and learning status.</p>
-			<span class="card-link">View progress <span>→</span></span>
-		</a>
-	</section>
 
 	<section id="review" class="review-area">
 		<div class="section-heading">
@@ -134,7 +108,7 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 <style>
 	.hero { align-items: center; display: grid; gap: 1.5rem; grid-template-columns: minmax(0, .9fr) minmax(440px, 1.1fr); padding: 3rem 0 2.5rem; }
 	.hero-copy { max-width: 520px; }
-	.eyebrow, .card-index { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .14em; margin: 0 0 .65rem; text-transform: uppercase; }
+	.eyebrow { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .14em; margin: 0 0 .65rem; text-transform: uppercase; }
 	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
 	h1 { font-size: var(--fs-mega); line-height: .95; letter-spacing: -.02em; margin: 0; }
 	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0 0; max-width: 520px; }
@@ -142,15 +116,14 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 	.roadmap-link:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
 	.roadmap-link span { transition: transform .15s; }
 	.roadmap-link:hover span { transform: translateX(4px); }
-	.workflow, .domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
-	.workflow { margin: 1rem 0 3rem; }
-	.workflow-card, .domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
-	.workflow-card:hover, .domain-card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-3px); }
-	.workflow-card h2, .domain-card h3 { font-size: var(--fs-xl); margin: 0 0 .55rem; }
-	.workflow-card p:not(.card-index), .domain-card p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
-	.card-link, .domain-card span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; margin-top: auto; padding-top: 1.25rem; text-transform: uppercase; }
-	.card-link span, .domain-card b, .section-heading a span { transition: transform .15s; }
-	.workflow-card:hover .card-link span, .domain-card:hover b, .section-heading a:hover span { display: inline-block; transform: translateX(4px); }
+	.domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
+	.domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
+	.domain-card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-3px); }
+	.domain-card h3 { font-size: var(--fs-xl); margin: 0 0 .55rem; }
+	.domain-card p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
+	.domain-card span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; margin-top: auto; padding-top: 1.25rem; text-transform: uppercase; }
+	.domain-card b, .section-heading a span { transition: transform .15s; }
+	.domain-card:hover b, .section-heading a:hover span { display: inline-block; transform: translateX(4px); }
 	.progress-summary { margin: 1rem 0 3rem; }
 	.review-area, .domains, .notes { margin-top: 3.5rem; }
 	.section-heading { align-items: end; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
@@ -167,6 +140,6 @@ const completedML = mlProblems.filter((problem) => problem.status === "Completed
 	.notes li strong { flex: 1; font: 600 var(--fs-h3) var(--font-serif); }
 	.notes li em { color: var(--muted); font: normal var(--fs-eyebrow) var(--font-sans); text-transform: uppercase; }
 	.notes li b { color: var(--accent); }
-	@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .hero-copy { max-width: 680px; } .workflow { grid-template-columns: repeat(2, 1fr); } .domain-grid { grid-template-columns: 1fr; } }
-	@media (max-width: 560px) { .hero { gap: .5rem; padding-top: 2.5rem; } .workflow { grid-template-columns: 1fr; } .section-heading { align-items: start; flex-direction: column; } .notes li em { display: none; } }
+	@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .hero-copy { max-width: 680px; } .domain-grid { grid-template-columns: 1fr; } }
+	@media (max-width: 560px) { .hero { gap: .5rem; padding-top: 2.5rem; } .section-heading { align-items: start; flex-direction: column; } .notes li em { display: none; } }
 </style>
