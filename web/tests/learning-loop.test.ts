@@ -63,3 +63,13 @@ test("only hovering a stage link pins a caption", () => {
 	}
 	assert.match(declarations(css, ".stage-caption"), /pointer-events:\s*none/, "hidden captions must not catch the pointer");
 });
+
+test("at narrow widths the animated caption leaves the fixed-height rows", () => {
+	// A narrow second column wraps sentences past the row height, so while the
+	// cycle runs the lit sentence moves to a reserved line under the stack.
+	const motion = mediaBlocks("(prefers-reduced-motion: no-preference)").join("\n");
+	const narrow = motion.slice(motion.indexOf("@container"));
+	assert.ok(motion.includes("@container"), "no narrow-width rule for the animated layout");
+	assert.match(declarations(narrow, ".stage-caption"), /position:\s*absolute/);
+	assert.match(declarations(narrow, ".stack"), /padding-bottom:/, "the stack must reserve room for the caption");
+});

@@ -167,6 +167,28 @@ const stages = [
 		.learning-loop:has([data-stage="retain"] .stage-word:is(:hover, :focus-visible)) .marker {
 			transform: translateY(400%);
 		}
+
+		/* Too narrow for a sentence beside each word: the lit sentence gets a reserved
+		   line under the stack, so the fixed rows the marker steps through never overflow. */
+		@container (max-width: 460px) {
+			.stack {
+				--caption-room: 3.4rem;
+
+				padding-bottom: var(--caption-room);
+			}
+
+			.stack::before {
+				bottom: var(--caption-room);
+			}
+
+			.stage-caption {
+				left: 1.4rem;
+				max-width: none;
+				position: absolute;
+				right: 0;
+				top: calc(var(--row) * 5 + 0.7rem);
+			}
+		}
 	}
 
 	@keyframes marker {
