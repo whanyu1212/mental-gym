@@ -10,7 +10,7 @@ Explain Mental Gym's learning system and introduce the four six-month AI enginee
 - 1920 × 1080, 16:9
 - Silent motion graphic
 - Deterministic HyperFrames render
-- Native MP4 playback inside an accessible homepage dialog
+- Native MP4 playback inside an accessible homepage dialog (superseded: the site now runs a live port of this composition, `web/src/components/RoadmapFilmStage.astro` driven by `web/src/scripts/roadmap-film-timeline.ts`, and no longer ships the MP4. Keep the two in sync if you render a new MP4 from here.)
 - First frame must work as the poster and thumbnail
 
 ## Audience

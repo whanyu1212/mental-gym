@@ -1,8 +1,6 @@
 ---
 import { withBase } from "../lib/url";
-
-const videoSrc = withBase("/media/mental-gym-intro.mp4");
-const posterSrc = withBase("/media/mental-gym-intro-poster.png");
+import RoadmapFilmStage from "./RoadmapFilmStage.astro";
 ---
 
 <div class="film">
@@ -12,30 +10,40 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 		<small>24 sec</small>
 	</button>
 
-	<dialog class="film-dialog" data-film-dialog aria-labelledby="film-title">
+	<dialog class="film-dialog" data-film-dialog aria-labelledby="film-title" aria-describedby="film-description">
 		<div class="dialog-shell">
 			<header>
 				<div>
 					<p>Mental Gym</p>
 					<h2 id="film-title">Choose your path</h2>
 				</div>
-				<button class="close-button" type="button" data-film-close aria-label="Close video">×</button>
+				<button class="close-button" type="button" data-film-close aria-label="Close">×</button>
 			</header>
 
-			<video
-				controls
-				preload="none"
-				poster={posterSrc}
-				playsinline
-				data-film-video
-				aria-describedby="film-description film-transcript"
-			>
-				<source src={videoSrc} type="video/mp4" />
-				Your browser does not support embedded video.
-			</video>
+			<RoadmapFilmStage />
+
+			<div class="film-controls">
+				<button class="film-toggle" type="button" data-film-toggle data-state="paused">
+					<span class="toggle-icon" aria-hidden="true"></span>
+					<span data-film-toggle-label>Play</span>
+				</button>
+				<input
+					class="film-scrub"
+					type="range"
+					min="0"
+					max="24"
+					step="0.1"
+					value="0"
+					disabled
+					aria-label="Film position"
+					aria-valuetext="0:00 of 0:24"
+					data-film-scrub
+				/>
+				<span class="film-time" data-film-time>0:00 / 0:24</span>
+			</div>
 
 			<footer>
-				<p id="film-description">A silent 24-second overview of the learning loop and four AI engineering paths. A complete text transcript follows.</p>
+				<p id="film-description">A 24-second animated overview of the learning loop and four AI engineering paths. A complete text transcript follows.</p>
 				<a href={withBase("/roadmap/")}>Explore the roadmap <span aria-hidden="true">→</span></a>
 			</footer>
 
@@ -87,7 +95,9 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 	}
 
 	.film-trigger:focus-visible,
-	.close-button:focus-visible {
+	.close-button:focus-visible,
+	.film-toggle:focus-visible,
+	.film-scrub:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 3px;
 	}
@@ -180,12 +190,71 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 		color: var(--accent);
 	}
 
-	video {
-		aspect-ratio: 16 / 9;
-		background: #201d17;
-		display: block;
-		height: auto;
-		width: 100%;
+	.film-controls {
+		align-items: center;
+		border-top: 1px solid var(--border);
+		display: flex;
+		gap: 0.9rem;
+		padding: 0.7rem 1.2rem;
+	}
+
+	.film-toggle {
+		align-items: center;
+		background: var(--panel);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		color: var(--text);
+		cursor: pointer;
+		display: inline-flex;
+		flex: 0 0 auto;
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		gap: 0.5rem;
+		letter-spacing: 0.09em;
+		min-width: 6.5rem;
+		padding: 0.4rem 0.8rem 0.4rem 0.6rem;
+		text-transform: uppercase;
+	}
+
+	.film-toggle:hover {
+		border-color: var(--accent);
+	}
+
+	.toggle-icon {
+		border-bottom: 0.3rem solid transparent;
+		border-left: 0.5rem solid var(--accent);
+		border-top: 0.3rem solid transparent;
+		height: 0;
+		width: 0;
+	}
+
+	.film-toggle[data-state="playing"] .toggle-icon {
+		border: 0;
+		border-left: 0.16rem solid var(--accent);
+		border-right: 0.16rem solid var(--accent);
+		height: 0.6rem;
+		width: 0.5rem;
+	}
+
+	.film-toggle[data-state="ended"] .toggle-icon {
+		border: 0.12rem solid var(--accent);
+		border-radius: 50%;
+		border-right-color: transparent;
+		height: 0.6rem;
+		width: 0.6rem;
+	}
+
+	.film-scrub {
+		accent-color: var(--accent);
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.film-time {
+		color: var(--muted);
+		flex: 0 0 auto;
+		font: var(--fs-micro) var(--font-mono);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.04em;
 	}
 
 	footer {
@@ -248,9 +317,15 @@ const posterSrc = withBase("/media/mental-gym-intro-poster.png");
 
 		header,
 		footer,
+		.film-controls,
 		.film-transcript {
 			align-items: start;
 			padding: 0.85rem;
+		}
+
+		.film-controls {
+			align-items: center;
+			gap: 0.6rem;
 		}
 
 		footer {

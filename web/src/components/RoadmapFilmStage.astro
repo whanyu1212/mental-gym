@@ -1,0 +1,739 @@
+---
+// Live port of media/hyperframes/mental-gym-intro/index.html. The stage keeps
+// the composition's 1920×1080 pixel layout and is scaled to its frame by
+// scripts/roadmap-film.ts; colours and fonts come from the site theme tokens.
+---
+
+<div class="film-frame" data-film-frame>
+	<div class="film-stage" data-film-stage aria-hidden="true">
+		<div class="brand">
+			<span class="brand-mark"></span>
+			<span class="brand-name">Mental Gym</span>
+		</div>
+		<div class="frame-count">24 WEEKS · 15 HOURS / WEEK</div>
+
+		<section class="scene scene-hook" data-scene="hook" data-active>
+			<div class="hook-copy">
+				<p class="eyebrow">A deliberate learning system</p>
+				<p class="display">Build technical<br /><span class="gold">fluency.</span></p>
+				<p class="lead">Connect courses, implementation, interview practice, review, and project evidence.</p>
+			</div>
+			<div class="hook-visual">
+				<div class="hook-ring">
+					<div class="hook-center">
+						<strong>Durable<br />knowledge</strong>
+						<span>Not just completion</span>
+					</div>
+					<span class="hook-badge one">Learn deeply</span>
+					<span class="hook-badge two">Build from scratch</span>
+					<span class="hook-badge three">Retrieve later</span>
+				</div>
+			</div>
+		</section>
+
+		<section class="scene scene-loop" data-scene="loop">
+			<div class="scene-copy">
+				<p class="eyebrow">The learning loop</p>
+				<p class="display">Make every step<br /><span class="gold">compound.</span></p>
+				<p class="lead">Each stage creates the input for the next.</p>
+			</div>
+			<div class="loop-diagram">
+				<div class="loop-track"></div>
+				<div class="orbit-spinner"><span class="comet"></span></div>
+				<div class="loop-center"><small>Build</small><strong>Durable fluency</strong></div>
+				<div class="loop-node learn"><small>01</small><strong>Learn</strong></div>
+				<div class="loop-node implement"><small>02</small><strong>Implement</strong></div>
+				<div class="loop-node practice"><small>03</small><strong>Practice</strong></div>
+				<div class="loop-node review"><small>04</small><strong>Review</strong></div>
+				<div class="loop-node retain"><small>05</small><strong>Retain</strong></div>
+			</div>
+		</section>
+
+		<section class="scene scene-paths" data-scene="paths">
+			<div class="scene-copy">
+				<p class="eyebrow">Choose one primary outcome</p>
+				<p class="display">Four paths. <span class="gold">One shared foundation.</span></p>
+			</div>
+			<div class="path-grid">
+				<div class="path-card"><small>01</small><p class="card-title">Applied AI<br />/ Agents</p><p>Retrieval, tools, evaluation, and reliable agent workflows.</p></div>
+				<div class="path-card"><small>02</small><p class="card-title">ML<br />Infrastructure</p><p>Data, training, serving, observability, and system performance.</p></div>
+				<div class="path-card"><small>03</small><p class="card-title">Model /<br />Post-training</p><p>Transformer internals, optimization, adaptation, and evaluation.</p></div>
+				<div class="path-card"><small>04</small><p class="card-title">AI<br />Product</p><p>User needs, metrics, experimentation, usability, and evidence.</p></div>
+			</div>
+		</section>
+
+		<section class="scene scene-plan" data-scene="plan">
+			<div class="scene-copy">
+				<p class="eyebrow">A realistic six-month plan</p>
+				<p class="display">Structure creates<br /><span class="gold">momentum.</span></p>
+				<p class="lead">Required work never exceeds the weekly budget.</p>
+			</div>
+			<div class="plan-stack">
+				<div class="plan-bar">
+					<div class="plan-bar-head"><p class="card-title">Shared foundation week</p><span>08 + 12 + 04</span></div>
+					<div class="timeline"><i class="foundation"></i><i class="specialization"></i><i class="capstone"></i></div>
+				</div>
+				<div class="hour-grid">
+					<div class="hour"><strong>5h</strong><small>Study</small></div>
+					<div class="hour"><strong>5h</strong><small>Implement</small></div>
+					<div class="hour"><strong>3h</strong><small>Interview</small></div>
+					<div class="hour"><strong>2h</strong><small>Language</small></div>
+				</div>
+				<p class="budget-note">Specialization and capstone rebalance these hours by track. The total stays 15.</p>
+			</div>
+		</section>
+
+		<section class="scene scene-proof" data-scene="proof">
+			<div class="scene-copy">
+				<p class="eyebrow">Evidence over activity</p>
+				<p class="display">Show what you<br /><span class="gold">can do.</span></p>
+				<p class="lead">Completion is not proficiency. Every week ends with something inspectable.</p>
+			</div>
+			<div class="proof-flow">
+				<div class="proof-card"><small>01 · SOURCE</small><p class="card-title">Implement</p><p>Versioned code, explicit constraints, and reproducible commands.</p></div>
+				<div class="proof-card"><small>02 · CHECKS</small><p class="card-title">Validate</p><p>Tests, baselines, metrics, and failure-focused examples.</p></div>
+				<div class="proof-card"><small>03 · RECALL</small><p class="card-title">Explain</p><p>Independent reasoning, delayed retrieval, and clear trade-offs.</p></div>
+				<div class="proof-card"><small>04 · PROJECT</small><p class="card-title">Apply</p><p>A bounded deliverable tied to a real system or user outcome.</p></div>
+				<div class="proof-arrow">→</div>
+			</div>
+		</section>
+
+		<section class="scene scene-cta" data-scene="cta">
+			<div class="cta-wrap">
+				<p class="eyebrow">Mental Gym · AI engineering roadmap</p>
+				<p class="display">Choose a path.<br /><span class="gold">Build evidence every week.</span></p>
+				<div class="cta-rule"></div>
+				<p class="lead">Eight shared foundation weeks. Twelve weeks of specialization. Four weeks to ship and explain the work.</p>
+				<span class="cta-link">Open the roadmap <b>→</b></span>
+			</div>
+		</section>
+	</div>
+</div>
+
+<style>
+	.film-frame {
+		--film-scale: 0.5;
+		aspect-ratio: 16 / 9;
+		background: var(--bg);
+		overflow: hidden;
+		position: relative;
+		width: 100%;
+	}
+
+	.film-stage {
+		--panel-soft: color-mix(in srgb, var(--panel) 82%, transparent);
+		--panel-strong: color-mix(in srgb, var(--panel) 80%, var(--surface-strong));
+		--gold: var(--accent);
+		--gold-soft: rgb(var(--accent-rgb) / 12%);
+		--gold-ring: rgb(var(--accent-rgb) / 42%);
+
+		background:
+			radial-gradient(circle at 78% 18%, rgb(var(--accent-rgb) / 11%), transparent 28%),
+			linear-gradient(135deg, var(--bg) 0%, var(--bg) 55%, var(--panel) 100%);
+		color: var(--text);
+		font-family: var(--font-sans);
+		height: 1080px;
+		left: 0;
+		overflow: hidden;
+		position: absolute;
+		top: 0;
+		transform: scale(var(--film-scale));
+		transform-origin: 0 0;
+		width: 1920px;
+	}
+
+	/* Zero-specificity reset so the component rules below always win. */
+	:where(.film-stage *) {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+	}
+
+	.film-stage::before {
+		border: 1px solid rgb(var(--accent-rgb) / 12%);
+		border-radius: 50%;
+		content: "";
+		height: 880px;
+		position: absolute;
+		right: -340px;
+		top: -380px;
+		width: 880px;
+	}
+
+	.film-stage::after {
+		background-image: radial-gradient(rgb(var(--accent-rgb) / 30%) 0.8px, transparent 0.8px);
+		background-size: 22px 22px;
+		content: "";
+		height: 260px;
+		opacity: 0.25;
+		position: absolute;
+		right: 70px;
+		top: 70px;
+		width: 360px;
+	}
+
+	/* One scene is visible at a time; the controller sets data-active from the playhead. */
+	.scene {
+		align-items: center;
+		display: grid;
+		height: 1080px;
+		inset: 0;
+		opacity: 0;
+		padding: 110px 150px;
+		position: absolute;
+		transition:
+			opacity 0.3s ease,
+			visibility 0s linear 0.3s;
+		visibility: hidden;
+		width: 1920px;
+	}
+
+	.film-stage[data-ready] .scene[data-active] {
+		opacity: 1;
+		transition: opacity 0.3s ease;
+		visibility: visible;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.scene,
+		.film-stage[data-ready] .scene[data-active] {
+			transition: none;
+		}
+	}
+
+	.brand {
+		align-items: center;
+		display: flex;
+		gap: 18px;
+		left: 150px;
+		position: absolute;
+		top: 78px;
+		z-index: 10;
+	}
+
+	.brand-mark {
+		border: 1px solid var(--gold-ring);
+		border-radius: 50%;
+		height: 26px;
+		position: relative;
+		width: 26px;
+	}
+
+	.brand-mark::before,
+	.brand-mark::after {
+		background: var(--gold);
+		content: "";
+		left: 50%;
+		position: absolute;
+		top: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	.brand-mark::before {
+		height: 1px;
+		width: 14px;
+	}
+
+	.brand-mark::after {
+		height: 14px;
+		width: 1px;
+	}
+
+	.brand-name {
+		color: var(--gold);
+		font: 600 30px var(--font-serif);
+		letter-spacing: 0.02em;
+	}
+
+	.frame-count {
+		color: var(--muted);
+		font: 600 16px var(--font-mono);
+		letter-spacing: 0.12em;
+		position: absolute;
+		right: 150px;
+		top: 84px;
+		z-index: 10;
+	}
+
+	.eyebrow {
+		color: var(--gold);
+		font: 700 18px var(--font-sans);
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+
+	.display {
+		font: 600 100px/0.98 var(--font-serif);
+		letter-spacing: -0.035em;
+	}
+
+	.lead {
+		color: var(--muted);
+		font: 400 30px/1.55 var(--font-sans);
+	}
+
+	.gold {
+		color: var(--gold);
+	}
+
+	.scene-hook {
+		grid-template-columns: 1.1fr 0.9fr;
+	}
+
+	.hook-copy {
+		max-width: 920px;
+	}
+
+	.hook-copy .display {
+		font-size: 132px;
+		margin: 28px 0 34px;
+	}
+
+	.hook-copy .lead {
+		max-width: 780px;
+	}
+
+	.hook-visual {
+		align-items: center;
+		display: flex;
+		justify-content: center;
+		position: relative;
+	}
+
+	.hook-ring {
+		align-items: center;
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		display: flex;
+		height: 510px;
+		justify-content: center;
+		position: relative;
+		width: 510px;
+	}
+
+	.hook-ring::before,
+	.hook-ring::after {
+		border: 1px dashed var(--gold-ring);
+		border-radius: 50%;
+		content: "";
+		position: absolute;
+	}
+
+	.hook-ring::before {
+		height: 390px;
+		width: 390px;
+	}
+
+	.hook-ring::after {
+		height: 250px;
+		width: 250px;
+	}
+
+	.hook-center {
+		text-align: center;
+	}
+
+	.hook-center strong {
+		display: block;
+		font: 600 40px var(--font-serif);
+	}
+
+	.hook-center span {
+		color: var(--gold);
+		display: block;
+		font: 700 14px var(--font-sans);
+		letter-spacing: 0.16em;
+		margin-top: 12px;
+		text-transform: uppercase;
+	}
+
+	.hook-badge {
+		background: var(--panel-soft);
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		color: var(--muted);
+		font: 600 16px var(--font-sans);
+		padding: 12px 20px;
+		position: absolute;
+	}
+
+	.hook-badge.one {
+		left: -15px;
+		top: 75px;
+	}
+
+	.hook-badge.two {
+		right: -5px;
+		top: 145px;
+	}
+
+	.hook-badge.three {
+		bottom: 72px;
+		right: 52px;
+	}
+
+	.scene-loop {
+		gap: 80px;
+		grid-template-columns: 0.78fr 1.22fr;
+	}
+
+	.scene-copy .display {
+		font-size: 88px;
+		margin: 24px 0 30px;
+	}
+
+	.loop-diagram {
+		height: 730px;
+		position: relative;
+		width: 930px;
+	}
+
+	.loop-track {
+		border: 2px solid var(--border);
+		border-radius: 50%;
+		height: 590px;
+		left: 170px;
+		position: absolute;
+		top: 66px;
+		width: 590px;
+	}
+
+	.loop-track::before {
+		border: 1px dashed var(--gold-ring);
+		border-radius: 50%;
+		content: "";
+		inset: 16px;
+		position: absolute;
+	}
+
+	.loop-center {
+		align-items: center;
+		background: var(--panel-soft);
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		display: flex;
+		flex-direction: column;
+		height: 250px;
+		justify-content: center;
+		left: 340px;
+		position: absolute;
+		text-align: center;
+		top: 236px;
+		width: 250px;
+	}
+
+	.loop-center small {
+		color: var(--gold);
+		font: 700 15px var(--font-sans);
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+
+	.loop-center strong {
+		font: 600 33px/1.1 var(--font-serif);
+		margin-top: 12px;
+		max-width: 180px;
+	}
+
+	.loop-node {
+		align-items: center;
+		background: var(--panel-strong);
+		border: 1px solid var(--border);
+		border-radius: 50%;
+		display: flex;
+		flex-direction: column;
+		height: 132px;
+		justify-content: center;
+		position: absolute;
+		width: 132px;
+	}
+
+	.loop-node small {
+		color: var(--gold);
+		font: 700 13px var(--font-mono);
+		margin-bottom: 8px;
+	}
+
+	.loop-node strong {
+		font: 650 19px var(--font-sans);
+	}
+
+	.loop-node.learn {
+		left: 399px;
+		top: 0;
+	}
+
+	.loop-node.implement {
+		right: 34px;
+		top: 188px;
+	}
+
+	.loop-node.practice {
+		bottom: 0;
+		right: 138px;
+	}
+
+	.loop-node.review {
+		bottom: 0;
+		left: 138px;
+	}
+
+	.loop-node.retain {
+		left: 34px;
+		top: 188px;
+	}
+
+	.orbit-spinner {
+		height: 590px;
+		left: 170px;
+		position: absolute;
+		top: 66px;
+		width: 590px;
+	}
+
+	.comet {
+		background: var(--gold);
+		border-radius: 50%;
+		box-shadow:
+			0 0 0 8px var(--gold-soft),
+			0 0 34px var(--gold);
+		height: 12px;
+		left: 289px;
+		position: absolute;
+		top: -5px;
+		width: 12px;
+	}
+
+	.scene-paths {
+		align-content: center;
+	}
+
+	.scene-paths .scene-copy {
+		margin-bottom: 56px;
+		max-width: 1200px;
+	}
+
+	.scene-paths .display {
+		font-size: 92px;
+	}
+
+	.path-grid {
+		display: grid;
+		gap: 24px;
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	.path-card {
+		background: var(--panel-soft);
+		border: 1px solid var(--border);
+		border-radius: 24px;
+		min-height: 330px;
+		padding: 38px;
+		position: relative;
+	}
+
+	.path-card::before {
+		background: var(--gold);
+		content: "";
+		height: 3px;
+		left: 38px;
+		position: absolute;
+		top: 0;
+		width: 58px;
+	}
+
+	.path-card small {
+		color: var(--gold);
+		font: 700 14px var(--font-mono);
+		letter-spacing: 0.12em;
+	}
+
+	.path-card .card-title {
+		font: 600 38px/1.08 var(--font-serif);
+		margin: 42px 0 22px;
+	}
+
+	.path-card p:not(.card-title) {
+		color: var(--muted);
+		font: 400 21px/1.5 var(--font-sans);
+	}
+
+	.scene-plan {
+		gap: 90px;
+		grid-template-columns: 0.65fr 1.35fr;
+	}
+
+	.plan-stack {
+		display: grid;
+		gap: 28px;
+	}
+
+	.plan-bar {
+		background: var(--panel-soft);
+		border: 1px solid var(--border);
+		border-radius: 22px;
+		padding: 30px 34px;
+	}
+
+	.plan-bar-head {
+		align-items: baseline;
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 20px;
+	}
+
+	.plan-bar .card-title {
+		font: 600 30px var(--font-serif);
+	}
+
+	.plan-bar-head span {
+		color: var(--gold);
+		font: 700 16px var(--font-mono);
+	}
+
+	.timeline {
+		background: color-mix(in srgb, var(--text) 8%, transparent);
+		border-radius: 999px;
+		display: flex;
+		height: 24px;
+		overflow: hidden;
+	}
+
+	.timeline i {
+		display: block;
+		height: 100%;
+	}
+
+	.timeline .foundation {
+		background: var(--gold);
+		width: 33.333%;
+	}
+
+	.timeline .specialization {
+		background: rgb(var(--accent-rgb) / 55%);
+		width: 50%;
+	}
+
+	.timeline .capstone {
+		background: rgb(var(--accent-rgb) / 25%);
+		width: 16.667%;
+	}
+
+	.hour-grid {
+		display: grid;
+		gap: 16px;
+		grid-template-columns: repeat(4, 1fr);
+	}
+
+	.hour {
+		background: var(--panel-soft);
+		border: 1px solid var(--border);
+		border-radius: 18px;
+		padding: 24px;
+	}
+
+	.hour strong {
+		display: block;
+		font: 600 38px var(--font-serif);
+	}
+
+	.hour small {
+		color: var(--muted);
+		font: 700 13px var(--font-sans);
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+
+	.budget-note {
+		border-left: 3px solid var(--gold);
+		color: var(--muted);
+		font: 500 21px/1.5 var(--font-sans);
+		padding-left: 24px;
+	}
+
+	.scene-proof {
+		gap: 100px;
+		grid-template-columns: 0.7fr 1.3fr;
+	}
+
+	.proof-flow {
+		display: grid;
+		gap: 18px;
+		grid-template-columns: repeat(2, 1fr);
+		position: relative;
+	}
+
+	.proof-card {
+		background: var(--panel-soft);
+		border: 1px solid var(--border);
+		border-radius: 22px;
+		min-height: 220px;
+		padding: 32px;
+	}
+
+	.proof-card small {
+		color: var(--gold);
+		font: 700 14px var(--font-mono);
+	}
+
+	.proof-card .card-title {
+		font: 600 32px var(--font-serif);
+		margin: 22px 0 12px;
+	}
+
+	.proof-card p:not(.card-title) {
+		color: var(--muted);
+		font: 400 19px/1.45 var(--font-sans);
+	}
+
+	.proof-arrow {
+		align-items: center;
+		background: var(--gold);
+		border: 8px solid var(--bg);
+		border-radius: 50%;
+		color: var(--bg);
+		display: flex;
+		font: 700 24px var(--font-sans);
+		height: 64px;
+		justify-content: center;
+		left: calc(50% - 32px);
+		position: absolute;
+		top: calc(50% - 32px);
+		width: 64px;
+		z-index: 3;
+	}
+
+	.scene-cta {
+		place-items: center;
+		text-align: center;
+	}
+
+	.cta-wrap {
+		max-width: 1200px;
+	}
+
+	.cta-wrap .display {
+		font-size: 124px;
+		margin: 22px 0 30px;
+	}
+
+	.cta-rule {
+		background: var(--gold);
+		height: 3px;
+		margin: 0 auto 30px;
+		width: 110px;
+	}
+
+	.cta-link {
+		background: var(--gold);
+		border-radius: 999px;
+		color: var(--bg);
+		display: inline-flex;
+		font: 700 18px var(--font-sans);
+		gap: 18px;
+		letter-spacing: 0.12em;
+		margin-top: 40px;
+		padding: 22px 34px;
+		text-transform: uppercase;
+	}
+</style>
