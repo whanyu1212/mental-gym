@@ -1,7 +1,7 @@
 ---
 title: Python — Start Here
 slug: python-start-here
-description: Install Python, use Mental Gym's Poetry environment, and run a first program and pytest test from the repository root.
+description: Run a first Python program and pytest test with Mental Gym's Poetry environment, or try uv in a separate practice project.
 category: Languages
 order: -8
 status: stable
@@ -16,6 +16,10 @@ tags:
 This lesson gets one small Python program running in the same environment as the
 repository. Keep the terminal in the repository root while you work. That makes
 paths and Poetry's `pyproject.toml` predictable.
+
+Prefer uv for your own practice? The [uv alternative](#try-the-same-example-with-uv)
+uses the same program and test in a separate project. You can follow that route
+without installing Poetry.
 
 ## Install the tools
 
@@ -45,7 +49,7 @@ poetry run python --version
 poetry run pytest --version
 ```
 
-Use `poetry run ...` for this track. It runs the command inside the repository's
+Use `poetry run ...` for the repository workflow. It runs the command inside the repository's
 environment even when that environment is not activated in your shell.
 
 ## Keep experiments in an ignored scratch directory
@@ -121,8 +125,48 @@ poetry run pytest build/scratch/test_python_first.py -q
 Pytest should report `1 passed`. A passing test exits with status code 0, which
 is what local scripts and CI use to recognize success.
 
+## Try the same example with uv
+
+[uv](https://docs.astral.sh/uv/) manages Python versions, project dependencies,
+and virtual environments. Install it using the [official uv installation
+guide](https://docs.astral.sh/uv/getting-started/installation/), then verify
+`uv --version`.
+
+Create a separate practice project. These commands use a temporary directory on
+macOS/Linux; on Windows, choose a directory outside the clone. If the directory
+already contains a project, choose a fresh name.
+
+```bash
+uv init --bare --python 3.12 --vcs none /tmp/mental-gym-python-uv
+cd /tmp/mental-gym-python-uv
+uv add --dev "pytest>=8,<9"
+```
+
+`uv init` creates the project metadata; `uv add --dev` records pytest as a
+development dependency and prepares the project's environment and `uv.lock`.
+uv can download the requested Python version if it is not installed.
+
+In this directory, create `python_first.py` and `test_python_first.py` using the
+two Python code blocks above. Then run:
+
+```bash
+uv run python python_first.py
+uv run pytest test_python_first.py -q
+```
+
+Expect `[0.5, 0.75, 1.0]` and `1 passed`, just as with Poetry. Use
+`uv run python <file>` for the Essentials snippets you save in this project.
+
+Mental Gym's full dependency set stays managed by Poetry and `poetry.lock`.
+This uv project installs only the dependencies needed for the lesson, using its
+own `.venv` and `uv.lock`. Return to the repository root and use Poetry when
+running the repository's full tests. See uv's [project guide](https://docs.astral.sh/uv/guides/projects/)
+for adding packages and running other commands.
+
 ## Troubleshooting
 
+- **`uv: command not found`:** finish the uv installation, reopen your terminal,
+  and check `uv --version`. Run the uv commands from the practice project above.
 - **`poetry: command not found`:** install Poetry, open a new terminal, and run
   `poetry --version` before returning to the repository.
 - **Poetry cannot find `pyproject.toml`:** run `git rev-parse --show-toplevel`,
@@ -144,3 +188,4 @@ then return to the [Python learning track](../../learn/python/).
 - [The Python Tutorial](https://docs.python.org/3/tutorial/)
 - [Installing packages in a virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/)
 - [Poetry installation](https://python-poetry.org/docs/#installation)
+- [uv projects and environments](https://docs.astral.sh/uv/guides/projects/)
