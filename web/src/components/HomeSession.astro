@@ -1,0 +1,82 @@
+---
+import { withBase } from '../lib/url';
+import DueForReview from './DueForReview.astro';
+---
+<home-session id="review" data-problem-root={withBase('/')}>
+  <section class="session" aria-labelledby="session-title">
+    <div class="session-icon" aria-hidden="true">↗</div>
+    <div class="session-copy">
+      <p class="label" data-session-label>Your next rep</p>
+      <h2 id="session-title">One problem. A little stronger.</h2>
+      <p data-session-description>Start with Two Sum. Find a pair, explain your approach, then check your reasoning.</p>
+      <a class="progress-link" href={withBase('/progress')} data-progress-link hidden>View your progress →</a>
+    </div>
+    <div class="session-action"><span data-session-meta>Arrays &amp; hashing · Easy</span><a href={withBase('/algorithms/1-two-sum/')} data-session-start>Try Two Sum <span aria-hidden="true">→</span></a></div>
+  </section>
+  <div class="review-queue" hidden data-review-queue><DueForReview /></div>
+</home-session>
+<script>
+  import { getAllRecords } from '../scripts/sr-db';
+  import { summarizeProgress } from '../scripts/sr-stats';
+  import { todayISO } from '../scripts/sr-scheduler';
+
+  class HomeSessionElement extends HTMLElement {
+    connectedCallback() {
+      this.render();
+      window.addEventListener('mental-gym:progress-updated', this.render);
+    }
+    disconnectedCallback() { window.removeEventListener('mental-gym:progress-updated', this.render); }
+    render = async () => {
+      try {
+        const stats = summarizeProgress(await getAllRecords(), todayISO());
+        const label = this.querySelector<HTMLElement>('[data-session-label]')!;
+        const title = this.querySelector<HTMLElement>('#session-title')!;
+        const description = this.querySelector<HTMLElement>('[data-session-description]')!;
+        const meta = this.querySelector<HTMLElement>('[data-session-meta]')!;
+        const start = this.querySelector<HTMLAnchorElement>('[data-session-start]')!;
+        const progress = this.querySelector<HTMLAnchorElement>('[data-progress-link]')!;
+        const queue = this.querySelector<HTMLElement>('[data-review-queue]')!;
+        const next = stats.dueRecords[0];
+        progress.hidden = stats.reviewed === 0;
+        queue.hidden = !next;
+        if (stats.reviewed === 0) {
+          label.textContent = 'Your next rep';
+          title.textContent = 'One problem. A little stronger.';
+          description.textContent = 'Start with Two Sum. Find a pair, explain your approach, then check your reasoning.';
+          meta.textContent = 'Arrays & hashing · Easy';
+          start.textContent = 'Try Two Sum →';
+          start.href = `${this.dataset.problemRoot}algorithms/1-two-sum/`;
+          return;
+        }
+        progress.textContent = `${stats.reviewed} reviewed · View your progress →`;
+        label.textContent = next ? 'Keep it fresh' : 'Ready for another rep?';
+        title.textContent = next ? next.title : 'All caught up. Keep building.';
+        description.textContent = next ? `${stats.dueRecords.length} ${stats.dueRecords.length === 1 ? 'problem is' : 'problems are'} ready for recall. Try solving from memory before opening the solution.` : 'Your next reviews are scheduled. Explore a new problem while those ideas settle in.';
+        meta.textContent = next ? `${next.group} · ${next.difficulty}` : 'Choose your next challenge';
+        start.textContent = next ? 'Start review →' : 'Find a problem →';
+        const domain = next?.domain === 'algorithms' ? 'algorithms' : next?.domain === 'ml' ? 'machine-learning' : 'sql';
+        start.href = next ? `${this.dataset.problemRoot}${domain}/${encodeURIComponent(next.slug)}/` : `${this.dataset.problemRoot}problems`;
+      } catch {
+        // The starter session remains usable when browser storage is unavailable.
+      }
+    };
+  }
+  if (!customElements.get('home-session')) customElements.define('home-session', HomeSessionElement);
+</script>
+<style>
+  home-session { display: block; scroll-margin-top: 90px; }
+  .session { display: flex; align-items: center; gap: 1.2rem; padding: 1.5rem; background: var(--home-tint); border: 1px solid var(--home-border); border-radius: 12px; }
+  .session-icon { align-self: flex-start; font: 1.8rem var(--font-sans); color: var(--home-accent); }
+  .session-copy { flex: 1; min-width: 0; }
+  .label { font: 600 .6rem var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--home-accent); margin: 0 0 .45rem; }
+  h2 { font: 600 1.55rem/1.1 var(--font-serif); margin: 0 0 .5rem; }
+  .session-copy > p:last-of-type { font: .78rem/1.6 var(--font-sans); color: var(--muted); margin: 0; max-width: 520px; }
+  .session-action { display: flex; flex-direction: column; align-items: flex-end; gap: .65rem; flex-shrink: 0; }
+  .session-action > span { font: .6rem var(--font-sans); color: var(--muted); }
+  .session-action > a { display: inline-flex; align-items: center; gap: 1rem; background: var(--home-accent); color: var(--home-on-accent); border-radius: 6px; padding: .75rem 1rem; font: 600 .72rem var(--font-sans); text-decoration: none; }
+  .session-action > a:hover { filter: brightness(1.15); }
+  .progress-link { display: inline-block; margin-top: .75rem; font: .68rem var(--font-sans); color: var(--home-accent); }
+  [hidden] { display: none; }
+  .review-queue { margin-top: 1rem; }
+  @media (max-width: 680px) { .session { flex-wrap: wrap; gap: .75rem; } .session-icon { display: none; } .session-copy { flex-basis: 100%; } .session-action { align-items: flex-start; margin-top: .5rem; } }
+</style>

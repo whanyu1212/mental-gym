@@ -70,7 +70,7 @@
 /* ----------------------------------------------------------------------------
    Accent channels.
    Each theme block in Layout.astro defines --accent-rgb as space-separated
-   sRGB channels (e.g. "201 168 76"). These derived tokens then expose the
+   sRGB channels (e.g. "201 230 165"). These derived tokens then expose the
    accent at fixed alphas so call sites never hardcode rgba(...) again.
    Usage:  background: var(--accent-soft);   color: var(--accent);
            border: 1px solid rgb(var(--accent-rgb) / 40%);  // freeform alpha

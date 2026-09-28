@@ -1,145 +1,112 @@
 ---
-import { getCollection } from "astro:content";
-import DueForReview from "../components/DueForReview.astro";
-import LiveLearningLoop from "../components/LiveLearningLoop.astro";
-import ProgressSummary from "../components/ProgressSummary.astro";
-import ResumeRow from "../components/ResumeRow.astro";
-import { mlProblems } from "../data/mlProblems";
-import { problems } from "../data/problems";
-import Layout from "../layouts/Layout.astro";
-import { withBase } from "../lib/url";
-
-const notes = (await getCollection("notes")).filter(
-	(note) => note.data.category !== "Meta" && note.data.kind !== "template",
-);
-const total = problems.length;
-const completedML = mlProblems.filter((problem) => problem.status === "Completed").length;
+import { getCollection } from 'astro:content';
+import HomeSession from '../components/HomeSession.astro';
+import LearningIllustration from '../components/LearningIllustration.astro';
+import ResumeRow from '../components/ResumeRow.astro';
+import { mlProblems } from '../data/mlProblems';
+import { problems } from '../data/problems';
+import Layout from '../layouts/Layout.astro';
+import { withBase } from '../lib/url';
+const notes = (await getCollection('notes')).filter(note => note.data.category !== 'Meta' && note.data.kind !== 'template');
+const completedML = mlProblems.filter(problem => problem.status === 'Completed').length;
 ---
-
 <Layout title="Mental Gym — Build technical fluency">
-	<section class="hero">
-		<div class="hero-copy">
-			<p class="eyebrow">Mental Gym</p>
-			<h1>Build technical fluency.</h1>
-			<p class="description">
-				A workspace for deliberate practice, first-principles implementation, and durable technical knowledge.
-			</p>
-			<a class="roadmap-link" href={withBase("/roadmap/")}>Explore the AI engineering roadmap <span aria-hidden="true">→</span></a>
-		</div>
-		<LiveLearningLoop />
-	</section>
-
-	<ResumeRow />
-
-	<section class="progress-summary">
-		<div class="section-heading">
-			<div>
-				<p class="eyebrow">Local progress</p>
-				<h2>Build durable recall</h2>
-			</div>
-		</div>
-		<ProgressSummary />
-	</section>
-
-
-	<section id="review" class="review-area">
-		<div class="section-heading">
-			<div>
-				<p class="eyebrow">Keep it active</p>
-				<h2>Review what you have practiced</h2>
-			</div>
-			<a href={withBase("/#review")}>Open practice <span>→</span></a>
-		</div>
-		<DueForReview />
-		<p class="review-empty">Your review queue appears here after you rate a completed problem.</p>
-	</section>
-
-	<section class="domains">
-		<div class="section-heading">
-			<div>
-				<p class="eyebrow">Choose a domain</p>
-				<h2>Practice and knowledge, connected</h2>
-			</div>
-		</div>
-		<div class="domain-grid">
-			<a class="domain-card" href={withBase("/problems?tab=algorithms")}>
-				<h3>DSA</h3>
-				<p>Pattern-based coding problems, algorithm guides, and notes on complexity and invariants.</p>
-				<span>{total} problems <b>→</b></span>
-			</a>
-			<a class="domain-card" href={withBase("/machine-learning")}>
-				<h3>ML engineering</h3>
-				<p>From-scratch implementations, ML coding prompts, and practical model-development concepts.</p>
-				<span>{mlProblems.length} prompts · {completedML} completed <b>→</b></span>
-			</a>
-			<a class="domain-card" href={withBase("/system-design")}>
-				<h3>System design</h3>
-				<p>Design ML and AI systems across data, training, serving, monitoring, and feedback loops.</p>
-				<span>Explore system design <b>→</b></span>
-			</a>
-		</div>
-	</section>
-
-	{notes.length > 0 && (
-		<section class="notes">
-			<div class="section-heading">
-				<div>
-					<p class="eyebrow">Knowledge library</p>
-					<h2>Start with a note</h2>
-				</div>
-				<a href={withBase("/notes")}>All notes <span>→</span></a>
-			</div>
-			<ol>
-				{notes.slice(0, 3).map((note, index) => (
-					<li>
-						<a href={withBase(`/notes/${note.id}/`)}>
-							<span>{String(index + 1).padStart(2, "0")}</span>
-							<strong>{note.data.title}</strong>
-							<em>{note.data.category}</em>
-							<b>→</b>
-						</a>
-					</li>
-				))}
-			</ol>
-		</section>
-	)}
+  <div class="home">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-dot"></span> A practice space for curious minds</p>
+        <h1>Build a mind<br />for <em>hard problems.</em></h1>
+        <p class="description">Solve problems. Build models. Make it stick.<br class="wide-break" /> A little deliberate practice, every day.</p>
+        <div class="hero-actions"><a class="primary-action" href="#review">Start a session <span aria-hidden="true">↗</span></a><a class="roadmap-link" href={withBase('/roadmap/')}>Explore the roadmap <span aria-hidden="true">→</span></a></div>
+        <p class="hero-footnote">First principles. Real practice. Lasting recall.</p>
+      </div>
+      <LearningIllustration />
+    </section>
+    <div class="learning-strip" aria-label="The learning cycle"><span>Good thinking takes practice.</span><ol><li>Learn</li><li>Implement</li><li>Practice</li><li>Review</li><li>Retain</li></ol></div>
+    <ResumeRow />
+    <HomeSession />
+    <section class="domains" aria-labelledby="domains-title">
+      <div class="section-heading"><div><p class="eyebrow">Choose your training ground</p><h2 id="domains-title">Different skills. Same curious mind.</h2></div><a href={withBase('/problems')}>All practice <span aria-hidden="true">↗</span></a></div>
+      <div class="domain-grid">
+        <a class="domain-card algorithms" href={withBase('/problems?tab=algorithms')}>
+          <div class="card-top"><span>01 / ALGORITHMS</span><b aria-hidden="true">↗</b></div>
+          <svg class="domain-art" viewBox="0 0 240 110" fill="none" aria-hidden="true"><path d="M40 74L92 30L145 74L201 29M92 30L201 29M40 74H145" stroke="currentColor" stroke-width="1.5" opacity=".35"/><path d="M40 74L92 30L145 74" stroke="currentColor" stroke-width="2.5"/><circle cx="40" cy="74" r="10" fill="currentColor"/><circle cx="92" cy="30" r="10" fill="currentColor"/><circle cx="145" cy="74" r="10" fill="var(--home-card)" stroke="currentColor" stroke-width="2"/><circle cx="201" cy="29" r="10" fill="var(--home-card)" stroke="currentColor" stroke-width="2"/></svg>
+          <h3>Find the pattern.</h3><p>Build your intuition for data structures, algorithms, and elegant solutions.</p><span class="card-footer">{problems.length} problems <span>DSA</span></span>
+        </a>
+        <a class="domain-card ml" href={withBase('/machine-learning')}>
+          <div class="card-top"><span>02 / MACHINE LEARNING</span><b aria-hidden="true">↗</b></div>
+          <svg class="domain-art" viewBox="0 0 240 110" fill="none" aria-hidden="true"><path d="M25 12V92H218M25 52H218M77 12V92M129 12V92M181 12V92" stroke="currentColor" opacity=".18"/><path d="M30 18C44 18 39 65 60 52S73 84 93 71S110 90 132 80S164 90 210 86" stroke="currentColor" stroke-width="2.5"/><circle cx="210" cy="86" r="5" fill="currentColor"/></svg>
+          <h3>Go beneath the model.</h3><p>Implement the fundamentals. Understand what happens behind the API.</p><span class="card-footer">{mlProblems.length} prompts · {completedML} completed <span>ML</span></span>
+        </a>
+        <a class="domain-card systems" href={withBase('/system-design')}>
+          <div class="card-top"><span>03 / SYSTEM DESIGN</span><b aria-hidden="true">↗</b></div>
+          <svg class="domain-art" viewBox="0 0 240 110" fill="none" aria-hidden="true"><path d="M67 55H102M140 55H167M120 35V20H184V34M120 75V91H184V76" stroke="currentColor" stroke-width="1.5"/><rect x="20" y="36" width="47" height="38" rx="5" stroke="currentColor" stroke-width="1.5"/><rect x="102" y="35" width="38" height="40" rx="5" fill="currentColor"/><rect x="167" y="34" width="47" height="42" rx="5" stroke="currentColor" stroke-width="1.5"/><path d="M30 48H56M30 57H47M178 48H203M178 58H203" stroke="currentColor" opacity=".5"/></svg>
+          <h3>See the bigger picture.</h3><p>Connect data, models, and infrastructure into systems that work.</p><span class="card-footer">Explore the tradeoffs <span>SYSTEMS</span></span>
+        </a>
+      </div>
+    </section>
+    {notes.length > 0 && <section class="notes" aria-labelledby="notes-title">
+      <div class="section-heading"><div><p class="eyebrow">The reading corner</p><h2 id="notes-title">A good idea to take with you.</h2></div><a href={withBase('/notes')}>All notes <span aria-hidden="true">↗</span></a></div>
+      <ol>{notes.slice(0, 3).map((note, index) => <li><a href={withBase(`/notes/${note.id}/`)}><span>{String(index + 1).padStart(2, '0')}</span><strong>{note.data.title}</strong><em>{note.data.category}</em><b aria-hidden="true">↗</b></a></li>)}</ol>
+    </section>}
+    <footer class="home-footer"><span>Mental Gym</span><p>Keep showing up. The connections will follow.</p><a href={withBase('/progress')}>Your progress ↗</a></footer>
+  </div>
 </Layout>
-
 <style>
-	.hero { align-items: center; display: grid; gap: 1.5rem; grid-template-columns: minmax(0, .9fr) minmax(440px, 1.1fr); padding: 3rem 0 2.5rem; }
-	.hero-copy { max-width: 520px; }
-	.eyebrow { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .14em; margin: 0 0 .65rem; text-transform: uppercase; }
-	h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
-	h1 { font-size: var(--fs-mega); line-height: .95; letter-spacing: -.02em; margin: 0; }
-	.description { color: var(--muted); font-size: var(--fs-lg); line-height: 1.6; margin: 1.15rem 0 0; max-width: 520px; }
-	.roadmap-link { align-items: center; background: var(--glass-surface); border: 1px solid var(--glass-border-strong); border-radius: var(--radius-pill); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--accent); display: inline-flex; font: 600 var(--fs-eyebrow) var(--font-sans); gap: .5rem; letter-spacing: .08em; margin-top: 1.4rem; padding: .7rem 1rem; text-decoration: none; text-transform: uppercase; transition: border-color .2s, transform .2s; }
-	.roadmap-link:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-1px); }
-	.roadmap-link span { transition: transform .15s; }
-	.roadmap-link:hover span { transform: translateX(4px); }
-	.domain-grid { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
-	.domain-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm); color: var(--text); display: flex; flex-direction: column; min-height: 225px; padding: 1.35rem; text-decoration: none; transition: border-color .2s, transform .2s; }
-	.domain-card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-3px); }
-	.domain-card h3 { font-size: var(--fs-xl); margin: 0 0 .55rem; }
-	.domain-card p { color: var(--muted); font-size: var(--fs-fine); line-height: 1.6; margin: 0; }
-	.domain-card span { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; margin-top: auto; padding-top: 1.25rem; text-transform: uppercase; }
-	.domain-card b, .section-heading a span { transition: transform .15s; }
-	.domain-card:hover b, .section-heading a:hover span { display: inline-block; transform: translateX(4px); }
-	.progress-summary { margin: 1rem 0 3rem; }
-	.review-area, .domains, .notes { margin-top: 3.5rem; }
-	.section-heading { align-items: end; display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
-	.section-heading h2 { font-size: var(--fs-h2); margin: 0; }
-	.section-heading a { color: var(--accent); font: 600 var(--fs-eyebrow) var(--font-sans); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
-	.review-empty { color: var(--muted); font-size: var(--fs-fine); margin: 0; }
-	.domain-grid { grid-template-columns: repeat(3, 1fr); }
-	.domain-card { min-height: 200px; }
-	.notes ol { border-top: 1px solid var(--border); list-style: none; margin: 0; padding: 0; }
-	.notes li { border-bottom: 1px solid var(--border); }
-	.notes li a { align-items: baseline; color: var(--text); display: flex; gap: 1rem; padding: .9rem 0; text-decoration: none; }
-	.notes li a:hover { color: var(--accent); }
-	.notes li span { color: var(--accent); font: var(--fs-eyebrow) var(--font-sans); opacity: .65; }
-	.notes li strong { flex: 1; font: 600 var(--fs-h3) var(--font-serif); }
-	.notes li em { color: var(--muted); font: normal var(--fs-eyebrow) var(--font-sans); text-transform: uppercase; }
-	.notes li b { color: var(--accent); }
-	@media (max-width: 800px) { .hero { grid-template-columns: 1fr; } .hero-copy { max-width: 680px; } .domain-grid { grid-template-columns: 1fr; } }
-	@media (max-width: 560px) { .hero { gap: .5rem; padding-top: 2.5rem; } .section-heading { align-items: start; flex-direction: column; } .notes li em { display: none; } }
+  .home { --home-accent: var(--accent); --home-on-accent: var(--on-accent); --home-tint: #f0f5e9; --home-border: #dce5d5; --home-card: #f5f8f1; }
+  :global([data-theme="dark"]) .home { --home-tint: #1c2922; --home-border: #354338; --home-card: #1c241f; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 2.5rem; align-items: center; padding: 2.5rem 0 2rem; }
+  .hero-copy { min-width: 0; }
+  .eyebrow { color: var(--home-accent); font: 500 .58rem/1.5 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; margin: 0 0 .75rem; }
+  .hero .eyebrow { display: flex; align-items: center; gap: .5rem; font-size: .6rem; letter-spacing: .045em; }
+  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--home-accent); flex-shrink: 0; }
+  h1 { font: 600 clamp(2.6rem, 5.1vw, 3.65rem)/.98 var(--font-serif); letter-spacing: -.045em; margin: 1.1rem 0; }
+  h1 em { font-weight: 400; color: var(--home-accent); }
+  .description { color: var(--muted); font: .92rem/1.65 var(--font-sans); margin: 1.2rem 0 1.5rem; }
+  .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .9rem; }
+  .primary-action { display: inline-flex; gap: 1.3rem; align-items: center; background: var(--home-accent); color: var(--home-on-accent); padding: .85rem 1rem; border-radius: 6px; font: 600 .72rem var(--font-sans); text-decoration: none; }
+  .primary-action:hover { filter: brightness(1.15); }
+  .roadmap-link { font: 500 .68rem var(--font-sans); color: var(--text); }
+  .roadmap-link span { margin-left: .3rem; }
+  .hero-footnote { color: var(--muted); font: .6rem/1.5 var(--font-mono); margin: 1.3rem 0 0; }
+  .learning-strip { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1rem 0; margin: 0 0 1.8rem; }
+  .learning-strip > span { font: italic 1rem var(--font-serif); }
+  .learning-strip ol { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; list-style: none; margin: 0; padding: 0; font: .6rem var(--font-mono); color: var(--muted); }
+  .learning-strip li + li::before { content: '→'; margin-right: .7rem; opacity: .5; }
+  .domains, .notes { margin-top: 3rem; }
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+  .section-heading .eyebrow { margin-bottom: .4rem; }
+  h2 { font: 600 1.8rem/1.1 var(--font-serif); letter-spacing: -.025em; margin: 0; }
+  .section-heading > a { font: 500 .65rem var(--font-sans); color: var(--home-accent); flex-shrink: 0; }
+  .domain-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; }
+  .domain-card { display: flex; flex-direction: column; min-width: 0; color: var(--home-accent); background: var(--home-card); border: 1px solid var(--home-border); border-radius: 10px; padding: 1rem; text-decoration: none; transition: transform .2s, border-color .2s; }
+  .domain-card:hover { transform: translateY(-4px); border-color: currentColor; text-decoration: none; }
+  .ml { --home-card: #faf5ef; --home-border: #e9dfd2; color: #91603d; }
+  .systems { --home-card: #f2f5fa; --home-border: #dfe5ed; color: #4c638a; }
+  :global([data-theme="dark"]) .ml { --home-card: #2b251f; --home-border: #473a2e; color: #e2b78e; }
+  :global([data-theme="dark"]) .systems { --home-card: #202731; --home-border: #354152; color: #a7bde2; }
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: .2rem; font: .6rem var(--font-mono); letter-spacing: .02em; }
+  .card-top b { font: 1rem var(--font-sans); }
+  .domain-art { width: 100%; height: 110px; margin: .8rem 0; overflow: visible; }
+  .domain-card h3 { color: var(--text); font: 600 1.4rem/1.1 var(--font-serif); letter-spacing: -.03em; margin: 0 0 .65rem; }
+  .domain-card p { color: var(--muted); font: .74rem/1.6 var(--font-sans); margin: 0 0 1.4rem; }
+  .card-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .4rem; align-items: center; border-top: 1px solid var(--home-border); padding-top: .8rem; margin-top: auto; font: .6rem var(--font-sans); }
+  .card-footer > span { font: .6rem var(--font-mono); }
+  .notes ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+  .notes li { border-bottom: 1px solid var(--border); }
+  .notes li a { display: flex; gap: 1rem; align-items: center; padding: 1rem 0; color: var(--text); text-decoration: none; }
+  .notes li a:hover { color: var(--home-accent); }
+  .notes li span { font: .6rem var(--font-mono); color: var(--muted); }
+  .notes li strong { flex: 1; font: 600 1.12rem var(--font-serif); }
+  .notes li em { font: normal .6rem var(--font-mono); text-transform: uppercase; color: var(--muted); }
+  .notes li b { font-weight: 400; color: var(--home-accent); }
+  .home-footer { margin-top: 2.7rem; display: flex; align-items: center; gap: 1rem; color: var(--muted); }
+  .home-footer > span { color: var(--home-accent); font: 600 1rem var(--font-serif); }
+  .home-footer p { flex: 1; font: .65rem var(--font-sans); }
+  .home-footer a { color: var(--home-accent); font: .65rem var(--font-sans); }
+  .home :global(a:focus-visible) { outline: 2px solid var(--home-accent); outline-offset: 5px; }
+  @media (max-width: 850px) { .hero { gap: 1.3rem; } .hero-actions { align-items: flex-start; flex-direction: column; } .learning-strip { align-items: flex-start; flex-direction: column; gap: .6rem; } }
+  @media (max-width: 680px) { .hero { grid-template-columns: minmax(0, 1fr); gap: 1.8rem; padding-top: 1.5rem; } h1 { font-size: clamp(2.8rem, 10vw, 3.65rem); } .hero-actions { flex-direction: row; align-items: center; } .hero-footnote { margin-top: 1rem; } .domain-grid { grid-template-columns: minmax(0, 1fr); } .domain-art { height: 100px; } .section-heading { align-items: flex-start; flex-direction: column; gap: .75rem; } .domain-card { padding: 1.3rem; } .domain-card h3 { font-size: 1.65rem; } .card-top { font-size: .58rem; } .domain-card p { max-width: 360px; } .home-footer { flex-wrap: wrap; } .home-footer p { flex-basis: 60%; } }
+  @media (max-width: 400px) { .learning-strip ol { gap: .4rem; font-size: .55rem; } .learning-strip li + li::before { margin-right: .4rem; } .notes li em { display: none; } .wide-break { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .domain-card { transition: none; } .domain-card:hover { transform: none; } }
 </style>

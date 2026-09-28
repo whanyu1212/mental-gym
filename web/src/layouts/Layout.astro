@@ -97,28 +97,29 @@ const pathname = stripBase(Astro.url.pathname);
 	:root,
 	[data-theme="dark"] {
 		color-scheme: dark;
-		--bg: #0e0e0e;
-		--panel: #161616;
-		--surface-base: #0e0e0e;
-		--surface-strong: #0a0a0a;
-		--text: #f0ead6;
-		--muted: #8a8070;
-		--border: #2a2520;
-		--accent-rgb: 201 168 76; /* brand gold — drives --accent + all --accent-* channels */
+		--bg: #101613;
+		--panel: #19221c;
+		--surface-base: #141c17;
+		--surface-strong: #0b100d;
+		--text: #eef2e9;
+		--muted: #b3b5a9;
+		--border: #354338;
+		--accent-rgb: 201 230 165; /* sage green — drives --accent + all --accent-* channels */
 		--easy-rgb: 125 171 125;  /* status green — drives --easy-* channels */
 		--link: rgb(var(--accent-rgb));
 		--accent: rgb(var(--accent-rgb));
 		--accent-dim: var(--accent-soft);
-		--header-bg: rgba(14, 14, 14, 0.85);
-		--bg-gradient: radial-gradient(ellipse at top, #1a1710 0%, var(--bg) 60%);
+		--on-accent: #182e29;
+		--header-bg: rgba(16, 22, 19, 0.9);
+		--bg-gradient: none;
 		--status-easy: rgb(var(--easy-rgb));
-		--status-medium: var(--accent);
+		--status-medium: #d5b56a;
 		--status-hard: #b05a5a;
 		--status-info: #5a82b0;
-		--glass-surface: rgba(22, 22, 22, 0.68);
-		--glass-surface-strong: rgba(12, 12, 12, 0.78);
-		--glass-border: rgba(240, 234, 214, 0.12);
-		--glass-border-strong: rgba(240, 234, 214, 0.18);
+		--glass-surface: rgba(25, 34, 28, 0.75);
+		--glass-surface-strong: rgba(16, 22, 19, 0.85);
+		--glass-border: rgba(238, 242, 233, 0.12);
+		--glass-border-strong: rgba(238, 242, 233, 0.18);
 		--glass-highlight: rgba(255, 255, 255, 0.08);
 		--glass-highlight-strong: rgba(255, 255, 255, 0.12);
 		--glass-blur: 14px;
@@ -128,33 +129,34 @@ const pathname = stripBase(Astro.url.pathname);
 
 	[data-theme="light"] {
 		color-scheme: light;
-		--bg: #fdfbf6;
-		--panel: #f6f0e4;
-		--surface-base: #efe7d8;
-		--surface-strong: #e5dbc9;
-		--text: #201d17;
-		--muted: #5c5446;
-		--border: #d8cfbd;
-		--accent-rgb: 138 109 31; /* brand gold (light) */
+		--bg: #fcfdfb;
+		--panel: #f3f6f0;
+		--surface-base: #eff3eb;
+		--surface-strong: #e4ebdf;
+		--text: #202b25;
+		--muted: #59645d;
+		--border: #dce4d9;
+		--accent-rgb: 36 88 68; /* forest green */
 		--easy-rgb: 46 125 50;    /* status green (light) */
 		--link: rgb(var(--accent-rgb));
 		--accent: rgb(var(--accent-rgb));
 		--accent-dim: var(--accent-soft);
-		--header-bg: rgba(253, 251, 246, 0.88);
-		--bg-gradient: radial-gradient(ellipse at top, #f1e7d4 0%, var(--bg) 70%);
+		--on-accent: #fcfdfb;
+		--header-bg: rgba(252, 253, 251, 0.94);
+		--bg-gradient: none;
 		--status-easy: rgb(var(--easy-rgb));
 		--status-medium: #b26a00;
 		--status-hard: #b23b3b;
 		--status-info: #2f6fa6;
-		--glass-surface: rgba(246, 240, 228, 0.68);
-		--glass-surface-strong: rgba(239, 231, 216, 0.78);
-		--glass-border: rgba(32, 29, 23, 0.12);
-		--glass-border-strong: rgba(32, 29, 23, 0.18);
-		--glass-highlight: rgba(32, 29, 23, 0.04);
-		--glass-highlight-strong: rgba(32, 29, 23, 0.08);
+		--glass-surface: rgba(243, 246, 240, 0.75);
+		--glass-surface-strong: rgba(239, 243, 235, 0.85);
+		--glass-border: rgba(32, 43, 37, 0.09);
+		--glass-border-strong: rgba(32, 43, 37, 0.16);
+		--glass-highlight: rgba(255, 255, 255, 0.4);
+		--glass-highlight-strong: rgba(255, 255, 255, 0.65);
 		--glass-blur: 16px;
-		--shadow-sm: 0 2px 8px rgba(32, 29, 23, 0.06);
-		--shadow-lg: 0 10px 24px rgba(32, 29, 23, 0.1);
+		--shadow-sm: 0 2px 8px rgba(32, 43, 37, 0.03);
+		--shadow-lg: 0 10px 24px rgba(32, 43, 37, 0.08);
 	}
 
 	* {
@@ -194,12 +196,12 @@ const pathname = stripBase(Astro.url.pathname);
 		pointer-events: none;
 	}
 
-	a {
+	:global(a) {
 		color: var(--link);
 		text-decoration: none;
 	}
 
-	a:hover {
+	:global(a:hover) {
 		text-decoration: underline;
 	}
 
