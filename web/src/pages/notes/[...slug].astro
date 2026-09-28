@@ -33,8 +33,10 @@ const kindLabel = note.data.kind === "template"
 ---
 
 <Layout title={`${note.data.title} | Mental Gym`} math={true}>
-	<nav class="breadcrumb">
-		<a href={withBase("/")}>Home</a>
+	<nav class="breadcrumb" aria-label="Breadcrumb">
+		<a href={withBase("/learn/")}>Learn</a>
+		<span class="sep">›</span>
+		<a href={withBase("/notes/")}>All notes</a>
 		<span class="sep">›</span>
 		<span>{note.data.title}</span>
 	</nav>
@@ -110,6 +112,7 @@ const kindLabel = note.data.kind === "template"
 <style>
 	.breadcrumb {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.4rem;
 		font-size: var(--fs-eyebrow);

@@ -40,6 +40,12 @@ A note's URL is `/notes/<id>/`. The id comes from `noteId` in `web/src/lib/note-
 
 New notes in those folders can omit `slug:` and use the folder path as their id, or set `slug:` to a short root-level id. Either way, `web/tests/notes.test.ts` fails if two notes publish the same id.
 
+## Learning tracks
+
+The Learn hub at `/learn/` groups Python, Julia, TypeScript, and Rust into ordered tracks. `web/src/data/learningTracks.ts` links to published note IDs and existing practice pages; it does not change where notes live or their URLs. Setup lessons, essentials, and missing references are labeled as coming next until content is available.
+
+The full library stays at `/notes/`. Add a lowercase `python`, `julia`, `typescript`, or `rust` tag to language-specific notes so they appear in the language filter. Shared algorithm foundations remain accessible from every track through the Learn hub.
+
 ## File Naming
 
 Use lowercase, hyphen-separated filenames that describe the topic:
