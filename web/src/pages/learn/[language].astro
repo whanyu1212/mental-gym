@@ -1,0 +1,89 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { languageTracks, type LanguageTrack } from '../../data/learningTracks';
+import { problems } from '../../data/problems';
+import { withBase } from '../../lib/url';
+
+export function getStaticPaths() {
+  return languageTracks.map(track => ({ params: { language: track.id }, props: { track } }));
+}
+interface Props { track: LanguageTrack; }
+const { track } = Astro.props;
+const notes = new Map((await getCollection('notes')).map(note => [note.id, note]));
+const problemsBySlug = new Map(problems.map(problem => [problem.slug, problem]));
+const firstReference = track.references[0];
+---
+<Layout title={`Learn ${track.name} | Mental Gym`}>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href={withBase('/learn/')}>Learn</a><span aria-hidden="true">/</span><span aria-current="page">{track.name}</span></nav>
+  <nav class="track-switcher" aria-label="Language tracks">{languageTracks.map(language => <a href={withBase(`/learn/${language.id}/`)} aria-current={language.id === track.id ? 'page' : undefined}>{language.name}</a>)}</nav>
+  <section class="hero"><div class="language-mark" aria-hidden="true">{track.mark}</div><div><p class="eyebrow">The {track.name} track</p><h1>{track.focus}</h1><p>{track.description}</p></div></section>
+
+  <section class="start-here" aria-labelledby="start-title">
+    <div><p class="eyebrow">Available today</p><h2 id="start-title">{firstReference ? 'Know the basics? Start with the toolkit.' : 'Start with the ideas behind the code.'}</h2><p>{firstReference ? `The three ${track.name} references below are ready to use. New to the language? The setup and essentials lessons are coming next; this is not yet a complete beginner course.` : 'Dedicated Julia notes are coming next. You can study the shared foundations now, or explore the existing Julia solution tabs in the practice links below.'}</p></div>
+    <a class="primary-action" href={firstReference ? withBase(`/notes/${firstReference.noteId}/`) : withBase('/learn/#foundations')}>{firstReference ? 'Open the quick reference' : 'Explore shared foundations'} <span aria-hidden="true">↗</span></a>
+  </section>
+
+  <div class="path-heading"><p class="eyebrow">Your learning path</p><p>Follow the stages in order, or jump to the references you need.</p></div>
+  <ol class="stages">
+    <li class="stage"><span class="stage-number" aria-hidden="true">01</span><section aria-labelledby="setup-title"><h2 id="setup-title">Get running</h2><p class="outcome">Get from a blank file to a working program and a passing test.</p><article class="planned"><span class="status">Coming next</span><h3>{track.name}: start here</h3><p>{track.setup}</p></article></section></li>
+    <li class="stage"><span class="stage-number" aria-hidden="true">02</span><section aria-labelledby="essentials-title"><h2 id="essentials-title">Learn the essentials</h2><p class="outcome">Understand the language decisions behind a small solution.</p><article class="planned"><span class="status">Coming next</span><h3>{track.name} foundations</h3><p>{track.essentials}</p></article></section></li>
+    <li class="stage"><span class="stage-number" aria-hidden="true">03</span><section aria-labelledby="tools-title"><h2 id="tools-title">Choose your tools</h2><p class="outcome">Read the quick reference first. Keep the API and operation-cost notes nearby as you practice.</p>
+      {track.references.length > 0 ? <ol class="resources">{track.references.map((reference, index) => <li><a href={withBase(`/notes/${reference.noteId}/`)}><span class="resource-order" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><h3>{notes.get(reference.noteId)!.data.title}</h3><p>{reference.purpose}</p></div><span class="resource-arrow" aria-hidden="true">↗</span></a></li>)}</ol> : <article class="planned"><span class="status">Coming next</span><h3>Julia reference notes</h3><p>A DSA quick reference, a standard-library guide, and an operation-cost cheatsheet.</p></article>}
+    </section></li>
+    <li class="stage"><span class="stage-number" aria-hidden="true">04</span><section aria-labelledby="practice-title"><h2 id="practice-title">Put it into practice</h2><p class="outcome">Attempt the problem, test your solution, then explain your choices.</p>
+      {track.practice.length > 0 && <><p class="available-label">Explore these existing problems</p><ol class="resources">{track.practice.map((exercise, index) => <li><a href={withBase(`/algorithms/${exercise.problemSlug}/`)}><span class="resource-order" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><h3>{problemsBySlug.get(exercise.problemSlug)!.title}</h3><p>{exercise.guidance}</p></div><span class="resource-arrow" aria-hidden="true">↗</span></a></li>)}</ol></>}
+      <article class="planned practice-planned"><span class="status">Coming next</span><h3>A shared starter exercise set</h3><p>Small exercises with tests in all four languages, followed by guided algorithm practice.{!track.practice.length && ` ${track.name} solution tabs are not available on the practice pages yet.`}</p></article>
+    </section></li>
+  </ol>
+
+  <footer class="track-footer"><div><h2>Keep the foundations close.</h2><p>Complexity and algorithmic patterns support every language. Current worked examples are mainly in Python.</p><a href={withBase('/learn/#foundations')}>Shared foundations →</a></div><a class="library-link" href={withBase(`/notes/?language=${track.id}`)}>All {track.name} notes ↗</a></footer>
+</Layout>
+<style>
+  .breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; color: var(--muted); font: .7rem var(--font-sans); margin: .8rem 0 1.2rem; }
+  .track-switcher { display: flex; flex-wrap: wrap; gap: .5rem; padding-bottom: 1.4rem; border-bottom: 1px solid var(--border); }
+  .track-switcher a { font-size: .75rem; padding: .5rem .8rem; color: var(--muted); border: 1px solid transparent; border-radius: 6px; }
+  .track-switcher a[aria-current="page"] { background: var(--accent-soft); border-color: var(--accent-ring); color: var(--accent); font-weight: 600; }
+  .hero { display: flex; align-items: flex-start; gap: 1.3rem; padding: 2.4rem 0 2rem; }
+  .language-mark { flex-shrink: 0; display: grid; place-items: center; width: 3.4rem; height: 3.4rem; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-ring); border-radius: 10px; font: 500 1.1rem var(--font-mono); }
+  .eyebrow { color: var(--accent); font: 500 .65rem/1.5 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 .6rem; }
+  h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 4.8vw, 3rem); letter-spacing: -.03em; line-height: 1.05; margin: 0; }
+  .hero p:last-child { color: var(--muted); font-size: .9rem; line-height: 1.7; max-width: 680px; margin: 1rem 0 0; }
+  h2 { font-size: 1.7rem; line-height: 1.15; margin: 0; }
+  .start-here { display: flex; align-items: center; gap: 1.5rem; padding: 1.4rem; border: 1px solid var(--accent-ring); background: var(--accent-glow); border-radius: 12px; }
+  .start-here > div { flex: 1; }
+  .start-here h2 { font-size: 1.45rem; }
+  .start-here p:last-child { font-size: .8rem; line-height: 1.65; color: var(--muted); margin: .65rem 0 0; }
+  .primary-action { flex-shrink: 0; background: var(--accent); color: var(--on-accent); border-radius: 6px; padding: .8rem .9rem; font: 600 .7rem var(--font-sans); text-decoration: none; }
+  .primary-action span { margin-left: .4rem; }
+  .primary-action:hover { filter: brightness(1.1); }
+  .path-heading { margin: 2.5rem 0 1.5rem; }
+  .path-heading > p:last-child { color: var(--muted); font-size: .85rem; line-height: 1.6; margin: 0; }
+  .stages { list-style: none; padding: 0; margin: 0; }
+  .stage { display: grid; grid-template-columns: 2.4rem minmax(0, 1fr); gap: 1rem; padding-bottom: 2.5rem; }
+  .stage > section { min-width: 0; }
+  .stage-number { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--border); color: var(--accent); border-radius: 50%; font: .7rem var(--font-mono); }
+  .outcome { color: var(--muted); font-size: .8rem; line-height: 1.6; margin: .5rem 0 1rem; }
+  .planned { border: 1px dashed var(--border); border-radius: 8px; padding: 1.1rem; background: var(--glass-surface); }
+  .status { display: inline-block; color: var(--muted); font: .6rem var(--font-mono); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
+  .planned h3 { font-size: 1.2rem; margin: 0 0 .4rem; }
+  .planned p, .resources p { color: var(--muted); font-size: .78rem; line-height: 1.65; margin: 0; }
+  .resources { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+  .resources li { border-bottom: 1px solid var(--border); }
+  .resources a { display: flex; align-items: center; gap: 1rem; padding: 1rem .25rem; text-decoration: none; }
+  .resources a > div { flex: 1; }
+  .resources h3 { font-size: 1.25rem; margin: 0 0 .3rem; }
+  .resources a:hover h3 { text-decoration: underline; }
+  .resource-order { font: .6rem var(--font-mono); color: var(--muted); }
+  .available-label { font: 600 .7rem var(--font-sans); color: var(--accent); margin: 0 0 .7rem; }
+  .practice-planned { margin-top: 1rem; }
+  .track-footer { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; padding: 1.5rem; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; }
+  .track-footer h2 { font-size: 1.5rem; }
+  .track-footer p { font-size: .8rem; line-height: 1.6; color: var(--muted); max-width: 540px; margin: .5rem 0 .8rem; }
+  .track-footer a { font-size: .75rem; }
+  .library-link { flex-shrink: 0; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  @media (max-width: 720px) { .start-here, .track-footer { flex-direction: column; align-items: flex-start; } .hero { gap: .9rem; } }
+  @media (max-width: 440px) { .hero { flex-direction: column; padding-top: 1.5rem; } .stage { grid-template-columns: minmax(0, 1fr); gap: .6rem; } .resources a { gap: .6rem; } .resource-order { display: none; } .track-switcher { gap: .2rem; } .track-switcher a { padding: .5rem .6rem; } }
+</style>

@@ -23,6 +23,8 @@ npm run astro check  # type-check .astro files
 | `/algorithms/[slug]` | `src/data/problems.ts` + `../src/leetcode/` | Auto-generated from the LeetCode API, paired with the local solution; some problems include a step-by-step animation |
 | `/machine-learning/[slug]` | `src/data/mlProblems.ts` | Hand-authored ML interview prompts and hints |
 | `/sql/[slug]` | `src/data/sqlProblems.ts` + `../src/sql/` | Prompt, local runner command, and reference answer |
+| `/learn/` and `/learn/[language]/` | `src/data/learningTracks.ts` | Four ordered language tracks, current resources, and clearly labeled upcoming lessons |
+| `/notes/` | `../notes/` | Full library; language tags drive the shareable `?language=python` filter (also Julia, TypeScript, Rust) |
 | `/notes/[slug]` | `../notes/` | Markdown/MDX notes with KaTeX math support. Optional `kind` / `courseId` / `moduleId` link a note to the roadmap; `kind: template` outlines stay out of the main list. See [`../notes/README.md`](../notes/README.md). |
 
 `problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a Python solution in `../src/leetcode/` (the generator collects `.py` files; a Julia file only gets attached as a port to an existing Python-backed entry, so a Julia-only addition needs a matching Python file to appear at all), regenerate it from the repo root:

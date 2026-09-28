@@ -2,10 +2,13 @@
 import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import { withBase } from "../../lib/url";
+import { learningLanguages } from "../../data/learningTracks";
 import { readingTimeMinutes } from "../../lib/readingTime";
 import ResumeRow from "../../components/ResumeRow.astro";
 import { courses, moduleHref, modules, noteCourseId } from "../../data/roadmap";
 
+const languageOptions = learningLanguages;
+const languageIds = new Set<string>(languageOptions.map((language) => language.id));
 const published = (await getCollection("notes")).filter((note) => note.data.category !== "Meta");
 const templateNotes = published.filter((note) => note.data.kind === "template");
 const allNotes = published.filter((note) => note.data.kind !== "template");
@@ -37,17 +40,41 @@ const notesByCategory = categories.map((category) => ({
 }));
 ---
 
-<Layout title="Notes | Mental Gym">
+<Layout title="All notes | Mental Gym">
 	<section class="hero">
-		<h1>Notes</h1>
+		<a class="back-link" href={withBase("/learn/")}>← Learning tracks</a>
+		<h1>All notes</h1>
 		<p class="tagline">Theoretical concepts, algorithmic patterns, and language-specific tips.</p>
 	</section>
 
 	<ResumeRow />
 
-	<div class="notes-container">
+	<div class="notes-container" data-notes-library>
+		<fieldset class="language-filter" data-language-filter hidden>
+			<legend>Filter notes by language</legend>
+			<div class="language-options">
+				<label>
+					<input type="radio" name="notes-language" value="all" checked />
+					<span>All languages</span>
+				</label>
+				{languageOptions.map((language) => (
+					<label>
+						<input
+							type="radio"
+							name="notes-language"
+							value={language.id}
+							data-language-name={language.name}
+							data-learn-href={withBase(`/learn/${language.id}/`)}
+						/>
+						<span>{language.name}</span>
+					</label>
+				))}
+			</div>
+			<p class="filter-summary" data-filter-summary aria-live="polite"></p>
+			<p class="filter-help">Course overview and templates appear under All languages. Linked course notes remain in the category results while filtering.</p>
+		</fieldset>
 		{(notesByCourse.length > 0 || ungroupedLinkedNotes.length > 0) && (
-			<section class="linked-section">
+			<section class="linked-section" data-unfiltered-only>
 				<h2 class="category-heading">
 					<span class="category-name">By course / module</span>
 					<span class="category-count">{linkedNotes.length}</span>
@@ -94,37 +121,53 @@ const notesByCategory = categories.map((category) => ({
 			</section>
 		)}
 		{notesByCategory.map((category) => (
-			<section class="category-section">
+			<section class="category-section" data-note-category>
 				<h2 class="category-heading">
-						<span class="category-name">{category.name}</span>
-						<span class="category-count">{category.notes.length}</span>
+					<span class="category-name">{category.name}</span>
+					<span class="category-count" data-category-count>{category.notes.length}</span>
 				</h2>
 				<div class="notes-grid">
-					{category.notes.map((note) => (
-						<a href={withBase(`/notes/${note.id}/`)} class="note-card">
-							<div class="note-content">
-								<div class="note-heading">
-									<h3 class="note-title">{note.data.title}</h3>
-									{note.data.status === "wip" && <span class="status">WIP</span>}
+					{category.notes.map((note) => {
+						const noteLanguages = (note.data.tags ?? [])
+							.map((tag) => tag.toLowerCase())
+							.filter((tag) => languageIds.has(tag));
+						return (
+							<a
+								href={withBase(`/notes/${note.id}/`)}
+								class="note-card"
+								data-note-card
+								data-languages={noteLanguages.join(" ")}
+							>
+								<div class="note-content">
+									<div class="note-heading">
+										<h3 class="note-title">{note.data.title}</h3>
+										{note.data.status === "wip" && <span class="status">WIP</span>}
+									</div>
+									{note.data.description && <p class="note-description">{note.data.description}</p>}
+									{note.data.tags && note.data.tags.length > 0 && (
+										<ul class="tag-list" aria-label="Topics">
+											{note.data.tags.map((tag) => <li>{tag}</li>)}
+										</ul>
+									)}
 								</div>
-								{note.data.description && <p class="note-description">{note.data.description}</p>}
-								{note.data.tags && note.data.tags.length > 0 && (
-									<ul class="tag-list" aria-label="Topics">
-										{note.data.tags.map((tag) => <li>{tag}</li>)}
-									</ul>
-								)}
-							</div>
-							<div class="note-footer">
-								<span class="read-time">{readingTimeMinutes(note.body)} min read</span>
-								<span class="read-more">Read note <span class="arrow">→</span></span>
-							</div>
-						</a>
-					))}
+								<div class="note-footer">
+									<span class="read-time">{readingTimeMinutes(note.body)} min read</span>
+									<span class="read-more">Read note <span class="arrow">→</span></span>
+								</div>
+							</a>
+						);
+					})}
 				</div>
 			</section>
 		))}
+		<section class="empty-state" data-language-empty hidden>
+			<h2 data-empty-title>No notes found</h2>
+			<p data-empty-copy>There are no notes for this language yet.</p>
+			<a data-empty-link href={withBase("/learn/julia/")}>Open the learning track</a>
+			<button type="button" data-reset-language>Show all notes</button>
+		</section>
 		{templateNotes.length > 0 && (
-			<section class="category-section">
+			<section class="category-section" data-unfiltered-only>
 				<h2 class="category-heading">
 					<span class="category-name">Templates</span>
 					<span class="category-count">{templateNotes.length}</span>
@@ -154,7 +197,98 @@ const notesByCategory = categories.map((category) => ({
 	</div>
 </Layout>
 
+<script>
+	const library = document.querySelector<HTMLElement>("[data-notes-library]");
+	const filter = library?.querySelector<HTMLFieldSetElement>("[data-language-filter]");
+
+	if (library && filter) {
+		const supportedLanguages = new Set([...filter.querySelectorAll<HTMLInputElement>("input[data-language-name]")].map(input => input.value));
+		const languageInput = (language: string) => filter.querySelector<HTMLInputElement>(`input[value="${language}"]`);
+		const requestedLanguage = () => new URLSearchParams(window.location.search).get("language") ?? "all";
+
+		const applyLanguage = (requested: string) => {
+			const language = supportedLanguages.has(requested) ? requested : "all";
+			const selectedInput = languageInput(language) ?? languageInput("all");
+			const languageName = selectedInput?.dataset.languageName ?? "all languages";
+			let visibleTotal = 0;
+
+			for (const card of library.querySelectorAll<HTMLElement>("[data-note-card]")) {
+				const languages = (card.dataset.languages ?? "").split(/\s+/).filter(Boolean);
+				const visible = language === "all" || languages.includes(language);
+				card.hidden = !visible;
+				if (visible) visibleTotal++;
+			}
+
+			for (const category of library.querySelectorAll<HTMLElement>("[data-note-category]")) {
+				const visibleCount = [...category.querySelectorAll<HTMLElement>("[data-note-card]")].filter((card) => !card.hidden).length;
+				const count = category.querySelector("[data-category-count]");
+				if (count) count.textContent = String(visibleCount);
+				category.hidden = visibleCount === 0;
+			}
+
+			for (const section of library.querySelectorAll<HTMLElement>("[data-unfiltered-only]")) {
+				section.hidden = language !== "all";
+			}
+
+			for (const input of filter.querySelectorAll<HTMLInputElement>('input[name="notes-language"]')) {
+				input.checked = input === selectedInput;
+			}
+
+			const summary = filter.querySelector("[data-filter-summary]");
+			if (summary) {
+				summary.textContent = language === "all"
+					? `${visibleTotal} notes in the library`
+					: `${visibleTotal} ${languageName} ${visibleTotal === 1 ? "note" : "notes"}`;
+			}
+
+			const emptyState = library.querySelector<HTMLElement>("[data-language-empty]");
+			if (emptyState) {
+				emptyState.hidden = visibleTotal !== 0;
+				const title = emptyState.querySelector("[data-empty-title]");
+				const copy = emptyState.querySelector("[data-empty-copy]");
+				const link = emptyState.querySelector<HTMLAnchorElement>("[data-empty-link]");
+				if (title) title.textContent = `${languageName} notes are coming`;
+				if (copy) copy.textContent = language === "julia"
+					? "Julia notes are still being prepared. The learning track is ready when you want a guided place to start."
+					: `There are no ${languageName} notes yet. The learning track is the best place to start.`;
+				if (link && selectedInput?.dataset.learnHref) {
+					link.href = selectedInput.dataset.learnHref;
+					link.textContent = `Open the ${languageName} learning track`;
+				}
+			}
+		};
+
+		const updateUrl = (language: string) => {
+			const url = new URL(window.location.href);
+			if (language === "all") url.searchParams.delete("language");
+			else url.searchParams.set("language", language);
+			window.history.pushState({}, "", url);
+		};
+
+		filter.addEventListener("change", (event) => {
+			const input = event.target;
+			if (!(input instanceof HTMLInputElement) || input.name !== "notes-language") return;
+			applyLanguage(input.value);
+			updateUrl(input.value);
+		});
+
+		library.querySelector("[data-reset-language]")?.addEventListener("click", () => {
+			applyLanguage("all");
+			updateUrl("all");
+			languageInput("all")?.focus();
+		});
+
+		window.addEventListener("popstate", () => applyLanguage(requestedLanguage()));
+		applyLanguage(requestedLanguage());
+		filter.hidden = false;
+	}
+</script>
+
 <style>
+	[hidden] {
+		display: none !important;
+	}
+
 	.hero {
 		text-align: center;
 		padding: 3.5rem 1rem 2.5rem;
@@ -166,6 +300,18 @@ const notesByCategory = categories.map((category) => ({
 		color: var(--accent);
 		font-family: var(--font-serif);
 		font-weight: 600;
+	}
+
+	.back-link {
+		display: inline-block;
+		margin-bottom: 1rem;
+		color: var(--muted);
+		font: 600 var(--fs-sm) var(--font-sans);
+		text-decoration: none;
+	}
+
+	.back-link:hover {
+		color: var(--accent);
 	}
 
 	.tagline {
@@ -183,6 +329,118 @@ const notesByCategory = categories.map((category) => ({
 		display: flex;
 		flex-direction: column;
 		gap: 3.5rem;
+	}
+
+	.language-filter {
+		margin: 0;
+		padding: 1.25rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--glass-surface);
+	}
+
+	.language-filter legend {
+		padding: 0 0.4rem;
+		color: var(--text);
+		font: 600 var(--fs-sm) var(--font-sans);
+	}
+
+	.language-options {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.language-options label {
+		position: relative;
+	}
+
+	.language-options input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+	}
+
+	.language-options span {
+		display: block;
+		padding: 0.5rem 0.8rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		color: var(--muted);
+		font: 600 var(--fs-sm) var(--font-sans);
+		cursor: pointer;
+		transition: border-color 0.15s, color 0.15s, background 0.15s;
+	}
+
+	.language-options label:hover span {
+		border-color: var(--accent);
+		color: var(--text);
+	}
+
+	.language-options input:focus-visible + span {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	.language-options input:checked + span {
+		border-color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
+		color: var(--accent);
+	}
+
+	.filter-summary,
+	.filter-help {
+		margin: 0.85rem 0 0;
+		font: var(--fs-sm) var(--font-sans);
+	}
+
+	.filter-summary {
+		color: var(--text);
+	}
+
+	.filter-help {
+		color: var(--muted);
+		line-height: 1.5;
+	}
+
+	.empty-state {
+		padding: 2.5rem 1.5rem;
+		border: 1px dashed var(--border);
+		border-radius: var(--radius-md);
+		text-align: center;
+	}
+
+	.empty-state h2 {
+		margin: 0;
+		color: var(--text);
+		font: 600 var(--fs-h2) var(--font-serif);
+	}
+
+	.empty-state p {
+		max-width: 36rem;
+		margin: 0.75rem auto 1.25rem;
+		color: var(--muted);
+		line-height: 1.6;
+	}
+
+	.empty-state a,
+	.empty-state button {
+		display: inline-block;
+		margin: 0.25rem;
+		padding: 0.55rem 0.85rem;
+		border: 1px solid var(--accent);
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--accent);
+		font: 600 var(--fs-sm) var(--font-sans);
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.empty-state a:hover,
+	.empty-state button:hover {
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
 	}
 
 	.linked-copy {
@@ -403,6 +661,19 @@ const notesByCategory = categories.map((category) => ({
 	}
 
 	@media (max-width: 640px) {
+		.hero {
+			padding-top: 2.5rem;
+		}
+
+		.language-options {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.language-options span {
+			text-align: center;
+		}
+
 		.notes-grid {
 			grid-template-columns: 1fr;
 		}

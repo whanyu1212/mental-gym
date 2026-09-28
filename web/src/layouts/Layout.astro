@@ -45,7 +45,7 @@ const pathname = stripBase(Astro.url.pathname);
 					<a href={withBase("/problems")} class={pathname.startsWith("/problems") || pathname.startsWith("/algorithms") || pathname.startsWith("/machine-learning") || pathname.startsWith("/sql") || pathname.startsWith("/system-design") ? "active" : ""}
 						>Practice</a
 					>
-					<a href={withBase("/notes")} class={pathname.startsWith("/notes") ? "active" : ""}
+					<a href={withBase("/learn/")} class={pathname.startsWith("/learn") || pathname.startsWith("/notes") ? "active" : ""}
 						>Learn</a
 					>
 					<a href={withBase("/#review")}>Review</a

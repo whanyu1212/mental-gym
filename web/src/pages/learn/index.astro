@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { languageTracks, sharedFoundations } from '../../data/learningTracks';
+import { withBase } from '../../lib/url';
+const notes = new Map((await getCollection('notes')).map(note => [note.id, note]));
+---
+<Layout title="Learn | Mental Gym">
+  <section class="hero">
+    <div><p class="eyebrow">Learn / Language tracks</p><h1>Learn the language.<br /><em>Keep the idea.</em></h1><p class="intro">Find your starting point in Python, Julia, TypeScript, or Rust. Build the language skills, keep a reference close, and put each idea into practice.</p></div>
+    <aside class="path-preview" aria-label="The learning path"><p>One idea. Four ways to build it.</p><ol><li><span>01</span> Get running</li><li><span>02</span> Learn the essentials</li><li><span>03</span> Choose your tools</li><li><span>04</span> Put it into practice</li></ol></aside>
+  </section>
+
+  <section aria-labelledby="tracks-title">
+    <div class="section-heading"><div><p class="eyebrow">Choose your language</p><h2 id="tracks-title">A path for each way you think.</h2></div><a href={withBase('/notes/')}>All notes ↗</a></div>
+    <div class="track-grid">
+      {languageTracks.map(track => <a class="track-card" href={withBase(`/learn/${track.id}/`)}>
+        <div class="card-top"><span class="language-mark" aria-hidden="true">{track.mark}</span><span>{track.references.length > 0 ? `${track.references.length} reference notes available` : 'Language notes coming next'}</span></div>
+        <h3>{track.name}</h3><p class="focus">{track.focus}</p><p>{track.description}</p>
+        <div class="card-bottom"><span>{track.practice.length ? `${track.practice.length} practice links · Foundations coming next` : 'Foundations and guided practice coming next'}</span><strong>Explore {track.name} <span aria-hidden="true">→</span></strong></div>
+      </a>)}
+    </div>
+  </section>
+
+  <section id="foundations" class="foundations" aria-labelledby="foundations-title">
+    <div class="section-heading"><div><p class="eyebrow">Shared foundations</p><h2 id="foundations-title">The reasoning travels with you.</h2></div></div>
+    <p class="section-copy">Study these concepts alongside any language track. The current worked examples are mainly in Python; the patterns and reasoning carry across languages.</p>
+    <ol>{sharedFoundations.map((resource, index) => <li><a href={withBase(`/notes/${resource.noteId}/`)}><span class="number">{String(index + 1).padStart(2, '0')}</span><div><h3>{notes.get(resource.noteId)!.data.title}</h3><p>{resource.purpose}</p></div><span aria-hidden="true">↗</span></a></li>)}</ol>
+  </section>
+
+  <section class="library" aria-labelledby="library-title"><div><p class="eyebrow">Keep a reference close</p><h2 id="library-title">Looking for a particular note?</h2><p>Browse the full library, including ML, system design, and course notes, or filter by language.</p></div><a href={withBase('/notes/')}>Browse all notes <span aria-hidden="true">→</span></a></section>
+</Layout>
+<style>
+  .hero { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 2.5rem; align-items: center; padding: 2.8rem 0 3rem; }
+  .eyebrow { color: var(--accent); font: 500 .65rem/1.5 var(--font-mono); letter-spacing: .09em; text-transform: uppercase; margin: 0 0 .65rem; }
+  h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; }
+  h1 { font-size: clamp(2.5rem, 5vw, 3.4rem); line-height: 1; letter-spacing: -.035em; margin: 0; }
+  h1 em { color: var(--accent); font-weight: 400; }
+  .intro, .section-copy { color: var(--muted); font-size: .9rem; line-height: 1.7; max-width: 660px; }
+  .intro { margin: 1.3rem 0 0; }
+  .path-preview { padding: 1.4rem; background: #182e29; color: #f5f2e9; border-radius: 14px; }
+  .path-preview p { font: 500 1.4rem/1.1 var(--font-serif); margin: 0 0 1.2rem; }
+  .path-preview ol { list-style: none; padding: 0; margin: 0; }
+  .path-preview li { display: flex; gap: 1rem; border-top: 1px solid #ffffff24; padding: .65rem 0; font: .75rem var(--font-sans); }
+  .path-preview li:last-child { padding-bottom: 0; }
+  .path-preview span { color: #c9e6a5; font: .65rem var(--font-mono); }
+  .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.2rem; }
+  h2 { font-size: 1.9rem; line-height: 1.1; letter-spacing: -.02em; margin: 0; }
+  .section-heading > a { font-size: .75rem; white-space: nowrap; }
+  .track-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .track-card { display: flex; flex-direction: column; background: var(--glass-surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.4rem; text-decoration: none; color: var(--text); transition: border-color .2s, transform .2s; }
+  .track-card:hover { border-color: var(--accent); transform: translateY(-3px); text-decoration: none; }
+  .card-top { display: flex; align-items: center; gap: 1rem; color: var(--muted); font-size: .65rem; }
+  .language-mark { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-ring); border-radius: 8px; font: 500 .9rem var(--font-mono); flex-shrink: 0; }
+  .track-card h3 { font-size: 2rem; margin: 1.1rem 0 .4rem; }
+  .track-card p { color: var(--muted); font: .8rem/1.65 var(--font-sans); margin: 0 0 1.2rem; }
+  .track-card .focus { color: var(--text); font-weight: 600; margin-bottom: .4rem; }
+  .card-bottom { display: flex; flex-direction: column; gap: .75rem; margin-top: auto; padding-top: .9rem; border-top: 1px solid var(--border); }
+  .card-bottom > span { color: var(--muted); font-size: .65rem; }
+  .card-bottom strong { color: var(--accent); font-size: .75rem; display: flex; justify-content: space-between; }
+  .foundations { margin-top: 3rem; scroll-margin-top: 90px; }
+  .foundations ol { list-style: none; padding: 0; margin: 1.4rem 0 0; border-top: 1px solid var(--border); }
+  .foundations li { border-bottom: 1px solid var(--border); }
+  .foundations a { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; text-decoration: none; }
+  .foundations a > div { flex: 1; }
+  .number { color: var(--muted); font: .65rem var(--font-mono); }
+  .foundations h3 { font-size: 1.2rem; margin: 0 0 .2rem; }
+  .foundations p { color: var(--muted); font-size: .75rem; line-height: 1.6; margin: 0; }
+  .foundations a:hover h3 { text-decoration: underline; }
+  .library { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; border: 1px solid var(--border); background: var(--panel); border-radius: 12px; padding: 1.4rem; margin-top: 2.5rem; }
+  .library h2 { font-size: 1.5rem; }
+  .library p:last-child { color: var(--muted); font-size: .8rem; line-height: 1.6; margin: .6rem 0 0; max-width: 570px; }
+  .library > a { flex-shrink: 0; font: 600 .75rem var(--font-sans); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+  @media (max-width: 720px) { .hero { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; padding-top: 1.5rem; } .track-grid { grid-template-columns: minmax(0, 1fr); } .section-heading, .library { align-items: flex-start; flex-direction: column; } }
+  @media (prefers-reduced-motion: reduce) { .track-card { transition: none; } .track-card:hover { transform: none; } }
+</style>
