@@ -105,7 +105,7 @@ test("language filter handles query selection, history, empty state, and reset",
 	select(dom, "julia");
 	const empty = document.querySelector<HTMLElement>("[data-language-empty]");
 	assert.equal(empty?.hidden, false);
-	assert.match(empty?.querySelector("[data-empty-copy]")?.textContent ?? "", /Julia notes are still being prepared/);
+	assert.match(empty?.querySelector("[data-empty-copy]")?.textContent ?? "", /Explore the Julia learning track/);
 	assert.equal(empty?.querySelector<HTMLAnchorElement>("[data-empty-link]")?.pathname, "/mental-gym/learn/julia/");
 	assert.ok([...document.querySelectorAll<HTMLElement>("[data-note-category]")].every((category) => category.hidden));
 

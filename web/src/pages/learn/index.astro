@@ -15,9 +15,9 @@ const notes = new Map((await getCollection('notes')).map(note => [note.id, note]
     <div class="section-heading"><div><p class="eyebrow">Choose your language</p><h2 id="tracks-title">A path for each way you think.</h2></div><a href={withBase('/notes/')}>All notes ↗</a></div>
     <div class="track-grid">
       {languageTracks.map(track => <a class="track-card" href={withBase(`/learn/${track.id}/`)}>
-        <div class="card-top"><span class="language-mark" aria-hidden="true">{track.mark}</span><span>{track.references.length > 0 ? `${track.references.length} reference notes available` : 'Language notes coming next'}</span></div>
+        <div class="card-top"><span class="language-mark" aria-hidden="true">{track.mark}</span><span>2 starter lessons available</span></div>
         <h3>{track.name}</h3><p class="focus">{track.focus}</p><p>{track.description}</p>
-        <div class="card-bottom"><span>{track.practice.length ? `${track.practice.length} practice links · Foundations coming next` : 'Foundations and guided practice coming next'}</span><strong>Explore {track.name} <span aria-hidden="true">→</span></strong></div>
+        <div class="card-bottom"><span>{track.references.length ? `${track.references.length} reference notes` : 'Reference notes coming next'}{track.practice.length ? ` · ${track.practice.length} practice links` : ' · Guided practice coming next'}</span><strong>Explore {track.name} <span aria-hidden="true">→</span></strong></div>
       </a>)}
     </div>
   </section>

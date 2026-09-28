@@ -20,15 +20,36 @@ const firstReference = track.references[0];
   <section class="hero"><div class="language-mark" aria-hidden="true">{track.mark}</div><div><p class="eyebrow">The {track.name} track</p><h1>{track.focus}</h1><p>{track.description}</p></div></section>
 
   <section class="start-here" aria-labelledby="start-title">
-    <div><p class="eyebrow">Available today</p><h2 id="start-title">{firstReference ? 'Know the basics? Start with the toolkit.' : 'Start with the ideas behind the code.'}</h2><p>{firstReference ? `The three ${track.name} references below are ready to use. New to the language? The setup and essentials lessons are coming next; this is not yet a complete beginner course.` : 'Dedicated Julia notes are coming next. You can study the shared foundations now, or explore the existing Julia solution tabs in the practice links below.'}</p></div>
-    <a class="primary-action" href={firstReference ? withBase(`/notes/${firstReference.noteId}/`) : withBase('/learn/#foundations')}>{firstReference ? 'Open the quick reference' : 'Explore shared foundations'} <span aria-hidden="true">↗</span></a>
+    <div>
+      <p class="eyebrow">Start here</p>
+      <h2 id="start-title">Your first program. Your first passing test.</h2>
+      <p>Set up {track.name}, run a small program, and check it with a test. Then work through the essentials with examples you can change and run yourself.</p>
+      {firstReference && <p>Already comfortable with the basics? <a href={withBase(`/notes/${firstReference.noteId}/`)}>Open the quick reference →</a></p>}
+    </div>
+    <a class="primary-action" href={withBase(`/notes/${track.setup.noteId}/`)}>Get running with {track.name} <span aria-hidden="true">↗</span></a>
   </section>
 
   <div class="path-heading"><p class="eyebrow">Your learning path</p><p>Follow the stages in order, or jump to the references you need.</p></div>
   <ol class="stages">
-    <li class="stage"><span class="stage-number" aria-hidden="true">01</span><section aria-labelledby="setup-title"><h2 id="setup-title">Get running</h2><p class="outcome">Get from a blank file to a working program and a passing test.</p><article class="planned"><span class="status">Coming next</span><h3>{track.name}: start here</h3><p>{track.setup}</p></article></section></li>
-    <li class="stage"><span class="stage-number" aria-hidden="true">02</span><section aria-labelledby="essentials-title"><h2 id="essentials-title">Learn the essentials</h2><p class="outcome">Understand the language decisions behind a small solution.</p><article class="planned"><span class="status">Coming next</span><h3>{track.name} foundations</h3><p>{track.essentials}</p></article></section></li>
-    <li class="stage"><span class="stage-number" aria-hidden="true">03</span><section aria-labelledby="tools-title"><h2 id="tools-title">Choose your tools</h2><p class="outcome">Read the quick reference first. Keep the API and operation-cost notes nearby as you practice.</p>
+    {[
+      { id: 'setup', number: '01', title: 'Get running', outcome: 'Get from a blank file to a working program and a passing test.', lesson: track.setup },
+      { id: 'essentials', number: '02', title: 'Learn the essentials', outcome: 'Understand the language decisions behind a small solution.', lesson: track.essentials },
+    ].map(({ id, number, title, outcome, lesson }) => (
+      <li class="stage">
+        <span class="stage-number" aria-hidden="true">{number}</span>
+        <section aria-labelledby={`${id}-title`}>
+          <h2 id={`${id}-title`}>{title}</h2>
+          <p class="outcome">{outcome}</p>
+          <ul class="resources">
+            <li><a href={withBase(`/notes/${lesson.noteId}/`)}>
+              <div><h3>{notes.get(lesson.noteId)!.data.title}</h3><p>{lesson.purpose}</p></div>
+              <span class="resource-arrow" aria-hidden="true">↗</span>
+            </a></li>
+          </ul>
+        </section>
+      </li>
+    ))}
+    <li class="stage"><span class="stage-number" aria-hidden="true">03</span><section aria-labelledby="tools-title"><h2 id="tools-title">Choose your tools</h2><p class="outcome">{track.references.length ? "Read the quick reference first. Keep the API and operation-cost notes nearby as you practice." : "Dedicated references are coming next. Continue to the existing practice links below and apply the essentials you have learned."}</p>
       {track.references.length > 0 ? <ol class="resources">{track.references.map((reference, index) => <li><a href={withBase(`/notes/${reference.noteId}/`)}><span class="resource-order" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><div><h3>{notes.get(reference.noteId)!.data.title}</h3><p>{reference.purpose}</p></div><span class="resource-arrow" aria-hidden="true">↗</span></a></li>)}</ol> : <article class="planned"><span class="status">Coming next</span><h3>Julia reference notes</h3><p>A DSA quick reference, a standard-library guide, and an operation-cost cheatsheet.</p></article>}
     </section></li>
     <li class="stage"><span class="stage-number" aria-hidden="true">04</span><section aria-labelledby="practice-title"><h2 id="practice-title">Put it into practice</h2><p class="outcome">Attempt the problem, test your solution, then explain your choices.</p>
@@ -54,7 +75,7 @@ const firstReference = track.references[0];
   .start-here { display: flex; align-items: center; gap: 1.5rem; padding: 1.4rem; border: 1px solid var(--accent-ring); background: var(--accent-glow); border-radius: 12px; }
   .start-here > div { flex: 1; }
   .start-here h2 { font-size: 1.45rem; }
-  .start-here p:last-child { font-size: .8rem; line-height: 1.65; color: var(--muted); margin: .65rem 0 0; }
+  .start-here p:not(.eyebrow) { font-size: .8rem; line-height: 1.65; color: var(--muted); margin: .65rem 0 0; }
   .primary-action { flex-shrink: 0; background: var(--accent); color: var(--on-accent); border-radius: 6px; padding: .8rem .9rem; font: 600 .7rem var(--font-sans); text-decoration: none; }
   .primary-action span { margin-left: .4rem; }
   .primary-action:hover { filter: brightness(1.1); }
