@@ -28,6 +28,7 @@ Notes are filed by topic:
 notes/
 ├── foundations/            # complexity analysis and interview questions
 ├── patterns/               # DSA patterns: arrays & hashing, two pointers, sliding window, …
+├── languages/             # setup and essentials for Python, Julia, TypeScript, Rust
 ├── toolkits/               # language references (Python, TypeScript, Rust)
 ├── ml/                     # model foundations and from-scratch implementations
 ├── system-design/          # architecture case studies
@@ -42,7 +43,7 @@ New notes in those folders can omit `slug:` and use the folder path as their id,
 
 ## Learning tracks
 
-The Learn hub at `/learn/` groups Python, Julia, TypeScript, and Rust into ordered tracks. `web/src/data/learningTracks.ts` links to published note IDs and existing practice pages; it does not change where notes live or their URLs. Setup lessons, essentials, and missing references are labeled as coming next until content is available.
+The Learn hub at `/learn/` groups Python, Julia, TypeScript, and Rust into ordered tracks. `web/src/data/learningTracks.ts` links to published note IDs and existing practice pages; it does not change where notes live or their URLs. Each track starts with a setup lesson and an essentials lesson in `notes/languages/`. Missing references and practice resources are labeled as coming next until content is available.
 
 The full library stays at `/notes/`. Add a lowercase `python`, `julia`, `typescript`, or `rust` tag to language-specific notes so they appear in the language filter. Shared algorithm foundations remain accessible from every track through the Learn hub.
 

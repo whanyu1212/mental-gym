@@ -247,10 +247,8 @@ const notesByCategory = categories.map((category) => ({
 				const title = emptyState.querySelector("[data-empty-title]");
 				const copy = emptyState.querySelector("[data-empty-copy]");
 				const link = emptyState.querySelector<HTMLAnchorElement>("[data-empty-link]");
-				if (title) title.textContent = `${languageName} notes are coming`;
-				if (copy) copy.textContent = language === "julia"
-					? "Julia notes are still being prepared. The learning track is ready when you want a guided place to start."
-					: `There are no ${languageName} notes yet. The learning track is the best place to start.`;
+				if (title) title.textContent = `No ${languageName} notes found`;
+				if (copy) copy.textContent = `No notes match this language filter. Explore the ${languageName} learning track or return to the full library.`;
 				if (link && selectedInput?.dataset.learnHref) {
 					link.href = selectedInput.dataset.learnHref;
 					link.textContent = `Open the ${languageName} learning track`;
