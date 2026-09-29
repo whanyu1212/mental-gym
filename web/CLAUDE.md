@@ -5,10 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev        # Start dev server at localhost:4321
-npm run build      # Build to ./dist/
-npm run preview    # Preview the production build locally
-npm run astro check  # Type-check .astro files
+bun run --cwd web dev          # Start dev server at localhost:4321
+bun run --cwd web build        # Build to ./dist/
+bun run --cwd web preview      # Preview the production build locally
+bun run --cwd web astro check  # Type-check .astro files
 ```
 
 The site deploys to GitHub Pages at `https://whanyu1212.github.io/mental-gym`. The `base` path is set to `/mental-gym` in production and `""` in dev — all internal links must use relative paths or Astro's built-in `base`-aware helpers.
@@ -19,7 +19,7 @@ The site deploys to GitHub Pages at `https://whanyu1212.github.io/mental-gym`. T
 
 ```bash
 # from repo root (mental-gym/), not web/
-poetry run python scripts/generate_problems.py
+uv run python scripts/generate_problems.py
 ```
 
 The script reads `src/leetcode/<category>/<problem>.py`, fetches problem metadata from the LeetCode GraphQL API (with local cache in `scripts/leetcode_cache.json`), and writes `web/src/data/problems.ts`.

@@ -4,7 +4,7 @@
  * `content.config.ts` passes to the glob loader, so this catches any gap
  * between what the tests model and what `astro build` actually emits.
  *
- * Run after `astro build`: `npm run verify:notes`.
+ * Run after `astro build`: `bun run verify:notes`.
  */
 import { existsSync, readFileSync } from "node:fs";
 

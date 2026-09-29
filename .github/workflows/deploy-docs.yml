@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -21,54 +19,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
+          version: '0.12.19'
           python-version: '3.11'
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+          enable-cache: true
 
       - name: Install Python dependencies
-        run: poetry install --no-interaction
+        run: uv sync --locked
 
       - name: Generate problems data
-        run: poetry run python scripts/generate_problems.py
+        run: uv run --locked python scripts/generate_problems.py
 
       - name: Validate algorithm guides
-        run: poetry run python scripts/validate_algorithm_guides.py --strict
+        run: uv run --locked python scripts/validate_algorithm_guides.py --strict
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          node-version: 24
 
-      - name: Install Node dependencies
-        working-directory: web
-        run: npm ci
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.11'
+
+      - name: Install JavaScript dependencies
+        run: bun ci
 
       - name: Run web tests
-        working-directory: web
-        run: npm test
+        run: bun run --cwd web test
 
       - name: Build Astro site
-        working-directory: web
-        run: npm run build
+        run: bun run --cwd web build
 
       - name: Verify note routes and highlight keys
-        working-directory: web
-        run: npm run verify:notes
+        run: bun run --cwd web verify:notes
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: web/dist
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -77,4 +76,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

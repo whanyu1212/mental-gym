@@ -21,41 +21,25 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
+          version: '0.12.19'
           python-version: '3.11'
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.8.5
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached dependencies
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          enable-cache: true
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
-
-      - name: Install project
-        run: poetry install --no-interaction
+        run: uv sync --locked
 
       - name: Run Python tests
         run: |
-          poetry run pytest tests/ -v --tb=short
+          uv run --locked pytest tests/ -v --tb=short
 
       - name: Validate algorithm guides
         run: |
-          poetry run python scripts/validate_algorithm_guides.py --strict
+          uv run --locked python scripts/validate_algorithm_guides.py --strict
 
       - name: Test Summary
         if: always()
@@ -63,55 +47,126 @@ jobs:
           echo "### Python Test Results" >> $GITHUB_STEP_SUMMARY
           echo "Python tests completed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
 
+  test-sql:
+    name: SQL Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Verify SQL test coverage
+        run: |
+          set -euo pipefail
+          coverage_failed=0
+
+          for dialect in postgres sqlite; do
+            mapfile -d '' answer_files < <(
+              find "src/sql/$dialect" -type f -name '*.sql' \
+                ! -name '*.fixture.sql' ! -name '*.test.sql' -print0 | sort -z
+            )
+            mapfile -d '' test_files < <(
+              find "src/sql/$dialect" -type f -name '*.test.sql' -print0 | sort -z
+            )
+
+            if (( ${#answer_files[@]} == 0 )); then
+              echo "::error::No $dialect SQL answer files found."
+              coverage_failed=1
+            fi
+
+            for answer_file in "${answer_files[@]}"; do
+              test_file="${answer_file%.sql}.test.sql"
+              if [[ ! -f "$test_file" ]]; then
+                echo "::error file=$answer_file::Missing SQL test: $test_file"
+                coverage_failed=1
+              fi
+            done
+
+            for test_file in "${test_files[@]}"; do
+              answer_file="${test_file%.test.sql}.sql"
+              if [[ ! -f "$answer_file" ]]; then
+                echo "::error file=$test_file::SQL test has no answer file: $answer_file"
+                coverage_failed=1
+              fi
+            done
+          done
+
+          exit "$coverage_failed"
+
+      - name: Install SQLite
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes sqlite3
+
+      - name: Start PostgreSQL 17
+        run: docker compose -f compose.sql.yml up --detach --wait
+
+      - name: Run PostgreSQL exercises
+        run: |
+          set -euo pipefail
+          mapfile -d '' test_files < <(find src/sql/postgres -type f -name '*.test.sql' -print0 | sort -z)
+          if (( ${#test_files[@]} == 0 )); then
+            echo "No PostgreSQL test files found." >&2
+            exit 1
+          fi
+
+          for test_file in "${test_files[@]}"; do
+            echo "Running $test_file"
+            docker compose -f compose.sql.yml exec -T postgres \
+              psql -v ON_ERROR_STOP=1 -U postgres -d postgres -f "$test_file"
+          done
+
+      - name: Run SQLite exercises
+        run: |
+          set -euo pipefail
+          mapfile -d '' test_files < <(find src/sql/sqlite -type f -name '*.test.sql' -print0 | sort -z)
+          if (( ${#test_files[@]} == 0 )); then
+            echo "No SQLite test files found." >&2
+            exit 1
+          fi
+
+          for test_file in "${test_files[@]}"; do
+            echo "Running $test_file"
+            sqlite3 -bail :memory: < "$test_file"
+          done
+
+      - name: Stop PostgreSQL 17
+        if: always()
+        run: docker compose -f compose.sql.yml down
+
   test-julia:
     name: Julia Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Julia
-        uses: julia-actions/setup-julia@v1
+        uses: julia-actions/setup-julia@fa02766e078afaaf09b14210362cee14137e6a32 # v3
         with:
-          version: '1.10'
+          version: '1.11'
 
       - name: Cache Julia packages
-        uses: julia-actions/cache@v1
+        uses: julia-actions/cache@d10a6fd8f31b12404a54613ebad242900567f2b9 # v2
 
       - name: Install Julia dependencies
         run: |
           julia --project=. -e 'using Pkg; Pkg.instantiate(; allow_autoprecomp=false)'
 
       - name: Run Julia tests
-        continue-on-error: true
-        id: julia-tests
         run: |
-          echo "Running Julia tests..."
-          test_count=0
-          failed_count=0
-          for test_file in tests/leetcode/test*.jl; do
-            echo "Running $test_file..."
-            if julia --project=. "$test_file" 2>&1; then
-              echo "✓ $test_file passed"
-              test_count=$((test_count + 1))
-            else
-              echo "✗ $test_file failed"
-              test_count=$((test_count + 1))
-              failed_count=$((failed_count + 1))
-            fi
-          done
-          echo "Total: $test_count tests, $failed_count failed"
-          if [ $failed_count -gt 0 ]; then
-            echo "::warning::$failed_count Julia test(s) failed. Some tests may need fixes for import paths or function names."
+          set -euo pipefail
+          test_files=(tests/leetcode/test*.jl)
+          if [[ ! -e "${test_files[0]}" ]]; then
+            echo "No Julia test files found." >&2
+            exit 1
           fi
 
-      - name: Test Summary
-        if: always()
-        run: |
-          echo "### Julia Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "Julia tests completed. Some tests may need fixes for import paths." >> $GITHUB_STEP_SUMMARY
-          echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          for test_file in "${test_files[@]}"; do
+            echo "Running $test_file"
+            julia --project=. "$test_file"
+          done
 
   test-web:
     name: Web Tests
@@ -119,27 +174,39 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: '0.12.19'
+          python-version: '3.11'
+          enable-cache: true
+
+      - name: Install Python dependencies
+        run: uv sync --locked
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          node-version: 24
 
-      - name: Install web dependencies
-        working-directory: web
-        run: npm ci
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.11'
+
+      - name: Install JavaScript dependencies
+        run: bun ci
+
+      - name: Type-check TypeScript solutions
+        run: bun run typecheck
 
       - name: Run web tests
-        working-directory: web
-        run: npm test
+        run: bun run --cwd web test
 
       - name: Build Astro site
-        working-directory: web
-        run: npm run build
+        run: bun run --cwd web build
 
       - name: Verify note routes and highlight keys
-        working-directory: web
-        run: npm run verify:notes
+        run: bun run --cwd web verify:notes

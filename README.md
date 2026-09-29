@@ -77,23 +77,30 @@ tests/                # pytest (LeetCode, Kattis) and Julia test suites
 
 ## Development
 
+Run the commands below from the repository root. Install uv for Python tooling and Bun 1.3.11 (pinned in `package.json`) for JavaScript dependencies. The Astro site runs on Node 24; `.nvmrc` selects it with `nvm use`. Bun manages both the TypeScript solutions and `web/` through the root `bun.lock`.
+
 **Python (solutions, scripts, tests):**
 
 ```bash
-poetry install
-poetry run pytest tests/ -v
+uv sync --locked
+uv run pytest tests/ -v
 ```
+
+Add the notebook dependency group when you need Jupyter tooling: `uv sync --locked --group notebook`.
 
 **Astro site:**
 
 ```bash
-cd web && npm install && npm run dev
+bun install
+bun run --cwd web dev
 ```
+
+Web tests also run Python reference solutions through uv. After `uv sync --locked`, run `bun run web:test`.
 
 **Regenerate problem data** after adding or editing a Python LeetCode solution (the generator collects `.py` files only; a Julia-only addition needs a matching Python file before it will appear):
 
 ```bash
-poetry run python scripts/generate_problems.py
+uv run python scripts/generate_problems.py
 ```
 
 **Julia solutions and tests** run via `julia --project=.`; see `Project.toml`.
@@ -101,7 +108,6 @@ poetry run python scripts/generate_problems.py
 **TypeScript LeetCode ports** (repo root, separate from `web/`):
 
 ```bash
-bun install
 bun src/leetcode/sliding_window/contains_duplicate_2.ts
 ```
 
@@ -112,3 +118,5 @@ Two GitHub Actions workflows: a test workflow (`pytest` over the LeetCode and Ka
 ## Tooling
 
 Python code is enforced with `ruff` (linting, import sorting, and formatting) and `docformatter` (docstring formatting and wrapping) via pre-commit hooks. The Astro site is TypeScript-checked with `astro check`.
+
+Install the hooks with `uv run --locked pre-commit install` after syncing dependencies. Keep `uv` on your PATH when committing; the docformatter hook uses uv to locate the project environment, including when `UV_PROJECT_ENVIRONMENT` selects a custom location.
