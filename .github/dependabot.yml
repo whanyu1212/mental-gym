@@ -28,15 +28,6 @@ updates:
         patterns:
           - "*"
 
-  - package-ecosystem: julia
-    directory: /environments/julia-ml
-    schedule:
-      interval: weekly
-    groups:
-      julia-ml-dependencies:
-        patterns:
-          - "*"
-
   - package-ecosystem: pre-commit
     directory: /
     schedule:

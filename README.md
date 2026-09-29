@@ -100,7 +100,6 @@ uv run python scripts/generate_problems.py
 ```
 
 **Julia solutions and tests** run via `julia --project=.`; see `Project.toml`.
-Notebook and ML dependencies use the separate `environments/julia-ml` project.
 
 **TypeScript LeetCode ports** (repo root, separate from `web/`):
 
