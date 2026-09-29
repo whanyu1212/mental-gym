@@ -4,6 +4,8 @@ The Astro site that powers [whanyu1212.github.io/mental-gym](https://whanyu1212.
 
 ## Quick start
 
+Use Node 24 (`nvm use` from the repository root) and Bun 1.3.11. Bun installs the shared workspace dependencies; Astro and the web tests run on Node. All commands below start from the repository root.
+
 ```bash
 bun install                  # from the repository root
 bun run --cwd web dev        # http://localhost:4321
@@ -13,6 +15,13 @@ bun run --cwd web dev        # http://localhost:4321
 bun run --cwd web build        # production build to ./dist/
 bun run --cwd web preview      # preview the production build locally
 bun run --cwd web astro check  # type-check .astro files
+```
+
+The tests compare teaching animations with Python reference solutions, so they also require uv on PATH:
+
+```bash
+uv sync --locked
+bun run web:test
 ```
 
 ## What lives here

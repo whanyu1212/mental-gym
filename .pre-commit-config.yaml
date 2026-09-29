@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: docformatter
         name: docformatter
-        entry: .venv/bin/docformatter
+        entry: uv run --locked docformatter
         language: system
         types:
           - "python"
