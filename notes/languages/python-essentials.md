@@ -19,7 +19,7 @@ objects. Two names can refer to the same mutable object, so a change through one
 name can be visible through the other.
 
 Each example before **Practice** is standalone on Python 3.10 or newer. Save one
-in a scratch `.py` file and run it with `poetry run python <file>` from the root.
+in a scratch `.py` file and run it with `uv run python <file>` from the root.
 
 ## Functions and control flow
 

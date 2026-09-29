@@ -14,7 +14,7 @@ const projectRoot = new URL("../..", import.meta.url);
 /** Run the repo's own Python solution so the animation's result is checked
  * against the code it claims to teach, not against a copy of that code. */
 function python(module: string, dir: string, expr: string): unknown {
-	const out = execFileSync("python3", ["-c", `import json,sys; sys.path.insert(0, ${JSON.stringify(dir)}); from ${module} import Solution; print(json.dumps(${expr}))`], {
+	const out = execFileSync("uv", ["run", "--locked", "python", "-c", `import json,sys; sys.path.insert(0, ${JSON.stringify(dir)}); from ${module} import Solution; print(json.dumps(${expr}))`], {
 		cwd: new URL(".", projectRoot).pathname,
 		encoding: "utf8",
 	});

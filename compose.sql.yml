@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17.11-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./src/sql:/workspace/src/sql:ro
+    working_dir: /workspace
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+      start_period: 5s

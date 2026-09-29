@@ -29,7 +29,7 @@ export const languageTracks: LanguageTrack[] = [
   {
     ...learningLanguages[0], mark: "Py", focus: "Express the idea clearly.",
     description: "Build confidence with Python's collections and idioms, then put them to work on algorithmic problems.",
-    setup: { noteId: "python-start-here", purpose: "Set up Python with Poetry, run a small program, and write your first test with pytest." },
+    setup: { noteId: "python-start-here", purpose: "Set up Python with uv, run a small program, and write your first test with pytest." },
     essentials: { noteId: "python-essentials", purpose: "Functions, control flow, mutability, comprehensions, iterators, and handling errors." },
     references: [
       { noteId: "python-dsa-toolkit", purpose: "Choose the right collection or helper for the problem." },

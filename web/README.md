@@ -5,14 +5,14 @@ The Astro site that powers [whanyu1212.github.io/mental-gym](https://whanyu1212.
 ## Quick start
 
 ```bash
-npm install
-npm run dev        # http://localhost:4321
+bun install                  # from the repository root
+bun run --cwd web dev        # http://localhost:4321
 ```
 
 ```bash
-npm run build      # production build to ./dist/
-npm run preview    # preview the production build locally
-npm run astro check  # type-check .astro files
+bun run --cwd web build        # production build to ./dist/
+bun run --cwd web preview      # preview the production build locally
+bun run --cwd web astro check  # type-check .astro files
 ```
 
 ## What lives here
@@ -30,7 +30,7 @@ npm run astro check  # type-check .astro files
 `problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a Python solution in `../src/leetcode/` (the generator collects `.py` files; a Julia file only gets attached as a port to an existing Python-backed entry, so a Julia-only addition needs a matching Python file to appear at all), regenerate it from the repo root:
 
 ```bash
-poetry run python scripts/generate_problems.py
+uv run python scripts/generate_problems.py
 ```
 
 ## Spaced repetition

@@ -80,28 +80,31 @@ tests/                # pytest (LeetCode, Kattis) and Julia test suites
 **Python (solutions, scripts, tests):**
 
 ```bash
-poetry install
-poetry run pytest tests/ -v
+uv sync --locked
+uv run pytest tests/ -v
 ```
+
+Add the notebook dependency group when you need Jupyter tooling: `uv sync --locked --group notebook`.
 
 **Astro site:**
 
 ```bash
-cd web && npm install && npm run dev
+bun install
+bun run --cwd web dev
 ```
 
 **Regenerate problem data** after adding or editing a Python LeetCode solution (the generator collects `.py` files only; a Julia-only addition needs a matching Python file before it will appear):
 
 ```bash
-poetry run python scripts/generate_problems.py
+uv run python scripts/generate_problems.py
 ```
 
 **Julia solutions and tests** run via `julia --project=.`; see `Project.toml`.
+Notebook and ML dependencies use the separate `environments/julia-ml` project.
 
 **TypeScript LeetCode ports** (repo root, separate from `web/`):
 
 ```bash
-bun install
 bun src/leetcode/sliding_window/contains_duplicate_2.ts
 ```
 

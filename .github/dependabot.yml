@@ -1,0 +1,65 @@
+version: 2
+
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      javascript-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: julia
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      julia-core-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: julia
+    directory: /environments/julia-ml
+    schedule:
+      interval: weekly
+    groups:
+      julia-ml-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      pre-commit-hooks:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      sql-containers:
+        patterns:
+          - "*"

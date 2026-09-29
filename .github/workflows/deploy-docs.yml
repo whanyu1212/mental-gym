@@ -23,45 +23,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v10.2.0
         with:
+          version: '0.12.19'
           python-version: '3.11'
-
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+          enable-cache: true
 
       - name: Install Python dependencies
-        run: poetry install --no-interaction
+        run: uv sync --locked
 
       - name: Generate problems data
-        run: poetry run python scripts/generate_problems.py
+        run: uv run --locked python scripts/generate_problems.py
 
       - name: Validate algorithm guides
-        run: poetry run python scripts/validate_algorithm_guides.py --strict
+        run: uv run --locked python scripts/validate_algorithm_guides.py --strict
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          node-version: 24
 
-      - name: Install Node dependencies
-        working-directory: web
-        run: npm ci
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.11'
+
+      - name: Install JavaScript dependencies
+        run: bun ci
 
       - name: Run web tests
-        working-directory: web
-        run: npm test
+        run: bun run --cwd web test
 
       - name: Build Astro site
-        working-directory: web
-        run: npm run build
+        run: bun run --cwd web build
 
       - name: Verify note routes and highlight keys
-        working-directory: web
-        run: npm run verify:notes
+        run: bun run --cwd web verify:notes
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

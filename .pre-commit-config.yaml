@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: docformatter
         name: docformatter
-        entry: poetry run docformatter
+        entry: .venv/bin/docformatter
         language: system
         types:
           - "python"
