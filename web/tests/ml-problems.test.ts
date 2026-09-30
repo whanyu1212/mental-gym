@@ -33,6 +33,11 @@ test("ids and slugs are unique across the whole bank", () => {
 test("each catalog drill carries a unique source number and a derived slug", () => {
 	const sourceNumbers = mlCatalogProblems.map((problem) => problem.sourceNumber);
 	assert.equal(new Set(sourceNumbers).size, sourceNumbers.length, "duplicate source number");
+	assert.deepEqual(
+		[...sourceNumbers].sort((a, b) => a - b),
+		Array.from({ length: 250 }, (_, index) => index + 1),
+		"catalog must include every screenshot source number from 1 through 250",
+	);
 
 	for (const problem of mlCatalogProblems) {
 		assert.match(
