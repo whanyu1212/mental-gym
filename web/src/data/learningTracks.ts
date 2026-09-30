@@ -80,6 +80,7 @@ export const languageTracks: LanguageTrack[] = [
 
 export const sharedFoundations = [
   { noteId: "asymptotic-analysis", purpose: "Describe how time and space grow with input size." },
+  { noteId: "recursion-and-iteration", purpose: "Decide between recursion and a loop, and convert one into the other." },
   { noteId: "arrays_and_hashing", purpose: "Choose arrays, maps, and sets around a clear invariant." },
   { noteId: "two_pointers", purpose: "Use relationships between positions to reduce repeated work." },
   { noteId: "sliding_window", purpose: "Maintain just enough state as a window moves." },

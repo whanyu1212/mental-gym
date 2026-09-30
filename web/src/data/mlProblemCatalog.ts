@@ -3,9 +3,10 @@ import type { MLProblem } from "./mlProblems";
 /**
  * Drills derived from the joinai.com problem catalog listing.
  *
- * The listing supplies title, topic, subtopic, and level only. Every prompt,
- * expectation, hint, and follow-up here is authored independently from the
- * standard mathematical definition the title names.
+ * Titles, topics, subtopics, and levels follow the source listing. Every prompt,
+ * expectation, hint, and follow-up is independently authored teaching content.
+ * Entries with a source link also have their drill mechanics checked against
+ * the public problem page.
  *
  * `sourceNumber` is the catalog's stable ordinal and drives the slug, so
  * retitling an entry never breaks saved progress.
@@ -5394,6 +5395,72 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		status: "Placeholder",
 	},
 	{
+		sourceNumber: 142,
+		id: "c142",
+		slug: "142-pack-a-context-prefix",
+		title: "Pack a Context Prefix",
+		difficulty: "Easy",
+		category: "Generative AI Systems",
+		subcategory: "Generation Serving",
+		tags: ["generative", "context-window", "serving"],
+		summary: "Select the longest prefix of context items that fits after reserving prompt and output tokens.",
+		whyItMatters:
+			"Context packing must account for the answer's token budget as well as the retrieved documents or conversation history.",
+		// Source: https://www.joinai.com/problems/pack-context-prefix
+		prompt:
+			"Given context item token_counts in priority order, a context_window capacity, prompt_tokens already committed, and reserved_output tokens, return the zero-based indices of the longest prefix whose total fits within context_window - prompt_tokens - reserved_output. Include only whole items. Stop at the first item that would exceed the budget, even if a later item would fit. Return an empty list if no item fits.",
+		expectations: [
+			"Subtract both prompt usage and the generation reserve from the capacity.",
+			"Track cumulative size and accept an item that exactly fills the remaining budget.",
+			"Return consecutive indices starting at zero without skipping an oversized item.",
+			"Use O(n) time and O(k) output space for k included items.",
+		],
+		hints: [
+			"Compute the available budget before scanning the items.",
+			"Compare the next cumulative total with the budget before accepting it.",
+			"A prefix constraint rules out searching for a better combination of items.",
+		],
+		followUps: [
+			"How would packing change if skipping items were allowed?",
+			"How should a serving system choose its generation reserve?",
+			"How would you account for separators and message-format overhead?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 143,
+		id: "c143",
+		slug: "143-padded-batch-token-waste",
+		title: "Padded Batch Token Waste",
+		difficulty: "Easy",
+		category: "Generative AI Systems",
+		subcategory: "Generation Serving",
+		tags: ["generative", "batching", "serving"],
+		summary: "Count the padding slots allocated when every sequence is extended to the batch's longest length.",
+		whyItMatters:
+			"Batching sequences of very different lengths can spend substantial compute on padding instead of useful tokens.",
+		// Source: https://www.joinai.com/problems/padded-batch-token-waste
+		prompt:
+			"Given a non-empty list of positive sequence lengths for one dense batch, return the integer number of padding tokens needed when every sequence is padded to the longest sequence. Compute len(lengths) * max(lengths) - sum(lengths). Keep the original lengths unchanged.",
+		expectations: [
+			"Distinguish total allocated slots from the number of actual tokens.",
+			"Return a token count rather than a fraction or percentage.",
+			"Recognize that equal-length sequences require no padding.",
+			"Use O(n) time and O(1) extra space.",
+		],
+		hints: [
+			"Each row has the same padded width: the largest input length.",
+			"Accumulate the sum and maximum in one pass.",
+			"Subtract useful tokens from allocated slots.",
+		],
+		followUps: [
+			"How would you express waste as a fraction of allocated slots?",
+			"How does grouping similar lengths into batches reduce waste?",
+			"What tradeoffs arise when waiting for similarly sized requests?",
+		],
+		status: "Placeholder",
+	},
+	{
 		sourceNumber: 164,
 		id: "c164",
 		slug: "164-build-an-undirected-adjacency-list",
@@ -7314,6 +7381,237 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		status: "Placeholder",
 	},
 	{
+		sourceNumber: 144,
+		id: "c144",
+		slug: "144-feature-schema-diff",
+		title: "Feature Schema Diff",
+		difficulty: "Easy",
+		category: "ML Engineering",
+		subcategory: "Data Pipelines",
+		tags: ["ml-engineering", "features", "schema"],
+		summary: "Find missing required features and unexpected request features while preserving their source order.",
+		whyItMatters:
+			"Comparing a request's feature names with the model's expected schema catches mismatches before prediction.",
+		// Source: https://www.joinai.com/problems/feature-schema-diff
+		prompt:
+			"Given expected_features and received_features as lists of feature names, return [missing, unexpected]. The missing list contains names from expected_features that do not occur in received_features, in expected order. The unexpected list contains names from received_features that do not occur in expected_features, in received order. Do not sort or modify the inputs.",
+		expectations: [
+			"Perform the membership comparison in both directions.",
+			"Keep the missing list first and the unexpected list second.",
+			"Preserve each input's ordering in its corresponding output.",
+			"Use membership sets for O(e + r) time and space.",
+		],
+		hints: [
+			"Build lookup sets, then iterate the original lists to preserve order.",
+			"A set difference alone does not retain the required ordering.",
+			"Matching names belong in neither output list.",
+		],
+		followUps: [
+			"How would you detect changes in feature types as well as names?",
+			"How should optional features and defaults affect validation?",
+			"How would you version schemas during a model rollout?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 145,
+		id: "c145",
+		slug: "145-standardize-with-training-statistics",
+		title: "Standardize with Training Statistics",
+		difficulty: "Medium",
+		category: "ML Engineering",
+		subcategory: "Data Pipelines",
+		tags: ["ml-engineering", "preprocessing", "data-leakage"],
+		summary: "Transform test features using means and population standard deviations fitted only on training rows.",
+		whyItMatters:
+			"Recomputing preprocessing statistics on evaluation data leaks information and changes the transformation the model learned.",
+		// Source: https://www.joinai.com/problems/standardize-with-training-stats
+		prompt:
+			"Given a non-empty rectangular training matrix train and a test matrix with the same feature width, compute each training column's mean and population standard deviation, dividing its squared-deviation sum by the number of training rows. Return a new test matrix with entries (test[i][j] - mean[j]) / std[j]. For a training column with zero standard deviation, return 0.0 for every test entry in that column. Test rows must not influence the fitted statistics.",
+		expectations: [
+			"Fit separate statistics for each feature using training rows only.",
+			"Use population variance, with the training row count as denominator.",
+			"Preserve test shape and use the stated constant-column convention.",
+			"Use O((n_train + n_test) * d) time and O(d) working space besides output.",
+		],
+		hints: [
+			"Separate fitting the transform from applying it.",
+			"A constant training column needs a branch before division.",
+			"Changing test values must not change the stored means or scales.",
+		],
+		followUps: [
+			"How would you persist this transform alongside a trained model?",
+			"How would fitting work for streaming training data?",
+			"How should preprocessing be fitted inside cross-validation?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 146,
+		id: "c146",
+		slug: "146-mini-batch-ranges",
+		title: "Mini-Batch Ranges",
+		difficulty: "Easy",
+		category: "ML Engineering",
+		subcategory: "Data Pipelines",
+		tags: ["ml-engineering", "batching"],
+		summary: "Partition dataset indices into consecutive batches, retaining a shorter final batch.",
+		whyItMatters:
+			"Correct batch boundaries let training and inference visit every example exactly once without dropping the tail.",
+		// Source: https://www.joinai.com/problems/mini-batch-ranges
+		prompt:
+			"Given positive integers num_items and batch_size, return an ordered list of [start, end] index pairs for batching a dataset. Each start is included and each end is excluded. Start at zero, advance by batch_size, and set each end to min(start + batch_size, num_items). Include the final partial batch so the ranges cover [0, num_items) exactly once.",
+		expectations: [
+			"Produce adjacent ranges with no overlap or uncovered indices.",
+			"Keep every batch at or below batch_size items.",
+			"Cap the last end at num_items instead of discarding a short batch.",
+			"Use O(ceil(num_items / batch_size)) time and output space.",
+		],
+		hints: [
+			"The next start equals the previous batch's end.",
+			"Half-open bounds can be used directly as slice endpoints.",
+			"A batch larger than the dataset produces just one range.",
+		],
+		followUps: [
+			"How would a drop_last option change the final range?",
+			"How would shuffling interact with these index ranges?",
+			"How would you partition batches across distributed workers?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 147,
+		id: "c147",
+		slug: "147-balanced-example-weights",
+		title: "Balanced Example Weights",
+		difficulty: "Medium",
+		category: "ML Engineering",
+		subcategory: "Data Pipelines",
+		tags: ["ml-engineering", "class-imbalance", "weighting"],
+		summary: "Assign each example an inverse-frequency class weight so each observed class receives equal total weight.",
+		whyItMatters:
+			"Class weighting changes how much common and rare classes contribute to a training loss without resampling the data.",
+		// Source: https://www.joinai.com/problems/balanced-example-weights
+		prompt:
+			"Given a non-empty sequence of hashable class labels, let n be the number of examples, k the number of distinct observed classes, and count[c] the frequency of class c. Return one weight per input example, in the same order, using n / (k * count[label[i]]). Return example weights rather than a class-to-weight mapping.",
+		expectations: [
+			"Count class frequencies before calculating weights.",
+			"Use only observed classes when determining k.",
+			"Give examples of the same class identical weights.",
+			"Use O(n) time and O(k) working space besides output.",
+		],
+		hints: [
+			"Build a frequency map in the first pass.",
+			"Each class's weights should sum to n / k.",
+			"The average weight across all examples is one.",
+		],
+		followUps: [
+			"How does weighting compare with oversampling rare classes?",
+			"How would you apply these weights to a mean loss?",
+			"What changes for multilabel examples?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 148,
+		id: "c148",
+		slug: "148-deterministic-canary-route",
+		title: "Deterministic Canary Route",
+		difficulty: "Easy",
+		category: "ML Engineering",
+		subcategory: "Model Serving",
+		tags: ["ml-engineering", "serving", "rollouts"],
+		summary: "Route a stable traffic bucket to a canary model when it falls below the rollout percentage.",
+		whyItMatters:
+			"A deterministic assignment lets a rollout increase gradually while keeping repeated requests in the same cohort.",
+		// Source: https://www.joinai.com/problems/deterministic-canary-route
+		prompt:
+			"Given an already computed integer bucket in [0, 99] and a canary_percent in [0, 100], return the string 'canary' when bucket < canary_percent and 'stable' otherwise. A bucket equal to the threshold goes to the stable model. Use the supplied bucket directly so identical inputs always produce the same route.",
+		expectations: [
+			"Use a strict comparison against the rollout threshold.",
+			"Return the requested route string without drawing random numbers.",
+			"Route all buckets to stable at 0 percent and to canary at 100 percent.",
+			"Use O(1) time and space.",
+		],
+		hints: [
+			"Bucket computation has already happened before this function is called.",
+			"The threshold splits the ordered buckets into two ranges.",
+			"Increasing the percentage retains buckets already assigned to canary.",
+		],
+		followUps: [
+			"How would you derive stable buckets from user identifiers?",
+			"Why might assignment use user identity instead of request identity?",
+			"Which metrics would trigger a canary rollback?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 149,
+		id: "c149",
+		slug: "149-inference-cache-hit-rate",
+		title: "Inference Cache Hit Rate",
+		difficulty: "Easy",
+		category: "ML Engineering",
+		subcategory: "Model Serving",
+		tags: ["ml-engineering", "serving", "caching"],
+		summary: "Compute the fraction of inference requests answered by the cache.",
+		whyItMatters:
+			"The cache hit rate helps explain how often expensive model execution is avoided and how much serving work remains.",
+		// Source: https://www.joinai.com/problems/inference-cache-hit-rate
+		prompt:
+			"Given a positive total_requests count and a cache_hits count between zero and total_requests inclusive, return cache_hits / total_requests as a floating-point fraction in [0, 1]. Both counts describe the same observation interval. Return the fraction itself rather than multiplying it by 100.",
+		expectations: [
+			"Divide cache hits by all requests in the interval.",
+			"Use floating-point division so fractional rates are retained.",
+			"Recognize that no hits gives zero and all hits gives one.",
+			"Use O(1) time and space.",
+		],
+		hints: [
+			"The request count is the denominator, not the cache miss count.",
+			"A dashboard can convert the returned fraction into a percentage.",
+			"Keep numerator and denominator aligned to the same interval.",
+		],
+		followUps: [
+			"How would you combine hit rates from servers with different request volumes?",
+			"How should model versions affect inference cache keys?",
+			"How do cache hits change overall latency and compute demand?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 150,
+		id: "c150",
+		slug: "150-inference-throughput",
+		title: "Inference Throughput",
+		difficulty: "Easy",
+		category: "ML Engineering",
+		subcategory: "Model Serving",
+		tags: ["ml-engineering", "serving", "metrics"],
+		summary: "Measure examples processed per second by dividing total batch work by total duration.",
+		whyItMatters:
+			"Aggregating work and elapsed time correctly lets serving benchmarks compare batches of different sizes and durations.",
+		// Source: https://www.joinai.com/problems/inference-throughput
+		prompt:
+			"Given matching non-empty lists batch_sizes and durations for successive inference batches, where durations are measured in seconds and sum to a positive total, return sum(batch_sizes) / sum(durations). The result is total examples processed per second. Sum the work and time first rather than averaging the individual batch rates.",
+		expectations: [
+			"Aggregate example counts and durations separately.",
+			"Return a floating-point rate in examples per second.",
+			"Account for batches with different durations through the total elapsed time.",
+			"Use O(b) time and O(1) extra space for b batches.",
+		],
+		hints: [
+			"Write the units beside both sums before dividing.",
+			"An arithmetic mean of batch rates gives every batch equal weight.",
+			"Even a batch that completes no examples can consume measured time.",
+		],
+		followUps: [
+			"How does larger batching trade throughput against request latency?",
+			"How would you measure throughput when batches run concurrently?",
+			"How should warm-up time affect a benchmark?",
+		],
+		status: "Placeholder",
+	},
+	{
 		sourceNumber: 151,
 		id: "c151",
 		slug: "151-rolling-window-means",
@@ -7374,6 +7672,39 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 			"How does an EMA compare to a rolling mean in memory and responsiveness?",
 			"How does alpha map to an effective window length?",
 			"Why do model weight averaging schemes use an EMA?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 153,
+		id: "c153",
+		slug: "153-population-stability-index",
+		title: "Population Stability Index",
+		difficulty: "Medium",
+		category: "ML Engineering",
+		subcategory: "Monitoring & Drift",
+		tags: ["ml-engineering", "monitoring", "drift"],
+		summary: "Compare reference and live distributions through normalized bin shares and their logarithmic ratios.",
+		whyItMatters:
+			"Distribution monitoring can reveal changes in serving inputs before labeled outcomes are available.",
+		// Source: https://www.joinai.com/problems/population-stability-index
+		prompt:
+			"Given equal-length non-empty lists expected_counts and actual_counts containing strictly positive counts for the same bins, normalize each list by its own total to obtain shares e[i] and a[i]. Return the population stability index sum((a[i] - e[i]) * ln(a[i] / e[i])), using the natural logarithm. The reference and live totals may differ; compare their shares rather than raw counts.",
+		expectations: [
+			"Normalize the two count lists independently.",
+			"Use corresponding bins in each difference and log ratio.",
+			"Return a scalar that is zero for matching distributions.",
+			"Use O(b) time and O(1) extra space for b bins.",
+		],
+		hints: [
+			"Compute both totals before accumulating bin contributions.",
+			"A change in sample volume alone should not change the score.",
+			"Positive bin counts make the logarithmic ratios defined.",
+		],
+		followUps: [
+			"How would you handle bins with zero observations?",
+			"How does the choice of bin boundaries affect the score?",
+			"Why does input drift alone not prove a loss of model quality?",
 		],
 		status: "Placeholder",
 	},
@@ -7506,6 +7837,39 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		status: "Placeholder",
 	},
 	{
+		sourceNumber: 158,
+		id: "c158",
+		slug: "158-linear-feature-contributions",
+		title: "Linear Feature Contributions",
+		difficulty: "Easy",
+		category: "Responsible AI",
+		subcategory: "Explainability",
+		tags: ["responsible-ai", "explainability", "linear-models"],
+		summary: "Decompose a linear model's score into signed products of each feature and its weight.",
+		whyItMatters:
+			"A linear model exposes a simple additive explanation of which features increase or decrease its raw score.",
+		// Source: https://www.joinai.com/problems/linear-feature-contributions
+		prompt:
+			"Given equal-length vectors features and weights for one example and a linear model, return a new list whose entry i is features[i] * weights[i]. Keep feature order and retain the sign of each product. Return the individual contributions, excluding any intercept, rather than summing them into a prediction.",
+		expectations: [
+			"Pair each feature with its corresponding weight.",
+			"Preserve positive, negative, and zero contributions.",
+			"Return one product per feature without adding a bias term.",
+			"Use O(d) time and output space for d features.",
+		],
+		hints: [
+			"This is an elementwise product, not a dot-product reduction.",
+			"Two negative factors produce a positive contribution.",
+			"The products sum to the model's raw score minus its intercept.",
+		],
+		followUps: [
+			"How would you express contributions relative to a baseline feature vector?",
+			"How does feature scaling change the interpretation of weights?",
+			"For logistic regression, why are these contributions to the logit rather than the probability?",
+		],
+		status: "Placeholder",
+	},
+	{
 		sourceNumber: 159,
 		id: "c159",
 		slug: "159-permutation-importance-drops",
@@ -7538,6 +7902,39 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 		status: "Placeholder",
 	},
 	{
+		sourceNumber: 160,
+		id: "c160",
+		slug: "160-normalize-signed-attributions",
+		title: "Normalize Signed Attributions",
+		difficulty: "Easy",
+		category: "Responsible AI",
+		subcategory: "Explainability",
+		tags: ["responsible-ai", "explainability", "normalization"],
+		summary: "Normalize attribution magnitudes to a total of one while retaining their signs.",
+		whyItMatters:
+			"Signed normalization makes relative attribution sizes comparable while retaining whether a feature supports or opposes a score.",
+		// Source: https://www.joinai.com/problems/normalize-signed-attributions
+		prompt:
+			"Given a list of signed numeric attributions, compute s = sum(abs(value) for value in attributions). Return a new list with each original value divided by s, preserving order and sign. When s is zero, return a list of zeros with the same length. For nonzero input magnitude, the absolute values of the output should sum to one.",
+		expectations: [
+			"Use absolute magnitudes in the denominator so opposite signs do not cancel.",
+			"Keep each numerator signed.",
+			"Apply the zero-total convention before division.",
+			"Use O(d) time and output space for d attributions.",
+		],
+		hints: [
+			"The denominator is the vector's L1 norm.",
+			"Normalizing by the signed sum can fail for a nonzero vector.",
+			"The signed output sum need not equal one.",
+		],
+		followUps: [
+			"How would normalizing positive and negative contributions separately change interpretation?",
+			"What information about absolute score magnitude is lost by normalization?",
+			"How would you aggregate normalized explanations across examples?",
+		],
+		status: "Placeholder",
+	},
+	{
 		sourceNumber: 161,
 		id: "c161",
 		slug: "161-l2-gradient-clipping",
@@ -7566,6 +7963,39 @@ export const mlCatalogProblems: MLCatalogProblem[] = [
 			"Why is norm clipping preferable to per-component value clipping?",
 			"How does per-example clipping enable differential privacy?",
 			"How does clipping address exploding but not vanishing gradients?",
+		],
+		status: "Placeholder",
+	},
+	{
+		sourceNumber: 162,
+		id: "c162",
+		slug: "162-clipped-noisy-sum",
+		title: "Clipped Noisy Sum",
+		difficulty: "Medium",
+		category: "Responsible AI",
+		subcategory: "Privacy & Safety",
+		tags: ["responsible-ai", "privacy", "aggregation"],
+		summary: "Bound each record's scalar contribution, sum the bounded values, and add a supplied noise sample.",
+		whyItMatters:
+			"Clipping separates the bounded contribution of each record from the noise added to an aggregate.",
+		// Source: https://www.joinai.com/problems/clipped-noisy-sum
+		prompt:
+			"Given numeric values, a positive scalar clip_bound, and an already sampled scalar noise, clamp each value to the interval [-clip_bound, clip_bound]. Return the sum of those clamped values plus noise. Apply clipping to each record before summation, and add the supplied noise exactly once after summation. Keep the calculation deterministic for the given inputs.",
+		expectations: [
+			"Clamp positive and negative contributions to the symmetric bounds.",
+			"Clip individual values rather than clipping the completed sum.",
+			"Use the supplied noise without sampling a replacement.",
+			"Use O(n) time and O(1) extra space.",
+		],
+		hints: [
+			"A scalar can be clamped with min(clip_bound, max(-clip_bound, value)).",
+			"Accumulate clamped values without storing an intermediate list.",
+			"The final addition is independent of the number of records.",
+		],
+		followUps: [
+			"How does the clipping bound trade aggregate distortion against noise scale?",
+			"How would you adapt the operation to a noisy mean?",
+			"How would clipping change for vector-valued contributions?",
 		],
 		status: "Placeholder",
 	},

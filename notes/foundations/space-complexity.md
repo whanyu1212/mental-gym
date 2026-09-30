@@ -71,7 +71,7 @@ Sometimes the output is considered part of the space cost, sometimes not. In int
 
 ## The Call Stack in Depth
 
-The call stack is the most commonly forgotten source of space in recursive algorithms.
+The call stack is the most commonly forgotten source of space in recursive algorithms. For when stack depth should push you toward a loop instead, see [Recursion vs Iteration](../recursion-and-iteration/).
 
 ### Linear recursion — $O(n)$
 
