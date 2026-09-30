@@ -96,7 +96,7 @@ Each of these makes one recursive call per step. Write the recursive version fir
 <details>
 <summary>Checkpoint answer</summary>
 
-Each call recurses on `n // 2` exactly once (compute `half = power(x, n // 2)` once and square it). The depth is the number of times you can halve $n$ before reaching 0, which is $\lfloor \log_2 n \rfloor + 1$. If you write `power(x, n // 2) * power(x, n // 2)` instead, the depth is the same but the total work goes back to $O(n)$.
+Each call recurses on `n // 2` exactly once (compute `half = power(x, n // 2)` once and square it). You can halve $n \ge 1$ exactly $\lfloor \log_2 n \rfloor + 1$ times before it reaches 0. Counting the base-case call at `n == 0` as a frame too, the peak depth is $\lfloor \log_2 n \rfloor + 2$. For example, `power(x, 1)` has frames for `n = 1` and `n = 0`. Either way it is $O(\log n)$. If you write `power(x, n // 2) * power(x, n // 2)` instead, the depth is the same but the total work goes back to $O(n)$.
 
 </details>
 
