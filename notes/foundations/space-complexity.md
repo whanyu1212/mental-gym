@@ -41,6 +41,33 @@ def sum_array(arr):
         total += x
     return total        # total space: O(1) auxiliary
 ```
+```julia
+function sum_array(arr)
+    total = 0           # O(1) — one integer
+    for x in arr        # loop variable: O(1)
+        total += x
+    end
+    return total        # total space: O(1) auxiliary
+end
+```
+```ts
+function sumArray(arr: number[]): number {
+  let total = 0;           // O(1) — one number
+  for (const x of arr) {   // loop variable: O(1)
+    total += x;
+  }
+  return total;            // total space: O(1) auxiliary
+}
+```
+```rust
+fn sum_array(arr: &[i64]) -> i64 {
+    let mut total = 0;  // O(1) — one integer
+    for &x in arr {     // loop variable: O(1)
+        total += x;
+    }
+    total               // total space: O(1) auxiliary
+}
+```
 
 ### 2. Allocated collections — $O(n)$
 
@@ -49,6 +76,21 @@ Any data structure that grows with input: lists, dicts, sets, strings built from
 ```python
 def copy_and_double(arr):
     return [x * 2 for x in arr]   # O(n) — new list of same length
+```
+```julia
+function copy_and_double(arr)
+    return [x * 2 for x in arr]   # O(n) — new array of same length
+end
+```
+```ts
+function copyAndDouble(arr: number[]): number[] {
+  return arr.map((x) => x * 2);   // O(n) — new array of same length
+}
+```
+```rust
+fn copy_and_double(arr: &[i64]) -> Vec<i64> {
+    arr.iter().map(|x| x * 2).collect()   // O(n) — new Vec of same length
+}
 ```
 
 ### 3. The call stack — $O(\text{depth})$
@@ -61,6 +103,34 @@ def factorial(n):
         return 1
     return n * factorial(n - 1)    # n frames on the stack simultaneously
 # Space: O(n)
+```
+```julia
+# Named fact so it doesn't clash with Base.factorial.
+function fact(n)
+    if n == 0
+        return 1
+    end
+    return n * fact(n - 1)    # n frames on the stack simultaneously
+end
+# Space: O(n)
+```
+```ts
+function factorial(n: number): number {
+  if (n === 0) {
+    return 1;
+  }
+  return n * factorial(n - 1);   // n frames on the stack simultaneously
+}
+// Space: O(n)
+```
+```rust
+fn factorial(n: u64) -> u64 {
+    if n == 0 {
+        return 1;
+    }
+    n * factorial(n - 1)    // n frames on the stack simultaneously
+}
+// Space: O(n)
 ```
 
 The key insight: **maximum stack depth** determines call stack space — not the total number of calls ever made, but how many are *alive at the same time*.
@@ -81,6 +151,30 @@ def sum_to(n):
         return 0
     return n + sum_to(n - 1)
 ```
+```julia
+function sum_to(n)
+    if n == 0
+        return 0
+    end
+    return n + sum_to(n - 1)
+end
+```
+```ts
+function sumTo(n: number): number {
+  if (n === 0) {
+    return 0;
+  }
+  return n + sumTo(n - 1);
+}
+```
+```rust
+fn sum_to(n: u64) -> u64 {
+    if n == 0 {
+        return 0;
+    }
+    n + sum_to(n - 1)
+}
+```
 
 At the deepest point, there are $n + 1$ frames simultaneously on the stack. Space: $O(n)$.
 
@@ -98,6 +192,55 @@ def binary_search(arr, lo, hi, target):
     else:
         return binary_search(arr, lo, mid - 1, target)
 ```
+```julia
+# Call with lo = 1, hi = length(arr) (Julia is 1-based).
+function binary_search(arr, lo, hi, target)
+    if lo > hi
+        return nothing
+    end
+    mid = (lo + hi) ÷ 2
+    if arr[mid] == target
+        return mid
+    elseif arr[mid] < target
+        return binary_search(arr, mid + 1, hi, target)
+    else
+        return binary_search(arr, lo, mid - 1, target)
+    end
+end
+```
+```ts
+function binarySearch(arr: number[], lo: number, hi: number, target: number): number {
+  if (lo > hi) {
+    return -1;
+  }
+  const mid = Math.floor((lo + hi) / 2);
+  if (arr[mid] === target) {
+    return mid;
+  } else if (arr[mid] < target) {
+    return binarySearch(arr, mid + 1, hi, target);
+  } else {
+    return binarySearch(arr, lo, mid - 1, target);
+  }
+}
+```
+```rust
+use std::cmp::Ordering;
+
+// Searches arr[lo..hi] with hi exclusive, so there is no `mid - 1` to
+// underflow when mid is 0 (usize can't go negative).
+// Call with lo = 0, hi = arr.len().
+fn binary_search(arr: &[i32], lo: usize, hi: usize, target: i32) -> Option<usize> {
+    if lo >= hi {
+        return None;
+    }
+    let mid = lo + (hi - lo) / 2;
+    match arr[mid].cmp(&target) {
+        Ordering::Equal => Some(mid),
+        Ordering::Less => binary_search(arr, mid + 1, hi, target),
+        Ordering::Greater => binary_search(arr, lo, mid, target),
+    }
+}
+```
 
 Only *one* branch is taken at each level — the call depth is $\log_2 n$. Space: $O(\log n)$.
 
@@ -109,6 +252,30 @@ def fib(n):
         return n
     return fib(n - 1) + fib(n - 2)
 ```
+```julia
+function fib(n)
+    if n <= 1
+        return n
+    end
+    return fib(n - 1) + fib(n - 2)
+end
+```
+```ts
+function fib(n: number): number {
+  if (n <= 1) {
+    return n;
+  }
+  return fib(n - 1) + fib(n - 2);
+}
+```
+```rust
+fn fib(n: u64) -> u64 {
+    if n <= 1 {
+        return n;
+    }
+    fib(n - 1) + fib(n - 2)
+}
+```
 
 The total number of calls is $O(2^n)$, but the **maximum stack depth** at any one moment is $O(n)$ (the leftmost branch `fib(n-1) → fib(n-2) → ...`). Space: $O(n)$.
 
@@ -119,6 +286,42 @@ def max_depth(node):
     if not node:
         return 0
     return 1 + max(max_depth(node.left), max_depth(node.right))
+```
+```julia
+function max_depth(node)
+    if node === nothing
+        return 0
+    end
+    return 1 + max(max_depth(node.left), max_depth(node.right))
+end
+```
+```ts
+interface TreeNode {
+  val: number;
+  left: TreeNode | null;
+  right: TreeNode | null;
+}
+
+function maxDepth(node: TreeNode | null): number {
+  if (node === null) {
+    return 0;
+  }
+  return 1 + Math.max(maxDepth(node.left), maxDepth(node.right));
+}
+```
+```rust
+struct TreeNode {
+    val: i32,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
+}
+
+fn max_depth(node: Option<&TreeNode>) -> usize {
+    match node {
+        None => 0,
+        Some(node) => 1 + max_depth(node.left.as_deref()).max(max_depth(node.right.as_deref())),
+    }
+}
 ```
 
 At any moment only one path from root to leaf is on the stack. Maximum depth: $h$ (tree height). For a balanced tree: $O(\log n)$. For a skewed tree (effectively a linked list): $O(n)$.
@@ -138,8 +341,47 @@ def factorial_tail(n, acc=1):
     if n == 0: return acc
     return factorial_tail(n - 1, n * acc)   # nothing pending
 ```
+```julia
+# Not tail-recursive: must multiply after call returns
+function fact(n)
+    n == 0 && return 1
+    return n * fact(n - 1)   # pending: multiply by n
+end
 
-Tail-recursive functions can be mechanically transformed into loops by the compiler or interpreter, reducing space from $O(n)$ to $O(1)$. Python does **not** perform this optimisation (Guido van Rossum explicitly chose not to, to preserve tracebacks). Julia and most functional languages do.
+# Tail-recursive: accumulator carries the state
+function fact_tail(n, acc=1)
+    n == 0 && return acc
+    return fact_tail(n - 1, n * acc)   # nothing pending
+end
+```
+```ts
+// Not tail-recursive: must multiply after call returns
+function factorial(n: number): number {
+  if (n === 0) return 1;
+  return n * factorial(n - 1);   // pending: multiply by n
+}
+
+// Tail-recursive: accumulator carries the state
+function factorialTail(n: number, acc = 1): number {
+  if (n === 0) return acc;
+  return factorialTail(n - 1, n * acc);   // nothing pending
+}
+```
+```rust
+// Not tail-recursive: must multiply after call returns
+fn factorial(n: u64) -> u64 {
+    if n == 0 { return 1; }
+    n * factorial(n - 1)   // pending: multiply by n
+}
+
+// Tail-recursive: accumulator carries the state (call with acc = 1)
+fn factorial_tail(n: u64, acc: u64) -> u64 {
+    if n == 0 { return acc; }
+    factorial_tail(n - 1, n * acc)   // nothing pending
+}
+```
+
+Tail-recursive functions can be mechanically transformed into loops by the compiler or interpreter, reducing space from $O(n)$ to $O(1)$. Python does **not** perform this optimisation (Guido van Rossum explicitly chose not to, to preserve tracebacks), and neither does Julia. TypeScript depends on the engine: the JavaScript spec asks for proper tail calls, but only Safari's engine implements them, not V8 (Chrome, Node). Rust may turn a tail call into a jump in an optimised build, but doesn't guarantee it. Scheme, Haskell, and Scala's `@tailrec` are where you can rely on it.
 
 ## Space Costs of Common Algorithms
 
@@ -199,6 +441,44 @@ def fib(n):
     if n <= 1: return n
     return fib(n - 1) + fib(n - 2)
 ```
+```julia
+# A fresh memo per top-level call: Julia evaluates default arguments on
+# every call. (The Memoize.jl package offers an @memoize macro.)
+function fib(n, memo = Dict{Int, Int}())
+    n <= 1 && return n
+    haskey(memo, n) && return memo[n]
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
+    return memo[n]
+end
+```
+```ts
+const memo = new Map<number, number>();
+
+function fib(n: number): number {
+  if (n <= 1) return n;
+  const cached = memo.get(n);
+  if (cached !== undefined) return cached;
+  const result = fib(n - 1) + fib(n - 2);
+  memo.set(n, result);
+  return result;
+}
+```
+```rust
+use std::collections::HashMap;
+
+// Call it as fib(n, &mut HashMap::new()).
+fn fib(n: u64, memo: &mut HashMap<u64, u64>) -> u64 {
+    if n <= 1 {
+        return n;
+    }
+    if let Some(&cached) = memo.get(&n) {
+        return cached;
+    }
+    let result = fib(n - 1, memo) + fib(n - 2, memo);
+    memo.insert(n, result);
+    result
+}
+```
 
 We spend $O(n)$ extra space to avoid recomputing $O(2^n)$ overlapping subproblems.
 
@@ -213,6 +493,38 @@ def find(arr, target):
 lookup = set(arr)
 def find_fast(target):
     return target in lookup
+```
+```julia
+# O(n) time per query — linear search each time
+find(arr, target) = target in arr
+
+# O(n) space once, O(1) per query — build a set
+lookup = Set(arr)
+find_fast(target) = target in lookup
+```
+```ts
+// O(n) time per query — linear search each time
+function find(arr: number[], target: number): boolean {
+  return arr.includes(target);
+}
+
+// O(n) space once, O(1) per query — build a set
+const lookup = new Set(arr);
+function findFast(target: number): boolean {
+  return lookup.has(target);
+}
+```
+```rust
+use std::collections::HashSet;
+
+// O(n) time per query — linear search each time
+fn find(arr: &[i32], target: i32) -> bool {
+    arr.contains(&target)
+}
+
+// O(n) space once, O(1) per query — build a set
+let lookup: HashSet<i32> = arr.iter().copied().collect();
+let find_fast = |target: i32| lookup.contains(&target);
 ```
 
 Spend $O(n)$ space to reduce each query from $O(n)$ to $O(1)$.
@@ -231,6 +543,52 @@ for i, x in enumerate(arr):
 
 def range_sum(l, r):
     return prefix[r + 1] - prefix[l]
+```
+```julia
+# O(n) per range sum query (l and r are 1-based and inclusive)
+range_sum_naive(arr, l, r) = sum(arr[l:r])
+
+# O(n) space, O(1) per query
+prefix = zeros(Int, length(arr) + 1)
+for (i, x) in enumerate(arr)
+    prefix[i + 1] = prefix[i] + x
+end
+
+range_sum(l, r) = prefix[r + 1] - prefix[l]
+```
+```ts
+// O(n) per range sum query
+function rangeSumNaive(arr: number[], l: number, r: number): number {
+  let total = 0;
+  for (let i = l; i <= r; i++) {
+    total += arr[i];
+  }
+  return total;
+}
+
+// O(n) space, O(1) per query
+const prefix = new Array<number>(arr.length + 1).fill(0);
+arr.forEach((x, i) => {
+  prefix[i + 1] = prefix[i] + x;
+});
+
+function rangeSum(l: number, r: number): number {
+  return prefix[r + 1] - prefix[l];
+}
+```
+```rust
+// O(n) per range sum query (the slice borrows, so no copy, but still O(n) time)
+fn range_sum_naive(arr: &[i64], l: usize, r: usize) -> i64 {
+    arr[l..=r].iter().sum()
+}
+
+// O(n) space, O(1) per query
+let mut prefix = vec![0; arr.len() + 1];
+for (i, &x) in arr.iter().enumerate() {
+    prefix[i + 1] = prefix[i] + x;
+}
+
+let range_sum = |l: usize, r: usize| prefix[r + 1] - prefix[l];
 ```
 
 ### Two pointers vs auxiliary space
@@ -251,10 +609,71 @@ def is_palindrome(s):
         l += 1; r -= 1
     return True
 ```
+```julia
+# O(n) space — build reversed string
+is_palindrome(s) = s == reverse(s)
 
-## Python-Specific Memory Patterns
+# O(1) space — two pointers, no allocation
+# (compares bytes, so this assumes ASCII text)
+function is_palindrome_two_pointers(s)
+    l, r = 1, ncodeunits(s)
+    while l < r
+        if codeunit(s, l) != codeunit(s, r)
+            return false
+        end
+        l += 1; r -= 1
+    end
+    return true
+end
+```
+```ts
+// O(n) space — build reversed string
+function isPalindrome(s: string): boolean {
+  return s === [...s].reverse().join("");
+}
 
-Python's memory model has some non-obvious behaviours.
+// O(1) space — two pointers, no allocation
+function isPalindromeTwoPointers(s: string): boolean {
+  let l = 0;
+  let r = s.length - 1;
+  while (l < r) {
+    if (s[l] !== s[r]) {
+      return false;
+    }
+    l += 1; r -= 1;
+  }
+  return true;
+}
+```
+```rust
+// O(n) space — build reversed string
+fn is_palindrome(s: &str) -> bool {
+    let reversed: String = s.chars().rev().collect();
+    s == reversed
+}
+
+// O(1) space — two pointers over the bytes (assumes ASCII text).
+// s.chars().eq(s.chars().rev()) is also O(1) space and handles Unicode.
+fn is_palindrome_two_pointers(s: &str) -> bool {
+    let bytes = s.as_bytes();
+    if bytes.is_empty() {
+        return true;
+    }
+    let (mut l, mut r) = (0, bytes.len() - 1);
+    while l < r {
+        if bytes[l] != bytes[r] {
+            return false;
+        }
+        l += 1;
+        r -= 1;
+    }
+    true
+}
+```
+
+## Language-Specific Memory Patterns
+
+Each language's memory model has some non-obvious behaviours. Switch tabs to compare how the same idea plays out.
 
 ### Generators vs lists
 
@@ -265,8 +684,34 @@ squares_list = [x**2 for x in range(n)]
 # O(1) space — produces one value at a time
 squares_gen = (x**2 for x in range(n))
 ```
+```julia
+# O(n) space — materialises all values immediately
+squares_list = [x^2 for x in 0:n-1]
 
-Use generators when you only need to iterate once and don't need random access.
+# O(1) space — produces one value at a time
+squares_gen = (x^2 for x in 0:n-1)
+```
+```ts
+// O(n) space — materialises all values immediately
+const squaresList = Array.from({ length: n }, (_, x) => x ** 2);
+
+// O(1) space — produces one value at a time
+function* squares(n: number) {
+  for (let x = 0; x < n; x++) {
+    yield x ** 2;
+  }
+}
+const squaresGen = squares(n);
+```
+```rust
+// O(n) space — materialises all values immediately
+let squares_vec: Vec<u64> = (0..n).map(|x| x * x).collect();
+
+// O(1) space — iterators are lazy: nothing runs until something consumes them
+let squares_iter = (0..n).map(|x| x * x);
+```
+
+Use generators (lazy iterators, in Rust) when you only need to iterate once and don't need random access.
 
 ### Slicing copies data
 
@@ -278,22 +723,71 @@ half = arr[:len(arr)//2]    # O(n/2) = O(n)
 # O(1) space — just two integers
 left, right = 0, len(arr) - 1
 ```
+```julia
+# O(n) space — arr[:] creates a full copy
+copy_of_arr = arr[:]
+half = arr[1:length(arr) ÷ 2]          # O(n/2) = O(n)
 
-Every slice operation in Python creates a **new object** with its own memory. Avoid slicing inside loops.
+# O(1) space — @view shares the original memory instead
+half_view = @view arr[1:length(arr) ÷ 2]
+
+# O(1) space — just two integers
+left, right = 1, length(arr)
+```
+```ts
+// O(n) space — slice() creates a full copy
+const copy = arr.slice();
+const half = arr.slice(0, Math.floor(arr.length / 2));   // O(n/2) = O(n)
+
+// (Typed arrays such as Int32Array also have .subarray(), which is a view.)
+
+// O(1) space — just two integers
+let left = 0;
+let right = arr.length - 1;
+```
+```rust
+// O(n) space — .to_vec() creates a full copy
+let copy = arr.to_vec();
+let half_copy = arr[..arr.len() / 2].to_vec();   // O(n/2) = O(n)
+
+// O(1) space — a plain slice borrows the data, no copy
+let half = &arr[..arr.len() / 2];
+
+// O(1) space — just two integers
+let (left, right) = (0, arr.len() - 1);
+```
+
+Every slice operation in Python creates a **new object** with its own memory, and so do Julia's `arr[a:b]` and TypeScript's `slice()`. Julia's `@view` and Rust's `&arr[a..b]` are views onto the original data instead. Avoid copying slices inside loops.
 
 ### Reference semantics
 
-Python variables hold references, not values. This affects how you reason about space:
+Python variables hold references, not values, and so do Julia's and TypeScript's for arrays. This affects how you reason about space:
 
 ```python
 a = [1, 2, 3]
 b = a           # O(0) extra space — b is just another reference to the same list
 b = a[:]        # O(n) extra space — b is a new, independent copy
 ```
+```julia
+a = [1, 2, 3]
+b = a           # O(0) extra space — b is just another name for the same array
+b = copy(a)     # O(n) extra space — b is a new, independent copy
+```
+```ts
+const a = [1, 2, 3];
+let b = a;      // O(0) extra space — b is just another reference to the same array
+b = [...a];     // O(n) extra space — b is a new, independent copy
+```
+```rust
+let a = vec![1, 2, 3];
+let b = &a;           // O(0) extra space — b borrows a
+let c = a.clone();    // O(n) extra space — c is a new, independent copy
+let d = a;            // O(0) extra space — a is *moved* into d and can't be used again
+```
 
-Mutations to `b` affect `a` in the first case; not in the second.
+Mutations to `b` affect `a` in the first case; not in the second. Rust makes the difference explicit: assignment moves, `&` borrows, and a copy only happens when you ask for one with `.clone()`.
 
-### `sys.getsizeof` is not the whole picture
+### Python: `sys.getsizeof` is not the whole picture
 
 `sys.getsizeof([1, 2, 3])` returns the size of the list *object* (the array of pointers), not the total memory including the integers themselves. For true memory profiling use `memory_profiler` or `tracemalloc`.
 

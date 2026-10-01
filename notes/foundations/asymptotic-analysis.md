@@ -113,6 +113,30 @@ for i in range(n):      # O(n)
         print(i, j)     # O(1)
 # Total: O(n²)
 ```
+```julia
+for i in 1:n            # O(n)
+    for j in 1:n        # O(n)
+        println(i, " ", j)  # O(1)
+    end
+end
+# Total: O(n²)
+```
+```ts
+for (let i = 0; i < n; i++) {     // O(n)
+  for (let j = 0; j < n; j++) {   // O(n)
+    console.log(i, j);            // O(1)
+  }
+}
+// Total: O(n²)
+```
+```rust
+for i in 0..n {         // O(n)
+    for j in 0..n {     // O(n)
+        println!("{i} {j}");  // O(1)
+    }
+}
+// Total: O(n²)
+```
 
 Each iteration of the outer loop triggers a full pass of the inner loop. Be careful though — not all nested loops are $O(n^2)$:
 
@@ -121,6 +145,30 @@ for i in range(n):          # O(n)
     for j in range(i):      # O(i), not O(n)
         print(i, j)
 # Total: 0 + 1 + 2 + ... + (n-1) = n(n-1)/2 = O(n²)
+```
+```julia
+for i in 1:n                # O(n)
+    for j in 1:i-1          # O(i), not O(n)
+        println(i, " ", j)
+    end
+end
+# Total: 0 + 1 + 2 + ... + (n-1) = n(n-1)/2 = O(n²)
+```
+```ts
+for (let i = 0; i < n; i++) {     // O(n)
+  for (let j = 0; j < i; j++) {   // O(i), not O(n)
+    console.log(i, j);
+  }
+}
+// Total: 0 + 1 + 2 + ... + (n-1) = n(n-1)/2 = O(n²)
+```
+```rust
+for i in 0..n {             // O(n)
+    for j in 0..i {         // O(i), not O(n)
+        println!("{i} {j}");
+    }
+}
+// Total: 0 + 1 + 2 + ... + (n-1) = n(n-1)/2 = O(n²)
 ```
 
 #### Derivation
@@ -133,6 +181,33 @@ for i in range(n):          # O(n)
     while j > 0:
         j = j // 2          # halving: O(log i)
 # Total: O(n log n)
+```
+```julia
+for i in 1:n                # O(n)
+    j = i
+    while j > 0
+        j = j ÷ 2           # halving: O(log i)
+    end
+end
+# Total: O(n log n)
+```
+```ts
+for (let i = 0; i < n; i++) {     // O(n)
+  let j = i;
+  while (j > 0) {
+    j = Math.floor(j / 2);        // halving: O(log i)
+  }
+}
+// Total: O(n log n)
+```
+```rust
+for i in 0..n {             // O(n)
+    let mut j = i;
+    while j > 0 {
+        j /= 2;             // halving: O(log i)
+    }
+}
+// Total: O(n log n)
 ```
 
 #### Derivation
@@ -159,6 +234,33 @@ for j in range(n):    # O(n)
     print(j * j)
 # Total: O(n) + O(n) = O(2n) = O(n)
 ```
+```julia
+for i in 1:n          # O(n)
+    println(i)
+end
+for j in 1:n          # O(n)
+    println(j * j)
+end
+# Total: O(n) + O(n) = O(2n) = O(n)
+```
+```ts
+for (let i = 0; i < n; i++) {   // O(n)
+  console.log(i);
+}
+for (let j = 0; j < n; j++) {   // O(n)
+  console.log(j * j);
+}
+// Total: O(n) + O(n) = O(2n) = O(n)
+```
+```rust
+for i in 0..n {       // O(n)
+    println!("{i}");
+}
+for j in 0..n {       // O(n)
+    println!("{}", j * j);
+}
+// Total: O(n) + O(n) = O(2n) = O(n)
+```
 
 After adding, drop constants and lower-order terms as usual.
 
@@ -170,6 +272,30 @@ if len(arr) < 100:
 else:
     merge_sort(arr)     # O(n log n)
 # Worst case: O(n²)
+```
+```julia
+if length(arr) < 100
+    bubble_sort!(arr)   # O(n²)
+else
+    merge_sort(arr)     # O(n log n)
+end
+# Worst case: O(n²)
+```
+```ts
+if (arr.length < 100) {
+  bubbleSort(arr);      // O(n²)
+} else {
+  mergeSort(arr);       // O(n log n)
+}
+// Worst case: O(n²)
+```
+```rust
+if arr.len() < 100 {
+    bubble_sort(&mut arr);  // O(n²)
+} else {
+    merge_sort(&arr);       // O(n log n)
+}
+// Worst case: O(n²)
 ```
 
 For Big O we always assume the worst-case branch will be taken.
@@ -240,6 +366,54 @@ def binary_search(arr, target, lo, hi):
     else:
         return binary_search(arr, target, lo, mid - 1)
 ```
+```julia
+# Call with lo = 1, hi = length(arr) (Julia is 1-based).
+function binary_search(arr, target, lo, hi)
+    if lo > hi
+        return nothing
+    end
+    mid = (lo + hi) ÷ 2
+    if arr[mid] == target
+        return mid
+    elseif arr[mid] < target
+        return binary_search(arr, target, mid + 1, hi)
+    else
+        return binary_search(arr, target, lo, mid - 1)
+    end
+end
+```
+```ts
+function binarySearch(arr: number[], target: number, lo: number, hi: number): number {
+  if (lo > hi) {
+    return -1;
+  }
+  const mid = Math.floor((lo + hi) / 2);
+  if (arr[mid] === target) {
+    return mid;
+  } else if (arr[mid] < target) {
+    return binarySearch(arr, target, mid + 1, hi);
+  } else {
+    return binarySearch(arr, target, lo, mid - 1);
+  }
+}
+```
+```rust
+// Searches arr[lo..hi] with hi exclusive (call with 0, arr.len()), so there
+// is no `mid - 1` to underflow. Same recurrence: one call on half the range.
+fn binary_search(arr: &[i32], target: i32, lo: usize, hi: usize) -> Option<usize> {
+    if lo >= hi {
+        return None;
+    }
+    let mid = lo + (hi - lo) / 2;
+    if arr[mid] == target {
+        Some(mid)
+    } else if arr[mid] < target {
+        binary_search(arr, target, mid + 1, hi)
+    } else {
+        binary_search(arr, target, lo, mid)
+    }
+}
+```
 
 One recursive call on a problem of size $n/2$, constant work at each level:
 
@@ -275,6 +449,40 @@ def merge_sort(arr):
     left = merge_sort(arr[:mid])    # T(n/2)
     right = merge_sort(arr[mid:])   # T(n/2)
     return merge(left, right)       # O(n)
+```
+```julia
+# merge_sorted, not merge: Base.merge already exists (for dictionaries)
+function merge_sort(arr)
+    if length(arr) <= 1
+        return arr
+    end
+    mid = length(arr) ÷ 2
+    left = merge_sort(arr[1:mid])       # T(n/2)
+    right = merge_sort(arr[mid+1:end])  # T(n/2)
+    return merge_sorted(left, right)    # O(n)
+end
+```
+```ts
+function mergeSort(arr: number[]): number[] {
+  if (arr.length <= 1) {
+    return arr;
+  }
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));  // T(n/2)
+  const right = mergeSort(arr.slice(mid));    // T(n/2)
+  return merge(left, right);                  // O(n)
+}
+```
+```rust
+fn merge_sort(arr: &[i32]) -> Vec<i32> {
+    if arr.len() <= 1 {
+        return arr.to_vec();
+    }
+    let mid = arr.len() / 2;
+    let left = merge_sort(&arr[..mid]);   // T(n/2)
+    let right = merge_sort(&arr[mid..]);  // T(n/2)
+    merge(&left, &right)                  // O(n)
+}
 ```
 
 Two recursive calls on $n/2$, linear merge step:
@@ -405,10 +613,99 @@ def fib_iterative(n):         # O(n) time, O(1) space
         a, b = b, a + b
     return a
 ```
+```julia
+function sum_array(arr)       # O(1) space — no extra allocation
+    total = 0
+    for x in arr
+        total += x
+    end
+    return total
+end
+
+copy_array(arr) = copy(arr)   # O(n) space — allocates a new array
+
+function merge_sort(arr)      # O(n) space — temp arrays during merge
+    # ...                     # O(log n) call stack depth
+end
+
+function fib(n)               # O(2^n) time, O(n) space (call stack)
+    n <= 1 && return n
+    return fib(n-1) + fib(n-2)
+end
+
+function fib_iterative(n)     # O(n) time, O(1) space
+    a, b = 0, 1
+    for _ in 1:n
+        a, b = b, a + b
+    end
+    return a
+end
+```
+```ts
+function sumArray(arr: number[]): number {   // O(1) space — no extra allocation
+  let total = 0;
+  for (const x of arr) {
+    total += x;
+  }
+  return total;
+}
+
+function copyArray(arr: number[]): number[] {   // O(n) space — allocates a new array
+  return arr.slice();
+}
+
+function mergeSort(arr: number[]) {   // O(n) space — temp arrays during merge
+  // ...                              // O(log n) call stack depth
+}
+
+function fib(n: number): number {     // O(2^n) time, O(n) space (call stack)
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+
+function fibIterative(n: number): number {   // O(n) time, O(1) space
+  let a = 0;
+  let b = 1;
+  for (let i = 0; i < n; i++) {
+    [a, b] = [b, a + b];
+  }
+  return a;
+}
+```
+```rust
+fn sum_array(arr: &[i64]) -> i64 {   // O(1) space — no extra allocation
+    let mut total = 0;
+    for &x in arr {
+        total += x;
+    }
+    total
+}
+
+fn copy_array(arr: &[i64]) -> Vec<i64> {   // O(n) space — allocates a new Vec
+    arr.to_vec()
+}
+
+fn merge_sort(arr: &[i64]) -> Vec<i64> {   // O(n) space — temp arrays during merge
+    todo!()                                // O(log n) call stack depth
+}
+
+fn fib(n: u64) -> u64 {               // O(2^n) time, O(n) space (call stack)
+    if n <= 1 { return n; }
+    fib(n - 1) + fib(n - 2)
+}
+
+fn fib_iterative(n: u64) -> u64 {     // O(n) time, O(1) space
+    let (mut a, mut b) = (0, 1);
+    for _ in 0..n {
+        (a, b) = (b, a + b);
+    }
+    a
+}
+```
 
 ### Tail Recursion
 
-A tail-recursive function makes its recursive call as the very last operation. Some languages (not Python, but Julia and most functional languages) optimise this into a loop, reducing stack space from $O(n)$ to $O(1)$.
+A tail-recursive function makes its recursive call as the very last operation. Some languages (Scheme, Haskell, Scala with `@tailrec`) optimise this into a loop, reducing stack space from $O(n)$ to $O(1)$. None of the four languages shown here guarantee it: Python and Julia never do it, V8 (Chrome, Node) doesn't for TypeScript, and Rust only might in an optimised build.
 
 ```python
 # Not tail-recursive: must return to multiply after recursive call
@@ -420,6 +717,46 @@ def factorial(n):
 def factorial_tail(n, acc=1):
     if n == 0: return acc
     return factorial_tail(n - 1, acc * n)   # no pending work
+```
+```julia
+# (fact, not factorial: Base.factorial already exists)
+# Not tail-recursive: must return to multiply after recursive call
+function fact(n)
+    n == 0 && return 1
+    return n * fact(n - 1)   # multiplication happens *after*
+end
+
+# Tail-recursive (accumulator pattern)
+function fact_tail(n, acc=1)
+    n == 0 && return acc
+    return fact_tail(n - 1, acc * n)   # no pending work
+end
+```
+```ts
+// Not tail-recursive: must return to multiply after recursive call
+function factorial(n: number): number {
+  if (n === 0) return 1;
+  return n * factorial(n - 1);   // multiplication happens *after*
+}
+
+// Tail-recursive (accumulator pattern)
+function factorialTail(n: number, acc = 1): number {
+  if (n === 0) return acc;
+  return factorialTail(n - 1, acc * n);   // no pending work
+}
+```
+```rust
+// Not tail-recursive: must return to multiply after recursive call
+fn factorial(n: u64) -> u64 {
+    if n == 0 { return 1; }
+    n * factorial(n - 1)   // multiplication happens *after*
+}
+
+// Tail-recursive (accumulator pattern; call with acc = 1)
+fn factorial_tail(n: u64, acc: u64) -> u64 {
+    if n == 0 { return acc; }
+    factorial_tail(n - 1, acc * n)   // no pending work
+}
 ```
 
 ## Amortized Analysis
@@ -493,6 +830,33 @@ def example(arr):
         for j in range(100):        # O(1) — fixed, not n
             print(arr[i], j)
 ```
+```julia
+function example(arr)
+    for i in 1:length(arr)          # O(n)
+        for j in 1:100              # O(1) — fixed, not n
+            println(arr[i], " ", j)
+        end
+    end
+end
+```
+```ts
+function example(arr: number[]): void {
+  for (let i = 0; i < arr.length; i++) {   // O(n)
+    for (let j = 0; j < 100; j++) {        // O(1) — fixed, not n
+      console.log(arr[i], j);
+    }
+  }
+}
+```
+```rust
+fn example(arr: &[i32]) {
+    for i in 0..arr.len() {         // O(n)
+        for j in 0..100 {           // O(1) — fixed, not n
+            println!("{} {j}", arr[i]);
+        }
+    }
+}
+```
 
 **Time:** $O(n)$ — the inner loop is constant regardless of input size.
 
@@ -515,6 +879,33 @@ def example(arr):
     for i in range(len(arr)):
         for j in range(i):          # runs 0, 1, 2, ..., n-1 times
             print(arr[j])
+```
+```julia
+function example(arr)
+    for i in 1:length(arr)
+        for j in 1:i-1              # runs 0, 1, 2, ..., n-1 times
+            println(arr[j])
+        end
+    end
+end
+```
+```ts
+function example(arr: number[]): void {
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < i; j++) {   // runs 0, 1, 2, ..., n-1 times
+      console.log(arr[j]);
+    }
+  }
+}
+```
+```rust
+fn example(arr: &[i32]) {
+    for i in 0..arr.len() {
+        for j in 0..i {             // runs 0, 1, 2, ..., n-1 times
+            println!("{}", arr[j]);
+        }
+    }
+}
 ```
 
 **Time:** $\displaystyle\sum_{i=0}^{n-1} i = \frac{n(n-1)}{2} = O(n^2)$
@@ -554,6 +945,30 @@ def example(n):
     i = n
     while i > 0:
         i = i // 2
+```
+```julia
+function example(n)
+    i = n
+    while i > 0
+        i = i ÷ 2
+    end
+end
+```
+```ts
+function example(n: number): void {
+  let i = n;
+  while (i > 0) {
+    i = Math.floor(i / 2);
+  }
+}
+```
+```rust
+fn example(n: u64) {
+    let mut i = n;
+    while i > 0 {
+        i /= 2;
+    }
+}
 ```
 
 <div class="example-result">
@@ -744,6 +1159,39 @@ def example(arr):
     for x in arr:           # O(n)
         print(x)
 ```
+```julia
+function example(arr)
+    for x in arr            # O(n)
+        println(x)
+    end
+    sort!(arr)              # O(n log n)
+    for x in arr            # O(n)
+        println(x)
+    end
+end
+```
+```ts
+function example(arr: number[]): void {
+  for (const x of arr) {          // O(n)
+    console.log(x);
+  }
+  arr.sort((a, b) => a - b);      // O(n log n)
+  for (const x of arr) {          // O(n)
+    console.log(x);
+  }
+}
+```
+```rust
+fn example(arr: &mut [i32]) {
+    for x in arr.iter() {   // O(n)
+        println!("{x}");
+    }
+    arr.sort();             // O(n log n)
+    for x in arr.iter() {   // O(n)
+        println!("{x}");
+    }
+}
+```
 
 **Time:** $O(n) + O(n \log n) + O(n) = O(n \log n)$ — dominated by the sort.
 
@@ -785,6 +1233,73 @@ def example(arr, target):
             hi = mid - 1
     return -1
 ```
+```julia
+function example(arr, target)
+    # Binary search: O(log n)
+    lo, hi = 1, length(arr)
+    while lo <= hi
+        mid = (lo + hi) ÷ 2
+        if arr[mid] == target
+            # Then scan outward linearly: O(n)
+            left = mid
+            while left > 1 && arr[left - 1] == target
+                left -= 1
+            end
+            return left
+        elseif arr[mid] < target
+            lo = mid + 1
+        else
+            hi = mid - 1
+        end
+    end
+    return nothing
+end
+```
+```ts
+function example(arr: number[], target: number): number {
+  // Binary search: O(log n)
+  let lo = 0;
+  let hi = arr.length - 1;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (arr[mid] === target) {
+      // Then scan outward linearly: O(n)
+      let left = mid;
+      while (left > 0 && arr[left - 1] === target) {
+        left -= 1;
+      }
+      return left;
+    } else if (arr[mid] < target) {
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return -1;
+}
+```
+```rust
+fn example(arr: &[i32], target: i32) -> Option<usize> {
+    // Binary search: O(log n). hi is exclusive, so it never underflows.
+    let (mut lo, mut hi) = (0, arr.len());
+    while lo < hi {
+        let mid = lo + (hi - lo) / 2;
+        if arr[mid] == target {
+            // Then scan outward linearly: O(n)
+            let mut left = mid;
+            while left > 0 && arr[left - 1] == target {
+                left -= 1;
+            }
+            return Some(left);
+        } else if arr[mid] < target {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    None
+}
+```
 
 **Time:** $O(\log n)$ to find the element, then up to $O(n)$ to scan — **total $O(n)$**. The logarithmic search is swallowed by the linear scan.
 
@@ -807,6 +1322,30 @@ def fib(n):
     if n <= 1:
         return n
     return fib(n - 1) + fib(n - 2)
+```
+```julia
+function fib(n)
+    if n <= 1
+        return n
+    end
+    return fib(n - 1) + fib(n - 2)
+end
+```
+```ts
+function fib(n: number): number {
+  if (n <= 1) {
+    return n;
+  }
+  return fib(n - 1) + fib(n - 2);
+}
+```
+```rust
+fn fib(n: u64) -> u64 {
+    if n <= 1 {
+        return n;
+    }
+    fib(n - 1) + fib(n - 2)
+}
 ```
 
 Each call makes two more at sizes $n-1$ and $n-2$. The call tree has depth $n$ and at each level the number of nodes roughly doubles — $O(2^n)$ calls total. Space is $O(n)$ (maximum call stack depth).
@@ -864,6 +1403,44 @@ def fib(n):
         return n
     return fib(n - 1) + fib(n - 2)
 ```
+```julia
+# A fresh memo per top-level call: Julia evaluates default arguments on
+# every call. (The Memoize.jl package offers an @memoize macro.)
+function fib(n, memo = Dict{Int, Int}())
+    n <= 1 && return n
+    haskey(memo, n) && return memo[n]
+    memo[n] = fib(n - 1, memo) + fib(n - 2, memo)
+    return memo[n]
+end
+```
+```ts
+const memo = new Map<number, number>();
+
+function fib(n: number): number {
+  if (n <= 1) return n;
+  const cached = memo.get(n);
+  if (cached !== undefined) return cached;
+  const result = fib(n - 1) + fib(n - 2);
+  memo.set(n, result);
+  return result;
+}
+```
+```rust
+use std::collections::HashMap;
+
+// Call it as fib(n, &mut HashMap::new()).
+fn fib(n: u64, memo: &mut HashMap<u64, u64>) -> u64 {
+    if n <= 1 {
+        return n;
+    }
+    if let Some(&cached) = memo.get(&n) {
+        return cached;
+    }
+    let result = fib(n - 1, memo) + fib(n - 2, memo);
+    memo.insert(n, result);
+    result
+}
+```
 
 Each unique $n$ is computed exactly once and cached. There are $n$ unique subproblems, each $O(1)$ to compute given its children — **$O(n)$ time, $O(n)$ space**.
 
@@ -886,6 +1463,30 @@ def f(n, m):
     if n == 0 or m == 0:
         return 1
     return f(n - 1, m) + f(n, m - 1)
+```
+```julia
+function f(n, m)
+    if n == 0 || m == 0
+        return 1
+    end
+    return f(n - 1, m) + f(n, m - 1)
+end
+```
+```ts
+function f(n: number, m: number): number {
+  if (n === 0 || m === 0) {
+    return 1;
+  }
+  return f(n - 1, m) + f(n, m - 1);
+}
+```
+```rust
+fn f(n: u64, m: u64) -> u64 {
+    if n == 0 || m == 0 {
+        return 1;
+    }
+    f(n - 1, m) + f(n, m - 1)
+}
 ```
 
 This computes a value on a 2D grid of size $n \times m$. Without memoisation: $O\!\left(\binom{n+m}{n}\right)$ — exponential. With memoisation: $O(n \cdot m)$ time and space, since there are $n \times m$ unique subproblems.
@@ -976,6 +1577,30 @@ def mystery(n):
     if n <= 0:
         return 0
     return n + mystery(n - 1)
+```
+```julia
+function mystery(n)
+    if n <= 0
+        return 0
+    end
+    return n + mystery(n - 1)
+end
+```
+```ts
+function mystery(n: number): number {
+  if (n <= 0) {
+    return 0;
+  }
+  return n + mystery(n - 1);
+}
+```
+```rust
+fn mystery(n: i64) -> i64 {
+    if n <= 0 {
+        return 0;
+    }
+    n + mystery(n - 1)
+}
 ```
 
 > **Answer.** Time: $O(n)$ — one call per integer from $n$ down to $0$. Space: $O(n)$ — the call stack holds $n$ frames simultaneously. This computes $\frac{n(n+1)}{2}$ but via recursion rather than the closed form, so it wastes space.
