@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
+import CodeTabs from "../../components/CodeTabs.astro";
 import ComplexityChart from "../../components/ComplexityChart.astro";
 import { withBase } from "../../lib/url";
 import SortingChart from "../../components/SortingChart.astro";
@@ -105,6 +106,7 @@ const kindLabel = note.data.kind === "template"
 			</div>
 		)}
 	</article>
+	<CodeTabs />
 	<NoteHighlighter noteId={note.id} />
 	<LastVisited title={note.data.title} kind="Notes" />
 </Layout>

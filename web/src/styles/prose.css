@@ -124,6 +124,71 @@
   font-weight: 400;
 }
 
+/* --- Multi-language code tabs (src/lib/remark-code-tabs.ts) ------------- */
+.prose .code-tabs {
+  margin: var(--space-3) 0 var(--space-5);
+}
+
+/* Without JavaScript every panel stays visible, so label each block instead
+   of showing a tab bar that cannot switch anything. */
+.prose .code-tabs:not([data-enhanced]) .code-tabs__list {
+  display: none;
+}
+
+.prose .code-tabs:not([data-enhanced]) .code-tabs__panel::before {
+  content: attr(data-label);
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--muted);
+  font: 600 var(--fs-micro) var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.prose .code-tabs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2) 0;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.prose .code-tabs__tab {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: 600 var(--fs-eyebrow) var(--font-sans);
+  letter-spacing: 0.04em;
+  padding: var(--space-2) var(--space-3);
+}
+
+.prose .code-tabs__tab:hover {
+  color: var(--text);
+}
+
+.prose .code-tabs__tab[aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.prose .code-tabs__tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-xs);
+}
+
+.prose .code-tabs[data-enhanced] .code-tabs__panel pre {
+  margin: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
 /* --- Tables ------------------------------------------------------------- */
 .prose :where(table) {
   display: block;
