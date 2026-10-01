@@ -36,6 +36,30 @@ def sum_to(n):
         return 0
     return n + sum_to(n - 1)  # 2. recursive case, 3. n shrinks by 1
 ```
+```julia
+function sum_to(n)
+    if n == 0                 # 1. base case
+        return 0
+    end
+    return n + sum_to(n - 1)  # 2. recursive case, 3. n shrinks by 1
+end
+```
+```ts
+function sumTo(n: number): number {
+  if (n === 0) {            // 1. base case
+    return 0;
+  }
+  return n + sumTo(n - 1);  // 2. recursive case, 3. n shrinks by 1
+}
+```
+```rust
+fn sum_to(n: u64) -> u64 {
+    if n == 0 {               // 1. base case
+        return 0;
+    }
+    n + sum_to(n - 1)         // 2. recursive case, 3. n shrinks by 1
+}
+```
 
 If any one of these is missing, the function either returns a wrong answer or never stops.
 
@@ -50,6 +74,36 @@ def countdown(n):
     print("down", n)   # runs on the way down: 3, 2, 1
     countdown(n - 1)
     print("up", n)     # runs on the way up:   1, 2, 3
+```
+```julia
+function countdown(n)
+    if n == 0
+        return
+    end
+    println("down ", n)   # runs on the way down: 3, 2, 1
+    countdown(n - 1)
+    println("up ", n)     # runs on the way up:   1, 2, 3
+end
+```
+```ts
+function countdown(n: number): void {
+  if (n === 0) {
+    return;
+  }
+  console.log("down", n);   // runs on the way down: 3, 2, 1
+  countdown(n - 1);
+  console.log("up", n);     // runs on the way up:   1, 2, 3
+}
+```
+```rust
+fn countdown(n: u32) {
+    if n == 0 {
+        return;
+    }
+    println!("down {n}");   // runs on the way down: 3, 2, 1
+    countdown(n - 1);
+    println!("up {n}");     // runs on the way up:   1, 2, 3
+}
 ```
 
 That "work on the way back up" is the one thing recursion gives you for free. A loop has no way back up unless you build one with a stack.
@@ -76,7 +130,7 @@ For loops, the matching discipline is the **loop invariant**: a statement that i
 | **Problem shape** | Breaks into smaller copies of itself: trees, nested data, divide and conquer | Steps through items in order: arrays, strings, streams |
 | **Maximum depth** | Small or bounded, such as $O(\log n)$ on balanced trees or halving | Could be $O(n)$ or unbounded: long lists, skewed trees, big grids |
 | **Work after the call** | Must combine children's results (postorder, merge step) | Nothing to combine, so a loop is simpler |
-| **Language** | Guaranteed tail calls (Scheme, Haskell, Scala `@tailrec`) | Python (default limit about 1000 frames), Java, JavaScript, C++, Rust: no guaranteed tail-call elimination |
+| **Language** | Guaranteed tail calls (Scheme, Haskell, Scala `@tailrec`) | Python (default limit about 1000 frames), Julia, Java, JavaScript/TypeScript, C++, Rust: no guaranteed tail-call elimination |
 | **Readability** | The code reads like the problem's definition | The state to track by hand is small |
 | **Performance** | Usually fine | Hot inner loops avoid call overhead |
 | **Extra memory** | $O(\text{depth})$ call stack, always | Often $O(1)$ |
@@ -142,6 +196,52 @@ def gcd_iter(a, b):     # same thing as a loop
         a, b = b, a % b
     return a
 ```
+```julia
+# Named gcd_rec so it doesn't clash with Base.gcd.
+function gcd_rec(a, b)  # tail-recursive
+    if b == 0
+        return a
+    end
+    return gcd_rec(b, a % b)
+end
+
+function gcd_iter(a, b) # same thing as a loop
+    while b != 0
+        a, b = b, a % b
+    end
+    return a
+end
+```
+```ts
+function gcd(a: number, b: number): number {      // tail-recursive
+  if (b === 0) {
+    return a;
+  }
+  return gcd(b, a % b);
+}
+
+function gcdIter(a: number, b: number): number {  // same thing as a loop
+  while (b !== 0) {
+    [a, b] = [b, a % b];
+  }
+  return a;
+}
+```
+```rust
+fn gcd(a: u64, b: u64) -> u64 {               // tail-recursive
+    if b == 0 {
+        return a;
+    }
+    gcd(b, a % b)
+}
+
+fn gcd_iter(mut a: u64, mut b: u64) -> u64 {  // same thing as a loop
+    while b != 0 {
+        (a, b) = (b, a % b);
+    }
+    a
+}
+```
 
 A non-tail function can often be turned into a tail-recursive one by carrying the partial result in an **accumulator**:
 
@@ -151,8 +251,34 @@ def factorial(n, acc=1):
         return acc
     return factorial(n - 1, acc * n)   # nothing left to do after this call
 ```
+```julia
+# Named factorial_acc so it doesn't clash with Base.factorial.
+function factorial_acc(n, acc=1)
+    if n == 0
+        return acc
+    end
+    return factorial_acc(n - 1, acc * n)   # nothing left to do after this call
+end
+```
+```ts
+function factorial(n: number, acc = 1): number {
+  if (n === 0) {
+    return acc;
+  }
+  return factorial(n - 1, acc * n);   // nothing left to do after this call
+}
+```
+```rust
+// Rust has no default arguments: call it as factorial(n, 1).
+fn factorial(n: u64, acc: u64) -> u64 {
+    if n == 0 {
+        return acc;
+    }
+    factorial(n - 1, acc * n)   // nothing left to do after this call
+}
+```
 
-Python still keeps every frame (it has no tail-call elimination), so the win in Python is that the loop version becomes obvious, not that the recursion becomes safe.
+None of these four languages *guarantees* tail-call elimination. Python and Julia never do it. TypeScript runs on JavaScript engines, and only Safari's implements the tail calls the spec asks for; V8 (Chrome, Node) does not. Rust's compiler may turn a tail call into a jump in an optimised build, but it doesn't promise to, so a debug build can still overflow. Either way, the win is that the loop version becomes obvious, not that the recursion becomes safe.
 
 ### Everything else: simulate the call stack
 
@@ -172,6 +298,75 @@ def preorder(root):
             stack.append(node.left)
     return out
 ```
+```julia
+mutable struct TreeNode
+    val::Int
+    left::Union{TreeNode, Nothing}
+    right::Union{TreeNode, Nothing}
+end
+
+function preorder(root)
+    out = Int[]
+    stack = root === nothing ? TreeNode[] : [root]
+    while !isempty(stack)
+        node = pop!(stack)
+        push!(out, node.val)
+        if node.right !== nothing
+            push!(stack, node.right)   # push right first so left is popped first
+        end
+        if node.left !== nothing
+            push!(stack, node.left)
+        end
+    end
+    return out
+end
+```
+```ts
+interface TreeNode {
+  val: number;
+  left: TreeNode | null;
+  right: TreeNode | null;
+}
+
+function preorder(root: TreeNode | null): number[] {
+  const out: number[] = [];
+  const stack: TreeNode[] = root ? [root] : [];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    out.push(node.val);
+    if (node.right) {
+      stack.push(node.right);   // push right first so left is popped first
+    }
+    if (node.left) {
+      stack.push(node.left);
+    }
+  }
+  return out;
+}
+```
+```rust
+struct TreeNode {
+    val: i32,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
+}
+
+// Takes a borrowed root: call it as preorder(tree.as_deref()).
+fn preorder(root: Option<&TreeNode>) -> Vec<i32> {
+    let mut out = Vec::new();
+    let mut stack: Vec<&TreeNode> = root.into_iter().collect();
+    while let Some(node) = stack.pop() {
+        out.push(node.val);
+        if let Some(right) = node.right.as_deref() {
+            stack.push(right);   // push right first so left is popped first
+        }
+        if let Some(left) = node.left.as_deref() {
+            stack.push(left);
+        }
+    }
+    out
+}
+```
 
 **Inorder** has to remember "come back to this node after its left subtree":
 
@@ -186,6 +381,55 @@ def inorder(root):
         out.append(node.val)
         node = node.right
     return out
+```
+```julia
+function inorder(root)
+    out, stack, node = Int[], TreeNode[], root
+    while !isempty(stack) || node !== nothing
+        while node !== nothing      # walk as far left as possible
+            push!(stack, node)
+            node = node.left
+        end
+        node = pop!(stack)          # the leftmost node not yet visited
+        push!(out, node.val)
+        node = node.right
+    end
+    return out
+end
+```
+```ts
+function inorder(root: TreeNode | null): number[] {
+  const out: number[] = [];
+  const stack: TreeNode[] = [];
+  let node = root;
+  while (stack.length > 0 || node) {
+    while (node) {                // walk as far left as possible
+      stack.push(node);
+      node = node.left;
+    }
+    node = stack.pop()!;          // the leftmost node not yet visited
+    out.push(node.val);
+    node = node.right;
+  }
+  return out;
+}
+```
+```rust
+fn inorder(root: Option<&TreeNode>) -> Vec<i32> {
+    let mut out = Vec::new();
+    let mut stack: Vec<&TreeNode> = Vec::new();
+    let mut node = root;
+    while !stack.is_empty() || node.is_some() {
+        while let Some(current) = node {        // walk as far left as possible
+            stack.push(current);
+            node = current.left.as_deref();
+        }
+        let current = stack.pop().unwrap();     // the leftmost node not yet visited
+        out.push(current.val);
+        node = current.right.as_deref();
+    }
+    out
+}
 ```
 
 **Postorder** (or any "combine the children" problem) is simplest with a visited flag. It is a direct simulation of "first call, then return":
@@ -204,6 +448,63 @@ def postorder(root):
             stack.append((node.right, False))
             stack.append((node.left, False))
     return out
+```
+```julia
+function postorder(root)
+    out = Int[]
+    stack = Tuple{Union{TreeNode, Nothing}, Bool}[(root, false)]
+    while !isempty(stack)
+        node, children_done = pop!(stack)
+        if node === nothing
+            continue
+        end
+        if children_done
+            push!(out, node.val)               # the "after the calls" work
+        else
+            push!(stack, (node, true))         # come back after the children
+            push!(stack, (node.right, false))
+            push!(stack, (node.left, false))
+        end
+    end
+    return out
+end
+```
+```ts
+function postorder(root: TreeNode | null): number[] {
+  const out: number[] = [];
+  const stack: Array<[TreeNode | null, boolean]> = [[root, false]];
+  while (stack.length > 0) {
+    const [node, childrenDone] = stack.pop()!;
+    if (node === null) {
+      continue;
+    }
+    if (childrenDone) {
+      out.push(node.val);               // the "after the calls" work
+    } else {
+      stack.push([node, true]);         // come back after the children
+      stack.push([node.right, false]);
+      stack.push([node.left, false]);
+    }
+  }
+  return out;
+}
+```
+```rust
+fn postorder(root: Option<&TreeNode>) -> Vec<i32> {
+    let mut out = Vec::new();
+    let mut stack = vec![(root, false)];
+    while let Some((node, children_done)) = stack.pop() {
+        let Some(node) = node else { continue };
+        if children_done {
+            out.push(node.val);                         // the "after the calls" work
+        } else {
+            stack.push((Some(node), true));             // come back after the children
+            stack.push((node.right.as_deref(), false));
+            stack.push((node.left.as_deref(), false));
+        }
+    }
+    out
+}
 ```
 
 The visited-flag pattern works for any recursive function: push a frame to visit later, then push its children. It is the most general conversion technique.
@@ -224,10 +525,10 @@ For "reach everything" problems (connected components, flood fill) neither diffe
 | Mistake | Symptom | Fix |
 |---|---|---|
 | Base case missing or unreachable, such as stepping `n - 2` from an odd `n` toward `0` | `RecursionError` / stack overflow | Check that *every* input reaches a base case: use `n <= 0`, or add a second base case |
-| Slicing on every call (`f(lst[1:])`) | $O(n^2)$ time and memory from copies | Pass an index instead |
+| Slicing on every call (`f(lst[1:])` in Python, `f(v[2:end])` in Julia, `f(arr.slice(1))` in TypeScript) | $O(n^2)$ time and memory from copies | Pass an index instead. Rust's `&v[1..]` and Julia's `@view v[2:end]` are $O(1)$ views, not copies |
 | Ignoring the call stack in space analysis | Claiming $O(1)$ space for recursive traversal | State $O(h)$ or $O(\text{depth})$ explicitly |
 | Branching recursion with overlapping subproblems | Exponential time, such as naive Fibonacci | Memoize, or go bottom-up |
-| Mutable default argument as a memo or path (`def f(x, seen=set())`) | State leaks between separate top-level calls | Default to `None` and create the set inside |
+| Python only: mutable default argument as a memo or path (`def f(x, seen=set())`) | State leaks between separate top-level calls | Default to `None` and create the set inside |
 | Forgetting to undo a choice in backtracking | Duplicated or corrupted results | Pair every `append` with a `pop` after the recursive call |
 | Raising `sys.setrecursionlimit` very high in Python | Interpreter segfaults when the C stack runs out | Convert to iteration instead |
 

@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test tests/*.test.ts",
-    "verify:notes": "node scripts/verify-note-routes.ts"
+    "verify:notes": "node scripts/verify-note-routes.ts",
+    "test:built": "node --test scripts/*.test.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",

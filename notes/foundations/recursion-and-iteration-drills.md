@@ -43,6 +43,36 @@ def f(n):
     f(n - 1)
     print("after", n)
 ```
+```julia
+function f(n)
+    if n == 0
+        return
+    end
+    println("before ", n)
+    f(n - 1)
+    println("after ", n)
+end
+```
+```ts
+function f(n: number): void {
+  if (n === 0) {
+    return;
+  }
+  console.log("before", n);
+  f(n - 1);
+  console.log("after", n);
+}
+```
+```rust
+fn f(n: u32) {
+    if n == 0 {
+        return;
+    }
+    println!("before {n}");
+    f(n - 1);
+    println!("after {n}");
+}
+```
 
 **Q2. What does `g(4)` return, and how many times is `g` called in total?**
 
@@ -51,6 +81,30 @@ def g(n):
     if n <= 1:
         return n
     return g(n - 1) + g(n - 2)
+```
+```julia
+function g(n)
+    if n <= 1
+        return n
+    end
+    return g(n - 1) + g(n - 2)
+end
+```
+```ts
+function g(n: number): number {
+  if (n <= 1) {
+    return n;
+  }
+  return g(n - 1) + g(n - 2);
+}
+```
+```rust
+fn g(n: u64) -> u64 {
+    if n <= 1 {
+        return n;
+    }
+    g(n - 1) + g(n - 2)
+}
 ```
 
 **Q3. What goes wrong when you call `h(5)`?**
@@ -61,6 +115,30 @@ def h(n):
         return 0
     return n + h(n - 2)
 ```
+```julia
+function h(n)
+    if n == 0
+        return 0
+    end
+    return n + h(n - 2)
+end
+```
+```ts
+function h(n: number): number {
+  if (n === 0) {
+    return 0;
+  }
+  return n + h(n - 2);
+}
+```
+```rust
+fn h(n: i64) -> i64 {   // signed, so n can go below 0
+    if n == 0 {
+        return 0;
+    }
+    n + h(n - 2)
+}
+```
 
 **Q4. A recursive inorder traversal visits a balanced BST and a completely skewed BST, each with $n$ nodes. What is the stack space for each, and which one would make you switch to an iterative version in Python?**
 
@@ -69,8 +147,8 @@ def h(n):
 
 1. `before 3`, `before 2`, `before 1`, `after 1`, `after 2`, `after 3`. The "after" lines run as the stack unwinds, so they come out in reverse order.
 2. It returns `3`. `g` is called **9** times in total: `g(4)` calls `g(3)` and `g(2)`, and `g(2)` is computed twice. Repeated work like this is why memoization exists.
-3. `5 → 3 → 1 → -1 → -3 → …` skips over `0`, so the base case is never reached. Python raises `RecursionError` after about 1000 frames. Fix it with `if n <= 0`.
-4. Balanced: $O(\log n)$. Skewed: $O(n)$. The skewed tree is effectively a linked list, so a large one will overflow Python's stack. That is the one to convert to an explicit stack.
+3. `5 → 3 → 1 → -1 → -3 → …` skips over `0`, so the base case is never reached. Python raises `RecursionError` after about 1000 frames. Julia throws a `StackOverflowError`, TypeScript a `RangeError: Maximum call stack size exceeded`, and Rust aborts the program with a stack overflow. Fix it with `n <= 0`.
+4. Balanced: $O(\log n)$. Skewed: $O(n)$. The skewed tree is effectively a linked list, so a large one will overflow the stack, and Python's 1000-frame limit hits first. That is the one to convert to an explicit stack.
 
 </details>
 
@@ -84,7 +162,7 @@ Each of these makes one recursive call per step. Write the recursive version fir
 |---|---|---|
 | 1 | Sum of `1..n` | The simplest base case and recursive step |
 | 2 | Factorial | The same pattern with multiplication |
-| 3 | Count the digits of an integer | Shrinking the input with `// 10` instead of `- 1` |
+| 3 | Count the digits of an integer | Shrinking the input with integer division by 10 instead of `- 1` |
 | 4 | [Reverse String](../../algorithms/344-reverse-string) | Recursing on two indices |
 | 5 | Check whether a string is a palindrome | Two-index recursion with an early exit |
 | 6 | Sum and max of a list | Recursing on an index vs slicing: why is `lst[1:]` on every call $O(n^2)$ overall? |

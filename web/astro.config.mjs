@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import remarkCodeTabs from './src/lib/remark-code-tabs.ts';
 
 // https://astro.build/config
 export default defineConfig({
@@ -13,7 +14,7 @@ export default defineConfig({
     shikiConfig: {
       theme: 'github-dark',
     },
-    remarkPlugins: [remarkMath],
+    remarkPlugins: [remarkMath, remarkCodeTabs],
     rehypePlugins: [rehypeKatex],
   },
 });
