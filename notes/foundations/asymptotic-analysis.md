@@ -27,7 +27,9 @@ This framing lets us ignore hardware, language, and constant factors — all of 
 
 "The algorithm does *at most* this much work."
 
-$$f(n) = O(g(n)) \iff \exists\; c > 0,\; n_0 \in \mathbb{N} \;:\; f(n) \leq c \cdot g(n) \quad \forall\; n \geq n_0$$
+$$
+f(n) = O(g(n)) \iff \exists\; c > 0,\; n_0 \in \mathbb{N} \;:\; f(n) \leq c \cdot g(n) \quad \forall\; n \geq n_0
+$$
 
 In plain terms: beyond some threshold $n_0$, $f$ never exceeds $g$ by more than a constant factor $c$. Big O is the notation you'll use in almost every interview and analysis.
 
@@ -37,7 +39,9 @@ In plain terms: beyond some threshold $n_0$, $f$ never exceeds $g$ by more than 
 
 "The algorithm does *at least* this much work."
 
-$$f(n) = \Omega(g(n)) \iff \exists\; c > 0,\; n_0 \in \mathbb{N} \;:\; f(n) \geq c \cdot g(n) \quad \forall\; n \geq n_0$$
+$$
+f(n) = \Omega(g(n)) \iff \exists\; c > 0,\; n_0 \in \mathbb{N} \;:\; f(n) \geq c \cdot g(n) \quad \forall\; n \geq n_0
+$$
 
 This is used to prove that no algorithm can solve a problem faster than a certain rate. The classic result: any comparison-based sorting algorithm is $\Omega(n \log n)$ because you need at least $\log_2(n!)$ comparisons to distinguish all $n!$ possible orderings.
 
@@ -45,7 +49,9 @@ This is used to prove that no algorithm can solve a problem faster than a certai
 
 "The algorithm is *exactly* this order of growth, up to constants."
 
-$$f(n) = \Theta(g(n)) \iff \exists\; c_1, c_2 > 0,\; n_0 \;:\; c_1 \cdot g(n) \leq f(n) \leq c_2 \cdot g(n) \quad \forall\; n \geq n_0$$
+$$
+f(n) = \Theta(g(n)) \iff \exists\; c_1, c_2 > 0,\; n_0 \;:\; c_1 \cdot g(n) \leq f(n) \leq c_2 \cdot g(n) \quad \forall\; n \geq n_0
+$$
 
 $\Theta$ means $O$ and $\Omega$ simultaneously — the function is sandwiched. Merge sort is $\Theta(n \log n)$: it is always exactly that, best and worst case alike.
 
@@ -53,9 +59,13 @@ $\Theta$ means $O$ and $\Omega$ simultaneously — the function is sandwiched. M
 
 Less common but useful for precise comparisons:
 
-$$f(n) = o(g(n)) \iff \lim_{n \to \infty} \frac{f(n)}{g(n)} = 0$$
+$$
+f(n) = o(g(n)) \iff \lim_{n \to \infty} \frac{f(n)}{g(n)} = 0
+$$
 
-$$f(n) = \omega(g(n)) \iff \lim_{n \to \infty} \frac{f(n)}{g(n)} = \infty$$
+$$
+f(n) = \omega(g(n)) \iff \lim_{n \to \infty} \frac{f(n)}{g(n)} = \infty
+$$
 
 Big O says $f$ grows *at most as fast* as $g$. Little-o says $f$ grows *strictly slower* than $g$ — the ratio goes to zero. For example, $n = o(n^2)$ but $n \neq o(n)$.
 
@@ -73,19 +83,25 @@ Big O says $f$ grows *at most as fast* as $g$. Little-o says $f$ grows *strictly
 
 ### 1. Drop Constants
 
-$$O(2n) \to O(n) \qquad O(500) \to O(1) \qquad O\!\left(\frac{n}{2}\right) \to O(n)$$
+$$
+O(2n) \to O(n) \qquad O(500) \to O(1) \qquad O\!\left(\frac{n}{2}\right) \to O(n)
+$$
 
 A constant factor shifts the curve vertically but doesn't change its shape.
 
 ### 2. Drop Lower-Order Terms
 
-$$O(n^2 + n) \to O(n^2) \qquad O(n + \log n) \to O(n) \qquad O(n^3 + n^2 + n) \to O(n^3)$$
+$$
+O(n^2 + n) \to O(n^2) \qquad O(n + \log n) \to O(n) \qquad O(n^3 + n^2 + n) \to O(n^3)
+$$
 
 At large $n$, the dominant term overwhelms everything else. At $n = 10^6$, the $n^2$ term is $10^{12}$ while the $n$ term is only $10^6$ — a factor of a million smaller.
 
 ### 3. Different Variables Stay Separate
 
-$$O(n + m) \text{ stays } O(n + m) \qquad O(n \cdot m) \text{ stays } O(n \cdot m)$$
+$$
+O(n + m) \text{ stays } O(n + m) \qquad O(n \cdot m) \text{ stays } O(n \cdot m)
+$$
 
 You can only simplify if you know the relationship between the variables. If $m = O(n)$ then $O(n + m) = O(n)$, but if $m$ is independent you must keep both.
 
@@ -107,6 +123,10 @@ for i in range(n):          # O(n)
 # Total: 0 + 1 + 2 + ... + (n-1) = n(n-1)/2 = O(n²)
 ```
 
+#### Derivation
+
+The inner loop runs $i$ times for each $i$, so the total is $\sum_{i=0}^{n-1} i$. Pair the first and last terms: $(0 + (n-1)) + (1 + (n-2)) + \cdots$. Each pair sums to $n-1$ and there are $n/2$ pairs, so the total is $\frac{n(n-1)}{2} = \frac{1}{2}n^2 - \frac{1}{2}n$. Drop the constant $\frac{1}{2}$ and the lower-order term to get $O(n^2)$.
+
 ```python
 for i in range(n):          # O(n)
     j = i
@@ -114,6 +134,21 @@ for i in range(n):          # O(n)
         j = j // 2          # halving: O(log i)
 # Total: O(n log n)
 ```
+
+#### Derivation
+
+For a fixed $i \geq 1$, the while loop runs $\lfloor \log_2 i \rfloor + 1$ times (see Worked Example 3). For $i = 0$ it runs 0 times. Summing over the outer loop:
+
+$$
+\begin{aligned}
+\sum_{i=1}^{n-1} \left(\lfloor \log_2 i \rfloor + 1\right)
+  &\leq \sum_{i=1}^{n-1} \log_2 i + n \\
+  &= \log_2\big((n-1)!\big) + n \\
+  &\leq n \log_2 n + n = O(n \log n)
+\end{aligned}
+$$
+
+The step $\log_2((n-1)!) \leq n\log_2 n$ holds because $(n-1)!$ is a product of fewer than $n$ factors, each less than $n$. For the lower bound, look only at the top half $i \geq n/2$. Each of those roughly $n/2$ terms is at least $\log_2(n/2)$, so the total is at least $\frac{n}{2}\log_2\frac{n}{2} = \Omega(n \log n)$. The bound is therefore tight: $\Theta(n \log n)$.
 
 ### 5. Sequential Steps Add, Then Simplify
 
@@ -208,11 +243,27 @@ def binary_search(arr, target, lo, hi):
 
 One recursive call on a problem of size $n/2$, constant work at each level:
 
-$$T(n) = T\!\left(\frac{n}{2}\right) + O(1)$$
+$$
+T(n) = T\!\left(\frac{n}{2}\right) + O(1)
+$$
 
-Solving by repeated substitution:
+Solving by repeated substitution. Write the constant work as $c$ and unroll:
 
-$$T(n) = T\!\left(\frac{n}{4}\right) + O(1) + O(1) = \cdots = O(1) \cdot \log_2 n = O(\log n)$$
+$$
+\begin{aligned}
+T(n) &= T\!\left(\tfrac{n}{2}\right) + c \\
+     &= T\!\left(\tfrac{n}{4}\right) + c + c \\
+     &= T\!\left(\tfrac{n}{8}\right) + 3c \\
+     &\;\;\vdots \\
+     &= T\!\left(\tfrac{n}{2^k}\right) + kc
+\end{aligned}
+$$
+
+The recursion bottoms out when the subproblem has size 1, which means $n / 2^k = 1$, or $k = \log_2 n$. Substituting:
+
+$$
+T(n) = T(1) + c\log_2 n = O(\log n)
+$$
 
 **Example — merge sort:**
 
@@ -228,13 +279,17 @@ def merge_sort(arr):
 
 Two recursive calls on $n/2$, linear merge step:
 
-$$T(n) = 2T\!\left(\frac{n}{2}\right) + O(n)$$
+$$
+T(n) = 2T\!\left(\frac{n}{2}\right) + O(n)
+$$
 
 ### The Master Theorem
 
 The Master Theorem solves recurrences of the form:
 
-$$T(n) = aT\!\left(\frac{n}{b}\right) + f(n)$$
+$$
+T(n) = aT\!\left(\frac{n}{b}\right) + f(n)
+$$
 
 where $a \geq 1$ (number of subproblems), $b > 1$ (factor by which input shrinks), and $f(n)$ is the cost of work outside the recursive calls.
 
@@ -250,21 +305,65 @@ Define the **critical exponent** $c^* = \log_b a$.
 
 **Applying it to merge sort:** $a = 2$, $b = 2$, $f(n) = n$.
 
-$$c^* = \log_2 2 = 1 \quad \Rightarrow \quad n^{c^*} = n$$
+$$
+c^* = \log_2 2 = 1 \quad \Rightarrow \quad n^{c^*} = n
+$$
 
 $f(n) = n = \Theta(n^1 \log^0 n)$ — this is Case 2 with $k = 0$.
 
-$$T(n) = \Theta(n \log n) \checkmark$$
+$$
+T(n) = \Theta(n \log n) \checkmark
+$$
 
 **More examples:**
 
-| Recurrence | $a$ | $b$ | $c^*$ | $f(n)$ | Case | Result |
-|---|---|---|---|---|---|---|
-| $T(n) = 2T(n/2) + n$ | 2 | 2 | 1 | $n$ | 2 | $\Theta(n \log n)$ |
-| $T(n) = 4T(n/2) + n$ | 4 | 2 | 2 | $n$ | 1 | $\Theta(n^2)$ |
-| $T(n) = T(n/2) + n$ | 1 | 2 | 0 | $n$ | 3 | $\Theta(n)$ |
-| $T(n) = 9T(n/3) + n^2$ | 9 | 3 | 2 | $n^2$ | 2 | $\Theta(n^2 \log n)$ |
-| $T(n) = 2T(n/2) + n^2$ | 2 | 2 | 1 | $n^2$ | 3 | $\Theta(n^2)$ |
+| Recurrence | Case | Result |
+|---|---|---|
+| $T(n) = 2T(n/2) + n$ | 2 | $\Theta(n \log n)$ |
+| $T(n) = 4T(n/2) + n$ | 1 | $\Theta(n^2)$ |
+| $T(n) = T(n/2) + n$ | 3 | $\Theta(n)$ |
+| $T(n) = 9T(n/3) + n^2$ | 2 | $\Theta(n^2 \log n)$ |
+| $T(n) = 2T(n/2) + n^2$ | 3 | $\Theta(n^2)$ |
+
+#### Derivation for each row
+
+For each recurrence, identify $a$, $b$, and $f(n)$; compute $c^* = \log_b a$, then compare $f(n)$ with $n^{c^*}$:
+
+1. **$T(n) = 2T(n/2) + n$**
+
+   $a = 2$, $b = 2$, $f(n) = n$. So $c^* = \log_2 2 = 1$ and $n^{c^*} = n$.
+
+   $f(n) = n = \Theta(n^1 \log^0 n)$ matches **Case 2** with $k = 0$. Thus $T(n) = \Theta(n \log n)$.
+
+2. **$T(n) = 4T(n/2) + n$**
+
+   $a = 4$, $b = 2$, $f(n) = n$. So $c^* = \log_2 4 = 2$ and $n^{c^*} = n^2$.
+
+   $f(n) = n = O(n^{2 - \varepsilon})$ with $\varepsilon = 1$: recursive work dominates. **Case 1** gives $T(n) = \Theta(n^2)$.
+
+3. **$T(n) = T(n/2) + n$**
+
+   $a = 1$, $b = 2$, $f(n) = n$. So $c^* = \log_2 1 = 0$ and $n^{c^*} = 1$.
+
+   $f(n) = n = \Omega(n^{0 + \varepsilon})$ with $\varepsilon = 1$. For **Case 3**, also check regularity ($a f(n/b) \leq k f(n)$ for some $k < 1$): $1 \cdot \frac{n}{2} = \frac{1}{2}n$ ✓. Thus $T(n) = \Theta(n)$.
+
+   Sanity check: unrolling gives $n + \frac{n}{2} + \frac{n}{4} + \cdots \leq 2n$.
+
+4. **$T(n) = 9T(n/3) + n^2$**
+
+   $a = 9$, $b = 3$, $f(n) = n^2$. So $c^* = \log_3 9 = 2$ and $n^{c^*} = n^2$.
+
+   $f(n) = n^2 = \Theta(n^2 \log^0 n)$ matches **Case 2** with $k = 0$. Thus $T(n) = \Theta(n^2 \log n)$.
+
+5. **$T(n) = 2T(n/2) + n^2$**
+
+   $a = 2$, $b = 2$, $f(n) = n^2$. So $c^* = \log_2 2 = 1$ and $n^{c^*} = n$.
+
+   $f(n) = n^2 = \Omega(n^{1 + \varepsilon})$ with $\varepsilon = 1$. Regularity holds: $2 \cdot \left(\frac{n}{2}\right)^2 = \frac{1}{2}n^2$ ✓. **Case 3** gives $T(n) = \Theta(n^2)$.
+
+#### Recursion-tree view: why Case 2 picks up a log
+
+For merge sort, level $j$ of the tree has $2^j$ subproblems of size $n/2^j$. Each level therefore does $2^j \cdot \frac{n}{2^j} = n$ work. There are $\log_2 n + 1$ levels, so the total is $n(\log_2 n + 1) = \Theta(n \log n)$. In Case 1 the per-level cost grows geometrically toward the leaves, so the leaves dominate. In Case 3 it shrinks geometrically, so the root dominates.
 
 > The Master Theorem does **not** apply when subproblems have unequal sizes (e.g., $T(n) = T(n/3) + T(2n/3) + n$) — use the recursion tree method instead.
 
@@ -296,7 +395,7 @@ def copy_array(arr):          # O(n) space — allocates a new array
 def merge_sort(arr):          # O(n) space — temp arrays during merge
     ...                       # O(log n) call stack depth
 
-def fib(n):                   # O(n) time, O(n) space (call stack)
+def fib(n):                   # O(2^n) time, O(n) space (call stack)
     if n <= 1: return n
     return fib(n-1) + fib(n-2)
 
@@ -397,6 +496,16 @@ def example(arr):
 
 **Time:** $O(n)$ — the inner loop is constant regardless of input size.
 
+#### Derivation
+
+Let $n = \texttt{len(arr)}$. The outer loop runs $n$ times, and the inner loop always runs exactly 100 times. Total `print` calls:
+
+$$
+\sum_{i=0}^{n-1} 100 = 100n
+$$
+
+By the definition of Big O, $100n \leq c \cdot n$ with $c = 100$ for every $n \geq 1$, so $T(n) = O(n)$. The inner loop also always runs, so $100n \geq 1 \cdot n$ and the bound is tight: $\Theta(n)$.
+
 ---
 
 ### Example 2 — Triangular sum
@@ -410,9 +519,35 @@ def example(arr):
 
 **Time:** $\displaystyle\sum_{i=0}^{n-1} i = \frac{n(n-1)}{2} = O(n^2)$
 
+#### Derivation
+
+Count how many times the inner body runs for each value of $i$:
+
+| $i$ | 0 | 1 | 2 | $\cdots$ | $n-1$ |
+|---|---|---|---|---|---|
+| inner iterations | 0 | 1 | 2 | $\cdots$ | $n-1$ |
+
+Let $S = 0 + 1 + \cdots + (n-1)$. Write the same sum backwards and add the two versions term by term:
+
+$$
+\begin{aligned}
+S  &= 0 + 1 + \cdots + (n-1) \\
+S  &= (n-1) + (n-2) + \cdots + 0 \\
+2S &= \underbrace{(n-1) + (n-1) + \cdots + (n-1)}_{n \text{ terms}} = n(n-1)
+\end{aligned}
+$$
+
+So $S = \frac{n(n-1)}{2} = \frac{1}{2}n^2 - \frac{1}{2}n$. For the upper bound, $S \leq \frac{1}{2}n^2$. For the lower bound, $S \geq \frac{1}{4}n^2$ whenever $n \geq 2$. Together these give $\Theta(n^2)$, which is half the work of the full $n \times n$ loop but the same growth rate.
+
 ---
 
+<section class="halving-example" aria-labelledby="example-3--logarithmic-while-loop">
+
+<p class="example-eyebrow">Worked example 03</p>
+
 ### Example 3 — Logarithmic while loop
+
+Each pass divides the remaining value by two. How many passes does that take?
 
 ```python
 def example(n):
@@ -421,7 +556,181 @@ def example(n):
         i = i // 2
 ```
 
-**Time:** $O(\log n)$ — $i$ halves each iteration, so the loop runs $\lfloor \log_2 n \rfloor + 1$ times.
+<div class="example-result">
+
+**Time: $O(\log n)$**
+
+For a positive integer $n$, the loop runs $\lfloor \log_2 n \rfloor + 1$ times. Doubling the input adds just one iteration.
+
+</div>
+
+<div class="example-derivation">
+
+#### Why halving gives log n
+
+<section class="calculation-step">
+
+##### 1. Start with the meaning of a logarithm
+
+$\log_2 n$ asks: *"2 to the power of what equals $n$?"*
+
+For example, $2^4 = 16$, so $\log_2 16 = 4$. Starting from 1, four doublings reach 16:
+
+$$
+1 \to 2 \to 4 \to 8 \to 16
+$$
+
+Read that backwards: four halvings take 16 back to 1. For powers of two, **$\log_2 n$ counts the halvings needed to reach 1.** The loop takes one more step to reach 0.
+
+</section>
+
+<section class="calculation-step">
+
+##### 2. Trace a concrete input
+
+Take $n = 16$. Read down the table: each row adds one iteration.
+
+| Iterations ($k$) | Calculation | Value of $i$ |
+|---|---|---|
+| 0 | $16 / 2^0$ | 16 |
+| 1 | $16 / 2^1$ | 8 |
+| 2 | $16 / 2^2$ | 4 |
+| 3 | $16 / 2^3$ | 2 |
+| 4 | $16 / 2^4$ | 1 |
+| 5 | $\lfloor 16 / 2^5 \rfloor$ | 0 (stop) |
+
+Four halvings reach 1. One final integer division reaches 0: **five iterations in total.**
+
+</section>
+
+<section class="calculation-step">
+
+##### 3. Write the pattern
+
+Each iteration introduces another factor of 2 in the denominator:
+
+$$
+\begin{aligned}
+\text{After 1 pass:}\quad &n/2 \\
+\text{After 2 passes:}\quad &n/(2 \cdot 2) = n/2^2 \\
+\text{After } k \text{ passes:}\quad &n/2^k
+\end{aligned}
+$$
+
+For a power of two, these values are exact until we reach 1. With integer division in general, $i = \lfloor n/2^k \rfloor$.
+
+</section>
+
+<section class="calculation-step">
+
+##### 4. Solve for the number of passes
+
+For a power of two, set the value equal to 1:
+
+$$
+\frac{n}{2^k} = 1
+$$
+
+Multiply both sides by $2^k$:
+
+$$
+n = 2^k
+$$
+
+Take $\log_2$ of both sides:
+
+$$
+k = \log_2 n
+$$
+
+That counts the passes to reach 1. Add the final pass to reach 0:
+
+$$
+\text{iterations} = \log_2 n + 1
+$$
+
+Check with 16: $4 + 1 = 5$ iterations, matching the trace above.
+
+</section>
+
+<section class="calculation-step">
+
+##### 5. Account for rounding down
+
+When $n$ is not a power of two, `//` rounds down. For $n = 20$:
+
+$$
+20 \to 10 \to 5 \to 2 \to 1 \to 0
+$$
+
+That's still five iterations. Since $2^4 = 16$ and $2^5 = 32$, we have $\log_2 20 \approx 4.32$. Round down, then add the last pass:
+
+$$
+\lfloor \log_2 20 \rfloor + 1 = 4 + 1 = 5
+$$
+
+For any positive integer $n$, stop at the first integer $k$ satisfying:
+
+$$
+\begin{aligned}
+n/2^k &< 1 \\
+2^k &> n \\
+k &> \log_2 n
+\end{aligned}
+$$
+
+The smallest such integer is $\lfloor \log_2 n \rfloor + 1$.
+
+</section>
+
+<section class="calculation-step">
+
+##### 6. Convert the count to Big O
+
+Each iteration does constant work. If that cost is $c$:
+
+$$
+\begin{aligned}
+T(n) &= c \cdot (\lfloor \log_2 n \rfloor + 1) \\
+     &= \Theta(\log n)
+\end{aligned}
+$$
+
+Dropping the constant factor, rounding, and final extra step gives logarithmic growth.
+
+The log's base only changes a constant factor. Dividing by 3 each time would give:
+
+$$
+\log_3 n = \frac{\log_2 n}{\log_2 3}
+$$
+
+</section>
+
+</div>
+
+<aside class="example-takeaway" aria-label="Halving intuition">
+
+#### Why this stays fast
+
+Doubling $n$ adds one iteration: the first halving brings $2n$ back to $n$.
+
+| Input $n$ | Iterations |
+|---|---|
+| 1,000 | 10 |
+| 1,000,000 | 20 |
+| 1,000,000,000 | 30 |
+
+**The binary view:** `i // 2` removes the last binary digit. For example:
+
+$$
+10100_2 \to 1010_2 \to 101_2
+$$
+
+Those values are 20, 10, and 5. The loop runs once per binary digit of $n$, which has $\lfloor \log_2 n \rfloor + 1$ digits.
+
+</aside>
+
+</section>
 
 ---
 
@@ -437,6 +746,22 @@ def example(arr):
 ```
 
 **Time:** $O(n) + O(n \log n) + O(n) = O(n \log n)$ — dominated by the sort.
+
+#### Derivation
+
+The three steps run one after another, so their costs add:
+
+$$
+T(n) = c_1 n + c_2 n\log_2 n + c_3 n
+$$
+
+For $n \geq 2$ we have $\log_2 n \geq 1$, so $n \leq n\log_2 n$. Replacing each linear term with $n \log_2 n$ gives an upper bound:
+
+$$
+T(n) \leq (c_1 + c_2 + c_3)\, n \log_2 n \quad \text{for all } n \geq 2
+$$
+
+This fits the Big O definition with $c = c_1 + c_2 + c_3$ and $n_0 = 2$, so $T(n) = O(n \log n)$. The ratio $\frac{n}{n \log n} = \frac{1}{\log n} \to 0$ shows that the linear passes are $o(n \log n)$: they become negligible as $n$ grows.
 
 ---
 
@@ -463,6 +788,16 @@ def example(arr, target):
 
 **Time:** $O(\log n)$ to find the element, then up to $O(n)$ to scan — **total $O(n)$**. The logarithmic search is swallowed by the linear scan.
 
+#### Derivation
+
+- **Search phase.** Each iteration of the outer `while` halves the interval `[lo, hi]`, just as in Example 3. It therefore runs at most $\lfloor \log_2 n \rfloor + 1$ times, which is $O(\log n)$.
+- **Scan phase.** The scan runs at most once, because the function returns right after it. It moves `left` from `mid` down toward 0, so it does at most `mid` $\leq n - 1$ steps.
+- **Total.** $T(n) \leq c_1 \log_2 n + c_2 n = O(n)$.
+- **Worst case is tight.** Suppose every element equals `target`. The first probe hits `mid` $= \lfloor (n-1)/2 \rfloor$, and the scan then walks all the way to index 0. That is about $n/2$ steps, so the worst case is $\Theta(n)$.
+- **Best case.** If the target appears once, the scan does 0 steps and only the $O(\log n)$ search remains.
+
+Replacing the scan with a second binary search for the leftmost occurrence makes the whole function $O(\log n)$ in every case.
+
 ---
 
 ### Example 6 — Recursive tree (two branches)
@@ -477,6 +812,44 @@ def fib(n):
 Each call makes two more at sizes $n-1$ and $n-2$. The call tree has depth $n$ and at each level the number of nodes roughly doubles — $O(2^n)$ calls total. Space is $O(n)$ (maximum call stack depth).
 
 Recurrence: $T(n) = T(n-1) + T(n-2) + O(1)$, which solves to $\Theta(\phi^n)$ where $\phi = \frac{1+\sqrt{5}}{2} \approx 1.618$ (the golden ratio). We bound this as $O(2^n)$.
+
+#### Derivation
+
+Let $C(n)$ be the number of calls. Then $C(0) = C(1) = 1$ and $C(n) = C(n-1) + C(n-2) + 1$.
+
+**Upper bound**
+
+Since $C(n-2) \leq C(n-1)$:
+
+$$
+C(n) \leq 2C(n-1) + 1
+$$
+
+Unrolling this gives $C(n) \leq 2^{n+1} - 1$. So $T(n) = O(2^n)$.
+
+**Lower bound**
+
+Since $C(n-1) \geq C(n-2)$:
+
+$$
+C(n) \geq 2C(n-2)
+$$
+
+Each application of this step subtracts 2 from $n$, so it can be applied $\lfloor n/2 \rfloor$ times before reaching a base case. That gives $C(n) \geq 2^{\lfloor n/2 \rfloor} = \Omega(\sqrt{2}^{\,n}) \approx \Omega(1.414^n)$. The call count is therefore exponential either way.
+
+**Exact rate**
+
+Ignoring the $+1$ temporarily, guess a solution of the form $C(n) = x^n$:
+
+$$
+x^n = x^{n-1} + x^{n-2} \;\Rightarrow\; x^2 = x + 1 \;\Rightarrow\; x = \frac{1 \pm \sqrt{5}}{2}
+$$
+
+The larger root $\phi \approx 1.618$ dominates, which gives $\Theta(\phi^n)$. In fact $C(n) = 2F(n+1) - 1$, where $F$ is the Fibonacci sequence with $F(1) = F(2) = 1$. Check: $C(2) = 2F(3) - 1 = 2 \cdot 2 - 1 = 3$, which counts `fib(2)`, `fib(1)`, and `fib(0)` ✓.
+
+**Space**
+
+Only one root-to-leaf path is on the stack at a time. The longest path is $n \to n-1 \to \cdots \to 1$, which is $n$ frames, so space is $O(n)$.
 
 ---
 
@@ -494,6 +867,16 @@ def fib(n):
 
 Each unique $n$ is computed exactly once and cached. There are $n$ unique subproblems, each $O(1)$ to compute given its children — **$O(n)$ time, $O(n)$ space**.
 
+#### Derivation
+
+- **Count the subproblems.** The only arguments that can ever appear are $0, 1, \ldots, n$, which is $n + 1$ distinct values.
+- **Cost per subproblem.** The first call to `fib(k)` does $O(1)$ work of its own plus two recursive calls. Any later call to `fib(k)` is a cache hit costing $O(1)$.
+- **Count all calls.** Each of the $n + 1$ first calls triggers at most 2 further calls, so there are at most $1 + 2(n+1)$ calls in total.
+- **Time.** $O(1)$ per call times $O(n)$ calls gives $T(n) = O(n)$.
+- **Space.** The cache holds $n + 1$ entries. The first descent `fib(n)` → `fib(n-1)` → $\cdots$ → `fib(1)` puts $n$ frames on the stack at once. Both are $O(n)$, so total space is $O(n)$.
+
+Compared with Example 6, caching takes the time from $\Theta(\phi^n)$ down to $\Theta(n)$ without changing the stack depth.
+
 ---
 
 ### Example 8 — Nested recursion
@@ -505,7 +888,58 @@ def f(n, m):
     return f(n - 1, m) + f(n, m - 1)
 ```
 
-This computes a value on a 2D grid of size $n \times m$. Without memoisation: $O\!\binom{n+m}{n}$ — exponential. With memoisation: $O(n \cdot m)$ time and space, since there are $n \times m$ unique subproblems.
+This computes a value on a 2D grid of size $n \times m$. Without memoisation: $O\!\left(\binom{n+m}{n}\right)$ — exponential. With memoisation: $O(n \cdot m)$ time and space, since there are $n \times m$ unique subproblems.
+
+#### Derivation
+
+**What the function returns**
+
+The base cases return 1, and the recursion follows Pascal's rule:
+
+$$
+\begin{aligned}
+\binom{n+m}{n}
+  &= \binom{n+m-1}{n-1} \\
+  &\quad + \binom{n+m-1}{n}
+\end{aligned}
+$$
+
+So:
+
+$$
+f(n, m) = \binom{n+m}{n}
+$$
+
+This counts the monotone lattice paths from $(n, m)$ to an edge of the grid.
+
+**Without memoisation**
+
+Every leaf of the call tree returns exactly 1, and each internal call returns the sum of its two children. The number of leaves therefore equals the return value:
+
+$$
+L = \binom{n+m}{n}
+$$
+
+Every internal node has exactly two children. A tree with $L$ leaves has $2L - 1$ nodes, so the call count is:
+
+$$
+2\binom{n+m}{n} - 1 = \Theta\!\left(\binom{n+m}{n}\right)
+$$
+
+For a square grid ($n = m$), Stirling's approximation gives:
+
+$$
+\binom{2n}{n} \sim \frac{4^n}{\sqrt{\pi n}}
+$$
+
+That is exponential. For example, $f(20, 20) = \binom{40}{20} \approx 1.4 \times 10^{11}$ leaves.
+
+**With memoisation**
+
+- **States.** The possible arguments are pairs $(i, j)$ with $0 \leq i \leq n$ and $0 \leq j \leq m$, which is $(n+1)(m+1)$ states.
+- **Work per state.** $O(1)$ plus two cache lookups.
+- **Time.** $(n+1)(m+1) \cdot O(1) = O(nm)$.
+- **Space.** The cache is $O(nm)$. The deepest chain of calls, where each call decrements $n$ or $m$ by one, has at most $n + m$ frames, and $n + m$ is smaller than $nm$ for large grids. Total space is $O(nm)$.
 
 ## Common Mistakes
 

@@ -82,7 +82,7 @@ const kindLabel = note.data.kind === "template"
 		</aside>
 	)}
 
-	<article class="prose">
+	<article class:list={["prose", { "asymptotic-note": note.id === "asymptotic-analysis" }]}>
 		<Content />
 		{note.id === "asymptotic-analysis" && (
 			<div class="chart-section">
@@ -112,6 +112,104 @@ const kindLabel = note.data.kind === "template"
 </Layout>
 
 <style>
+	/* Keep the reading-layout prototype confined to the halving example. */
+	.asymptotic-note :global(.halving-example) {
+		box-sizing: border-box;
+		width: 100%;
+		margin: 3rem 0;
+		padding: clamp(1rem, 3vw, 2rem);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--bg);
+	}
+	.asymptotic-note :global(.halving-example .example-eyebrow) {
+		margin: 0 0 0.5rem;
+		font-size: var(--fs-fine);
+		font-weight: 600;
+		color: var(--accent);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.asymptotic-note :global(.halving-example h3) {
+		margin: 0 0 1rem;
+		font-size: clamp(1.35rem, 3vw, 1.75rem);
+		line-height: 1.25;
+		letter-spacing: -0.02em;
+		text-transform: none;
+	}
+	.asymptotic-note :global(.halving-example h4) {
+		margin: 0 0 1.25rem;
+		padding: 0;
+		border: 0;
+		font-size: 1.1rem;
+		line-height: 1.4;
+	}
+	.asymptotic-note :global(.halving-example h5) {
+		margin: 0 0 1rem;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: var(--accent);
+		font-weight: 600;
+	}
+	.asymptotic-note :global(.halving-example .example-result),
+	.asymptotic-note :global(.halving-example .example-takeaway) {
+		padding: 1.25rem;
+		background: var(--panel);
+		border-radius: var(--radius-sm);
+	}
+	.asymptotic-note :global(.halving-example .example-result) {
+		border-left: 3px solid var(--accent);
+		margin: 1.5rem 0 2.5rem;
+	}
+	.asymptotic-note :global(.halving-example .calculation-step) {
+		padding: 1.5rem 0;
+		border-top: 1px solid var(--border);
+	}
+	.asymptotic-note :global(.halving-example .example-takeaway) {
+		margin-top: 1rem;
+	}
+	.asymptotic-note :global(.halving-example .katex-display) {
+		max-width: 100%;
+		margin: 1.25rem 0;
+		padding: 0.5rem 0;
+	}
+	.asymptotic-note :global(.halving-example table) {
+		display: table;
+		font-size: var(--fs-sm);
+	}
+	.asymptotic-note :global(.halving-example th) {
+		font-size: var(--fs-sm);
+		text-transform: none;
+		letter-spacing: normal;
+	}
+	.asymptotic-note :global(.halving-example td),
+	.asymptotic-note :global(.halving-example th) {
+		padding: 0.65rem 0.75rem;
+	}
+	.asymptotic-note :global(.halving-example .calculation-step > :last-child),
+	.asymptotic-note :global(.halving-example .example-result > :last-child),
+	.asymptotic-note :global(.halving-example .example-takeaway > :last-child) {
+		margin-bottom: 0;
+	}
+	@media (max-width: 540px) {
+		.asymptotic-note :global(.halving-example) {
+			padding: 1rem 0;
+			border-right: 0;
+			border-left: 0;
+			border-radius: 0;
+		}
+		.asymptotic-note :global(.halving-example pre) {
+			padding: 1rem;
+		}
+		.asymptotic-note :global(.halving-example td),
+		.asymptotic-note :global(.halving-example th) {
+			padding: 0.5rem;
+		}
+		.asymptotic-note :global(.halving-example .katex-display) {
+			font-size: 0.9em;
+		}
+	}
+
 	.breadcrumb {
 		display: flex;
 		flex-wrap: wrap;
