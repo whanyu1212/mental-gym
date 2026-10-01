@@ -633,6 +633,8 @@ function isPalindrome(s: string): boolean {
 }
 
 // O(1) space — two pointers, no allocation
+// (compares UTF-16 code units, so this assumes text without emoji or other
+// characters outside the BMP; iterating by code point would need a copy)
 function isPalindromeTwoPointers(s: string): boolean {
   let l = 0;
   let r = s.length - 1;
