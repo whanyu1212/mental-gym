@@ -67,6 +67,12 @@
   --dim-hard: 0.3;  /* visited / consumed values */
 }
 
+@media (min-width: 1000px) {
+  :root {
+    --measure: 80ch;
+  }
+}
+
 /* ----------------------------------------------------------------------------
    Accent channels.
    Each theme block in Layout.astro defines --accent-rgb as space-separated
