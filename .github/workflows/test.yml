@@ -108,8 +108,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes sqlite3
 
-      - name: Start PostgreSQL 17
+      - name: Start PostgreSQL
         run: docker compose -f compose.sql.yml up --detach --wait
+
+      - name: Show PostgreSQL startup logs on failure
+        if: failure()
+        run: docker compose -f compose.sql.yml logs --no-color postgres
 
       - name: Run PostgreSQL exercises
         run: |
@@ -140,7 +144,7 @@ jobs:
             sqlite3 -bail :memory: < "$test_file"
           done
 
-      - name: Stop PostgreSQL 17
+      - name: Stop PostgreSQL
         if: always()
         run: docker compose -f compose.sql.yml down
 
