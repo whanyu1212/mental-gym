@@ -1,7 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
 import CodeTabs from "../../components/CodeTabs.astro";
-import ComplexityChart from "../../components/ComplexityChart.astro";
 import { withBase } from "../../lib/url";
 import SortingChart from "../../components/SortingChart.astro";
 import StackDepthChart from "../../components/StackDepthChart.astro";
@@ -84,13 +83,6 @@ const kindLabel = note.data.kind === "template"
 
 	<article class:list={["prose", { "asymptotic-note": note.id === "asymptotic-analysis" }]}>
 		<Content />
-		{note.id === "asymptotic-analysis" && (
-			<div class="chart-section">
-				<h2>Growth Rate Visualised</h2>
-				<p class="chart-intro">How the common complexity classes scale as <em>n</em> grows. Note the logarithmic y-axis — O(2ⁿ) and O(n!) shoot off the chart almost immediately.</p>
-				<ComplexityChart />
-			</div>
-		)}
 		{note.id === "time-complexity" && (
 			<div class="chart-section">
 				<h2>Sorting Algorithm Comparison</h2>
@@ -112,8 +104,299 @@ const kindLabel = note.data.kind === "template"
 </Layout>
 
 <style>
-	/* Keep the reading-layout prototype confined to the halving example. */
-	.asymptotic-note :global(.halving-example) {
+	.asymptotic-note {
+		max-width: 56rem;
+	}
+	.asymptotic-note :global(h1) {
+		font-size: clamp(2.6rem, 5vw, 3.5rem);
+		letter-spacing: -0.025em;
+	}
+	.asymptotic-note :global(.note-lead) {
+		max-width: 48ch;
+		margin: 0.75rem 0 2rem;
+		color: var(--muted);
+		font-size: var(--fs-lg);
+		line-height: 1.65;
+	}
+	.asymptotic-note :global(h2),
+	.asymptotic-note :global(h3) {
+		scroll-margin-top: 6rem;
+	}
+	.asymptotic-note :global(h3) {
+		font-size: var(--fs-lg);
+		line-height: 1.4;
+		text-transform: none;
+		letter-spacing: normal;
+	}
+	.asymptotic-note :global(> h2) {
+		position: relative;
+		margin: 3.5rem 0 1.25rem;
+		padding-bottom: 0.85rem;
+		font-size: clamp(1.6rem, 3vw, 2rem);
+		letter-spacing: -0.015em;
+	}
+	.asymptotic-note :global(> h2::after) {
+		content: "";
+		position: absolute;
+		bottom: -1px;
+		left: 0;
+		width: 3rem;
+		border-bottom: 2px solid var(--accent);
+	}
+	.asymptotic-note :global(.note-callout),
+	.asymptotic-note :global(> blockquote) {
+		margin: 1.75rem 0;
+		padding: 1.25rem;
+		border-left: 3px solid var(--accent-ring);
+		border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+		background: var(--panel);
+		font-size: var(--fs-sm);
+	}
+	.asymptotic-note :global(.note-callout-label) {
+		margin: 0 0 0.65rem;
+		color: var(--accent);
+		font-size: var(--fs-eyebrow);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.asymptotic-note :global(.note-callout > :last-child) { margin-bottom: 0; }
+	.asymptotic-note :global(> blockquote p) {
+		color: var(--text);
+		font-style: normal;
+	}
+	.asymptotic-note :global(.notation-definition) {
+		margin: 1.25rem 0;
+		padding: clamp(1rem, 3vw, 1.5rem);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+	}
+	.asymptotic-note :global(.notation-definition > h3) {
+		margin: 0 0 0.65rem;
+		font-size: var(--fs-xl);
+	}
+	.asymptotic-note :global(.notation-definition > h3 + p) {
+		color: var(--muted);
+	}
+	.asymptotic-note :global(.notation-definition .katex-display) {
+		box-sizing: border-box;
+		max-width: 100%;
+		margin: 1.25rem 0;
+		padding: 1rem;
+		border-radius: var(--radius-sm);
+		background: var(--panel);
+	}
+	.asymptotic-note :global(.notation-definition > :last-child) { margin-bottom: 0; }
+
+	/* Let the wrapper scroll while the table keeps its native column layout. */
+	.asymptotic-note :global(.note-table) {
+		position: relative;
+		max-width: 100%;
+		margin: 1rem 0 2rem;
+		overflow-x: auto;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		-webkit-overflow-scrolling: touch;
+	}
+	.asymptotic-note :global(.note-table:focus-visible) {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+	}
+	.asymptotic-note :global(.note-table table) {
+		display: table;
+		width: 100%;
+		margin: 0;
+		overflow: visible;
+	}
+	.asymptotic-note :global(.note-table th),
+	.asymptotic-note :global(.note-table td) {
+		padding: 0.8rem 1rem;
+		border: 0;
+		border-bottom: 1px solid var(--border);
+		vertical-align: top;
+		line-height: 1.65;
+	}
+	.asymptotic-note :global(.note-table th) {
+		color: var(--text);
+		font-size: var(--fs-sm);
+		font-weight: 600;
+		letter-spacing: normal;
+		text-transform: none;
+	}
+	.asymptotic-note :global(.note-table tbody tr:nth-child(even)) {
+		background: color-mix(in srgb, var(--panel) 45%, transparent);
+	}
+	.asymptotic-note :global(.note-table tbody tr:last-child td) { border-bottom: 0; }
+	.asymptotic-note :global(#common-mistakes + ol) {
+		padding-left: 2rem;
+	}
+	.asymptotic-note :global(#common-mistakes + ol > li) {
+		margin: 0;
+		padding: 1rem 0 1rem 0.5rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.asymptotic-note :global(#common-mistakes + ol > li::marker) {
+		color: var(--accent);
+		font-family: var(--font-mono);
+		font-size: var(--fs-sm);
+	}
+	.asymptotic-note :global(#common-mistakes + ol > li:last-child) { border-bottom: 0; }
+	.asymptotic-note :global(#common-mistakes + ol p) { margin-bottom: 0; }
+	.asymptotic-note :global(.note-toc) {
+		box-sizing: border-box;
+		max-width: 56rem;
+		padding: clamp(1rem, 3vw, 1.75rem);
+		margin: 0 0 3rem;
+		border: 1px solid var(--border);
+		border-top: 2px solid var(--accent-ring);
+		border-radius: var(--radius-lg);
+		background: linear-gradient(135deg, var(--accent-glow), transparent 60%), var(--panel);
+		font-family: var(--font-sans);
+	}
+	.asymptotic-note :global(.note-toc-header),
+	.asymptotic-note :global(.note-toc-heading) {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.asymptotic-note :global(.note-toc-header) {
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+	.asymptotic-note :global(.note-toc-icon) {
+		flex-shrink: 0;
+		color: var(--accent);
+	}
+	.asymptotic-note :global(.note-toc-label) {
+		margin: 0;
+		color: var(--text);
+		font: 600 var(--fs-display)/1.2 var(--font-serif);
+		letter-spacing: -0.02em;
+	}
+	.asymptotic-note :global(.note-toc-count) {
+		padding: 0.3rem 0.65rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-pill);
+		color: var(--muted);
+		font-size: var(--fs-fine);
+		line-height: 1.5;
+	}
+	.asymptotic-note :global(.note-toc-intro) {
+		margin: 0.65rem 0 1.25rem;
+		color: var(--muted);
+		font-size: var(--fs-sm);
+		line-height: 1.6;
+	}
+	.asymptotic-note :global(.note-toc ol) {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-rows: repeat(5, auto);
+		grid-auto-flow: column;
+		gap: 0.5rem 0.75rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		counter-reset: toc-section;
+	}
+	.asymptotic-note :global(.note-toc li) {
+		margin: 0;
+		min-width: 0;
+		counter-increment: toc-section;
+	}
+	.asymptotic-note :global(.note-toc a) {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		height: 100%;
+		box-sizing: border-box;
+		padding: 0.85rem 0.75rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		background: var(--bg);
+		color: var(--text);
+		font-size: var(--fs-sm);
+		line-height: 1.45;
+		text-decoration: none;
+		transition: border-color var(--dur-fast), background var(--dur-fast);
+	}
+	.asymptotic-note :global(.note-toc a::before) {
+		content: counter(toc-section, decimal-leading-zero);
+		flex-shrink: 0;
+		color: var(--accent);
+		font: 500 var(--fs-fine)/1 var(--font-mono);
+	}
+	.asymptotic-note :global(.note-toc a::after) {
+		content: "";
+		width: 0.4rem;
+		height: 0.4rem;
+		margin-left: auto;
+		flex-shrink: 0;
+		border-top: 1px solid var(--muted);
+		border-right: 1px solid var(--muted);
+		transform: rotate(45deg);
+	}
+	.asymptotic-note :global(.note-toc-copy) {
+		display: grid;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+	.asymptotic-note :global(.note-toc-copy > span) {
+		color: var(--muted);
+		font-size: var(--fs-fine);
+	}
+	.asymptotic-note :global(.note-toc a:hover),
+	.asymptotic-note :global(.note-toc a:focus-visible) {
+		border-color: var(--accent-ring);
+		background: var(--accent-glow);
+	}
+	.asymptotic-note :global(.note-toc a:hover strong),
+	.asymptotic-note :global(.note-toc a:focus-visible strong) {
+		color: var(--accent);
+	}
+	.asymptotic-note :global(.note-toc a:focus-visible) {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+	@media (max-width: 620px) {
+		.asymptotic-note :global(.note-toc ol) {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: none;
+			grid-auto-flow: row;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.asymptotic-note :global(.note-toc a) { transition: none; }
+	}
+	.asymptotic-note :global(.review-question) {
+		margin: 2rem 0;
+		padding-bottom: 2rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.asymptotic-note :global(.review-question > h3) {
+		margin: 0 0 0.75rem;
+		color: var(--text);
+		font-size: var(--fs-xl);
+	}
+	.asymptotic-note :global(.review-answer) {
+		margin: 1rem 0 0;
+		padding: 0.15rem 1rem;
+		background: var(--panel);
+	}
+	.asymptotic-note :global(.review-answer summary) {
+		padding: 0.65rem 0;
+		font-size: var(--fs-sm);
+		line-height: 1.65;
+	}
+	.asymptotic-note :global(.review-answer summary:hover) { color: var(--text); }
+	.asymptotic-note :global(.review-answer[open]) { padding-bottom: 1rem; }
+	.asymptotic-note :global(.review-answer[open] > summary) {
+		margin-bottom: 1rem;
+		border-bottom: 1px solid var(--border);
+	}
+	.asymptotic-note :global(.review-answer > :last-child) { margin-bottom: 0; }
+
+	/* One reading layout for every worked example in this note. */
+	.asymptotic-note :global(.worked-example) {
 		box-sizing: border-box;
 		width: 100%;
 		margin: 3rem 0;
@@ -122,90 +405,98 @@ const kindLabel = note.data.kind === "template"
 		border-radius: var(--radius-md);
 		background: var(--bg);
 	}
-	.asymptotic-note :global(.halving-example .example-eyebrow) {
-		margin: 0 0 0.5rem;
-		font-size: var(--fs-fine);
-		font-weight: 600;
-		color: var(--accent);
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-	}
-	.asymptotic-note :global(.halving-example h3) {
+	.asymptotic-note :global(.worked-example h3) {
 		margin: 0 0 1rem;
 		font-size: clamp(1.35rem, 3vw, 1.75rem);
 		line-height: 1.25;
 		letter-spacing: -0.02em;
 		text-transform: none;
+		scroll-margin-top: 6rem;
 	}
-	.asymptotic-note :global(.halving-example h4) {
+	.asymptotic-note :global(.worked-example h4) {
 		margin: 0 0 1.25rem;
 		padding: 0;
 		border: 0;
 		font-size: 1.1rem;
 		line-height: 1.4;
 	}
-	.asymptotic-note :global(.halving-example h5) {
-		margin: 0 0 1rem;
+	.asymptotic-note :global(.worked-example h5) {
+		margin: 1.5rem 0 1rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--border);
 		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--accent);
 		font-weight: 600;
 	}
-	.asymptotic-note :global(.halving-example .example-result),
-	.asymptotic-note :global(.halving-example .example-takeaway) {
+	.asymptotic-note :global(.worked-example .example-result),
+	.asymptotic-note :global(.worked-example .example-takeaway) {
 		padding: 1.25rem;
 		background: var(--panel);
 		border-radius: var(--radius-sm);
 	}
-	.asymptotic-note :global(.halving-example .example-result) {
+	.asymptotic-note :global(.worked-example .example-result) {
 		border-left: 3px solid var(--accent);
 		margin: 1.5rem 0 2.5rem;
 	}
-	.asymptotic-note :global(.halving-example .calculation-step) {
+	.asymptotic-note :global(.worked-example .calculation-step) {
 		padding: 1.5rem 0;
 		border-top: 1px solid var(--border);
 	}
-	.asymptotic-note :global(.halving-example .example-takeaway) {
+	.asymptotic-note :global(.worked-example .calculation-step h5) {
+		margin-top: 0;
+		padding-top: 0;
+		border-top: 0;
+	}
+	.asymptotic-note :global(.worked-example .example-takeaway) {
 		margin-top: 1rem;
 	}
-	.asymptotic-note :global(.halving-example .katex-display) {
+	.asymptotic-note :global(.worked-example .katex-display) {
 		max-width: 100%;
 		margin: 1.25rem 0;
 		padding: 0.5rem 0;
 	}
-	.asymptotic-note :global(.halving-example table) {
-		display: table;
+	.asymptotic-note :global(.worked-example table) {
+		/* Keep the shared block scroll container for narrow-screen tables. */
 		font-size: var(--fs-sm);
 	}
-	.asymptotic-note :global(.halving-example th) {
+	.asymptotic-note :global(.worked-example th) {
 		font-size: var(--fs-sm);
 		text-transform: none;
 		letter-spacing: normal;
 	}
-	.asymptotic-note :global(.halving-example td),
-	.asymptotic-note :global(.halving-example th) {
+	.asymptotic-note :global(.worked-example td),
+	.asymptotic-note :global(.worked-example th) {
 		padding: 0.65rem 0.75rem;
 	}
-	.asymptotic-note :global(.halving-example .calculation-step > :last-child),
-	.asymptotic-note :global(.halving-example .example-result > :last-child),
-	.asymptotic-note :global(.halving-example .example-takeaway > :last-child) {
+	.asymptotic-note :global(.worked-example > :last-child),
+	.asymptotic-note :global(.worked-example .example-derivation > :last-child),
+	.asymptotic-note :global(.worked-example .calculation-step > :last-child),
+	.asymptotic-note :global(.worked-example .example-result > :last-child),
+	.asymptotic-note :global(.worked-example .example-takeaway > :last-child) {
 		margin-bottom: 0;
 	}
 	@media (max-width: 540px) {
-		.asymptotic-note :global(.halving-example) {
+		.asymptotic-note :global(.note-table th),
+		.asymptotic-note :global(.note-table td) { padding: 0.65rem 0.75rem; }
+		.asymptotic-note :global(.notation-definition .katex-display) {
+			padding: 0.85rem;
+			font-size: 0.9em;
+		}
+		.asymptotic-note :global(.worked-example) {
 			padding: 1rem 0;
 			border-right: 0;
 			border-left: 0;
 			border-radius: 0;
 		}
-		.asymptotic-note :global(.halving-example pre) {
+		.asymptotic-note :global(.worked-example pre) {
 			padding: 1rem;
 		}
-		.asymptotic-note :global(.halving-example td),
-		.asymptotic-note :global(.halving-example th) {
+		.asymptotic-note :global(.worked-example td),
+		.asymptotic-note :global(.worked-example th) {
 			padding: 0.5rem;
 		}
-		.asymptotic-note :global(.halving-example .katex-display) {
+		.asymptotic-note :global(.worked-example .katex-display) {
 			font-size: 0.9em;
 		}
 	}
