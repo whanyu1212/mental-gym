@@ -11,17 +11,62 @@ tags:
   - big-o
 ---
 
+import ComplexityChart from '../../web/src/components/ComplexityChart.astro';
+
 # Asymptotic Analysis
+
+<p class="note-lead">From counting operations to solving recurrences — learn to see how an algorithm grows.</p>
+
+<nav class="note-toc" aria-labelledby="note-index-label">
+
+<div class="note-toc-header">
+  <div class="note-toc-heading">
+    <svg class="note-toc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+      <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" />
+    </svg>
+    <p id="note-index-label" class="note-toc-label">Contents</p>
+  </div>
+  <span class="note-toc-count">10 sections</span>
+</div>
+
+<p class="note-toc-intro">Build the foundations, then put them into practice.</p>
+
+<ol role="list">
+  <li><a href="#the-formal-notations"><span class="note-toc-copy"><strong>Notation</strong><span>Big O, Omega &amp; Theta</span></span></a></li>
+  <li><a href="#rules-for-calculating-big-o"><span class="note-toc-copy"><strong>Counting rules</strong><span>Loops, branches &amp; dominant terms</span></span></a></li>
+  <li><a href="#common-complexity-classes"><span class="note-toc-copy"><strong>Growth classes</strong><span>Compare curves &amp; work budgets</span></span></a></li>
+  <li><a href="#analysing-recursive-algorithms"><span class="note-toc-copy"><strong>Recurrences</strong><span>Recursive work &amp; the Master Theorem</span></span></a></li>
+  <li><a href="#space-complexity"><span class="note-toc-copy"><strong>Space</strong><span>Allocations &amp; the live call stack</span></span></a></li>
+  <li><a href="#amortized-analysis"><span class="note-toc-copy"><strong>Amortized analysis</strong><span>Cost across a sequence of operations</span></span></a></li>
+  <li><a href="#python-built-in-complexities"><span class="note-toc-copy"><strong>Python costs</strong><span>Lists, dictionaries &amp; strings</span></span></a></li>
+  <li><a href="#worked-examples"><span class="note-toc-copy"><strong>Worked examples</strong><span>Eight step-by-step derivations</span></span></a></li>
+  <li><a href="#common-mistakes"><span class="note-toc-copy"><strong>Common mistakes</strong><span>Hidden work &amp; misleading shortcuts</span></span></a></li>
+  <li><a href="#review-questions"><span class="note-toc-copy"><strong>Review questions</strong><span>Ten prompts to test your intuition</span></span></a></li>
+</ol>
+
+</nav>
 
 ## What is Asymptotic Analysis?
 
 Asymptotic analysis describes how an algorithm's resource usage (time or space) scales as the input size $n$ grows toward infinity. The key insight is that we care about the **shape** of the growth curve, not the exact number of operations on any particular machine.
 
-**Why "asymptotic"?** The word comes from the Greek *asymptotos* — not falling together. In mathematics, an asymptote is a line a curve approaches but never reaches. We are asking: as $n \to \infty$, what curve does the runtime *approach*?
+The result is a statement about growth, not a prediction of seconds on a particular machine. Constant factors still matter in practice; asymptotic notation deliberately abstracts them away.
 
-This framing lets us ignore hardware, language, and constant factors — all of which shift the curve up or down but don't change its fundamental shape.
+### Choose the function before the bound
+
+Best-case, average-case, and worst-case costs are different functions. You can use $O$, $\Omega$, or $\Theta$ to describe **any** of them. For linear search, best-case time is $\Theta(1)$ and worst-case time is $\Theta(n)$; $O$ does not itself mean “worst case.”
+
+<aside class="note-callout" aria-labelledby="cost-model-label">
+
+<p id="cost-model-label" class="note-callout-label">Cost model for this note</p>
+
+Arithmetic, array access, and comparisons of bounded-size values count as $O(1)$. A print statement counts as one body operation, not a benchmark of I/O. Memory bounds count extra allocations and call-stack frames, including allocated results unless stated otherwise. If values grow into arbitrary-precision integers or long strings, include their arithmetic, comparison, or hashing costs separately.
+
+</aside>
 
 ## The Formal Notations
+
+<section class="notation-definition" aria-labelledby="big-o--upper-bound">
 
 ### Big O — Upper Bound
 
@@ -35,6 +80,10 @@ In plain terms: beyond some threshold $n_0$, $f$ never exceeds $g$ by more than 
 
 **Example:** Linear search is $O(n)$ because in the worst case you inspect every element.
 
+</section>
+
+<section class="notation-definition" aria-labelledby="big-omega--lower-bound">
+
 ### Big Omega — Lower Bound
 
 "The algorithm does *at least* this much work."
@@ -43,7 +92,11 @@ $$
 f(n) = \Omega(g(n)) \iff \exists\; c > 0,\; n_0 \in \mathbb{N} \;:\; f(n) \geq c \cdot g(n) \quad \forall\; n \geq n_0
 $$
 
-This is used to prove that no algorithm can solve a problem faster than a certain rate. The classic result: any comparison-based sorting algorithm is $\Omega(n \log n)$ because you need at least $\log_2(n!)$ comparisons to distinguish all $n!$ possible orderings.
+A lower bound can describe one algorithm's cost or establish a limit for an entire problem. For comparison sorting, a decision tree must distinguish $n!$ possible orderings, so its deepest path needs at least $\log_2(n!) = \Omega(n \log n)$ comparisons. This is a worst-case problem lower bound, not a claim that every input needs that many comparisons.
+
+</section>
+
+<section class="notation-definition" aria-labelledby="big-theta--tight-bound">
 
 ### Big Theta — Tight Bound
 
@@ -54,6 +107,8 @@ f(n) = \Theta(g(n)) \iff \exists\; c_1, c_2 > 0,\; n_0 \;:\; c_1 \cdot g(n) \leq
 $$
 
 $\Theta$ means $O$ and $\Omega$ simultaneously — the function is sandwiched. Merge sort is $\Theta(n \log n)$: it is always exactly that, best and worst case alike.
+
+</section>
 
 ### Little-o and Little-omega
 
@@ -71,6 +126,8 @@ Big O says $f$ grows *at most as fast* as $g$. Little-o says $f$ grows *strictly
 
 ### Intuitive Summary
 
+<div class="note-table" role="region" aria-labelledby="intuitive-summary" tabindex="0">
+
 | Notation | Meaning | Analogy |
 |----------|---------|---------|
 | $f = O(g)$ | $f$ grows at most as fast as $g$ | $f \leq g$ (up to constant) |
@@ -78,6 +135,8 @@ Big O says $f$ grows *at most as fast* as $g$. Little-o says $f$ grows *strictly
 | $f = \Theta(g)$ | $f$ grows at the same rate as $g$ | $f = g$ (up to constants) |
 | $f = o(g)$ | $f$ grows strictly slower than $g$ | $f < g$ (asymptotically) |
 | $f = \omega(g)$ | $f$ grows strictly faster than $g$ | $f > g$ (asymptotically) |
+
+</div>
 
 ## Rules for Calculating Big O
 
@@ -173,7 +232,7 @@ for i in 0..n {             // O(n)
 
 #### Derivation
 
-The inner loop runs $i$ times for each $i$, so the total is $\sum_{i=0}^{n-1} i$. Pair the first and last terms: $(0 + (n-1)) + (1 + (n-2)) + \cdots$. Each pair sums to $n-1$ and there are $n/2$ pairs, so the total is $\frac{n(n-1)}{2} = \frac{1}{2}n^2 - \frac{1}{2}n$. Drop the constant $\frac{1}{2}$ and the lower-order term to get $O(n^2)$.
+The body executes $\sum_{i=0}^{n-1} i = n(n-1)/2$ times, giving $\Theta(n^2)$ growth. [Worked Example 2](#example-2--triangular-sum) derives the triangular sum; an inner loop that shrinks with $i$ changes the count, but not the quadratic order.
 
 ```python
 for i in range(n):          # O(n)
@@ -264,14 +323,14 @@ for j in 0..n {       // O(n)
 
 After adding, drop constants and lower-order terms as usual.
 
-### 6. Conditionals: Take the Worst Branch
+### 6. Conditionals: Respect Which Inputs Reach Each Branch
 
 ```python
 if len(arr) < 100:
     bubble_sort(arr)    # O(n²)
 else:
     merge_sort(arr)     # O(n log n)
-# Worst case: O(n²)
+# Worst-case growth: O(n log n)
 ```
 ```julia
 if length(arr) < 100
@@ -279,7 +338,7 @@ if length(arr) < 100
 else
     merge_sort(arr)     # O(n log n)
 end
-# Worst case: O(n²)
+# Worst-case growth: O(n log n)
 ```
 ```ts
 if (arr.length < 100) {
@@ -287,7 +346,7 @@ if (arr.length < 100) {
 } else {
   mergeSort(arr);       // O(n log n)
 }
-// Worst case: O(n²)
+// Worst-case growth: O(n log n)
 ```
 ```rust
 if arr.len() < 100 {
@@ -295,12 +354,16 @@ if arr.len() < 100 {
 } else {
     merge_sort(&arr);       // O(n log n)
 }
-// Worst case: O(n²)
+// Worst-case growth: O(n log n)
 ```
 
-For Big O we always assume the worst-case branch will be taken.
+For a worst-case bound, consider the most expensive **reachable** branch at each input size. Here bubble sort runs only for $n < 100$: its quadratic work is bounded by a fixed cutoff. As $n$ grows, only the merge-sort branch is taken, so the overall worst-case growth is $\Theta(n \log n)$.
+
+If either branch could be chosen for arbitrarily large $n$, a quadratic branch would instead dominate the worst case. Branch conditions matter; do not simply pick the largest annotation.
 
 ## Common Complexity Classes
+
+<div class="note-table" role="region" aria-labelledby="common-complexity-classes" tabindex="0">
 
 | Notation | Name | Typical source | Example |
 |----------|------|----------------|---------|
@@ -314,32 +377,48 @@ For Big O we always assume the worst-case branch will be taken.
 | $O(2^n)$ | Exponential | All subsets | Power set, recursive Fibonacci |
 | $O(n!)$ | Factorial | All permutations | Brute-force TSP, permutation generation |
 
+</div>
+
+<ComplexityChart />
+
 ### Growth Rate Comparison
 
-For $n = 1000$:
+At $n = 1000$, these are values of representative functions, **not measured operation counts or timings**:
 
-| Complexity | Operations | Feasible? |
-|------------|------------|-----------|
-| $O(1)$ | 1 | ✅ Instant |
-| $O(\log n)$ | ~10 | ✅ Instant |
-| $O(\sqrt{n})$ | ~32 | ✅ Instant |
-| $O(n)$ | 1,000 | ✅ Instant |
-| $O(n \log n)$ | ~10,000 | ✅ Fast |
-| $O(n^2)$ | 1,000,000 | ✅ ~1 second |
-| $O(n^3)$ | $10^9$ | ⚠️ ~15 minutes |
-| $O(2^n)$ | $2^{1000}$ | ❌ Heat death of universe |
-| $O(n!)$ | $1000!$ | ❌ Incomprehensible |
+<div class="note-table" role="region" aria-labelledby="growth-rate-comparison" tabindex="0">
 
-**Interview constraint heuristic:** Given a time limit of ~$10^8$ operations per second:
+| Function $g(n)$ | Approximate value |
+|---|---:|
+| $1$ | 1 |
+| $\log_2 n$ | 10 |
+| $\sqrt n$ | 32 |
+| $n$ | 1,000 |
+| $n \log_2 n$ | 10,000 |
+| $n^2$ | 1,000,000 |
+| $n^3$ | 1,000,000,000 |
+| $2^n$ | $1.07 \times 10^{301}$ |
+| $n!$ | $4.02 \times 10^{2567}$ |
 
-| $n$ | Max viable complexity |
-|-----|-----------------------|
-| $n \leq 20$ | $O(2^n)$ or $O(n!)$ |
-| $n \leq 500$ | $O(n^3)$ |
-| $n \leq 5{,}000$ | $O(n^2)$ |
-| $n \leq 10^6$ | $O(n \log n)$ |
-| $n \leq 10^8$ | $O(n)$ |
-| $n > 10^8$ | $O(\log n)$ or $O(1)$ |
+</div>
+
+### Estimate feasibility from the work budget
+
+Suppose a problem allows roughly $10^7$ inexpensive operations in total. The following are illustrative sizes, not universal cutoffs:
+
+<div class="note-table" role="region" aria-labelledby="estimate-feasibility-from-the-work-budget" tabindex="0">
+
+| Growth | Example input size | Representative work |
+|---|---:|---:|
+| $n!$ | 10 | $10! \approx 3.6 \times 10^6$ |
+| $2^n$ | 20 | $2^{20} \approx 10^6$ |
+| $n^3$ | 100 | $10^6$ |
+| $n^2$ | 1,000 | $10^6$ |
+| $n \log_2 n$ | 100,000 | $\approx 1.7 \times 10^6$ |
+| $n$ | 1,000,000 | $10^6$ |
+
+</div>
+
+Factorial and exponential growth are not interchangeable: $20! \approx 2.43 \times 10^{18}$, far beyond this budget. Adjust estimates for the language, constants, memory, and actual operations. Reading $n$ items already costs $\Omega(n)$; sublinear processing usually assumes random access or prior preprocessing.
 
 ## Analysing Recursive Algorithms
 
@@ -499,15 +578,19 @@ $$
 T(n) = aT\!\left(\frac{n}{b}\right) + f(n)
 $$
 
-where $a \geq 1$ (number of subproblems), $b > 1$ (factor by which input shrinks), and $f(n)$ is the cost of work outside the recursive calls.
+where $a \geq 1$ is the number of subproblems, $b > 1$ is the shrink factor, and $f(n)$ is the non-recursive work. Assume a constant-size base case with $T(1) = \Theta(1)$ and a nonnegative work function. Floors and ceilings in balanced splits do not normally change the resulting asymptotic bound.
 
 Define the **critical exponent** $c^* = \log_b a$.
+
+<div class="note-table" role="region" aria-labelledby="the-master-theorem" tabindex="0">
 
 | Case | Condition | Solution |
 |------|-----------|----------|
 | **Case 1** | $f(n) = O(n^{c^* - \varepsilon})$ for some $\varepsilon > 0$ | $T(n) = \Theta(n^{c^*})$ |
-| **Case 2** | $f(n) = \Theta(n^{c^*} \log^k n)$ | $T(n) = \Theta(n^{c^*} \log^{k+1} n)$ |
-| **Case 3** | $f(n) = \Omega(n^{c^* + \varepsilon})$ for some $\varepsilon > 0$ | $T(n) = \Theta(f(n))$ |
+| **Case 2** | $f(n) = \Theta(n^{c^*} \log^k n)$ for $k \geq 0$ | $T(n) = \Theta(n^{c^*} \log^{k+1} n)$ |
+| **Case 3** | $f(n) = \Omega(n^{c^* + \varepsilon})$ for some $\varepsilon > 0$, **and** $a f(n/b) \leq \rho f(n)$ for some $\rho < 1$ and sufficiently large $n$ | $T(n) = \Theta(f(n))$ |
+
+</div>
 
 **Intuition:** Compare the cost of the recursive work ($n^{c^*}$) to the cost of the non-recursive work ($f(n)$). Whichever dominates determines the total cost. If they're equal (Case 2), you pick up an extra $\log$ factor.
 
@@ -525,6 +608,8 @@ $$
 
 **More examples:**
 
+<div class="note-table" role="region" aria-label="Master Theorem recurrence examples" tabindex="0">
+
 | Recurrence | Case | Result |
 |---|---|---|
 | $T(n) = 2T(n/2) + n$ | 2 | $\Theta(n \log n)$ |
@@ -532,6 +617,8 @@ $$
 | $T(n) = T(n/2) + n$ | 3 | $\Theta(n)$ |
 | $T(n) = 9T(n/3) + n^2$ | 2 | $\Theta(n^2 \log n)$ |
 | $T(n) = 2T(n/2) + n^2$ | 3 | $\Theta(n^2)$ |
+
+</div>
 
 #### Derivation for each row
 
@@ -577,9 +664,11 @@ For merge sort, level $j$ of the tree has $2^j$ subproblems of size $n/2^j$. Eac
 
 ## Space Complexity
 
-Space complexity measures auxiliary memory — how much extra memory the algorithm allocates beyond the input itself.
+Here we measure peak extra memory beyond the input: temporary data, allocated results, and the deepest live call stack. Some analyses exclude output storage; say which convention you are using. Add simultaneously live allocations, not every allocation made over the whole run.
 
 ### Sources of Space Usage
+
+<div class="note-table" role="region" aria-labelledby="sources-of-space-usage" tabindex="0">
 
 | Source | Notes |
 |--------|-------|
@@ -587,6 +676,8 @@ Space complexity measures auxiliary memory — how much extra memory the algorit
 | Arrays / hash maps | $O(n)$ where $n$ is the number of elements |
 | Call stack (recursion) | $O(\text{depth})$ — one frame per recursive call |
 | Output / return values | Sometimes counted, sometimes excluded — clarify in interviews |
+
+</div>
 
 ### Examples
 
@@ -705,7 +796,7 @@ fn fib_iterative(n: u64) -> u64 {     // O(n) time, O(1) space
 
 ### Tail Recursion
 
-A tail-recursive function makes its recursive call as the very last operation. Some languages (Scheme, Haskell, Scala with `@tailrec`) optimise this into a loop, reducing stack space from $O(n)$ to $O(1)$. None of the four languages shown here guarantee it: Python and Julia never do it, V8 (Chrome, Node) doesn't for TypeScript, and Rust only might in an optimised build.
+A tail-recursive function has no work left after its recursive call returns. A compiler or runtime can replace such calls with jumps, avoiding stack growth, but an accumulator alone does not guarantee this. For these Python, Julia, TypeScript-on-V8, and Rust examples, count $O(n)$ stack space unless you have verified tail-call optimisation in the actual runtime or build.
 
 ```python
 # Not tail-recursive: must return to multiply after recursive call
@@ -761,13 +852,15 @@ fn factorial_tail(n: u64, acc: u64) -> u64 {
 
 ## Amortized Analysis
 
-Amortized analysis assigns a cost to each operation such that the *average* cost per operation over a sequence is bounded, even if individual operations are occasionally expensive.
+Amortized analysis bounds the total cost of a sequence and divides by the number of operations. It is not a probabilistic average over random inputs: the sequence can include expensive operations, and the total-cost bound still holds.
 
 ### Aggregate Method
 
 Sum the total cost of $n$ operations, then divide by $n$.
 
-**Python list append:** A resize doubles capacity. Starting with capacity 1, resizes happen at sizes 1, 2, 4, 8, …, $n$. Total copy work: $1 + 2 + 4 + \cdots + n \leq 2n$. Over $n$ appends, average cost is $2n / n = O(1)$ per append — **amortized $O(1)$**.
+**Dynamic-array model:** suppose capacity doubles when full. Starting at capacity 1, resizes copy $1, 2, 4, \ldots$ elements. Up to $n$ appends, this geometric sum is less than $2n$. Add the $n$ new-element writes: total work is $\Theta(n)$, or **amortized $\Theta(1)$ per append**.
+
+CPython lists use a smaller over-allocation factor, not literal doubling. Their growth policy still gives amortized $O(1)$ append for ordinary list elements; doubling is the simplified model used for the proof.
 
 ### Accounting Method
 
@@ -783,9 +876,11 @@ This is the most general method, used to analyse splay trees, Fibonacci heaps, a
 
 ## Python Built-in Complexities
 
-Knowing these prevents hidden $O(n)$ surprises inside what looks like $O(1)$ code.
+These costs assume bounded-size elements and keys. For strings, $n$ and $m$ denote string lengths. For joining $p$ parts, $L$ is their total length. Long-key hashing, user-defined comparisons, and arbitrary-precision arithmetic need their own cost analysis.
 
 ### List
+
+<div class="note-table" role="region" aria-labelledby="list" tabindex="0">
 
 | Operation | Average | Worst | Notes |
 |-----------|---------|-------|-------|
@@ -799,7 +894,11 @@ Knowing these prevents hidden $O(n)$ surprises inside what looks like $O(1)$ cod
 | `arr[a:b]` | $O(b-a)$ | $O(n)$ | copies the slice |
 | `arr + arr2` | $O(n+m)$ | $O(n+m)$ | |
 
+</div>
+
 ### Dict / Set
+
+<div class="note-table" role="region" aria-labelledby="dict--set" tabindex="0">
 
 | Operation | Average | Worst | Notes |
 |-----------|---------|-------|-------|
@@ -808,7 +907,11 @@ Knowing these prevents hidden $O(n)$ surprises inside what looks like $O(1)$ cod
 | `del d[k]` | $O(1)$ | $O(n)$ | |
 | Iteration | $O(n)$ | $O(n)$ | |
 
+</div>
+
 ### String
+
+<div class="note-table" role="region" aria-labelledby="string" tabindex="0">
 
 | Operation | Cost | Notes |
 |-----------|------|-------|
@@ -816,13 +919,21 @@ Knowing these prevents hidden $O(n)$ surprises inside what looks like $O(1)$ cod
 | `s + t` | $O(n+m)$ | creates a new string |
 | `sub in s` | $O(n \cdot m)$ | naive; Python uses optimised algo |
 | `s.split()` | $O(n)$ | |
-| `"".join(parts)` | $O(n)$ | prefer over `+=` in a loop |
+| `"".join(parts)` | $O(L + p)$ | one result allocation and one copy of each part |
 
-> **String concatenation trap:** `s += part` inside a loop is $O(n^2)$ total because each `+=` creates a new string. Always collect parts in a list and call `"".join()` at the end.
+</div>
+
+> **String concatenation trap:** repeatedly copying a growing prefix can make concatenation quadratic in the final length. CPython optimises some local `+=` cases, but that is not a portable complexity guarantee. Collecting parts and using `"".join(parts)` gives predictable $O(L + p)$ work.
 
 ## Worked Examples
 
+Use the same sequence each time: identify the input size and assumptions, read the code, then count the work. Each result below uses the cost model stated at the start of this note.
+
+<section class="worked-example" aria-labelledby="example-1--constant-inner-loop">
+
 ### Example 1 — Constant inner loop
+
+**Input:** an array of $n$ bounded-size values. The inner loop has a fixed limit of 100.
 
 ```python
 def example(arr):
@@ -858,7 +969,13 @@ fn example(arr: &[i32]) {
 }
 ```
 
-**Time:** $O(n)$ — the inner loop is constant regardless of input size.
+<div class="example-result">
+
+**Time:** $\Theta(n)$. **Extra space:** $O(1)$. The fixed inner loop changes the constant, not the growth rate.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
@@ -870,9 +987,15 @@ $$
 
 By the definition of Big O, $100n \leq c \cdot n$ with $c = 100$ for every $n \geq 1$, so $T(n) = O(n)$. The inner loop also always runs, so $100n \geq 1 \cdot n$ and the bound is tight: $\Theta(n)$.
 
----
+</div>
+
+</section>
+
+<section class="worked-example" aria-labelledby="example-2--triangular-sum">
 
 ### Example 2 — Triangular sum
+
+**Input:** an array of $n$ values. The inner loop runs $i$ times on outer iteration $i$.
 
 ```python
 def example(arr):
@@ -908,7 +1031,13 @@ fn example(arr: &[i32]) {
 }
 ```
 
-**Time:** $\displaystyle\sum_{i=0}^{n-1} i = \frac{n(n-1)}{2} = O(n^2)$
+<div class="example-result">
+
+**Time:** $\Theta(n^2)$. **Extra space:** $O(1)$. The exact number of inner-body executions is $n(n-1)/2$.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
@@ -930,15 +1059,15 @@ $$
 
 So $S = \frac{n(n-1)}{2} = \frac{1}{2}n^2 - \frac{1}{2}n$. For the upper bound, $S \leq \frac{1}{2}n^2$. For the lower bound, $S \geq \frac{1}{4}n^2$ whenever $n \geq 2$. Together these give $\Theta(n^2)$, which is half the work of the full $n \times n$ loop but the same growth rate.
 
----
+</div>
 
-<section class="halving-example" aria-labelledby="example-3--logarithmic-while-loop">
+</section>
 
-<p class="example-eyebrow">Worked example 03</p>
+<section class="worked-example" aria-labelledby="example-3--logarithmic-while-loop">
 
 ### Example 3 — Logarithmic while loop
 
-Each pass divides the remaining value by two. How many passes does that take?
+**Input:** a positive integer $n$. Each pass uses integer division to halve the remaining value; $n = 0$ would simply skip the loop.
 
 ```python
 def example(n):
@@ -973,7 +1102,7 @@ fn example(n: u64) {
 
 <div class="example-result">
 
-**Time: $O(\log n)$**
+**Time:** $\Theta(\log n)$. **Extra space:** $O(1)$.
 
 For a positive integer $n$, the loop runs $\lfloor \log_2 n \rfloor + 1$ times. Doubling the input adds just one iteration.
 
@@ -981,29 +1110,13 @@ For a positive integer $n$, the loop runs $\lfloor \log_2 n \rfloor + 1$ times. 
 
 <div class="example-derivation">
 
-#### Why halving gives log n
+#### Derivation
 
 <section class="calculation-step">
 
-##### 1. Start with the meaning of a logarithm
+##### 1. Trace a concrete input
 
-$\log_2 n$ asks: *"2 to the power of what equals $n$?"*
-
-For example, $2^4 = 16$, so $\log_2 16 = 4$. Starting from 1, four doublings reach 16:
-
-$$
-1 \to 2 \to 4 \to 8 \to 16
-$$
-
-Read that backwards: four halvings take 16 back to 1. For powers of two, **$\log_2 n$ counts the halvings needed to reach 1.** The loop takes one more step to reach 0.
-
-</section>
-
-<section class="calculation-step">
-
-##### 2. Trace a concrete input
-
-Take $n = 16$. Read down the table: each row adds one iteration.
+For $n = 16$, integer division reaches 1 after four halvings, then needs one final pass to reach 0:
 
 | Iterations ($k$) | Calculation | Value of $i$ |
 |---|---|---|
@@ -1014,110 +1127,37 @@ Take $n = 16$. Read down the table: each row adds one iteration.
 | 4 | $16 / 2^4$ | 1 |
 | 5 | $\lfloor 16 / 2^5 \rfloor$ | 0 (stop) |
 
-Four halvings reach 1. One final integer division reaches 0: **five iterations in total.**
-
 </section>
 
 <section class="calculation-step">
 
-##### 3. Write the pattern
+##### 2. Count the passes
 
-Each iteration introduces another factor of 2 in the denominator:
+After $k$ passes, $i = \lfloor n/2^k \rfloor$. The loop stops when this is 0:
 
 $$
 \begin{aligned}
-\text{After 1 pass:}\quad &n/2 \\
-\text{After 2 passes:}\quad &n/(2 \cdot 2) = n/2^2 \\
-\text{After } k \text{ passes:}\quad &n/2^k
+\left\lfloor \frac{n}{2^k} \right\rfloor = 0
+&\iff \frac{n}{2^k} < 1 \\
+&\iff k > \log_2 n
 \end{aligned}
 $$
 
-For a power of two, these values are exact until we reach 1. With integer division in general, $i = \lfloor n/2^k \rfloor$.
+The smallest integer satisfying this is $\lfloor \log_2 n \rfloor + 1$. For example, $20 \to 10 \to 5 \to 2 \to 1 \to 0$ also takes five passes: $\lfloor \log_2 20 \rfloor + 1 = 5$.
 
 </section>
 
 <section class="calculation-step">
 
-##### 4. Solve for the number of passes
+##### 3. Convert the count to a growth rate
 
-For a power of two, set the value equal to 1:
-
-$$
-\frac{n}{2^k} = 1
-$$
-
-Multiply both sides by $2^k$:
+Each pass does constant work, so for a constant $c > 0$:
 
 $$
-n = 2^k
+T(n) = c\left(\lfloor \log_2 n \rfloor + 1\right) + O(1) = \Theta(\log n)
 $$
 
-Take $\log_2$ of both sides:
-
-$$
-k = \log_2 n
-$$
-
-That counts the passes to reach 1. Add the final pass to reach 0:
-
-$$
-\text{iterations} = \log_2 n + 1
-$$
-
-Check with 16: $4 + 1 = 5$ iterations, matching the trace above.
-
-</section>
-
-<section class="calculation-step">
-
-##### 5. Account for rounding down
-
-When $n$ is not a power of two, `//` rounds down. For $n = 20$:
-
-$$
-20 \to 10 \to 5 \to 2 \to 1 \to 0
-$$
-
-That's still five iterations. Since $2^4 = 16$ and $2^5 = 32$, we have $\log_2 20 \approx 4.32$. Round down, then add the last pass:
-
-$$
-\lfloor \log_2 20 \rfloor + 1 = 4 + 1 = 5
-$$
-
-For any positive integer $n$, stop at the first integer $k$ satisfying:
-
-$$
-\begin{aligned}
-n/2^k &< 1 \\
-2^k &> n \\
-k &> \log_2 n
-\end{aligned}
-$$
-
-The smallest such integer is $\lfloor \log_2 n \rfloor + 1$.
-
-</section>
-
-<section class="calculation-step">
-
-##### 6. Convert the count to Big O
-
-Each iteration does constant work. If that cost is $c$:
-
-$$
-\begin{aligned}
-T(n) &= c \cdot (\lfloor \log_2 n \rfloor + 1) \\
-     &= \Theta(\log n)
-\end{aligned}
-$$
-
-Dropping the constant factor, rounding, and final extra step gives logarithmic growth.
-
-The log's base only changes a constant factor. Dividing by 3 each time would give:
-
-$$
-\log_3 n = \frac{\log_2 n}{\log_2 3}
-$$
+A different fixed divisor changes only the constant: $\log_3 n = \log_2 n / \log_2 3$. The extra final pass and rounding do not change logarithmic growth.
 
 </section>
 
@@ -1147,9 +1187,11 @@ Those values are 20, 10, and 5. The loop runs once per binary digit of $n$, whic
 
 </section>
 
----
+<section class="worked-example" aria-labelledby="example-4--two-independent-passes">
 
 ### Example 4 — Two independent passes
+
+**Input:** an array of $n$ values. Assume the sort has $\Theta(n \log n)$ worst-case comparison cost; library implementation details can differ.
 
 ```python
 def example(arr):
@@ -1193,7 +1235,13 @@ fn example(arr: &mut [i32]) {
 }
 ```
 
-**Time:** $O(n) + O(n \log n) + O(n) = O(n \log n)$ — dominated by the sort.
+<div class="example-result">
+
+**Time (worst case):** $\Theta(n \log n)$ — two linear scans plus the sort. Extra space depends on the sorting implementation.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
@@ -1211,9 +1259,15 @@ $$
 
 This fits the Big O definition with $c = c_1 + c_2 + c_3$ and $n_0 = 2$, so $T(n) = O(n \log n)$. The ratio $\frac{n}{n \log n} = \frac{1}{\log n} \to 0$ shows that the linear passes are $o(n \log n)$: they become negligible as $n$ grows.
 
----
+</div>
+
+</section>
+
+<section class="worked-example" aria-labelledby="example-5--binary-search--linear-work">
 
 ### Example 5 — Binary search + linear work
+
+**Input:** a sorted array of $n$ values and a target. The function finds the leftmost occurrence by searching, then scanning left through duplicates.
 
 ```python
 def example(arr, target):
@@ -1301,7 +1355,13 @@ fn example(arr: &[i32], target: i32) -> Option<usize> {
 }
 ```
 
-**Time:** $O(\log n)$ to find the element, then up to $O(n)$ to scan — **total $O(n)$**. The logarithmic search is swallowed by the linear scan.
+<div class="example-result">
+
+**Time (worst case):** $\Theta(n)$. **Extra space:** $O(1)$. The duplicate scan can dominate the logarithmic search.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
@@ -1309,13 +1369,19 @@ fn example(arr: &[i32], target: i32) -> Option<usize> {
 - **Scan phase.** The scan runs at most once, because the function returns right after it. It moves `left` from `mid` down toward 0, so it does at most `mid` $\leq n - 1$ steps.
 - **Total.** $T(n) \leq c_1 \log_2 n + c_2 n = O(n)$.
 - **Worst case is tight.** Suppose every element equals `target`. The first probe hits `mid` $= \lfloor (n-1)/2 \rfloor$, and the scan then walks all the way to index 0. That is about $n/2$ steps, so the worst case is $\Theta(n)$.
-- **Best case.** If the target appears once, the scan does 0 steps and only the $O(\log n)$ search remains.
+- **Best case.** If the first probe finds the leftmost occurrence, the function returns after constant work: $\Theta(1)$. With no duplicates, the scan is constant, and the search still has $O(\log n)$ worst-case time.
 
 Replacing the scan with a second binary search for the leftmost occurrence makes the whole function $O(\log n)$ in every case.
 
----
+</div>
+
+</section>
+
+<section class="worked-example" aria-labelledby="example-6--recursive-tree-two-branches">
 
 ### Example 6 — Recursive tree (two branches)
+
+**Input:** a nonnegative integer $n$. As throughout this note, treat arithmetic as constant-cost rather than analysing the bit length of Fibonacci values.
 
 ```python
 def fib(n):
@@ -1348,15 +1414,21 @@ fn fib(n: u64) -> u64 {
 }
 ```
 
-Each call makes two more at sizes $n-1$ and $n-2$. The call tree has depth $n$ and at each level the number of nodes roughly doubles — $O(2^n)$ calls total. Space is $O(n)$ (maximum call stack depth).
+<div class="example-result">
 
-Recurrence: $T(n) = T(n-1) + T(n-2) + O(1)$, which solves to $\Theta(\phi^n)$ where $\phi = \frac{1+\sqrt{5}}{2} \approx 1.618$ (the golden ratio). We bound this as $O(2^n)$.
+**Time:** $\Theta(\phi^n)$, where $\phi = (1 + \sqrt 5)/2 \approx 1.618$. **Extra space:** $\Theta(n)$.
+
+Each non-base call branches into sizes $n-1$ and $n-2$. The branches reach their base cases at different depths, so not every level doubles completely. $O(2^n)$ is a convenient loose upper bound; $\Theta(\phi^n)$ is the tight rate.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
 Let $C(n)$ be the number of calls. Then $C(0) = C(1) = 1$ and $C(n) = C(n-1) + C(n-2) + 1$.
 
-**Upper bound**
+##### 1. Bound the call count from above
 
 Since $C(n-2) \leq C(n-1)$:
 
@@ -1366,7 +1438,7 @@ $$
 
 Unrolling this gives $C(n) \leq 2^{n+1} - 1$. So $T(n) = O(2^n)$.
 
-**Lower bound**
+##### 2. Bound the call count from below
 
 Since $C(n-1) \geq C(n-2)$:
 
@@ -1376,7 +1448,7 @@ $$
 
 Each application of this step subtracts 2 from $n$, so it can be applied $\lfloor n/2 \rfloor$ times before reaching a base case. That gives $C(n) \geq 2^{\lfloor n/2 \rfloor} = \Omega(\sqrt{2}^{\,n}) \approx \Omega(1.414^n)$. The call count is therefore exponential either way.
 
-**Exact rate**
+##### 3. Find the exact growth rate
 
 Ignoring the $+1$ temporarily, guess a solution of the form $C(n) = x^n$:
 
@@ -1386,13 +1458,19 @@ $$
 
 The larger root $\phi \approx 1.618$ dominates, which gives $\Theta(\phi^n)$. In fact $C(n) = 2F(n+1) - 1$, where $F$ is the Fibonacci sequence with $F(1) = F(2) = 1$. Check: $C(2) = 2F(3) - 1 = 2 \cdot 2 - 1 = 3$, which counts `fib(2)`, `fib(1)`, and `fib(0)` ✓.
 
-**Space**
+##### 4. Count the stack frames
 
 Only one root-to-leaf path is on the stack at a time. The longest path is $n \to n-1 \to \cdots \to 1$, which is $n$ frames, so space is $O(n)$.
 
----
+</div>
+
+</section>
+
+<section class="worked-example" aria-labelledby="example-7--memoised-recursion">
 
 ### Example 7 — Memoised recursion
+
+**Input:** a nonnegative integer $n$, starting with an empty cache. Repeated calls with a populated cache have a different cost.
 
 ```python
 from functools import lru_cache
@@ -1414,13 +1492,11 @@ function fib(n, memo = Dict{Int, Int}())
 end
 ```
 ```ts
-const memo = new Map<number, number>();
-
-function fib(n: number): number {
+function fib(n: number, memo = new Map<number, number>()): number {
   if (n <= 1) return n;
   const cached = memo.get(n);
   if (cached !== undefined) return cached;
-  const result = fib(n - 1) + fib(n - 2);
+  const result = fib(n - 1, memo) + fib(n - 2, memo);
   memo.set(n, result);
   return result;
 }
@@ -1442,21 +1518,35 @@ fn fib(n: u64, memo: &mut HashMap<u64, u64>) -> u64 {
 }
 ```
 
-Each unique $n$ is computed exactly once and cached. There are $n$ unique subproblems, each $O(1)$ to compute given its children — **$O(n)$ time, $O(n)$ space**.
+<div class="example-result">
+
+**Time:** $\Theta(n)$. **Extra space:** $\Theta(n)$.
+
+Each non-base subproblem is computed once and cached. Base cases and cache hits take constant work.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
 - **Count the subproblems.** The only arguments that can ever appear are $0, 1, \ldots, n$, which is $n + 1$ distinct values.
-- **Cost per subproblem.** The first call to `fib(k)` does $O(1)$ work of its own plus two recursive calls. Any later call to `fib(k)` is a cache hit costing $O(1)$.
+- **Cost per subproblem.** A non-base cache miss does $O(1)$ work of its own plus two recursive calls. Cache hits and base-case calls cost $O(1)$.
 - **Count all calls.** Each of the $n + 1$ first calls triggers at most 2 further calls, so there are at most $1 + 2(n+1)$ calls in total.
 - **Time.** $O(1)$ per call times $O(n)$ calls gives $T(n) = O(n)$.
-- **Space.** The cache holds $n + 1$ entries. The first descent `fib(n)` → `fib(n-1)` → $\cdots$ → `fib(1)` puts $n$ frames on the stack at once. Both are $O(n)$, so total space is $O(n)$.
+- **Space.** The cache holds at most $n + 1$ entries; these implementations differ in whether base cases are cached. The initial descent has $\Theta(n)$ live frames. Cache and stack are both linear, so peak extra space is $\Theta(n)$.
 
 Compared with Example 6, caching takes the time from $\Theta(\phi^n)$ down to $\Theta(n)$ without changing the stack depth.
 
----
+</div>
+
+</section>
+
+<section class="worked-example" aria-labelledby="example-8--nested-recursion">
 
 ### Example 8 — Nested recursion
+
+**Input:** positive integers $n$ and $m$. Both are independent size parameters; zero-valued arguments are the recursion's base cases.
 
 ```python
 def f(n, m):
@@ -1489,11 +1579,19 @@ fn f(n: u64, m: u64) -> u64 {
 }
 ```
 
-This computes a value on a 2D grid of size $n \times m$. Without memoisation: $O\!\left(\binom{n+m}{n}\right)$ — exponential. With memoisation: $O(n \cdot m)$ time and space, since there are $n \times m$ unique subproblems.
+<div class="example-result">
+
+**Time without memoisation:** $O\!\left(\binom{n+m}{n}\right)$. **Time and space with memoisation:** $O(n \cdot m)$.
+
+This computes a value on a 2D grid of size $n \times m$. Without memoisation, the call count is exponential for a square grid. With memoisation, there are $n \times m$ unique subproblems.
+
+</div>
+
+<div class="example-derivation">
 
 #### Derivation
 
-**What the function returns**
+##### 1. Identify what the function returns
 
 The base cases return 1, and the recursion follows Pascal's rule:
 
@@ -1511,9 +1609,9 @@ $$
 f(n, m) = \binom{n+m}{n}
 $$
 
-This counts the monotone lattice paths from $(n, m)$ to an edge of the grid.
+This counts monotone lattice paths from $(0, 0)$ to $(n, m)$, using only right and up steps.
 
-**Without memoisation**
+##### 2. Count calls without memoisation
 
 Every leaf of the call tree returns exactly 1, and each internal call returns the sum of its two children. The number of leaves therefore equals the return value:
 
@@ -1535,18 +1633,22 @@ $$
 
 That is exponential. For example, $f(20, 20) = \binom{40}{20} \approx 1.4 \times 10^{11}$ leaves.
 
-**With memoisation**
+##### 3. Count states with memoisation
 
 - **States.** The possible arguments are pairs $(i, j)$ with $0 \leq i \leq n$ and $0 \leq j \leq m$, which is $(n+1)(m+1)$ states.
 - **Work per state.** $O(1)$ plus two cache lookups.
 - **Time.** $(n+1)(m+1) \cdot O(1) = O(nm)$.
-- **Space.** The cache is $O(nm)$. The deepest chain of calls, where each call decrements $n$ or $m$ by one, has at most $n + m$ frames, and $n + m$ is smaller than $nm$ for large grids. Total space is $O(nm)$.
+- **Space.** Count the $O(nm)$ cache and $O(n+m)$ stack together: $O(nm+n+m)$. For positive $n,m$, $n+m \leq 2nm$, so the total is $O(nm)$ even when one dimension is small.
+
+</div>
+
+</section>
 
 ## Common Mistakes
 
-1. **Treating $O(1)$ as "fast"** — it means *constant*, not *small*. A hash table with a terrible hash function might do $O(1)$ work per lookup but that "constant" could be enormous.
+1. **Treating $O(1)$ as "fast"** — it means *constant in the chosen input size*, not *small*. A fixed loop of ten million iterations is still $O(1)$ in $n$, but may be expensive.
 
-2. **Missing hidden $O(n)$ operations** — `x in list` is $O(n)$; `list.copy()` is $O(n)$; string concatenation in a loop is $O(n^2)$. Always check the cost of standard library calls.
+2. **Missing hidden work** — `x in list` is $O(n)$ and `list.copy()` is $O(n)$. Repeatedly copying a growing string can be quadratic. Check library costs and what actually gets copied.
 
 3. **Forgetting call stack space** — a recursive function with depth $d$ uses $O(d)$ stack space, regardless of what else it allocates. A depth-$n$ recursion on large $n$ can cause a stack overflow.
 
@@ -1554,101 +1656,194 @@ That is exponential. For example, $f(20, 20) = \binom{40}{20} \approx 1.4 \times
 
 5. **Applying rules across different variables** — $O(n + m)$ cannot be simplified to $O(n)$ unless you know $m = O(n)$. Graphs, matrices, and multi-input problems frequently have two independent size parameters.
 
-6. **Ignoring the base case in recursion** — the base case must actually terminate and take $O(1)$ time, or the recurrence is wrong. A base case that itself does $O(n)$ work changes everything.
+6. **Ignoring the base case in recursion** — calls must terminate, and the recurrence must include the actual base-case cost. That cost need not be $O(1)$; assuming it is can invalidate the analysis.
 
-7. **Over-applying the Master Theorem** — it only applies to recurrences of the form $T(n) = aT(n/b) + f(n)$ with equal-size subproblems and exact division. It does not apply to $T(n) = T(n-1) + O(1)$ (use substitution) or $T(n) = T(n/3) + T(2n/3) + n$ (use recursion tree).
+7. **Over-applying the Master Theorem** — it only applies to recurrences of the form $T(n) = aT(n/b) + f(n)$ with balanced equal-size subproblems. Floors and ceilings are usually harmless, but unequal splits need a different analysis. It does not apply to $T(n) = T(n-1) + O(1)$ (use substitution) or $T(n) = T(n/3) + T(2n/3) + n$ (use recursion tree).
 
 ## Review Questions
 
-These range from recall to application to deeper reasoning. Try to answer before revealing.
+Try each question before opening its answer. Explain the work count, not just the final symbol.
 
----
+<section class="review-question" aria-labelledby="q1--upper-bound-or-tight-bound">
 
-**Q1.** What is the difference between $O(n)$ and $\Theta(n)$? Give an algorithm that is $O(n)$ but not $\Theta(n)$.
+### Q1 — Upper bound or tight bound?
 
-> **Answer.** $O(n)$ is an upper bound — the algorithm runs in *at most* linear time. $\Theta(n)$ is a tight bound — it runs in *exactly* linear time (both upper and lower bounds are $n$). Linear search is $O(n)$ but not $\Theta(n)$: in the best case (target is first element) it terminates in $O(1)$, so the lower bound is $\Omega(1)$, not $\Omega(n)$.
+Can a worst-case running-time function be $O(n)$ without being $\Theta(n)$? Give an example.
 
----
+<details class="review-answer">
+<summary>Show answer</summary>
 
-**Q2.** What is the time and space complexity of this function?
+Yes. Binary search has worst-case time $\Theta(\log n)$, so $O(n)$ is a valid but loose upper bound. It is not $\Theta(n)$: the worst-case function grows more slowly than a linear lower bound. Keep the case fixed when comparing bounds.
+
+</details>
+
+</section>
+
+<section class="review-question" aria-labelledby="q2--a-logarithmic-loop-inside-a-linear-loop">
+
+### Q2 — A logarithmic loop inside a linear loop
+
+What is the time complexity? Count the inner iterations for a given $i$.
 
 ```python
-def mystery(n):
-    if n <= 0:
-        return 0
-    return n + mystery(n - 1)
+for i in range(n):
+    j = 1
+    while j <= i:
+        j *= 2
 ```
+
 ```julia
-function mystery(n)
-    if n <= 0
-        return 0
+for i in 0:(n - 1)
+    j = 1
+    while j <= i
+        j *= 2
     end
-    return n + mystery(n - 1)
 end
 ```
-```ts
-function mystery(n: number): number {
-  if (n <= 0) {
-    return 0;
+
+```typescript
+for (let i = 0; i < n; i++) {
+  let j = 1;
+  while (j <= i) {
+    j *= 2;
   }
-  return n + mystery(n - 1);
 }
 ```
+
 ```rust
-fn mystery(n: i64) -> i64 {
-    if n <= 0 {
-        return 0;
+for i in 0..n {
+    let mut j = 1;
+    while j <= i {
+        j *= 2;
     }
-    n + mystery(n - 1)
 }
 ```
 
-> **Answer.** Time: $O(n)$ — one call per integer from $n$ down to $0$. Space: $O(n)$ — the call stack holds $n$ frames simultaneously. This computes $\frac{n(n+1)}{2}$ but via recursion rather than the closed form, so it wastes space.
+<details class="review-answer">
+<summary>Show answer</summary>
 
----
+For $i \geq 1$, the inner loop runs $\lfloor\log_2 i\rfloor + 1$ times. Every outer iteration costs at most $O(\log n)$, giving an $O(n\log n)$ upper bound. The last roughly $n/2$ iterations each cost $\Theta(\log n)$, giving a matching lower bound. Total time is $\Theta(n\log n)$.
 
-**Q3.** Rank these from fastest to slowest growth: $n \log n$, $2^n$, $n^{0.5}$, $n!$, $n^2$, $\log n$.
+</details>
 
-> **Answer.** $\log n < n^{0.5} < n \log n < n^2 < 2^n < n!$
+</section>
 
----
+<section class="review-question" aria-labelledby="q3--independent-input-sizes">
 
-**Q4.** What does the Master Theorem give for $T(n) = 3T(n/3) + n$?
+### Q3 — Independent input sizes
 
-> **Answer.** $a = 3$, $b = 3$, so $c^* = \log_3 3 = 1$. $f(n) = n = \Theta(n^1)$ — Case 2 with $k = 0$. Therefore $T(n) = \Theta(n \log n)$.
+An algorithm makes one pass over $m$ items, then one pass over $n$ items, with constant work per item. What is its complexity?
 
----
+<details class="review-answer">
+<summary>Show answer</summary>
 
-**Q5.** Why is `"".join(parts)` preferred over `result += part` in a Python loop?
+$\Theta(m+n)$, equivalently $\Theta(\max(m,n))$. Keep both parameters unless the problem gives a relationship between them; $O(m)$ alone can miss the cost of the second input.
 
-> **Answer.** Strings in Python are immutable. Each `+=` allocates a brand new string of length equal to the combined length, then copies both. Over $n$ iterations concatenating strings of total length $L$, this costs $O(L^2)$ in the worst case. `"".join(parts)` computes the final length first, allocates once, and copies each part exactly once — $O(L)$ total.
+</details>
 
----
+</section>
 
-**Q6.** A function processes an $n \times n$ matrix with a triple nested loop where each loop runs from $0$ to $n$. What is its time complexity? What if the innermost loop runs from $0$ to a constant $k$?
+<section class="review-question" aria-labelledby="q4--constants-and-crossover-points">
 
-> **Answer.** Three loops each $0$ to $n$: $O(n^3)$. If the innermost runs to constant $k$: $O(k \cdot n^2) = O(n^2)$ — the constant is dropped.
+### Q4 — Constants and crossover points
 
----
+Suppose two implementations have modelled costs $n^2$ and $1000n\log_2 n$. Which is cheaper for a given $n$?
 
-**Q7.** Is it possible for an $O(n^2)$ algorithm to be faster in practice than an $O(n \log n)$ algorithm? Explain.
+<details class="review-answer">
+<summary>Show answer</summary>
 
-> **Answer.** Yes — for small $n$. Big O describes asymptotic behaviour; it hides constant factors. An $O(n^2)$ algorithm with a very small constant (like insertion sort) can beat an $O(n \log n)$ algorithm with high overhead (like merge sort) when $n$ is small. This is why Timsort switches to insertion sort for runs shorter than ~64 elements.
+Compare the actual expressions. The quadratic model is cheaper when $n < 1000\log_2 n$; the linearithmic model eventually wins as $n$ grows. Asymptotic order alone does not decide which implementation is faster at a small input size.
 
----
+</details>
 
-**Q8.** What is the amortized cost of a single `append` to a Python list, and how do you derive it?
+</section>
 
-> **Answer.** Amortized $O(1)$. Starting with capacity 1, the list doubles when full. Resize events happen at sizes $1, 2, 4, \ldots, n$, copying $1 + 2 + 4 + \cdots + n \leq 2n$ elements total. Over $n$ appends, the total work is $O(n) + 2n \cdot O(1) = O(n)$, so the average (amortized) cost per append is $O(n)/n = O(1)$.
+<section class="review-question" aria-labelledby="q5--growing-strings">
 
----
+### Q5 — Growing strings
 
-**Q9.** Solve the recurrence $T(n) = T(n - 1) + n$ with $T(0) = 0$.
+You concatenate $n$ one-character parts, and every concatenation copies the entire existing prefix. Why is this quadratic? What changes with a single join?
 
-> **Answer.** Expanding: $T(n) = n + (n-1) + (n-2) + \cdots + 1 = \frac{n(n+1)}{2} = \Theta(n^2)$. This is the cost of bubble sort — on each pass you do $O(n)$ work, and you make $n$ passes.
+<details class="review-answer">
+<summary>Show answer</summary>
 
----
+The copied lengths are $1+2+\cdots+n = n(n+1)/2$, so total copying is $\Theta(n^2)$. A join copies the characters into one allocated result, giving $\Theta(n)$ work for these $n$ one-character parts. This question assumes prefix copying; do not infer that every runtime implements local string `+=` identically.
 
-**Q10.** You have an algorithm that uses $O(\log n)$ space. Can it have $O(n)$ time complexity? Give an example.
+</details>
 
-> **Answer.** Yes. Binary search uses $O(\log n)$ stack space (recursive version) or $O(1)$ space (iterative), yet makes $O(\log n)$ comparisons — $O(\log n)$ time. But consider an algorithm that does a linear scan while maintaining a recursion stack of depth $\log n$: $O(n)$ time, $O(\log n)$ space. Time and space complexity are independent — one does not determine the other.
+</section>
+
+<section class="review-question" aria-labelledby="q6--work-versus-live-memory">
+
+### Q6 — Work versus live memory
+
+Why does naive recursive Fibonacci have exponential time but only linear stack space?
+
+<details class="review-answer">
+<summary>Show answer</summary>
+
+Time counts every node visited in the recursion tree: $\Theta(\phi^n)$, or the looser upper bound $O(2^n)$. Space counts the deepest simultaneously live path, which is $\Theta(n)$ frames. Memoization reduces repeated work to $\Theta(n)$ time, but the cache and initial call-stack descent still need $\Theta(n)$ space.
+
+</details>
+
+</section>
+
+<section class="review-question" aria-labelledby="q7--small-quadratic-subproblems">
+
+### Q7 — Small quadratic subproblems
+
+Why can insertion sort be useful inside a faster hybrid sorting algorithm?
+
+<details class="review-answer">
+<summary>Show answer</summary>
+
+Small subarrays make the quadratic term small, while insertion sort has low overhead and good locality. A fixed-size base-case cutoff does not turn the whole sort quadratic. Many hybrids use this trade-off; the cutoff depends on the implementation.
+
+</details>
+
+</section>
+
+<section class="review-question" aria-labelledby="q8--amortized-cost">
+
+### Q8 — Amortized cost
+
+In the doubling-capacity dynamic-array model, why do $n$ appends take linear total work despite occasional expensive resizes?
+
+<details class="review-answer">
+<summary>Show answer</summary>
+
+The copied capacities form a geometric series $1+2+4+\cdots < 2n$. Add the $n$ ordinary writes: total work is $\Theta(n)$, so each append has amortized $\Theta(1)$ cost. A single resizing append can still cost $\Theta(n)$.
+
+</details>
+
+</section>
+
+<section class="review-question" aria-labelledby="q9--a-shrinking-inner-loop">
+
+### Q9 — A shrinking inner loop
+
+A loop performs $n$ body operations on the first pass, $n-1$ on the next, and so on down to 1. What is the total?
+
+<details class="review-answer">
+<summary>Show answer</summary>
+
+$\sum_{i=1}^{n} i = n(n+1)/2 = \Theta(n^2)$. The inner work shrinks, but its average is still proportional to $n$ across $n$ passes.
+
+</details>
+
+</section>
+
+<section class="review-question" aria-labelledby="q10--construct-an-example">
+
+### Q10 — Construct an example
+
+Give a concrete algorithm with $\Theta(n)$ time and $O(\log n)$ extra space.
+
+<details class="review-answer">
+<summary>Show answer</summary>
+
+Recursive depth-first traversal of an already-built **balanced binary tree** with $n$ nodes, doing constant work per visit. Every node is visited once, and the stack depth is the tree's $O(\log n)$ height. The bound assumes visits do not retain an output list; an unbalanced tree can instead need $O(n)$ stack space.
+
+</details>
+
+</section>
