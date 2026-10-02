@@ -1,19 +1,17 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.13.1"
+julia_version = "1.11.9"
 manifest_format = "2.1"
-project_hash = "f9f0d919d2f63d5a36a53ab8789d78e1b5471a7c"
+project_hash = "d10978ec06878c8ec753f3f0d17e56de567aa145"
 
 [[deps.DataStructures]]
 deps = ["OrderedCollections"]
 git-tree-sha1 = "b0bc6d2cad1fed8b7fd59a1551a991cb3d2809e6"
-registries = "General"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 version = "0.19.6"
 
 [[deps.OrderedCollections]]
 git-tree-sha1 = "12f1439c4f986bb868acda6ea33ebc78e19b95ad"
-registries = "General"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.7.0"
 
