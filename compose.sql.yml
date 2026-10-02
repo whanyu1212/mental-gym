@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
     tmpfs:
-      - /var/lib/postgresql/data
+      # PostgreSQL 18 stores data in a version-specific subdirectory.
+      - /var/lib/postgresql
     volumes:
       - ./src/sql:/workspace/src/sql:ro
     working_dir: /workspace
