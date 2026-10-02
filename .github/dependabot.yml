@@ -9,6 +9,10 @@ updates:
       javascript-dependencies:
         patterns:
           - "*"
+        # Review major migrations separately instead of bundling unrelated changes.
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: uv
     directory: /
