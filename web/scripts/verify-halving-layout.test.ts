@@ -9,28 +9,65 @@ const html = readFileSync(
 	"utf8",
 );
 const document = new JSDOM(html).window.document;
-const example = document.querySelector(".halving-example");
+const examples = [...document.querySelectorAll(".worked-example")];
+const halving = examples[2];
+
+const titleIds = [
+	"example-1--constant-inner-loop",
+	"example-2--triangular-sum",
+	"example-3--logarithmic-while-loop",
+	"example-4--two-independent-passes",
+	"example-5--binary-search--linear-work",
+	"example-6--recursive-tree-two-branches",
+	"example-7--memoised-recursion",
+	"example-8--nested-recursion",
+];
 
 test("asymptotic note uses the shared page container", () => {
 	assert.ok(document.querySelector("main.container > article.asymptotic-note"));
 	assert.equal(document.querySelector(".container-wide"), null);
 });
 
-test("halving prototype has an accessible title and contains only Example 3", () => {
-	assert.ok(example);
-	const label = example.getAttribute("aria-labelledby");
-	assert.equal(label, "example-3--logarithmic-while-loop");
-	assert.equal(document.getElementById(label), example.querySelector("h3"));
-	assert.equal(example.querySelectorAll("h3").length, 1);
-	assert.ok(example.querySelector("pre code")?.textContent?.includes("i = i // 2"));
-	assert.ok(example.querySelector(".example-result .katex"));
-	assert.equal(example.querySelectorAll(".calculation-step h5").length, 6);
-	assert.equal(example.querySelectorAll("details").length, 0);
-	assert.equal(example.querySelectorAll(".katex-error").length, 0);
+test("all eight examples share an accessible title, result, and derivation layout", () => {
+	assert.equal(examples.length, 8);
+	for (const [index, example] of examples.entries()) {
+		const label = example.getAttribute("aria-labelledby");
+		assert.equal(label, titleIds[index]);
+		assert.equal(document.getElementById(label!), example.querySelector(":scope > h3"));
+		assert.equal(example.querySelectorAll("h3").length, 1);
+		assert.match(example.querySelector("h3")!.textContent!, new RegExp(`^Example ${index + 1} — `));
+		assert.equal(example.querySelector(".example-eyebrow"), null);
+		assert.equal(example.querySelectorAll(":scope > .example-result").length, 1);
+		assert.ok(example.querySelector(".example-result .katex"));
+		assert.match(example.querySelector(".example-result")!.textContent!, /Time/);
+		assert.equal(example.querySelectorAll(":scope > .example-derivation").length, 1);
+		assert.equal(example.querySelector(".example-derivation > h4")?.textContent, "Derivation");
+		assert.equal(example.querySelectorAll(".worked-example, hr, details, .katex-error").length, 0);
+	}
+	assert.equal(document.querySelector(".halving-example"), null);
+	assert.equal(document.querySelectorAll(".katex-error").length, 0);
+	assert.equal(examples.at(-1)?.nextElementSibling?.textContent, "Common Mistakes");
+});
+
+test("each example keeps its own four-language code group", () => {
+	for (const example of examples) {
+		const groups = example.querySelectorAll(":scope > [data-code-tabs]");
+		assert.equal(groups.length, 1);
+		const panels = [...groups[0].querySelectorAll('[role="tabpanel"]')];
+		assert.deepEqual(panels.map((panel) => panel.getAttribute("data-lang")), ["python", "julia", "typescript", "rust"]);
+		assert.ok(panels.every((panel) => panel.querySelector("pre code")));
+	}
+});
+
+test("halving explanation keeps three focused steps and its intuition callout", () => {
+	assert.ok(halving);
+	assert.ok(halving.querySelector("pre code")?.textContent?.includes("i = i // 2"));
+	assert.equal(halving.querySelectorAll(".calculation-step h5").length, 3);
+	assert.equal(halving.querySelector(".example-takeaway h4")?.textContent, "Why this stays fast");
 });
 
 test("vertical trace retains the iteration count and stopping value", () => {
-	const table = example?.querySelector(".calculation-step table");
+	const table = halving?.querySelector(".calculation-step table");
 	assert.ok(table);
 	assert.equal(table.querySelectorAll("thead th").length, 3);
 	const rows = [...table.querySelectorAll("tbody tr")];
@@ -45,10 +82,10 @@ test("vertical trace retains the iteration count and stopping value", () => {
 	);
 });
 
-test("other worked examples remain outside the prototype", () => {
-	const titles = [...document.querySelectorAll("h3")].filter(
-		(heading) => /^Example \d/.test(heading.textContent ?? ""),
-	);
-	assert.equal(titles.length, 8);
-	assert.equal(titles.filter((heading) => example?.contains(heading)).length, 1);
+test("recursive derivations use numbered subsection headings", () => {
+	for (const [index, count] of [[5, 4], [7, 3]]) {
+		const steps = [...examples[index].querySelectorAll(".example-derivation h5")];
+		assert.equal(steps.length, count);
+		steps.forEach((step, stepIndex) => assert.match(step.textContent!, new RegExp(`^${stepIndex + 1}\\. `)));
+	}
 });
