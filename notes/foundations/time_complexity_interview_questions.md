@@ -90,6 +90,33 @@ def example(arr):
         for j in range(i + 1, len(arr)):  # O(n)
             print(arr[i], arr[j])
 ```
+```julia
+function example(arr)
+    for i in 1:length(arr)              # O(n)
+        for j in i+1:length(arr)        # O(n)
+            println(arr[i], " ", arr[j])
+        end
+    end
+end
+```
+```ts
+function example(arr: number[]): void {
+  for (let i = 0; i < arr.length; i++) {        // O(n)
+    for (let j = i + 1; j < arr.length; j++) {  // O(n)
+      console.log(arr[i], arr[j]);
+    }
+  }
+}
+```
+```rust
+fn example(arr: &[i32]) {
+    for i in 0..arr.len() {             // O(n)
+        for j in i + 1..arr.len() {     // O(n)
+            println!("{} {}", arr[i], arr[j]);
+        }
+    }
+}
+```
 
 **Answer**: O(n²)
 - Outer loop: n iterations
@@ -130,7 +157,7 @@ def example(arr):
 - Total: O(n) * O(log n) = O(n log n)
 
 **Example**: Merge sort
-```
+```text
 Level 0: [8,3,5,4,7,2,1,6]           - O(n) merge work
          /                \
 Level 1: [8,3,5,4]    [7,2,1,6]      - O(n) merge work
@@ -182,6 +209,78 @@ for i in range(n):
         print(j)
         j //= 2  # Halves each time
 ```
+```julia
+# O(n²) - both loops depend on n
+for i in 1:n
+    for j in 1:n
+        println(i, " ", j)
+    end
+end
+
+# O(n) - inner loop is constant
+for i in 1:n
+    for j in 1:10  # Always 10 iterations
+        println(i, " ", j)
+    end
+end
+
+# O(n log n) - inner loop decreases exponentially
+for i in 1:n
+    j = i
+    while j > 0
+        println(j)
+        j ÷= 2  # Halves each time
+    end
+end
+```
+```ts
+// O(n²) - both loops depend on n
+for (let i = 0; i < n; i++) {
+  for (let j = 0; j < n; j++) {
+    console.log(i, j);
+  }
+}
+
+// O(n) - inner loop is constant
+for (let i = 0; i < n; i++) {
+  for (let j = 0; j < 10; j++) {  // Always 10 iterations
+    console.log(i, j);
+  }
+}
+
+// O(n log n) - inner loop decreases exponentially
+for (let i = 0; i < n; i++) {
+  let j = i;
+  while (j > 0) {
+    console.log(j);
+    j = Math.floor(j / 2);  // Halves each time
+  }
+}
+```
+```rust
+// O(n²) - both loops depend on n
+for i in 0..n {
+    for j in 0..n {
+        println!("{i} {j}");
+    }
+}
+
+// O(n) - inner loop is constant
+for i in 0..n {
+    for j in 0..10 {  // Always 10 iterations
+        println!("{i} {j}");
+    }
+}
+
+// O(n log n) - inner loop decreases exponentially
+for i in 0..n {
+    let mut j = i;
+    while j > 0 {
+        println!("{j}");
+        j /= 2;  // Halves each time
+    }
+}
+```
 
 ---
 
@@ -192,6 +291,30 @@ def fib(n):
     if n <= 1:
         return n
     return fib(n-1) + fib(n-2)
+```
+```julia
+function fib(n)
+    if n <= 1
+        return n
+    end
+    return fib(n-1) + fib(n-2)
+end
+```
+```ts
+function fib(n: number): number {
+  if (n <= 1) {
+    return n;
+  }
+  return fib(n - 1) + fib(n - 2);
+}
+```
+```rust
+fn fib(n: u64) -> u64 {
+    if n <= 1 {
+        return n;
+    }
+    fib(n - 1) + fib(n - 2)
+}
 ```
 
 **Answer**: O(2^n)
@@ -256,6 +379,118 @@ def tree_height(node):
         return 0
     return 1 + max(tree_height(node.left), tree_height(node.right))
 ```
+```julia
+# O(n) space - linear recursion depth
+# (named fact so it doesn't clash with Base.factorial)
+function fact(n)
+    if n <= 1
+        return 1
+    end
+    return n * fact(n-1)  # Max depth: n
+end
+
+# O(log n) space - binary tree depth
+# Call with left = 1, right = length(arr) (Julia is 1-based)
+function binary_search(arr, target, left, right)
+    if left > right
+        return nothing
+    end
+    mid = (left + right) ÷ 2
+    if arr[mid] == target
+        return mid
+    elseif arr[mid] < target
+        return binary_search(arr, target, mid+1, right)
+    else
+        return binary_search(arr, target, left, mid-1)
+    end
+end
+
+# O(n) space - tree with n nodes (worst case)
+function tree_height(node)
+    if node === nothing
+        return 0
+    end
+    return 1 + max(tree_height(node.left), tree_height(node.right))
+end
+```
+```ts
+// O(n) space - linear recursion depth
+function factorial(n: number): number {
+  if (n <= 1) {
+    return 1;
+  }
+  return n * factorial(n - 1);  // Max depth: n
+}
+
+// O(log n) space - binary tree depth
+function binarySearch(arr: number[], target: number, left: number, right: number): number {
+  if (left > right) {
+    return -1;
+  }
+  const mid = Math.floor((left + right) / 2);
+  if (arr[mid] === target) {
+    return mid;
+  } else if (arr[mid] < target) {
+    return binarySearch(arr, target, mid + 1, right);
+  } else {
+    return binarySearch(arr, target, left, mid - 1);
+  }
+}
+
+// O(n) space - tree with n nodes (worst case)
+interface TreeNode {
+  val: number;
+  left: TreeNode | null;
+  right: TreeNode | null;
+}
+
+function treeHeight(node: TreeNode | null): number {
+  if (node === null) {
+    return 0;
+  }
+  return 1 + Math.max(treeHeight(node.left), treeHeight(node.right));
+}
+```
+```rust
+// O(n) space - linear recursion depth
+fn factorial(n: u64) -> u64 {
+    if n <= 1 {
+        return 1;
+    }
+    n * factorial(n - 1)  // Max depth: n
+}
+
+// O(log n) space - binary tree depth
+// Searches arr[left..right] with right exclusive (call with 0, arr.len()),
+// so there is no `mid - 1` to underflow.
+fn binary_search(arr: &[i32], target: i32, left: usize, right: usize) -> Option<usize> {
+    if left >= right {
+        return None;
+    }
+    let mid = left + (right - left) / 2;
+    if arr[mid] == target {
+        Some(mid)
+    } else if arr[mid] < target {
+        binary_search(arr, target, mid + 1, right)
+    } else {
+        binary_search(arr, target, left, mid)
+    }
+}
+
+// O(n) space - tree with n nodes (worst case)
+struct TreeNode {
+    val: i32,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
+}
+
+fn tree_height(node: Option<&TreeNode>) -> usize {
+    match node {
+        None => 0,
+        Some(n) => 1 + tree_height(n.left.as_deref()).max(tree_height(n.right.as_deref())),
+    }
+}
+```
 
 ---
 
@@ -269,6 +504,39 @@ def mystery(n):
         i //= 2
         count += 1
     return count
+```
+```julia
+function mystery(n)
+    count = 0
+    i = n
+    while i > 0
+        i ÷= 2
+        count += 1
+    end
+    return count
+end
+```
+```ts
+function mystery(n: number): number {
+  let count = 0;
+  let i = n;
+  while (i > 0) {
+    i = Math.floor(i / 2);
+    count += 1;
+  }
+  return count;
+}
+```
+```rust
+fn mystery(n: u64) -> u32 {
+    let mut count = 0;
+    let mut i = n;
+    while i > 0 {
+        i /= 2;
+        count += 1;
+    }
+    count
+}
 ```
 
 **Answer**: O(log n)
@@ -318,6 +586,30 @@ while i > 0:
 # Binary search
 mid = (left + right) // 2
 ```
+```julia
+while i > 0
+    i ÷= 2  # or i *= 2, or i >>= 1
+end
+
+# Binary search
+mid = (left + right) ÷ 2
+```
+```ts
+while (i > 0) {
+  i = Math.floor(i / 2);  // or i *= 2, or i >>= 1 (32-bit integers only)
+}
+
+// Binary search
+const mid = Math.floor((left + right) / 2);
+```
+```rust
+while i > 0 {
+    i /= 2;  // or i *= 2, or i >>= 1
+}
+
+// Binary search (written this way so left + right can't overflow)
+let mid = left + (right - left) / 2;
+```
 
 ---
 
@@ -334,6 +626,39 @@ for item in collection:
 for i in range(n):
     if condition:  # O(1) check
         result.append(i)
+```
+```julia
+for item in collection
+    # O(1) operation
+end
+
+for i in 1:n
+    if condition  # O(1) check
+        push!(result, i)
+    end
+end
+```
+```ts
+for (const item of collection) {
+  // O(1) operation
+}
+
+for (let i = 0; i < n; i++) {
+  if (condition) {  // O(1) check
+    result.push(i);
+  }
+}
+```
+```rust
+for item in &collection {
+    // O(1) operation
+}
+
+for i in 0..n {
+    if condition {  // O(1) check
+        result.push(i);
+    }
+}
 ```
 
 ---
@@ -354,6 +679,43 @@ def merge_sort(arr):
     right = merge_sort(arr[mid:])   # T(n/2)
     return merge(left, right)        # O(n)
 ```
+```julia
+# Merge sort structure
+# (merge_sorted, not merge: Base.merge already exists for dictionaries)
+function merge_sort(arr)
+    if length(arr) <= 1
+        return arr
+    end
+    mid = length(arr) ÷ 2
+    left = merge_sort(arr[1:mid])       # T(n/2)
+    right = merge_sort(arr[mid+1:end])  # T(n/2)
+    return merge_sorted(left, right)    # O(n)
+end
+```
+```ts
+// Merge sort structure
+function mergeSort(arr: number[]): number[] {
+  if (arr.length <= 1) {
+    return arr;
+  }
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));  // T(n/2)
+  const right = mergeSort(arr.slice(mid));    // T(n/2)
+  return merge(left, right);                  // O(n)
+}
+```
+```rust
+// Merge sort structure
+fn merge_sort(arr: &[i32]) -> Vec<i32> {
+    if arr.len() <= 1 {
+        return arr.to_vec();
+    }
+    let mid = arr.len() / 2;
+    let left = merge_sort(&arr[..mid]);   // T(n/2)
+    let right = merge_sort(&arr[mid..]);  // T(n/2)
+    merge(&left, &right)                  // O(n)
+}
+```
 
 ---
 
@@ -373,6 +735,48 @@ for i in range(n):
     for j in range(i, n):  # Triangle: n(n+1)/2 = O(n²)
         # O(1) operation
 ```
+```julia
+for i in 1:n
+    for j in 1:n  # Both loops n times
+        # O(1) operation
+    end
+end
+
+# Or
+for i in 1:n
+    for j in i:n  # Triangle: n(n+1)/2 = O(n²)
+        # O(1) operation
+    end
+end
+```
+```ts
+for (let i = 0; i < n; i++) {
+  for (let j = 0; j < n; j++) {  // Both loops n times
+    // O(1) operation
+  }
+}
+
+// Or
+for (let i = 0; i < n; i++) {
+  for (let j = i; j < n; j++) {  // Triangle: n(n+1)/2 = O(n²)
+    // O(1) operation
+  }
+}
+```
+```rust
+for i in 0..n {
+    for j in 0..n {  // Both loops n times
+        // O(1) operation
+    }
+}
+
+// Or
+for i in 0..n {
+    for j in i..n {  // Triangle: n(n+1)/2 = O(n²)
+        // O(1) operation
+    }
+}
+```
 
 ---
 
@@ -388,6 +792,33 @@ def recursive(n):
         return
     recursive(n-1)  # Branch 1
     recursive(n-1)  # Branch 2
+```
+```julia
+function recursive(n)
+    if n <= 0
+        return
+    end
+    recursive(n-1)  # Branch 1
+    recursive(n-1)  # Branch 2
+end
+```
+```ts
+function recursive(n: number): void {
+  if (n <= 0) {
+    return;
+  }
+  recursive(n - 1);  // Branch 1
+  recursive(n - 1);  // Branch 2
+}
+```
+```rust
+fn recursive(n: i32) {
+    if n <= 0 {
+        return;
+    }
+    recursive(n - 1);  // Branch 1
+    recursive(n - 1);  // Branch 2
+}
 ```
 
 ---
@@ -422,6 +853,48 @@ for i in range(n):
     result.append(str(i))
 final = "".join(result)
 ```
+```julia
+# O(n²) - strings are immutable, creates a new string each time
+result = ""
+for i in 1:n
+    result *= string(i)  # O(length(result)) each iteration
+end
+
+# O(n) - write into a growable buffer, take the string once
+buf = IOBuffer()
+for i in 1:n
+    print(buf, i)
+end
+final = String(take!(buf))
+```
+```ts
+// Often fine in practice: engines build a "rope" for += instead of copying,
+// but that's an optimisation, not a guarantee
+let result = "";
+for (let i = 0; i < n; i++) {
+  result += String(i);
+}
+
+// O(n) - collect the parts, join once
+const parts: string[] = [];
+for (let i = 0; i < n; i++) {
+  parts.push(String(i));
+}
+const joined = parts.join("");
+```
+```rust
+// O(n) amortised - String is mutable, so push_str appends in place
+let mut result = String::new();
+for i in 0..n {
+    result.push_str(&i.to_string());
+}
+
+// The O(n²) trap in Rust is rebuilding the string every time
+let mut slow = String::new();
+for i in 0..n {
+    slow = format!("{slow}{i}");  // allocates and copies a new String
+}
+```
 
 ---
 
@@ -434,6 +907,37 @@ arr[i:j]  # Creates new array of size j-i
 # Common mistake: O(n²) due to slicing in loop
 for i in range(n):
     process(arr[i:])  # O(n-i) each iteration → O(n²) total
+```
+```julia
+# O(k) where k = slice size
+arr[i:j]        # Creates a new array of size j-i+1 (Julia ranges include both ends)
+@view arr[i:j]  # O(1) - a view, no copy
+
+# Common mistake: O(n²) due to slicing in loop
+for i in 1:n
+    process(arr[i:end])  # O(n-i) each iteration → O(n²) total
+end
+```
+```ts
+// O(k) where k = slice size
+arr.slice(i, j);  // Creates new array of size j-i
+
+// Common mistake: O(n²) due to slicing in loop
+for (let i = 0; i < n; i++) {
+  process(arr.slice(i));  // O(n-i) each iteration → O(n²) total
+}
+```
+```rust
+// O(1) - a slice borrows, nothing is copied
+let view = &arr[i..j];
+// O(k) where k = slice size - only when you ask for a copy
+let copy = arr[i..j].to_vec();
+
+// So slicing in a loop doesn't copy...
+for i in 0..n {
+    process(&arr[i..]);  // the slice itself is O(1)
+}
+// ...unless you write process(arr[i..].to_vec()), which is O(n²) total
 ```
 
 ---
@@ -452,6 +956,49 @@ for item in my_set:
 # O(n) - set operations
 set1.union(set2)
 set1.intersection(set2)
+```
+```julia
+# O(1) average, O(n) worst
+x in my_set
+my_dict[key]
+
+# O(n) - iterating
+for item in my_set
+    # ...
+end
+
+# O(n) - set operations
+union(set1, set2)
+intersect(set1, set2)
+```
+```ts
+// O(1) average, O(n) worst
+mySet.has(x);
+myMap.get(key);
+
+// O(n) - iterating
+for (const item of mySet) {
+  // ...
+}
+
+// O(n) - set operations (Set methods added in ES2025;
+// on older runtimes use new Set([...set1, ...set2]))
+set1.union(set2);
+set1.intersection(set2);
+```
+```rust
+// O(1) average, O(n) worst
+my_set.contains(&x);
+my_map[&key];
+
+// O(n) - iterating
+for item in &my_set {
+    // ...
+}
+
+// O(n) - set operations (lazy iterators; collect() builds the new set)
+let all: HashSet<_> = set1.union(&set2).collect();
+let both: HashSet<_> = set1.intersection(&set2).collect();
 ```
 
 ---
@@ -482,6 +1029,48 @@ def inorder(node):
 
 # Best case: h = log n (balanced tree)
 # Worst case: h = n (skewed tree)
+```
+```julia
+# Recursive: O(h) space where h = tree height
+function inorder(node)
+    if node === nothing
+        return
+    end
+    inorder(node.left)
+    println(node.val)
+    inorder(node.right)
+end
+
+# Best case: h = log n (balanced tree)
+# Worst case: h = n (skewed tree)
+```
+```ts
+// Recursive: O(h) space where h = tree height
+// (TreeNode as defined in Question 8)
+function inorder(node: TreeNode | null): void {
+  if (node === null) {
+    return;
+  }
+  inorder(node.left);
+  console.log(node.val);
+  inorder(node.right);
+}
+
+// Best case: h = log n (balanced tree)
+// Worst case: h = n (skewed tree)
+```
+```rust
+// Recursive: O(h) space where h = tree height
+// (TreeNode as defined in Question 8)
+fn inorder(node: Option<&TreeNode>) {
+    let Some(node) = node else { return };
+    inorder(node.left.as_deref());
+    println!("{}", node.val);
+    inorder(node.right.as_deref());
+}
+
+// Best case: h = log n (balanced tree)
+// Worst case: h = n (skewed tree)
 ```
 
 ---

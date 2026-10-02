@@ -104,8 +104,43 @@ for part in parts:
 # O(n) — one allocation, one copy per part
 result = "".join(parts)
 ```
+```julia
+# O(n²) — each *= allocates and copies a longer string
+result = ""
+for part in parts
+    result *= part
+end
 
-This matters: for $n$ parts each of length $L$, the naive approach costs $L + 2L + 3L + \cdots + nL = \frac{n(n+1)}{2} L = O(n^2 L)$.
+# O(n) — one allocation, one copy per part
+result = join(parts)
+```
+```ts
+// Usually fine in practice: V8 and other engines build a "rope" for +=
+// instead of copying, but the language doesn't promise that
+let result = "";
+for (const part of parts) {
+  result += part;
+}
+
+// O(n) — the portable choice
+const joined = parts.join("");
+```
+```rust
+// O(n²) — format! allocates a brand-new String every time
+let mut result = String::new();
+for part in &parts {
+    result = format!("{result}{part}");
+}
+
+// O(n) amortised — String is a growable buffer, push_str appends in place
+let mut result = String::new();
+for part in &parts {
+    result.push_str(part);
+}
+// or simply: let result = parts.concat();
+```
+
+This matters: for $n$ parts each of length $L$, the naive approach costs $L + 2L + 3L + \cdots + nL = \frac{n(n+1)}{2} L = O(n^2 L)$. It applies wherever strings are immutable (Python, Julia, the TypeScript spec). Rust's `String` is mutable, so the trap there is allocating a new string on every step instead of appending.
 
 ## Sorting Algorithms
 
@@ -171,6 +206,21 @@ arr[i]
 d[key]
 (n * (n + 1)) // 2   # closed-form formula
 ```
+```julia
+arr[i]
+d[key]
+n * (n + 1) ÷ 2      # closed-form formula
+```
+```ts
+arr[i];
+map.get(key);
+(n * (n + 1)) / 2;   // closed-form formula
+```
+```rust
+arr[i];
+map[&key];           // or map.get(&key) if the key may be missing
+n * (n + 1) / 2;     // closed-form formula
+```
 
 ### $O(\log n)$ — Halving or doubling
 
@@ -188,8 +238,51 @@ while lo <= hi:
     mid = (lo + hi) // 2
     ...
 ```
+```julia
+# Halving
+i = n
+while i > 0
+    i ÷= 2          # log₂n iterations
+end
 
-Any time you see `i //= 2`, `i *= 2`, or `mid = (lo + hi) // 2`, think $O(\log n)$.
+# Binary search
+lo, hi = 1, length(arr)
+while lo <= hi
+    mid = (lo + hi) ÷ 2
+    # ...
+end
+```
+```ts
+// Halving
+let i = n;
+while (i > 0) {
+  i = Math.floor(i / 2);   // log₂n iterations
+}
+
+// Binary search
+let lo = 0;
+let hi = arr.length - 1;
+while (lo <= hi) {
+  const mid = Math.floor((lo + hi) / 2);
+  // ...
+}
+```
+```rust
+// Halving
+let mut i = n;
+while i > 0 {
+    i /= 2;         // log₂n iterations
+}
+
+// Binary search (hi is exclusive, so it never underflows)
+let (mut lo, mut hi) = (0, arr.len());
+while lo < hi {
+    let mid = lo + (hi - lo) / 2;
+    // ...
+}
+```
+
+Any time you see the value halved (`i //= 2`, `i ÷= 2`, `i /= 2`), doubled (`i *= 2`), or a midpoint taken (`mid = (lo + hi) // 2`), think $O(\log n)$.
 
 ### $O(n)$ — Single pass
 
@@ -199,6 +292,24 @@ One loop, constant work per iteration:
 total = 0
 for x in arr:
     total += x
+```
+```julia
+total = 0
+for x in arr
+    total += x
+end
+```
+```ts
+let total = 0;
+for (const x of arr) {
+  total += x;
+}
+```
+```rust
+let mut total = 0;
+for &x in &arr {
+    total += x;
+}
 ```
 
 Also: building a hash map from a list, linear scan, two-pointer technique.
@@ -219,6 +330,49 @@ def merge_sort(arr):
     return merge(L, R)           # O(n)
 # Recurrence: T(n) = 2T(n/2) + O(n) → O(n log n)
 ```
+```julia
+sort!(arr)           # O(n log n)
+
+# merge_sorted, not merge: Base.merge already exists (for dictionaries)
+function merge_sort(arr)
+    if length(arr) <= 1
+        return arr
+    end
+    mid = length(arr) ÷ 2
+    L = merge_sort(arr[1:mid])       # T(n/2)
+    R = merge_sort(arr[mid+1:end])   # T(n/2)
+    return merge_sorted(L, R)        # O(n)
+end
+# Recurrence: T(n) = 2T(n/2) + O(n) → O(n log n)
+```
+```ts
+arr.sort((a, b) => a - b);   // O(n log n). Without a comparator, sort() compares as strings
+
+function mergeSort(arr: number[]): number[] {
+  if (arr.length <= 1) {
+    return arr;
+  }
+  const mid = Math.floor(arr.length / 2);
+  const L = mergeSort(arr.slice(0, mid));   // T(n/2)
+  const R = mergeSort(arr.slice(mid));      // T(n/2)
+  return merge(L, R);                       // O(n)
+}
+// Recurrence: T(n) = 2T(n/2) + O(n) → O(n log n)
+```
+```rust
+arr.sort();          // O(n log n)
+
+fn merge_sort(arr: &[i32]) -> Vec<i32> {
+    if arr.len() <= 1 {
+        return arr.to_vec();
+    }
+    let mid = arr.len() / 2;
+    let left = merge_sort(&arr[..mid]);    // T(n/2) — the slice borrows, no copy
+    let right = merge_sort(&arr[mid..]);   // T(n/2)
+    merge(&left, &right)                   // O(n)
+}
+// Recurrence: T(n) = 2T(n/2) + O(n) → O(n log n)
+```
 
 ### $O(n^2)$ — Nested loops over the same data
 
@@ -230,6 +384,45 @@ for i in range(n):
 for i in range(n):
     for j in range(i, n): # triangle: n(n+1)/2 = O(n²)
         ...
+```
+```julia
+for i in 1:n
+    for j in 1:n          # both range over n
+        # ...
+    end
+end
+
+for i in 1:n
+    for j in i:n          # triangle: n(n+1)/2 = O(n²)
+        # ...
+    end
+end
+```
+```ts
+for (let i = 0; i < n; i++) {
+  for (let j = 0; j < n; j++) {   // both range over n
+    // ...
+  }
+}
+
+for (let i = 0; i < n; i++) {
+  for (let j = i; j < n; j++) {   // triangle: n(n+1)/2 = O(n²)
+    // ...
+  }
+}
+```
+```rust
+for i in 0..n {
+    for j in 0..n {       // both range over n
+        // ...
+    }
+}
+
+for i in 0..n {
+    for j in i..n {       // triangle: n(n+1)/2 = O(n²)
+        // ...
+    }
+}
 ```
 
 Watch for hidden quadratic patterns:
@@ -244,6 +437,50 @@ for x in arr:
     if x in another_arr:   # use a set instead
         ...
 ```
+```julia
+# O(n²) — findfirst and deleteat! are each O(n), called n times
+for x in to_remove
+    deleteat!(arr, findfirst(==(x), arr))
+end
+
+# O(n²) — `in` on a Vector is O(n), called n times
+for x in arr
+    if x in another_arr   # use a Set instead
+        # ...
+    end
+end
+```
+```ts
+// O(n²) — indexOf and splice are each O(n), called n times
+for (const x of toRemove) {
+  const i = arr.indexOf(x);
+  if (i !== -1) {
+    arr.splice(i, 1);
+  }
+}
+
+// O(n²) — includes is O(n), called n times
+for (const x of arr) {
+  if (anotherArr.includes(x)) {   // use a Set instead
+    // ...
+  }
+}
+```
+```rust
+// O(n²) — position and remove are each O(n), called n times
+for x in &to_remove {
+    if let Some(i) = arr.iter().position(|y| y == x) {
+        arr.remove(i);
+    }
+}
+
+// O(n²) — contains on a Vec is O(n), called n times
+for x in &arr {
+    if another_arr.contains(x) {   // use a HashSet instead
+        // ...
+    }
+}
+```
 
 ### $O(2^n)$ — Branching recursion or subsets
 
@@ -255,6 +492,33 @@ def f(n):
         return
     f(n - 1)    # branch 1
     f(n - 1)    # branch 2
+```
+```julia
+function f(n)
+    if n == 0
+        return
+    end
+    f(n - 1)    # branch 1
+    f(n - 1)    # branch 2
+end
+```
+```ts
+function f(n: number): void {
+  if (n === 0) {
+    return;
+  }
+  f(n - 1);   // branch 1
+  f(n - 1);   // branch 2
+}
+```
+```rust
+fn f(n: u32) {
+    if n == 0 {
+        return;
+    }
+    f(n - 1);   // branch 1
+    f(n - 1);   // branch 2
+}
 ```
 
 The call tree has $2^n$ leaves. Generating all subsets of an $n$-element set is intrinsically $O(2^n)$ — there are $2^n$ subsets to produce.
@@ -269,6 +533,30 @@ for i in range(n):
     while j > 0:
         j //= 2        # O(log i) for each i
 ```
+```julia
+for i in 1:n
+    j = i
+    while j > 0
+        j ÷= 2         # O(log i) for each i
+    end
+end
+```
+```ts
+for (let i = 0; i < n; i++) {
+  let j = i;
+  while (j > 0) {
+    j = Math.floor(j / 2);   // O(log i) for each i
+  }
+}
+```
+```rust
+for i in 0..n {
+    let mut j = i;
+    while j > 0 {
+        j /= 2;        // O(log i) for each i
+    }
+}
+```
 
 Total iterations: $\sum_{i=1}^{n} \log i = \log(n!) \approx n \log n$ by Stirling's approximation. Not $O(n^2)$.
 
@@ -278,8 +566,25 @@ Total iterations: $\sum_{i=1}^{n} \log i = \log(n!) \approx n \log n$ by Stirlin
 for i in range(n):
     process(arr[i:])    # slice is O(n - i) — copies data
 ```
+```julia
+for i in 1:n
+    process(arr[i:end])          # slice is O(n - i) — copies data
+    # process(@view arr[i:end])  # a view is O(1) — no copy
+end
+```
+```ts
+for (let i = 0; i < n; i++) {
+  process(arr.slice(i));   // slice is O(n - i) — copies data
+}
+```
+```rust
+for i in 0..n {
+    process(arr[i..].to_vec());   // .to_vec() is O(n - i) — copies data
+    // process(&arr[i..]);        // a borrowed slice is O(1) — no copy
+}
+```
 
-Total work: $(n) + (n-1) + \cdots + 1 = \frac{n(n+1)}{2} = O(n^2)$. Pass indices instead of slices when possible.
+Total work: $(n) + (n-1) + \cdots + 1 = \frac{n(n+1)}{2} = O(n^2)$. Pass indices instead of slices when possible, or use a view (Julia's `@view`, Rust's `&arr[i..]`) where the language has one.
 
 ### 3. The same complexity, different constants
 
@@ -294,8 +599,28 @@ d = {}
 for x in adversarial_input:
     d[x] = True    # average O(1), worst O(n)
 ```
+```julia
+d = Dict()
+for x in adversarial_input
+    d[x] = true    # average O(1), worst O(n)
+end
+```
+```ts
+const d = new Map();
+for (const x of adversarialInput) {
+  d.set(x, true);   // average O(1), worst O(n)
+}
+```
+```rust
+use std::collections::HashMap;
 
-In Python, `dict` and `set` use a randomised hash seed (since Python 3.3) which makes adversarial inputs hard to construct. But for non-string keys or custom `__hash__` implementations, be aware the worst case exists.
+let mut d = HashMap::new();
+for x in &adversarial_input {
+    d.insert(x, true);   // average O(1), worst O(n)
+}
+```
+
+In Python, `dict` and `set` use a randomised hash seed (since Python 3.3) which makes adversarial inputs hard to construct. Rust's `HashMap` uses a randomly keyed SipHash by default for the same reason. But for non-string keys or custom `__hash__` implementations, be aware the worst case exists.
 
 ### 5. Sorting an already-sorted list
 
@@ -348,6 +673,39 @@ def f(arr):
             result.append(arr[i] + arr[j])
     return result
 ```
+```julia
+function f(arr)
+    result = eltype(arr)[]
+    for i in 1:length(arr)
+        for j in i:length(arr)
+            push!(result, arr[i] + arr[j])
+        end
+    end
+    return result
+end
+```
+```ts
+function f(arr: number[]): number[] {
+  const result: number[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i; j < arr.length; j++) {
+      result.push(arr[i] + arr[j]);
+    }
+  }
+  return result;
+}
+```
+```rust
+fn f(arr: &[i32]) -> Vec<i32> {
+    let mut result = Vec::new();
+    for i in 0..arr.len() {
+        for j in i..arr.len() {
+            result.push(arr[i] + arr[j]);
+        }
+    }
+    result
+}
+```
 
 > **Answer.** $O(n^2)$ time, $O(n^2)$ space. The outer loop runs $n$ times; the inner loop runs $n - i$ times for each $i$, giving $n + (n-1) + \cdots + 1 = \frac{n(n+1)}{2}$ iterations — $O(n^2)$. The result list accumulates all those pairs, so it also has $O(n^2)$ entries.
 
@@ -381,11 +739,63 @@ def contains_duplicate(arr):
                 return True
     return False
 ```
+```julia
+function contains_duplicate(arr)
+    for i in 1:length(arr)
+        for j in i+1:length(arr)
+            if arr[i] == arr[j]
+                return true
+            end
+        end
+    end
+    return false
+end
+```
+```ts
+function containsDuplicate(arr: number[]): boolean {
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      if (arr[i] === arr[j]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+```
+```rust
+fn contains_duplicate(arr: &[i32]) -> bool {
+    for i in 0..arr.len() {
+        for j in i + 1..arr.len() {
+            if arr[i] == arr[j] {
+                return true;
+            }
+        }
+    }
+    false
+}
+```
 
 > **Answer.** $O(n^2)$ — checks every pair. Fix: use a set.
 > ```python
 > def contains_duplicate(arr):
 >     return len(arr) != len(set(arr))  # O(n) time, O(n) space
+> ```
+> ```julia
+> contains_duplicate(arr) = length(arr) != length(Set(arr))  # O(n) time, O(n) space
+> ```
+> ```ts
+> function containsDuplicate(arr: number[]): boolean {
+>   return arr.length !== new Set(arr).size;  // O(n) time, O(n) space
+> }
+> ```
+> ```rust
+> use std::collections::HashSet;
+>
+> fn contains_duplicate(arr: &[i32]) -> bool {
+>     let seen: HashSet<_> = arr.iter().collect();
+>     arr.len() != seen.len()  // O(n) time, O(n) space
+> }
 > ```
 > Or equivalently, iterate and add to a seen set, returning `True` on first repeat.
 

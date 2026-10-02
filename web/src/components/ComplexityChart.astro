@@ -1,147 +1,210 @@
 ---
-// Server-rendered shell; Chart.js runs client-side
+import { COMPLEXITY_CURVES, formatGrowthValue } from "../lib/complexity-curves";
+const sampleInputs = [4, 8, 16, 32];
 ---
 
-<div class="chart-wrap">
-	<canvas id="complexity-chart"></canvas>
-	<div class="chart-legend" id="chart-legend"></div>
-</div>
+<figure class="complexity-chart" aria-labelledby="growth-rate-visualised">
+	<h3 id="growth-rate-visualised">Growth Rate Visualised</h3>
+	<div class="chart-stage">
+		<canvas id="complexity-chart" role="img" aria-labelledby="growth-rate-visualised" aria-describedby="complexity-chart-caption">
+			Compare the representative growth functions using the legend and sample values below.
+		</canvas>
+	</div>
+	<ul class="chart-legend" aria-label="Growth class legend">
+		{COMPLEXITY_CURVES.map((curve) => (
+			<li data-curve={curve.id}>
+				<span class="legend-line" aria-hidden="true" style={{
+					"--curve-color": `var(--curve-${curve.id})`,
+					"border-top-style": curve.dash.length === 0 ? "solid" : curve.dash[0] === 2 ? "dotted" : "dashed",
+				}}></span>
+				<span class="legend-label"><strong>{curve.label}</strong><span>{curve.name}</span></span>
+			</li>
+		))}
+	</ul>
+	<figcaption id="complexity-chart-caption">
+		Representative functions, not measured runtimes; constant factors are 1.
+		Both axes use logarithmic scales. Equal input ratios have equal spacing; log n uses base 2.
+		Samples above 1 billion are omitted, so curves stop rather than flatten.
+	</figcaption>
+	<details class="chart-values">
+		<summary>Sample values</summary>
+		<table tabindex="0" aria-label="Sample growth values; scroll horizontally for more columns">
+			<caption>Representative function values (rounded), not timings</caption>
+			<thead><tr><th scope="col">Growth class</th>{sampleInputs.map((n) => <th scope="col">n = {n}</th>)}</tr></thead>
+			<tbody>{COMPLEXITY_CURVES.map((curve) => (
+				<tr><th scope="row">{curve.label}</th>{sampleInputs.map((n) => <td>{formatGrowthValue(curve.growth(n))}</td>)}</tr>
+			))}</tbody>
+		</table>
+	</details>
+	<noscript><p>The plot needs JavaScript; the legend and sample values remain available.</p></noscript>
+</figure>
 
 <script>
-	import { Chart, LineController, LineElement, PointElement, LinearScale, LogarithmicScale, CategoryScale, Tooltip, Legend } from "chart.js";
+	import { Chart, LineController, LineElement, PointElement, LogarithmicScale, Tooltip } from "chart.js";
+	import { CHART_INPUTS, CHART_MAX, COMPLEXITY_CURVES, chartInputTicks, chartValue, formatGrowthValue } from "../lib/complexity-curves";
 
-	Chart.register(LineController, LineElement, PointElement, LinearScale, LogarithmicScale, CategoryScale, Tooltip, Legend);
+	Chart.register(LineController, LineElement, PointElement, LogarithmicScale, Tooltip);
 
-	const N = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
-
-	const clamp = (v: number) => Math.min(v, 2e9);
-
-	const rootStyles = getComputedStyle(document.documentElement);
-	const theme = {
-		text: rootStyles.getPropertyValue("--text").trim(),
-		muted: rootStyles.getPropertyValue("--muted").trim(),
-		border: rootStyles.getPropertyValue("--border").trim(),
-		panel: rootStyles.getPropertyValue("--panel").trim(),
-		easy: rootStyles.getPropertyValue("--status-easy").trim(),
-		medium: rootStyles.getPropertyValue("--status-medium").trim(),
-		hard: rootStyles.getPropertyValue("--status-hard").trim(),
-		info: rootStyles.getPropertyValue("--status-info").trim(),
-	};
-
-	const curves = [
-		{ label: "O(1)",       color: theme.easy, fn: ()     => 1 },
-		{ label: "O(log n)",   color: theme.info, fn: (n: number) => Math.log2(n) },
-		{ label: "O(n)",       color: theme.medium, fn: (n: number) => n },
-		{ label: "O(n log n)", color: theme.accent ?? theme.medium, fn: (n: number) => n * Math.log2(n) },
-		{ label: "O(n²)",      color: "#c07040", fn: (n: number) => n * n },
-		{ label: "O(2ⁿ)",      color: theme.hard, fn: (n: number) => clamp(Math.pow(2, n)) },
-		{ label: "O(n!)",      color: "#8a3a3a", fn: (n: number) => clamp([1,1,2,6,24,120,720,5040,40320,362880,3628800][N.indexOf(n)] ?? 2e9) },
-	];
-
-	const datasets = curves.map((c) => ({
-		label: c.label,
-		data: N.map(c.fn),
-		borderColor: c.color,
-		backgroundColor: `${c.color}22`,
-		borderWidth: 2,
-		pointRadius: 3,
-		pointHoverRadius: 6,
-		tension: 0.3,
-	}));
-
-	const ctx = (document.getElementById("complexity-chart") as HTMLCanvasElement).getContext("2d")!;
-
-	new Chart(ctx, {
-		type: "line",
-		data: { labels: N.map(String), datasets },
-		options: {
-			responsive: true,
-			interaction: { mode: "index", intersect: false },
-			scales: {
-				x: {
-					title: { display: true, text: "n (input size)", color: theme.text },
-					ticks: { color: theme.text },
-					grid: { color: theme.border },
-				},
-				y: {
-					type: "logarithmic",
-					title: { display: true, text: "Operations (log scale)", color: theme.text },
-					ticks: {
-						color: theme.text,
-						callback: (v) => {
-							const val = Number(v);
-							if (val >= 1e9) return "1B+";
-							if (val >= 1e6) return (val / 1e6).toFixed(0) + "M";
-							if (val >= 1e3) return (val / 1e3).toFixed(0) + "K";
-							return val.toFixed(0);
-						},
-					},
-					grid: { color: theme.border },
-				},
+	for (const figure of document.querySelectorAll<HTMLElement>(".complexity-chart")) {
+		const canvas = figure.querySelector<HTMLCanvasElement>("canvas")!;
+		const styles = () => getComputedStyle(document.documentElement);
+		const color = (id: string) => getComputedStyle(figure).getPropertyValue(`--curve-${id}`).trim();
+		const token = (name: string) => styles().getPropertyValue(name).trim();
+		const chart = new Chart(canvas, {
+			type: "line",
+			data: {
+				datasets: COMPLEXITY_CURVES.map((curve) => ({
+					label: curve.label,
+					data: CHART_INPUTS.map((n) => ({ x: n, y: chartValue(curve.growth(n)) })),
+					borderColor: color(curve.id),
+					backgroundColor: color(curve.id),
+					borderDash: curve.dash,
+					borderWidth: 2,
+					pointRadius: 2,
+					pointHoverRadius: 5,
+					tension: 0,
+					spanGaps: false,
+				})),
 			},
-			plugins: {
-				legend: { display: false },
-				tooltip: {
-					backgroundColor: theme.panel,
-					borderColor: theme.border,
-					borderWidth: 1,
-					titleColor: theme.text,
-					bodyColor: theme.muted,
-					callbacks: {
-						label: (ctx) => {
-							const v = ctx.raw as number;
-							const display = v >= 2e9 ? "∞ (intractable)" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(1) + "K" : v.toFixed(1);
-							return ` ${ctx.dataset.label}: ${display}`;
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				animation: false,
+				interaction: { mode: "nearest", intersect: false },
+				scales: {
+					x: {
+						type: "logarithmic",
+						min: 2,
+						max: 1024,
+						title: { display: true, text: "Input size n (log scale)", color: token("--text") },
+						afterBuildTicks: (axis) => {
+							axis.ticks = chartInputTicks(axis.chart.width).map((value) => ({ value }));
+						},
+						ticks: {
+							color: token("--muted"),
+							autoSkip: false,
+							maxRotation: 0,
+							callback: (value) => Number(value).toLocaleString("en"),
+						},
+						grid: { color: token("--border") },
+					},
+					y: {
+						type: "logarithmic",
+						min: 1,
+						max: CHART_MAX,
+						title: { display: true, text: "Function value (log scale)", color: token("--text") },
+						ticks: {
+							color: token("--muted"),
+							callback: (value) => {
+								const n = Number(value);
+								return Number.isInteger(Math.log10(n))
+									? new Intl.NumberFormat("en", { notation: "compact" }).format(n)
+									: "";
+							},
+						},
+						grid: { color: token("--border") },
+					},
+				},
+				plugins: {
+					tooltip: {
+						backgroundColor: token("--panel"),
+						borderColor: token("--border"),
+						borderWidth: 1,
+						titleColor: token("--text"),
+						bodyColor: token("--text"),
+						callbacks: {
+							title: (items) => `n = ${items[0]?.parsed.x}`,
+							label: (item) => `${item.dataset.label}: ${formatGrowthValue(item.parsed.y!)}`,
 						},
 					},
 				},
 			},
-		},
-	});
+		});
 
-	// Build custom legend
-	const legend = document.getElementById("chart-legend")!;
-	curves.forEach((c) => {
-		const item = document.createElement("div");
-		item.className = "legend-item";
-		item.innerHTML = `<span class="legend-dot" style="background:${c.color}"></span><span class="legend-label">${c.label}</span>`;
-		legend.appendChild(item);
-	});
+		// Keep the canvas and server-rendered legend in sync after a theme switch.
+		new MutationObserver(() => {
+			chart.data.datasets.forEach((dataset, index) => {
+				dataset.borderColor = color(COMPLEXITY_CURVES[index].id);
+				dataset.backgroundColor = color(COMPLEXITY_CURVES[index].id);
+			});
+			for (const axis of Object.values(chart.options.scales ?? {})) {
+				if (axis?.ticks) axis.ticks.color = token("--muted");
+				if (axis?.grid) axis.grid.color = token("--border");
+				if (axis?.title) axis.title.color = token("--text");
+			}
+			const tooltip = chart.options.plugins?.tooltip;
+			if (tooltip) {
+				tooltip.backgroundColor = token("--panel");
+				tooltip.borderColor = token("--border");
+				tooltip.titleColor = token("--text");
+				tooltip.bodyColor = token("--text");
+			}
+			chart.update("none");
+		}).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+	}
 </script>
 
 <style>
-	.chart-wrap {
-		background: var(--panel);
+	.complexity-chart {
+		--curve-constant: #427a47;
+		--curve-log: #276da3;
+		--curve-sqrt: #7b4db0;
+		--curve-linear: #a15a00;
+		--curve-linearithmic: #087c80;
+		--curve-quadratic: #b34f30;
+		--curve-cubic: #b33780;
+		--curve-exponential: #bd353f;
+		--curve-factorial: #39464d;
+		margin: 1.5rem 0 2rem;
+		padding: clamp(1rem, 3vw, 1.5rem);
+		min-width: 0;
 		border: 1px solid var(--border);
-		border-radius: var(--radius-xs);
-		padding: 1.5rem;
+		border-radius: var(--radius-md);
+		background: var(--panel);
+	}
+	:global([data-theme="dark"]) .complexity-chart {
+		--curve-constant: #a8cf83;
+		--curve-log: #78abe1;
+		--curve-sqrt: #ba98eb;
+		--curve-linear: #e0bc69;
+		--curve-linearithmic: #65c9c5;
+		--curve-quadratic: #e9a076;
+		--curve-cubic: #e792c4;
+		--curve-exponential: #ee8892;
+		--curve-factorial: #d0d9df;
+	}
+	.complexity-chart h3 { margin: 0 0 1rem; }
+	.chart-stage { position: relative; height: 340px; }
+	canvas { width: 100%; }
+	.chart-legend {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+		gap: 0.9rem 1.25rem;
+		list-style: none;
+		padding: 0;
 		margin: 1.5rem 0;
 	}
-
-	canvas {
-		max-height: 380px;
+	.chart-legend li { display: flex; align-items: center; gap: 0.6rem; margin: 0; max-width: none; }
+	.legend-line { flex: 0 0 1.5rem; border-top: 3px solid var(--curve-color); }
+	.legend-label { display: flex; flex-direction: column; font-size: var(--fs-sm); line-height: 1.5; }
+	.legend-label > span { color: var(--muted); font-size: var(--fs-fine); }
+	figcaption { max-width: var(--measure); color: var(--muted); font-size: var(--fs-sm); line-height: 1.65; }
+	.chart-values { margin-bottom: 0; }
+	.chart-values table:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
 	}
-
-	.chart-legend {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.6rem 1.25rem;
-		margin-top: 1.25rem;
-		justify-content: center;
-	}
-
-	.legend-item {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: var(--fs-fine);
-		color: var(--muted);
-	}
-
-	.legend-dot {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		display: inline-block;
+	caption { text-align: left; color: var(--muted); margin: 0.75rem 0; }
+	@media (max-width: 540px) {
+		.chart-stage { height: 280px; }
+		.chart-legend {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 0.75rem;
+			margin: 1.25rem 0;
+		}
+		.chart-legend li { gap: 0.4rem; min-width: 0; }
+		.legend-line { flex-basis: 1rem; }
+		.legend-label { font-size: 0.8rem; min-width: 0; }
+		.legend-label > span { font-size: 0.75rem; overflow-wrap: anywhere; }
 	}
 </style>

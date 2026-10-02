@@ -172,6 +172,9 @@ web/.astro/
 web/node_modules/
 !web/src/lib/
 
+# Local reference screenshots
+/screenshot/
+
 # LeetCode API cache
 scripts/leetcode_cache.json
 

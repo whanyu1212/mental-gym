@@ -327,7 +327,7 @@ An element is dropped from the back when a newer, larger value arrives: it leave
 
 [Generate Parentheses](../../algorithms/22-generate-parentheses)
 
-Here the stack is the **current path**. Push a choice, recurse, then pop to undo it. The call stack and the path stack grow and shrink together.
+Here the stack is the **current path**. Push a choice, recurse, then pop to undo it. The call stack and the path stack grow and shrink together. For turning any recursion into an explicit stack, see [Recursion vs Iteration](../recursion-and-iteration/#converting-recursion-to-iteration).
 
 ```python
 def generate_parenthesis(n: int) -> list[str]:
