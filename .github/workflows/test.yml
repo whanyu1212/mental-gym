@@ -41,6 +41,13 @@ jobs:
         run: |
           uv run --locked python scripts/validate_algorithm_guides.py --strict
 
+      - name: Validate repository hygiene hooks
+        run: |
+          set -euo pipefail
+          for hook in trailing-whitespace end-of-file-fixer check-yaml check-merge-conflict check-toml; do
+            uv run --locked pre-commit run "$hook" --all-files
+          done
+
       - name: Test Summary
         if: always()
         run: |
