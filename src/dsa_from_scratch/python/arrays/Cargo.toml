@@ -1,0 +1,11 @@
+[package]
+name = "array-practice"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+path = "common_operations.rs"
+
+[dependencies]
+rand = "0.10.3"
