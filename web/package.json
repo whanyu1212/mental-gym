@@ -20,7 +20,7 @@
     "astro": "^7.3.5",
     "chart.js": "^4.5.1",
     "github-slugger": "^2.0.0",
-    "katex": "^0.16.38",
+    "katex": "^0.18.9",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "typescript": "^5.9.3"
