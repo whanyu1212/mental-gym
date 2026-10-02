@@ -162,7 +162,14 @@ jobs:
 
       - name: Install Julia dependencies
         run: |
-          julia --project=. -e 'using Pkg; Pkg.instantiate(; allow_autoprecomp=false)'
+          julia --project=. -e '
+            using Pkg, TOML
+            manifest = TOML.parsefile("Manifest.toml")
+            resolved = VersionNumber(manifest["julia_version"])
+            @assert (resolved.major, resolved.minor) == (VERSION.major, VERSION.minor) "Resolve the manifest with the CI Julia version"
+            @assert Pkg.is_manifest_current(".") === true "Run Pkg.resolve() after changing Project.toml"
+            Pkg.instantiate(; allow_autoprecomp=false)
+          '
 
       - name: Run Julia tests
         run: |
