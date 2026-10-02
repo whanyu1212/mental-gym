@@ -210,3 +210,6 @@ jobs:
 
       - name: Verify note routes and highlight keys
         run: bun run --cwd web verify:notes
+
+      - name: Run post-build page tests
+        run: bun run --cwd web test:built
