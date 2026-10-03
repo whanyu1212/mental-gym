@@ -20,9 +20,10 @@ leetcode/
 └── two_pointers/
 ```
 
-Create language directories as needed. Existing filenames and topic assignments
-are preserved; implementations of the same problem are joined by their canonical
-LeetCode slug, even when legacy ports live in different topics.
+Create language directories as needed. Use the topic that matches the algorithm
+(for example, Minimum Window Substring belongs in `sliding_window/`). Existing
+filenames are preserved; implementations of the same problem are joined by their
+canonical LeetCode slug, even when legacy ports live in different topics.
 
 ## Add a problem
 

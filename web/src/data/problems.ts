@@ -2697,6 +2697,127 @@ if __name__ == "__main__":
     sourceUrl: "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
   },
   {
+    id: "76",
+    slug: "76-minimum-window-substring",
+    leetcodeSlug: "minimum-window-substring",
+    title: "Minimum Window Substring",
+    difficulty: "Hard",
+    group: "Sliding Window",
+    topics: ["hash-table", "string", "sliding-window"],
+    description: `<p>Given two strings <code>s</code> and <code>t</code> of lengths <code>m</code> and <code>n</code> respectively, return <em>the <strong>minimum window</strong></em> <span data-keyword="substring-nonempty"><strong><em>substring</em></strong></span><em> of </em><code>s</code><em> such that every character in </em><code>t</code><em> (<strong>including duplicates</strong>) is included in the window</em>. If there is no such substring, return <em>the empty string </em><code>&quot;&quot;</code>.</p>
+
+<p>The testcases will be generated such that the answer is <strong>unique</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;ADOBECODEBANC&quot;, t = &quot;ABC&quot;
+<strong>Output:</strong> &quot;BANC&quot;
+<strong>Explanation:</strong> The minimum window substring &quot;BANC&quot; includes &#39;A&#39;, &#39;B&#39;, and &#39;C&#39; from string t.
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;a&quot;, t = &quot;a&quot;
+<strong>Output:</strong> &quot;a&quot;
+<strong>Explanation:</strong> The entire string s is the minimum window.
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;a&quot;, t = &quot;aa&quot;
+<strong>Output:</strong> &quot;&quot;
+<strong>Explanation:</strong> Both &#39;a&#39;s from t must be included in the window.
+Since the largest window of s only has one &#39;a&#39;, return empty string.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>m == s.length</code></li>
+	<li><code>n == t.length</code></li>
+	<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>
+	<li><code>s</code> and <code>t</code> consist of uppercase and lowercase English letters.</li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> Could you find an algorithm that runs in <code>O(m + n)</code> time?</p>
+`,
+    solutions: {
+      julia: `"""
+    minWindow(s::String, t::String)::String
+
+Given two strings \`s\` and \`t\`, return the minimum window substring of \`s\` such that every character in \`t\` (including duplicates) is included in the window. If there is no such substring, return the empty string \`""\`.
+
+This function solves the "Minimum Window Substring" problem on LeetCode (Problem #76).
+
+# Arguments
+- \`s::String\`: The string in which to find the minimum window substring.
+- \`t::String\`: The string containing the characters to be included in the window.
+
+# Returns
+- \`String\`: The minimum window substring of \`s\` that contains all characters of \`t\`. If no such substring exists, returns \`""\`.
+"""
+
+function minWindow(s::String, t::String)::String
+    if isempty(s) || isempty(t) || length(s) < length(t)
+        return ""
+    end
+
+    # Initialize the hashmaps
+    pattern_count, window = Dict{Char, Int}(), Dict{Char, Int}()
+    for c in t
+        pattern_count[c] = get(pattern_count, c, 0) + 1
+    end
+
+    # Tracking variables for comparing the window and pattern, whether they match in count
+    have, need = 0, length(pattern_count) # O(1) time complexity to check if the window and pattern match
+    left, right = 1, 1
+    min_len, res = Inf, [0, 0]
+
+    # Sliding window algorithm
+    for right in eachindex(s)
+        c = s[right]
+        window[c] = get(window, c, 0) + 1
+        if haskey(pattern_count, c) && window[c] == pattern_count[c]
+            have += 1
+        end
+
+        while have == need
+            # Check if its shorter than the current minimum length
+            if right - left + 1 < min_len
+                min_len = right - left + 1
+                res = [left, right]
+            end
+
+            # Shrink the window by moving the left pointer to the right
+            # Subtrack the counter if the character is in the pattern
+            c = s[left]
+            if haskey(pattern_count, c) && window[c] == pattern_count[c]
+                have -= 1
+            end
+            window[c] -= 1
+            left += 1
+        end
+    end
+    return min_len == Inf ? "" : s[res[1]:res[2]]
+end
+
+# Example usage
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    println(minWindow("ADOBECODEBANC", "ABC")) # Expected output: "BANC"
+    println(minWindow("a", "a")) # Expected output: "a"
+    println(minWindow("a", "aa")) # Expected output: ""
+end`,
+    },
+    sourceUrl: "https://leetcode.com/problems/minimum-window-substring/",
+  },
+  {
     id: "121",
     slug: "121-best-time-to-buy-and-sell-stock",
     leetcodeSlug: "best-time-to-buy-and-sell-stock",
@@ -3205,9 +3326,11 @@ if __name__ == "__main__":
     result = 0 # initialize a counter
     curr_sum = sum(arr[1:window]) # initialize the current sum up to index k
 
-    for L in 1:(length(arr) - window)
+    # A length-window array still has one window; include the final start index.
+    for L in 1:(length(arr) - window + 1)
         if L > 1
-            curr_sum = curr_sum - arr[L - 1] + arr[L + window] # update the current sum
+            # Advancing to L removes L - 1 and adds the new right endpoint.
+            curr_sum = curr_sum - arr[L - 1] + arr[L + window - 1]
         end
         if curr_sum // window >= threshold
             result += 1
@@ -3436,127 +3559,6 @@ class Solution:
         return res`,
     },
     sourceUrl: "https://leetcode.com/problems/generate-parentheses/",
-  },
-  {
-    id: "76",
-    slug: "76-minimum-window-substring",
-    leetcodeSlug: "minimum-window-substring",
-    title: "Minimum Window Substring",
-    difficulty: "Hard",
-    group: "Stack",
-    topics: ["hash-table", "string", "sliding-window"],
-    description: `<p>Given two strings <code>s</code> and <code>t</code> of lengths <code>m</code> and <code>n</code> respectively, return <em>the <strong>minimum window</strong></em> <span data-keyword="substring-nonempty"><strong><em>substring</em></strong></span><em> of </em><code>s</code><em> such that every character in </em><code>t</code><em> (<strong>including duplicates</strong>) is included in the window</em>. If there is no such substring, return <em>the empty string </em><code>&quot;&quot;</code>.</p>
-
-<p>The testcases will be generated such that the answer is <strong>unique</strong>.</p>
-
-<p>&nbsp;</p>
-<p><strong class="example">Example 1:</strong></p>
-
-<pre>
-<strong>Input:</strong> s = &quot;ADOBECODEBANC&quot;, t = &quot;ABC&quot;
-<strong>Output:</strong> &quot;BANC&quot;
-<strong>Explanation:</strong> The minimum window substring &quot;BANC&quot; includes &#39;A&#39;, &#39;B&#39;, and &#39;C&#39; from string t.
-</pre>
-
-<p><strong class="example">Example 2:</strong></p>
-
-<pre>
-<strong>Input:</strong> s = &quot;a&quot;, t = &quot;a&quot;
-<strong>Output:</strong> &quot;a&quot;
-<strong>Explanation:</strong> The entire string s is the minimum window.
-</pre>
-
-<p><strong class="example">Example 3:</strong></p>
-
-<pre>
-<strong>Input:</strong> s = &quot;a&quot;, t = &quot;aa&quot;
-<strong>Output:</strong> &quot;&quot;
-<strong>Explanation:</strong> Both &#39;a&#39;s from t must be included in the window.
-Since the largest window of s only has one &#39;a&#39;, return empty string.
-</pre>
-
-<p>&nbsp;</p>
-<p><strong>Constraints:</strong></p>
-
-<ul>
-	<li><code>m == s.length</code></li>
-	<li><code>n == t.length</code></li>
-	<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>
-	<li><code>s</code> and <code>t</code> consist of uppercase and lowercase English letters.</li>
-</ul>
-
-<p>&nbsp;</p>
-<p><strong>Follow up:</strong> Could you find an algorithm that runs in <code>O(m + n)</code> time?</p>
-`,
-    solutions: {
-      julia: `"""
-    minWindow(s::String, t::String)::String
-
-Given two strings \`s\` and \`t\`, return the minimum window substring of \`s\` such that every character in \`t\` (including duplicates) is included in the window. If there is no such substring, return the empty string \`""\`.
-
-This function solves the "Minimum Window Substring" problem on LeetCode (Problem #76).
-
-# Arguments
-- \`s::String\`: The string in which to find the minimum window substring.
-- \`t::String\`: The string containing the characters to be included in the window.
-
-# Returns
-- \`String\`: The minimum window substring of \`s\` that contains all characters of \`t\`. If no such substring exists, returns \`""\`.
-"""
-
-function minWindow(s::String, t::String)::String
-    if isempty(s) || isempty(t) || length(s) < length(t)
-        return ""
-    end
-
-    # Initialize the hashmaps
-    pattern_count, window = Dict{Char, Int}(), Dict{Char, Int}()
-    for c in t
-        pattern_count[c] = get(pattern_count, c, 0) + 1
-    end
-
-    # Tracking variables for comparing the window and pattern, whether they match in count
-    have, need = 0, length(pattern_count) # O(1) time complexity to check if the window and pattern match
-    left, right = 1, 1
-    min_len, res = Inf, [0, 0]
-
-    # Sliding window algorithm
-    for right in eachindex(s)
-        c = s[right]
-        window[c] = get(window, c, 0) + 1
-        if haskey(pattern_count, c) && window[c] == pattern_count[c]
-            have += 1
-        end
-
-        while have == need
-            # Check if its shorter than the current minimum length
-            if right - left + 1 < min_len
-                min_len = right - left + 1
-                res = [left, right]
-            end
-
-            # Shrink the window by moving the left pointer to the right
-            # Subtrack the counter if the character is in the pattern
-            c = s[left]
-            if haskey(pattern_count, c) && window[c] == pattern_count[c]
-                have -= 1
-            end
-            window[c] -= 1
-            left += 1
-        end
-    end
-    return min_len == Inf ? "" : s[res[1]:res[2]]
-end
-
-# Example usage
-
-if abspath(PROGRAM_FILE) == @__FILE__
-    println(minWindow("ADOBECODEBANC", "ABC")) # Expected output: "BANC"
-    println(minWindow("a", "a")) # Expected output: "a"
-    println(minWindow("a", "aa")) # Expected output: ""
-end`,
-    },
-    sourceUrl: "https://leetcode.com/problems/minimum-window-substring/",
   },
   {
     id: "150",

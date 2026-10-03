@@ -56,6 +56,7 @@ def test_collects_every_language_without_requiring_python(tmp_path, monkeypatch)
     assert entries["two-sum"]["solution_paths"] == paths
     assert entries["reverse-string"]["solution_paths"] == {"rust": rust_only}
     assert entries["minimum-window-substring"]["solution_paths"] == {"julia": julia_only}
+    assert entries["minimum-window-substring"]["group"] == "Sliding Window"
     assert entries["min-stack"]["solution_paths"] == {"typescript": ts_only}
     assert entries["reverse-string"]["group"] == "Two Pointers"
 
@@ -76,6 +77,18 @@ def test_joins_cross_topic_aliases_and_prefers_canonical_topic(tmp_path, monkeyp
         == canonical
     )
     assert generator.collect_problems() == list(entries.values())
+
+
+def test_repository_minimum_window_uses_sliding_window_topic():
+    entry = next(
+        p
+        for p in generator.collect_problems()
+        if p["leetcode_slug"] == "minimum-window-substring"
+    )
+    assert entry["group"] == "Sliding Window"
+    assert entry["solution_paths"]["julia"] == (
+        generator.SRC_LEETCODE_DIR / "sliding_window" / "julia" / "MinWindow.jl"
+    )
 
 
 def test_skips_module_wiring_reviews_and_test_files(tmp_path, monkeypatch):

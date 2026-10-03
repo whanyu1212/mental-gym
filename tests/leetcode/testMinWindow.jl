@@ -1,5 +1,5 @@
 using Test
-include("../../src/leetcode/stack/julia/MinWindow.jl")
+include("../../src/leetcode/sliding_window/julia/MinWindow.jl")
 
 @testset "minimum window substring" begin
     @test minWindow("ADOBECODEBANC", "ABC") == "BANC"

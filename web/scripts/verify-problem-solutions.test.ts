@@ -23,3 +23,17 @@ test("every built problem renders exactly its available languages and one defaul
 		}
 	}
 });
+
+test("Minimum Window Substring's catalog entry and breadcrumb point to Sliding Window", () => {
+	const page = new JSDOM(readFileSync(
+		new URL("../dist/algorithms/76-minimum-window-substring/index.html", import.meta.url), "utf8",
+	)).window.document;
+	assert.ok(page.querySelector('.breadcrumb a[href$="#algo-sliding-window"]'));
+	assert.equal(page.querySelector('.breadcrumb a[href$="#algo-stack"]'), null);
+	const catalog = new JSDOM(readFileSync(
+		new URL("../dist/problems/index.html", import.meta.url), "utf8",
+	)).window.document;
+	const selector = 'a[href$="/algorithms/76-minimum-window-substring/"]';
+	assert.ok(catalog.querySelector(`#algo-sliding-window ${selector}`));
+	assert.equal(catalog.querySelector(`#algo-stack ${selector}`), null);
+});
