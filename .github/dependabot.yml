@@ -1,10 +1,23 @@
 version: 2
 
+# Batch routine updates per ecosystem; review major migrations individually.
+# Cooldowns and PR limits apply to version updates, not security updates.
 updates:
   - package-ecosystem: bun
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+    ignore:
+      # Match the Node 24 runtime in .nvmrc and CI; revisit with a runtime upgrade.
+      - dependency-name: "@types/node"
+        versions: [">=25.0.0"]
+      # rehype-katex renders with 0.16; CSS/assets must stay on the same line.
+      # Revisit together with a renderer that supports newer KaTeX versions.
+      - dependency-name: katex
+        versions: [">=0.17.0"]
     groups:
       javascript-dependencies:
         patterns:
@@ -18,43 +31,88 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     groups:
       python-dependencies:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: julia
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     groups:
       julia-core-dependencies:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: pre-commit
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     groups:
       pre-commit-hooks:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
     groups:
       sql-containers:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: cargo
+    directory: /src/dsa_from_scratch/python/arrays
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+    groups:
+      rust-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
