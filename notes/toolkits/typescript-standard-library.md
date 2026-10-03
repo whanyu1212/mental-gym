@@ -605,7 +605,7 @@ console.log(JSON.stringify([[1, 2], [3]])); // [[1,2],[3]], compact and on one l
 console.log(`answer = ${42}`);             // template string, like an f-string
 ```
 
-Run a file from the repo root with `bun src/leetcode/<folder>/<name>.ts`, and type-check with `bun run typecheck`. `if (import.meta.main) { ... }` plays the role of `if __name__ == "__main__":`.
+Run a file from the repo root with `bun src/leetcode/<folder>/typescript/<name>.ts`, and type-check with `bun run typecheck`. `if (import.meta.main) { ... }` plays the role of `if __name__ == "__main__":`.
 
 ---
 

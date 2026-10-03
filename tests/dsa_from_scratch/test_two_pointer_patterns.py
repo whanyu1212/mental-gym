@@ -1,5 +1,5 @@
 """
-Tests for src/dsa_from_scratch/python/two_pointers.
+Tests for src/dsa_from_scratch/two_pointers/python.
 
 Each template is checked on hand-picked edge cases and against a brute-
 force version on a fixed set of random inputs.

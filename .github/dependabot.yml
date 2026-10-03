@@ -103,7 +103,9 @@ updates:
           - patch
 
   - package-ecosystem: cargo
-    directory: /src/dsa_from_scratch/python/arrays
+    directories:
+      - /src/dsa_from_scratch
+      - /src/leetcode
     schedule:
       interval: weekly
     open-pull-requests-limit: 3

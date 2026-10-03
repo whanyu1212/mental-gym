@@ -81,6 +81,53 @@ export interface AlgorithmGuide {
 export type AlgorithmGuides = Record<string, AlgorithmGuide>;
 
 export const guides = {
+	"76-minimum-window-substring": {
+		slug: "76-minimum-window-substring",
+		pattern: "Variable sliding window with frequency coverage",
+		recognitionSignals: [
+			"find the shortest contiguous substring satisfying a requirement",
+			"the target may contain repeated characters",
+			"expanding can establish validity; shrinking finds a shorter valid window",
+		],
+		dissection:
+			"Find the shortest slice of s containing at least the frequency of every character in t. Return an empty string if no window covers the target.",
+		intuition:
+			"Expand right until the window covers every target frequency. While coverage holds, record the current window and move left to remove unnecessary characters. Once coverage breaks, expand again; neither pointer needs to move backward.",
+		invariant:
+			"The window counts describe exactly s[left:right], and have counts exactly the distinct target characters whose required frequency is met. The saved result is the shortest valid window examined so far.",
+		bruteForce: {
+			approach:
+				"For every starting position, extend a window while counting characters and check coverage against the target frequencies. This repeats scans of the same suffixes.",
+			complexity: { time: "O(m² + n)", space: "O(1)", note: "For the fixed English-letter alphabet; m = s.length, n = t.length." },
+		},
+		constraintReasoning:
+			"Both strings can have length 10⁵, so quadratic scans are too expensive. Each pointer moving forward at most m times gives the requested O(m + n) bound.",
+		approachSteps: [
+			"Build target frequency counts and set need to the number of distinct target characters.",
+			"Expand right, updating window counts; increment have only when a target count first reaches its requirement.",
+			"While have equals need, save the current window if shorter than the best.",
+			"Before removing the left character, decrement have if its count equals the required count; then update its count and advance left.",
+			"Return the saved slice, or an empty string if no valid window was found.",
+		],
+		complexity: { time: "O(m + n)", space: "O(1)", note: "The prompt fixes the alphabet to English letters. Saving boundaries avoids repeatedly copying candidate windows; the final substring is the output." },
+		pitfalls: [
+			"Using a set loses multiplicity: t = 'AA' requires two occurrences, not one.",
+			"Incrementing have for every extra occurrence rather than only when the required count is reached.",
+			"Shrinking only once instead of continuing until coverage breaks.",
+			"Treating Julia string byte indices as character positions for arbitrary Unicode; this solution follows the prompt's English-letter constraint.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "s = 'ADOBECODEBANC', t = 'ABC'", expected: "'BANC'", note: "The optimal window appears after an earlier valid but longer window." },
+			{ kind: "boundary", input: "s = 'a', t = 'a'", expected: "'a'", note: "A single-character window can be the entire answer." },
+			{ kind: "trap", input: "s = 'a', t = 'aa'", expected: "''", note: "Presence alone is insufficient: target multiplicity must be satisfied." },
+			{ kind: "trap", input: "s = 'AAABBC', t = 'AABC'", expected: "'AABBC'", note: "Shrinking past the second required A would invalidate coverage." },
+		],
+		followUps: [
+			"How would you change the space bound for an unrestricted character alphabet?",
+			"Why can left advance without losing a future shorter answer?",
+		],
+		relatedNotes: ["sliding_window", "arrays_and_hashing"],
+	},
 	"1-two-sum": {
 		slug: "1-two-sum",
 		pattern: "Hashmap complement lookup",

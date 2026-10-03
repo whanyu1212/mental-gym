@@ -200,8 +200,11 @@ jobs:
       - name: Set up Rust
         run: rustup toolchain install stable --profile minimal --no-self-update
 
-      - name: Run Rust array tests
-        run: cargo +stable test --locked --manifest-path src/dsa_from_scratch/python/arrays/Cargo.toml
+      - name: Run Rust from-scratch tests
+        run: cargo +stable test --locked --manifest-path src/dsa_from_scratch/Cargo.toml
+
+      - name: Run Rust LeetCode tests
+        run: cargo +stable test --locked --manifest-path src/leetcode/Cargo.toml
 
   test-web:
     name: Web Tests

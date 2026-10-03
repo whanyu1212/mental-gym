@@ -1,11 +1,11 @@
 [package]
-name = "array-practice"
+name = "dsa-practice"
 version = "0.1.0"
 edition = "2024"
 publish = false
 
 [lib]
-path = "common_operations.rs"
+path = "lib.rs"
 
 [dependencies]
 rand = "0.10.3"

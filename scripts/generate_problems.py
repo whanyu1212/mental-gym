@@ -27,7 +27,14 @@ CATEGORY_TITLE_MAP = {
     "stack": "Stack",
 }
 
-# Map python file stems → correct LeetCode slug where auto-conversion would be wrong
+LANGUAGES = {
+    "python": ".py",
+    "julia": ".jl",
+    "typescript": ".ts",
+    "rust": ".rs",
+}
+
+# Map language-independent file stems to their canonical LeetCode slugs.
 SLUG_OVERRIDES: dict[str, str] = {
     "is_anagram": "valid-anagram",
     "group_anagram": "group-anagrams",
@@ -73,20 +80,23 @@ SLUG_OVERRIDES: dict[str, str] = {
     "min_stack": "min-stack",
     "remove_duplicate": "remove-duplicates-from-sorted-array",
     "remove_duplicates_ii": "remove-duplicates-from-sorted-array-ii",
+    "close_duplicates": "contains-duplicate-ii",
+    "num_of_subarrays": (
+        "number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold"
+    ),
+    "merge2_sorted_list": "merge-two-sorted-lists",
+    "two_sum_part2": "two-sum-ii-input-array-is-sorted",
+    "min_window": "minimum-window-substring",
 }
 
 
 def stem_to_leetcode_slug(stem: str) -> str:
+    # Accept snake_case, kebab-case, and existing Julia CamelCase filenames.
+    stem = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", stem)
+    stem = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", stem).lower().replace("-", "_")
     if stem in SLUG_OVERRIDES:
         return SLUG_OVERRIDES[stem]
     return stem.replace("_", "-")
-
-
-def normalized_key(stem: str) -> str:
-    """Normalize a filename stem for cross-language matching."""
-    text = re.sub(r"[_-]+", " ", stem)
-    text = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", text)
-    return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
 def load_cache() -> dict:
@@ -140,45 +150,52 @@ def fetch_problem(leetcode_slug: str, cache: dict) -> dict | None:
 
 
 def collect_problems() -> list[dict]:
-    """Walk src/leetcode/ and collect one entry per unique Python
-    file."""
-    seen_slugs: set[str] = set()
-    problems: list[dict] = []
+    """
+    Collect multilingual solutions by canonical LeetCode slug.
 
-    for category_dir in sorted(SRC_LEETCODE_DIR.iterdir()):
-        if not category_dir.is_dir():
-            continue
-        group = CATEGORY_TITLE_MAP.get(category_dir.name, category_dir.name)
+    Language order preserves the existing Python-backed topic
+    assignments, while also discovering problems implemented only in
+    another language. For duplicate ports, prefer the canonical topic,
+    then the first sorted path.
+    """
+    problems: dict[str, dict] = {}
+    categories = sorted(p for p in SRC_LEETCODE_DIR.iterdir() if p.is_dir())
 
-        for py_file in sorted(category_dir.glob("*.py")):
-            lc_slug = stem_to_leetcode_slug(py_file.stem)
-            if lc_slug in seen_slugs:
-                print(f"  Skipping duplicate: {py_file.name} → {lc_slug}")
-                continue
-            seen_slugs.add(lc_slug)
+    for language, extension in LANGUAGES.items():
+        for category in categories:
+            for solution in sorted((category / language).glob(f"*{extension}")):
+                if (
+                    solution.stem in {"__init__", "mod", "lib", "main"}
+                    or solution.stem.startswith("test_")
+                    or solution.stem.endswith(("_review", ".test", ".spec"))
+                ):
+                    continue
+                slug = stem_to_leetcode_slug(solution.stem)
+                entry = problems.setdefault(
+                    slug,
+                    {
+                        "category": category.name,
+                        "group": CATEGORY_TITLE_MAP.get(category.name, category.name),
+                        "leetcode_slug": slug,
+                        "solution_paths": {},
+                    },
+                )
+                paths = entry["solution_paths"]
+                previous = paths.get(language)
+                if previous is not None:
+                    if (
+                        category.name == entry["category"]
+                        and previous.parent.parent.name != entry["category"]
+                    ):
+                        paths[language] = solution
+                    print(
+                        f"  Duplicate {language} port for {slug}; "
+                        f"using {paths[language]}"
+                    )
+                else:
+                    paths[language] = solution
 
-            problems.append(
-                {
-                    "py_path": py_file,
-                    "group": group,
-                    "leetcode_slug": lc_slug,
-                    "norm_key": normalized_key(py_file.stem),
-                }
-            )
-
-    return problems
-
-
-def find_julia_solution(norm_key: str) -> str:
-    """Search all category dirs for a .jl file matching the normalized
-    key."""
-    for category_dir in SRC_LEETCODE_DIR.iterdir():
-        if not category_dir.is_dir():
-            continue
-        for jl_file in category_dir.glob("*.jl"):
-            if normalized_key(jl_file.stem) == norm_key:
-                return jl_file.read_text(encoding="utf-8").strip()
-    return ""
+    return list(problems.values())
 
 
 def js_string(s: str) -> str:
@@ -205,6 +222,10 @@ def render_ts(problems_data: list[dict]) -> str:
     lines.append("// Run: uv run python scripts/generate_problems.py")
     lines.append("")
     lines.append('export type Difficulty = "Easy" | "Medium" | "Hard";')
+    lines.append(
+        f"export const solutionLanguages = {json.dumps(list(LANGUAGES))} as const;"
+    )
+    lines.append("export type SolutionLanguage = (typeof solutionLanguages)[number];")
     lines.append("")
     lines.append("export interface Problem {")
     lines.append("  id: string;")
@@ -215,10 +236,7 @@ def render_ts(problems_data: list[dict]) -> str:
     lines.append("  group: string;")
     lines.append("  topics: string[];")
     lines.append("  description: string;")
-    lines.append("  solutions: {")
-    lines.append("    python: string;")
-    lines.append("    julia: string;")
-    lines.append("  };")
+    lines.append("  solutions: Partial<Record<SolutionLanguage, string>>;")
     lines.append("  sourceUrl: string;")
     lines.append("}")
     lines.append("")
@@ -236,8 +254,11 @@ def render_ts(problems_data: list[dict]) -> str:
         lines.append(f"    topics: {topics_json},")
         lines.append(f'    description: `{js_string(p["description"])}`,')
         lines.append("    solutions: {")
-        lines.append(f'      python: `{js_string(p["python"])}`,')
-        lines.append(f'      julia: `{js_string(p["julia"])}`,')
+        for language in LANGUAGES:
+            if language in p["solutions"]:
+                lines.append(
+                    f'      {language}: `{js_string(p["solutions"][language])}`,'
+                )
         lines.append("    },")
         lines.append(f'    sourceUrl: {json.dumps(p["source_url"])},')
         lines.append("  },")
@@ -273,8 +294,10 @@ def main() -> None:
         topics = [t["slug"] for t in (question.get("topicTags") or [])]
         description = question.get("content") or ""
 
-        python_code = entry["py_path"].read_text(encoding="utf-8").strip()
-        julia_code = find_julia_solution(entry["norm_key"])
+        solutions = {
+            language: path.read_text(encoding="utf-8").strip()
+            for language, path in entry["solution_paths"].items()
+        }
 
         slug = f"{frontend_id}-{lc_slug}"
 
@@ -288,8 +311,7 @@ def main() -> None:
                 "group": entry["group"],
                 "topics": topics,
                 "description": description,
-                "python": python_code,
-                "julia": julia_code,
+                "solutions": solutions,
                 "source_url": f"https://leetcode.com/problems/{lc_slug}/",
             }
         )

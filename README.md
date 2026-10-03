@@ -20,12 +20,12 @@ Most problems are solved with an explicit invariant and complexity justification
 
 | Area | Scope | Where |
 | --- | --- | --- |
-| DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution covered by pytest in CI; 16 also have a Julia port; TypeScript ports start from the repo-root Bun project | `src/leetcode/`, `tests/leetcode/` |
+| DSA (LeetCode) | 48 unique problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack: 47 Python implementations, 22 Julia implementations, and a TypeScript port; Rust module scaffolding is ready for new solutions | `src/leetcode/`, `tests/leetcode/` |
 | Competitive programming (Kattis) | 26 unique solved problems (25 Python, 1 Julia-only), every Python solution covered by pytest in CI against the official Kattis samples | `src/kattis/`, `tests/kattis/` |
 | ML from scratch | A NumPy-only logistic regression implementation (vectorized forward pass, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
 | Technical notes | 16 long-form guides on complexity analysis, algorithmic patterns, ML foundations, and system design, rendered with KaTeX math support | `notes/` |
-| DSA from scratch | Data structures and reusable algorithmic pattern templates (prefix sum, Kadane, sliding window, three pointers, backtracking), grouped by topic | `src/dsa_from_scratch/python/` |
+| DSA from scratch | Data structures and reusable algorithmic pattern templates (prefix sum, Kadane, sliding window, three pointers, backtracking), grouped by topic and language; one shared Rust crate | `src/dsa_from_scratch/` |
 
 ## How to study a topic
 
@@ -38,14 +38,14 @@ Each DSA topic follows the same loop. Pick a row and work left to right:
 
 | Topic | 1. Note | 2. From scratch | 3. Problems | 4. Tests |
 | --- | --- | --- | --- | --- |
-| Arrays & Hashing | [Arrays & Hashing](https://whanyu1212.github.io/mental-gym/notes/arrays_and_hashing/) · [Prefix Sum](https://whanyu1212.github.io/mental-gym/notes/prefix_sum_pattern/) · [Kadane's Algorithm](https://whanyu1212.github.io/mental-gym/notes/kadane_algorithm/) | [`arrays/`](src/dsa_from_scratch/python/arrays/) · [`hash_map/`](src/dsa_from_scratch/python/hash_map/) | [22 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-arrays-hashing) · [`src`](src/leetcode/arrays_hashing/) | [`test_arrays_hashing.py`](tests/leetcode/test_arrays_hashing.py) |
-| Two Pointers | [Two Pointers](https://whanyu1212.github.io/mental-gym/notes/two_pointers/) | [`two_pointers/`](src/dsa_from_scratch/python/two_pointers/) · [`three_pointers/`](src/dsa_from_scratch/python/three_pointers/) (three-way partition) | [14 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-two-pointers) · [`src`](src/leetcode/two_pointers/) | [`test_two_pointers.py`](tests/leetcode/test_two_pointers.py) |
-| Sliding Window | [Sliding Window](https://whanyu1212.github.io/mental-gym/notes/sliding_window/) | [`sliding_window/`](src/dsa_from_scratch/python/sliding_window/) | [5 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-sliding-window) · [`src`](src/leetcode/sliding_window/) | [`test_sliding_window.py`](tests/leetcode/test_sliding_window.py) |
-| Stack | [Stack](https://whanyu1212.github.io/mental-gym/notes/stack/) | [`list_adt/`](src/dsa_from_scratch/python/list_adt/) (stacks, queues, linked lists) | [6 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-stack) · [`src`](src/leetcode/stack/) | [`test_stack.py`](tests/leetcode/test_stack.py) |
+| Arrays & Hashing | [Arrays & Hashing](https://whanyu1212.github.io/mental-gym/notes/arrays_and_hashing/) · [Prefix Sum](https://whanyu1212.github.io/mental-gym/notes/prefix_sum_pattern/) · [Kadane's Algorithm](https://whanyu1212.github.io/mental-gym/notes/kadane_algorithm/) | [`arrays/`](src/dsa_from_scratch/arrays/) · [`hash_map/`](src/dsa_from_scratch/hash_map/) | [22 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-arrays-hashing) · [`src`](src/leetcode/arrays_hashing/) | [`test_arrays_hashing.py`](tests/leetcode/test_arrays_hashing.py) |
+| Two Pointers | [Two Pointers](https://whanyu1212.github.io/mental-gym/notes/two_pointers/) | [`two_pointers/`](src/dsa_from_scratch/two_pointers/) · [`three_pointers/`](src/dsa_from_scratch/three_pointers/) (three-way partition) | [14 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-two-pointers) · [`src`](src/leetcode/two_pointers/) | [`test_two_pointers.py`](tests/leetcode/test_two_pointers.py) |
+| Sliding Window | [Sliding Window](https://whanyu1212.github.io/mental-gym/notes/sliding_window/) | [`sliding_window/`](src/dsa_from_scratch/sliding_window/) | [6 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-sliding-window) · [`src`](src/leetcode/sliding_window/) | [`test_sliding_window.py`](tests/leetcode/test_sliding_window.py) |
+| Stack | [Stack](https://whanyu1212.github.io/mental-gym/notes/stack/) | [`list_adt/`](src/dsa_from_scratch/list_adt/) (stacks, queues, linked lists) | [6 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-stack) · [`src`](src/leetcode/stack/) | [`test_stack.py`](tests/leetcode/test_stack.py) |
 
 **Before any topic**, the foundations apply everywhere: [Asymptotic Analysis](https://whanyu1212.github.io/mental-gym/notes/asymptotic-analysis/), [Time Complexity](https://whanyu1212.github.io/mental-gym/notes/time-complexity/), and [Space Complexity](https://whanyu1212.github.io/mental-gym/notes/space-complexity/). Keep the [Python DSA Quick Reference](https://whanyu1212.github.io/mental-gym/notes/python-dsa-toolkit/) open while solving.
 
-**Other areas** follow the same shape: [Logistic Regression from Scratch](https://whanyu1212.github.io/mental-gym/notes/ml-logistic-regression/) pairs with [`src/ml/`](src/ml/), and the [Real-Time ML Inference](https://whanyu1212.github.io/mental-gym/notes/sd-real-time-ml-inference/) case study is the system-design entry point. Topics with a from-scratch implementation but no problems yet (graphs, heaps, sorting, binary search, DP, and more) live under [`src/dsa_from_scratch/python/`](src/dsa_from_scratch/python/).
+**Other areas** follow the same shape: [Logistic Regression from Scratch](https://whanyu1212.github.io/mental-gym/notes/ml-logistic-regression/) pairs with [`src/ml/`](src/ml/), and the [Real-Time ML Inference](https://whanyu1212.github.io/mental-gym/notes/sd-real-time-ml-inference/) case study is the system-design entry point. Topics with a from-scratch implementation but no problems yet (graphs, heaps, sorting, binary search, DP, and more) live under [`src/dsa_from_scratch/`](src/dsa_from_scratch/).
 
 ## The practice site
 
@@ -62,11 +62,11 @@ See [`web/README.md`](web/README.md) for the site's architecture and local dev i
 
 ```text
 src/
-├── leetcode/         # LeetCode solutions (Python + Julia), organized by pattern
+├── leetcode/         # Topic → language → problem; one shared Rust Cargo crate
 ├── kattis/           # Kattis competitive-programming solutions (Python + Julia)
 ├── ml/               # NumPy-first ML implementations
 ├── sql/              # SQL exercises: answers, fixtures, test harnesses
-└── dsa_from_scratch/ # Data structures and pattern templates, by topic
+└── dsa_from_scratch/ # Topic → language → implementation; shared Rust crate
 
 notes/                # Technical notes by topic (foundations, patterns, toolkits, ml, …) — see notes/README.md
 web/                  # Astro practice site (problems, notes, spaced repetition)
@@ -97,7 +97,7 @@ bun run --cwd web dev
 
 Web tests also run Python reference solutions through uv. After `uv sync --locked`, run `bun run web:test`.
 
-**Regenerate problem data** after adding or editing a Python LeetCode solution (the generator collects `.py` files only; a Julia-only addition needs a matching Python file before it will appear):
+**Regenerate problem data** after adding or editing a LeetCode solution in Python, Julia, TypeScript, or Rust. Solutions live in `src/leetcode/<topic>/<language>/` and are joined by canonical LeetCode slug; Python is not required. See [`src/leetcode/README.md`](src/leetcode/README.md).
 
 ```bash
 uv run python scripts/generate_problems.py
@@ -108,12 +108,28 @@ uv run python scripts/generate_problems.py
 **TypeScript LeetCode ports** (repo root, separate from `web/`):
 
 ```bash
-bun src/leetcode/sliding_window/contains_duplicate_2.ts
+bun src/leetcode/sliding_window/typescript/contains_duplicate_2.ts
 ```
+
+**Rust LeetCode solutions** share one crate, with unit tests beside each implementation:
+
+```bash
+cargo test --locked --manifest-path src/leetcode/Cargo.toml
+cargo clean --manifest-path src/leetcode/Cargo.toml
+```
+
+**DSA from scratch** uses the same topic/language layout and a separate Rust crate:
+
+```bash
+cargo test --locked --manifest-path src/dsa_from_scratch/Cargo.toml
+cargo clean --manifest-path src/dsa_from_scratch/Cargo.toml
+```
+
+See [`src/dsa_from_scratch/README.md`](src/dsa_from_scratch/README.md) for Python commands and Rust module registration.
 
 ## CI
 
-Two GitHub Actions workflows: a test workflow (`pytest` over the LeetCode and Kattis suites, a guide-content validator, and the Julia test suite) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
+Two GitHub Actions workflows: a test workflow (Python tests, a guide-content validator, Julia and Rust tests, SQL exercises, and web tests/build) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
 
 ## Tooling
 

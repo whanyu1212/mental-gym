@@ -22,7 +22,7 @@ Use this note when you already know the algorithm and need the TypeScript spelli
 > - Looking up syntax and APIs → [TypeScript Standard Library for DSA](../typescript-standard-library/)
 > - Checking operation costs → [TypeScript Big O Cheatsheet](../typescript-big-o-cheatsheet/)
 
-Run a solution from the repo root with the Bun project (`bun install`, then `bun src/leetcode/<pattern>/<name>.ts`). Do not hang algorithm files off `web/`.
+Run a solution from the repo root with the Bun project (`bun install`, then `bun src/leetcode/<pattern>/typescript/<name>.ts`). Do not hang algorithm files off `web/`.
 
 ---
 
@@ -357,7 +357,7 @@ if (import.meta.main) {
 ```
 
 ```bash
-bun src/leetcode/sliding_window/contains_duplicate_2.ts
+bun src/leetcode/sliding_window/typescript/contains_duplicate_2.ts
 bun run typecheck
 ```
 

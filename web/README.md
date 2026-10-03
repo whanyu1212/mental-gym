@@ -36,7 +36,7 @@ bun run web:test
 | `/notes/` | `../notes/` | Full library; language tags drive the shareable `?language=python` filter (also Julia, TypeScript, Rust) |
 | `/notes/[slug]` | `../notes/` | Markdown/MDX notes with KaTeX math support. Optional `kind` / `courseId` / `moduleId` link a note to the roadmap; `kind: template` outlines stay out of the main list. See [`../notes/README.md`](../notes/README.md). |
 
-`problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a Python solution in `../src/leetcode/` (the generator collects `.py` files; a Julia file only gets attached as a port to an existing Python-backed entry, so a Julia-only addition needs a matching Python file to appear at all), regenerate it from the repo root:
+`problems.ts` is **auto-generated** — never edit it by hand. After adding or changing a solution in `../src/leetcode/<topic>/<language>/`, regenerate it from the repo root. Python, Julia, TypeScript, and Rust implementations are joined by canonical LeetCode slug; a problem does not need a Python counterpart. Solution tabs show only available languages. See [`../src/leetcode/README.md`](../src/leetcode/README.md) for naming and module conventions.
 
 ```bash
 uv run python scripts/generate_problems.py

@@ -2,6 +2,8 @@
 // Run: uv run python scripts/generate_problems.py
 
 export type Difficulty = "Easy" | "Medium" | "Hard";
+export const solutionLanguages = ["python", "julia", "typescript", "rust"] as const;
+export type SolutionLanguage = (typeof solutionLanguages)[number];
 
 export interface Problem {
   id: string;
@@ -12,10 +14,7 @@ export interface Problem {
   group: string;
   topics: string[];
   description: string;
-  solutions: {
-    python: string;
-    julia: string;
-  };
+  solutions: Partial<Record<SolutionLanguage, string>>;
   sourceUrl: string;
 }
 
@@ -817,7 +816,39 @@ if __name__ == "__main__":
     )  # [["bat"],["nat","tan"],["ate","eat","tea"]]
     print(solution.groupAnagrams([""]))  # [[""]]
     print(solution.groupAnagrams(["a"]))  # [["a"]]`,
-      julia: ``,
+      julia: `using DataStructures
+
+function group_anagrams(strs::Vector{String})::Vector{Vector{String}}
+    # The tuple can contain a variable number of elemtns of type Int
+    # -> String[] default value factory
+    result = DefaultDict{Tuple{Vararg{Int}},Vector{String}}(() -> String[])
+    for s in strs
+        # More idiomatic initialization in julia
+        # Instead of using repeat
+        count = zeros(Int, 26)
+        for char in s
+            # Julia is 1 based indexing
+            index = Int(char) - Int('a') + 1
+            if 1 <= index <= 26
+                count[index] += 1
+            else
+                @warn "Character '$char' in string '$s' is not a lowercase English letter."
+            end
+        end
+        key = Tuple(count)
+        push!(result[key], s)
+    end
+    return collect(values(result))
+
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    strs1 = ["eat", "tea", "tan", "ate", "nat", "bat"]
+    println(group_anagrams(strs1))
+end
+
+# julia --project=<project path> <file path>
+# project path can be empty if you cd into the project directory`,
     },
     sourceUrl: "https://leetcode.com/problems/group-anagrams/",
   },
@@ -911,7 +942,6 @@ if __name__ == "__main__":
     assert solution.maxSubArray([5]) == 5
 
     print("All Maximum Subarray tests passed.")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/maximum-subarray/",
   },
@@ -996,7 +1026,6 @@ class Solution:
             else:
                 nums[mid], nums[right] = nums[right], nums[mid]
                 right -= 1`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/sort-colors/",
   },
@@ -1160,7 +1189,6 @@ class Solution:
                 max_count = count_dict[num]
 
         return res`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/majority-element/",
   },
@@ -1358,7 +1386,6 @@ if __name__ == "__main__":
         assert r2 == sorted(expected), f"BoyerMoore failed: {nums} -> {r2}"
 
     print("All test cases passed!")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/majority-element-ii/",
   },
@@ -1819,7 +1846,6 @@ if __name__ == "__main__":
     assert res3 == 12, f"Expected 12, got {res3}"
 
     print("All tests passed!")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/range-sum-query-2d-immutable/",
   },
@@ -1904,7 +1930,6 @@ if __name__ == "__main__":
     print(s.topKFrequent([1], 1))  # Output: [1]
     print(s.topKFrequent([1, 2], 2))  # Output: [1, 2]
     print(s.topKFrequent([3, 0, 1, 0], 1))  # Output: [0]`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/top-k-frequent-elements/",
   },
@@ -1966,7 +1991,6 @@ if __name__ == "__main__":
     assert sol.subarraySum([-1, -1, 1], 0) == 1  # [-1,-1,1] sums to -1+... wait
     assert sol.subarraySum([1, -1, 1, -1], 0) == 4
     print("All test cases passed!")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/subarray-sum-equals-k/",
   },
@@ -2071,7 +2095,6 @@ if __name__ == "__main__":
     hashSet.remove(2)
     print(f"Contains 2 after removal: {hashSet.contains(2)}")  # Expected: False
     print(f"Contains 1 after removal of 2: {hashSet.contains(1)}")  # Expected: True`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/design-hashset/",
   },
@@ -2185,7 +2208,6 @@ if __name__ == "__main__":
     print(f"Get 2 (updated): {hashMap.get(2)}")  # returns 1
     hashMap.remove(2)  # remove the mapping for 2
     print(f"Get 2 (removed): {hashMap.get(2)}")  # returns -1 (not found)`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/design-hashmap/",
   },
@@ -2315,7 +2337,6 @@ if __name__ == "__main__":
     arr = [5, 2, 3, 1]
     sorted_arr = solution.sortArray(arr)
     print(f"Sorted array: {sorted_arr}")  # Output: [1, 2, 3, 5]`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/sort-an-array/",
   },
@@ -2439,7 +2460,6 @@ if __name__ == "__main__":
     assert solution.maxSubarraySumCircular([5]) == 5
 
     print("All Maximum Sum Circular Subarray tests passed.")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/maximum-sum-circular-subarray/",
   },
@@ -2522,7 +2542,6 @@ if __name__ == "__main__":
     assert sol.xorQueries([4, 8], [[0, 0], [1, 1]]) == [4, 8]
     assert sol.xorQueries([0, 0, 0], [[0, 2]]) == [0]
     print("All test cases passed!")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/xor-queries-of-a-subarray/",
   },
@@ -2674,9 +2693,129 @@ Notice that the answer must be a substring, &quot;pwke&quot; is a subsequence an
 
 if __name__ == "__main__":
     pass`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+  },
+  {
+    id: "76",
+    slug: "76-minimum-window-substring",
+    leetcodeSlug: "minimum-window-substring",
+    title: "Minimum Window Substring",
+    difficulty: "Hard",
+    group: "Sliding Window",
+    topics: ["hash-table", "string", "sliding-window"],
+    description: `<p>Given two strings <code>s</code> and <code>t</code> of lengths <code>m</code> and <code>n</code> respectively, return <em>the <strong>minimum window</strong></em> <span data-keyword="substring-nonempty"><strong><em>substring</em></strong></span><em> of </em><code>s</code><em> such that every character in </em><code>t</code><em> (<strong>including duplicates</strong>) is included in the window</em>. If there is no such substring, return <em>the empty string </em><code>&quot;&quot;</code>.</p>
+
+<p>The testcases will be generated such that the answer is <strong>unique</strong>.</p>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;ADOBECODEBANC&quot;, t = &quot;ABC&quot;
+<strong>Output:</strong> &quot;BANC&quot;
+<strong>Explanation:</strong> The minimum window substring &quot;BANC&quot; includes &#39;A&#39;, &#39;B&#39;, and &#39;C&#39; from string t.
+</pre>
+
+<p><strong class="example">Example 2:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;a&quot;, t = &quot;a&quot;
+<strong>Output:</strong> &quot;a&quot;
+<strong>Explanation:</strong> The entire string s is the minimum window.
+</pre>
+
+<p><strong class="example">Example 3:</strong></p>
+
+<pre>
+<strong>Input:</strong> s = &quot;a&quot;, t = &quot;aa&quot;
+<strong>Output:</strong> &quot;&quot;
+<strong>Explanation:</strong> Both &#39;a&#39;s from t must be included in the window.
+Since the largest window of s only has one &#39;a&#39;, return empty string.
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>m == s.length</code></li>
+	<li><code>n == t.length</code></li>
+	<li><code>1 &lt;= m, n &lt;= 10<sup>5</sup></code></li>
+	<li><code>s</code> and <code>t</code> consist of uppercase and lowercase English letters.</li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong>Follow up:</strong> Could you find an algorithm that runs in <code>O(m + n)</code> time?</p>
+`,
+    solutions: {
+      julia: `"""
+    minWindow(s::String, t::String)::String
+
+Given two strings \`s\` and \`t\`, return the minimum window substring of \`s\` such that every character in \`t\` (including duplicates) is included in the window. If there is no such substring, return the empty string \`""\`.
+
+This function solves the "Minimum Window Substring" problem on LeetCode (Problem #76).
+
+# Arguments
+- \`s::String\`: The string in which to find the minimum window substring.
+- \`t::String\`: The string containing the characters to be included in the window.
+
+# Returns
+- \`String\`: The minimum window substring of \`s\` that contains all characters of \`t\`. If no such substring exists, returns \`""\`.
+"""
+
+function minWindow(s::String, t::String)::String
+    if isempty(s) || isempty(t) || length(s) < length(t)
+        return ""
+    end
+
+    # Initialize the hashmaps
+    pattern_count, window = Dict{Char, Int}(), Dict{Char, Int}()
+    for c in t
+        pattern_count[c] = get(pattern_count, c, 0) + 1
+    end
+
+    # Tracking variables for comparing the window and pattern, whether they match in count
+    have, need = 0, length(pattern_count) # O(1) time complexity to check if the window and pattern match
+    left, right = 1, 1
+    min_len, res = Inf, [0, 0]
+
+    # Sliding window algorithm
+    for right in eachindex(s)
+        c = s[right]
+        window[c] = get(window, c, 0) + 1
+        if haskey(pattern_count, c) && window[c] == pattern_count[c]
+            have += 1
+        end
+
+        while have == need
+            # Check if its shorter than the current minimum length
+            if right - left + 1 < min_len
+                min_len = right - left + 1
+                res = [left, right]
+            end
+
+            # Shrink the window by moving the left pointer to the right
+            # Subtrack the counter if the character is in the pattern
+            c = s[left]
+            if haskey(pattern_count, c) && window[c] == pattern_count[c]
+                have -= 1
+            end
+            window[c] -= 1
+            left += 1
+        end
+    end
+    return min_len == Inf ? "" : s[res[1]:res[2]]
+end
+
+# Example usage
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    println(minWindow("ADOBECODEBANC", "ABC")) # Expected output: "BANC"
+    println(minWindow("a", "a")) # Expected output: "a"
+    println(minWindow("a", "aa")) # Expected output: ""
+end`,
+    },
+    sourceUrl: "https://leetcode.com/problems/minimum-window-substring/",
   },
   {
     id: "121",
@@ -2904,7 +3043,80 @@ if __name__ == "__main__":
 
     # Expected: False (empty input)
     print(solution.containsNearbyDuplicate([], 1))`,
-      julia: ``,
+      julia: `function closeDuplicates(nums::Vector{Int}, k::Int)::Bool
+
+    window = Set{Int}() # Initialize a set to store the elements
+    L = 1 # Initial left pointer
+
+    for R in 1:length(nums) # Iterate over the array
+        if R - L > k
+            delete!(window, nums[L]) # Remove the element at the left pointer
+            L += 1
+        end
+        if nums[R] in window
+            return true
+        end
+
+        push!(window, nums[R]) # Add the element to the set
+    end
+    return false
+end
+
+# Example usage
+if abspath(PROGRAM_FILE) == @__FILE__
+    nums = [1,2,3,1]
+    k = 3
+    println(closeDuplicates(nums, k)) # true
+end`,
+      typescript: `/**
+ * Check whether nums has two equal values within index distance k.
+ *
+ * Membership in \`window\` is exactly "have I seen this value within the
+ * last k positions", so a hit on nums[right] is a valid answer.
+ */
+function containsNearbyDuplicate(nums: number[], k: number): boolean {
+  const window = new Set<number>();
+  let left = 0;
+
+  for (let right = 0; right < nums.length; right++) {
+    // Window grew to k+2 values: evict the old left bound FIRST.
+    // Incrementing left before delete() evicts the wrong element and
+    // leaves a stale value in the set — false positives on pairs
+    // farther apart than k.
+    if (right - left > k) {
+      window.delete(nums[left]);
+      left += 1;
+    }
+
+    if (window.has(nums[right])) {
+      return true;
+    }
+
+    window.add(nums[right]);
+  }
+
+  return false;
+}
+
+if (import.meta.main) {
+  // Expected: true  (nums[0] == nums[3] == 1, |0 - 3| = 3 <= k)
+  console.log(containsNearbyDuplicate([1, 2, 3, 1], 3));
+
+  // Expected: true  (nums[2] == nums[3] == 1, |2 - 3| = 1 <= k)
+  console.log(containsNearbyDuplicate([1, 0, 1, 1], 1));
+
+  // Expected: false (only matching pair is farther apart than k)
+  console.log(containsNearbyDuplicate([1, 2, 3, 1, 2, 3], 2));
+
+  // Expected: false (no duplicates at all)
+  console.log(containsNearbyDuplicate([1, 2, 3, 4], 2));
+
+  // Expected: false (k = 0 means indices must be identical)
+  console.log(containsNearbyDuplicate([1, 1], 0));
+
+  // Expected: false (empty input)
+  console.log(containsNearbyDuplicate([], 1));
+}`,
     },
     sourceUrl: "https://leetcode.com/problems/contains-duplicate-ii/",
   },
@@ -3110,7 +3322,23 @@ if __name__ == "__main__":
 
     # Expected: 0 (no window reaches the threshold)
     print(solution.numOfSubarrays([1, 1, 1, 1, 1], 5, 5))`,
-      julia: ``,
+      julia: `function numOfSubarrays(arr::Vector{Int}, window::Int, threshold::Int)::Int
+    result = 0 # initialize a counter
+    curr_sum = sum(arr[1:window]) # initialize the current sum up to index k
+
+    # A length-window array still has one window; include the final start index.
+    for L in 1:(length(arr) - window + 1)
+        if L > 1
+            # Advancing to L removes L - 1 and adds the new right endpoint.
+            curr_sum = curr_sum - arr[L - 1] + arr[L + window - 1]
+        end
+        if curr_sum // window >= threshold
+            result += 1
+        end
+    end
+
+    return result
+end`,
     },
     sourceUrl: "https://leetcode.com/problems/number-of-sub-arrays-of-size-k-and-average-greater-than-or-equal-to-threshold/",
   },
@@ -3214,7 +3442,68 @@ if __name__ == "__main__":
     while merged_list:
         print(merged_list.val)
         merged_list = merged_list.next`,
-      julia: ``,
+      julia: `mutable struct ListNode
+    val::Int
+    next::Union{ListNode,Nothing}
+
+    # Constructor for a single node
+    ListNode(val::Int) = new(val, nothing)
+    # Constructor for node with next pointer
+    ListNode(val::Int, next::Union{ListNode,Nothing}) = new(val, next)
+end
+
+
+function merge_two_lists(
+    list1::Union{ListNode,Nothing}, list2::Union{ListNode,Nothing}
+)::Union{ListNode,Nothing}
+    isnothing(list1) && isnothing(list2) && return nothing
+    isnothing(list1) && return list2
+    isnothing(list2) && return list1
+
+    dummy = ListNode(0)
+    current = dummy
+
+    while !isnothing(list1) && !isnothing(list2)
+        if list1.val <= list2.val
+            current.next = list1
+            list1 = list1.next
+        else
+            current.next = list2
+            list2 = list2.next
+        end
+        current = current.next
+    end
+
+    # Attach remaining nodes
+    current.next = isnothing(list1) ? list2 : list1
+
+    return dummy.next
+end
+
+# Helper function to print the list
+function print_list(head::Union{ListNode,Nothing})
+    current = head
+    while !isnothing(current)
+        print(current.val, " -> ")
+        current = current.next
+    end
+    println("nothing")
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    # Create test lists
+    l1 = ListNode(1, ListNode(2, ListNode(4)))
+    l2 = ListNode(1, ListNode(3, ListNode(4)))
+
+    println("List 1:")
+    print_list(l1)
+    println("List 2:")
+    print_list(l2)
+
+    println("Merged list:")
+    result = merge_two_lists(l1, l2)
+    print_list(result)
+end`,
     },
     sourceUrl: "https://leetcode.com/problems/merge-two-sorted-lists/",
   },
@@ -3268,7 +3557,6 @@ class Solution:
 
         backtrack(0, 0)
         return res`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/generate-parentheses/",
   },
@@ -3367,7 +3655,6 @@ if __name__ == "__main__":
     tokens = ["2", "1", "+", "3", "*"]
     # Explanation: ((2 + 1) * 3) = 9
     assert (result := solution.evalRPN(tokens)) == 9, f"unexpected {result=}"`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/evaluate-reverse-polish-notation/",
   },
@@ -3461,7 +3748,6 @@ if __name__ == "__main__":
     minStack.pop()
     print(minStack.top())  # 0
     print(minStack.getMin())  # -2`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/min-stack/",
   },
@@ -3588,7 +3874,6 @@ class Solution:
 if __name__ == "__main__":
     solution = Solution()
     print(solution.maxSlidingWindow([1, 3, -1, -3, 5, 3, 6, 7], 3))  # [3,3,5,5,6,7]`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/sliding-window-maximum/",
   },
@@ -3685,7 +3970,6 @@ if __name__ == "__main__":
 
     solution = Solution()
     print(solution.checkInclusion(s1, s2))`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/permutation-in-string/",
   },
@@ -4027,7 +4311,6 @@ class Solution:
                             right -= 1
 
         return result`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/4sum/",
   },
@@ -4132,7 +4415,6 @@ class Solution:
 
         # slow is an index, so the number of unique values is slow + 1.
         return slow + 1`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/",
   },
@@ -4427,7 +4709,6 @@ class Solution:
                 nums[write] = nums[read]
                 write += 1
         return write`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/",
   },
@@ -4780,7 +5061,28 @@ if __name__ == "__main__":
     numbers = [2, 7, 11, 15]
     target = 9
     print(s.twoSum(numbers, target))  # Output is [1, 2]`,
-      julia: ``,
+      julia: `using Test
+
+function TwoSumPart2(nums::Vector{Int}, target::Int)
+    i, j = 1, length(nums)
+    while i < j
+        sum = nums[i] + nums[j]
+        if sum == target
+            return [i, j]
+        elseif sum < target
+            i += 1
+        else
+            j -= 1
+        end
+    end
+    return []
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    @test TwoSumPart2([2, 7, 11, 15], 9) == [1, 2]
+    @test TwoSumPart2([2, 3, 4], 6) == [1, 3]
+    @test TwoSumPart2([-1, 0], -1) == [1, 2]
+end`,
     },
     sourceUrl: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
   },
@@ -4908,7 +5210,6 @@ if __name__ == "__main__":
     Solution().rotate(nums, k)
     print(f"Result: {nums}")
     # Expected: [5, 6, 7, 1, 2, 3, 4]`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/rotate-array/",
   },
@@ -4957,7 +5258,6 @@ if __name__ == "__main__":
     s = ["h", "e", "l", "l", "o"]
     Solution().reverseString(s)
     print(s)`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/reverse-string/",
   },
@@ -5017,7 +5317,6 @@ if __name__ == "__main__":
             right -= 1
 
         return True`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/valid-palindrome-ii/",
   },
@@ -5133,7 +5432,6 @@ if __name__ == "__main__":
     for p_arr, lim, expected in test_cases:
         result = sol.numRescueBoats(p_arr.copy(), lim)
         print(f"people={p_arr}, limit={lim} -> {result} (exp: {expected})")`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/boats-to-save-people/",
   },
@@ -5203,7 +5501,6 @@ merged: a p b q c   d
         result.append(word1[i:])
         result.append(word2[j:])
         return "".join(result)`,
-      julia: ``,
     },
     sourceUrl: "https://leetcode.com/problems/merge-strings-alternately/",
   },
