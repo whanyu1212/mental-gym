@@ -15,14 +15,14 @@ The site deploys to GitHub Pages at `https://whanyu1212.github.io/mental-gym`. T
 
 ## Regenerating problems.ts
 
-`src/data/problems.ts` is **auto-generated** — never edit it by hand. To regenerate after adding Python solutions:
+`src/data/problems.ts` is **auto-generated** — never edit it by hand. To regenerate after adding or changing solutions in any supported language:
 
 ```bash
 # from repo root (mental-gym/), not web/
 uv run python scripts/generate_problems.py
 ```
 
-The script reads `src/leetcode/<category>/<problem>.py`, fetches problem metadata from the LeetCode GraphQL API (with local cache in `scripts/leetcode_cache.json`), and writes `web/src/data/problems.ts`.
+The script reads `src/leetcode/<category>/<language>/<problem>.<extension>`, joins Python/Julia/TypeScript/Rust implementations by canonical LeetCode slug, fetches metadata from the LeetCode GraphQL API (with local cache in `scripts/leetcode_cache.json`), and writes `web/src/data/problems.ts`. A problem can exist in any one language; its first available implementation is the default solution panel.
 
 ## Architecture
 
@@ -54,7 +54,7 @@ PostgreSQL exercises run locally with Homebrew PostgreSQL 17 through `scripts/ru
 
 Every algorithm page is an attempt-first learning loop: the problem statement is visible, but the guide, animation, and solution are opened by either saving an attempt or explicitly choosing **Study instead**. Attempt history is local-only and separate from spaced-repetition review ratings.
 
-When adding an algorithm problem, add the Python solution and a complete entry in `src/data/algorithmGuides.ts`; CI runs `scripts/validate_algorithm_guides.py --strict`. Add a bespoke animation only when motion makes the invariant or state change materially clearer than a guide and worked test cases do.
+When adding an algorithm problem, add a solution in a supported language and a complete entry in `src/data/algorithmGuides.ts`; CI runs `scripts/validate_algorithm_guides.py --strict`. Add a bespoke animation only when motion makes the invariant or state change materially clearer than a guide and worked test cases do.
 
 The IndexedDB export format is versioned. Preserve all prior import versions when adding new local progress stores, and add migration plus export/import tests for the new version.
 

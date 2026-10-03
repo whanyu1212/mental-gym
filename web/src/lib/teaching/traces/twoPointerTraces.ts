@@ -2,7 +2,7 @@ import type { HighlightSpec, TeachingStep } from "../types";
 
 /**
  * Step generators for the two-pointer animations (LeetCode 26, 80, 88, 344,
- * 1768). Each one *runs* the algorithm from src/leetcode/two_pointers and
+ * 1768). Each one *runs* the algorithm from src/leetcode/two_pointers/python and
  * records a frame per pointer move, so the pictures can never drift from the
  * code they teach. web/tests/two-pointer-traces.test.ts checks every frame
  * against an independent simulation and the final result against the problem.

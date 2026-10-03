@@ -308,7 +308,7 @@ so the front is the current maximum.
 
 An element is dropped from the back when a newer, larger value arrives: it leaves the window no later than that value and is smaller, so it can never win. That is the same domination argument as section 4.
 
-**This repo's solution uses a heap instead.** `src/leetcode/stack/max_sliding_window.py` pushes `(-value, index)` and lazily pops the top while it is outside the window. That is $O(n \log n)$ time; the deque above is $O(n)$ with $O(k)$ extra space. Knowing both, and why the deque can discard what the heap has to keep, is worth more than either alone.
+**This repo's solution uses a heap instead.** `src/leetcode/stack/python/max_sliding_window.py` pushes `(-value, index)` and lazily pops the top while it is outside the window. That is $O(n \log n)$ time; the deque above is $O(n)$ with $O(k)$ extra space. Knowing both, and why the deque can discard what the heap has to keep, is worth more than either alone.
 
 ### Check Yourself
 

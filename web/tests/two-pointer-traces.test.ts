@@ -21,7 +21,7 @@ function python(module: string, dir: string, expr: string): unknown {
 	return JSON.parse(out);
 }
 
-const TWO_POINTERS = "src/leetcode/two_pointers";
+const TWO_POINTERS = "src/leetcode/two_pointers/python";
 
 function rng(seed: number) {
 	return () => {
