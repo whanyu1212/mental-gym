@@ -12,20 +12,41 @@ from typing import List
 
 class NumArray:
     def __init__(self, nums: List[int]):
+        """
+        Precompute prefix sums so each range query is O(1).
+
+        Args:
+            nums: The immutable array that queries will sum over.
+        """
         self.prefix = [0]
         for n in nums:
             self.prefix.append(self.prefix[-1] + n)
 
     def sumRange(self, left: int, right: int) -> int:
+        """
+        Return the sum of nums[left..right], inclusive.
+
+        Args:
+            left: The first index of the range.
+            right: The last index of the range, with left <= right.
+
+        Returns:
+            The sum of the elements from left to right.
+        """
         return self.prefix[right + 1] - self.prefix[left]
 
 
 if __name__ == "__main__":
     num_array = NumArray([-2, 0, 3, -5, 2, -1])
 
-    assert num_array.sumRange(0, 2) == 1
-    assert num_array.sumRange(2, 5) == -1
-    assert num_array.sumRange(0, 5) == -3
-    assert num_array.sumRange(3, 3) == -5
+    # Expected: 1 (-2 + 0 + 3)
+    print(num_array.sumRange(0, 2))
 
-    print("All Range Sum Query - Immutable tests passed.")
+    # Expected: -1 (3 - 5 + 2 - 1)
+    print(num_array.sumRange(2, 5))
+
+    # Expected: -3 (the whole array, starting at index 0)
+    print(num_array.sumRange(0, 5))
+
+    # Expected: -5 (a single element)
+    print(num_array.sumRange(3, 3))
