@@ -1,5 +1,6 @@
 // Direct addressing table: the key IS the array index. No hash function, no
-// collisions, every operation is O(1) worst case.
+// collisions: insert, search, delete and contains are O(1) worst case.
+// `len` is the exception, O(size), because nothing tracks the count.
 //
 //   keys 0..size  ->  slots[key]
 //

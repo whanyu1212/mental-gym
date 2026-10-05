@@ -36,21 +36,26 @@ Both map types mirror `std::HashMap`'s API where it matters: `put` returns `Opti
 
 ## Cost of each operation
 
-`n` is the number of stored pairs (`m` the size of a second set), and `L` is the key length.
+`n` is the number of stored pairs (`m` the size of a second set), `c` is the number of buckets or slots, and `L` is the key length. The tables never shrink, so after many removals `c` can be much larger than `n`.
 
 | Operation | Average | Worst case | Note |
 | --- | --- | --- | --- |
 | `mod_hash` | O(1) | O(1) | |
 | `hash_uppercase`, `polynomial_hash`, `fnv1a_64` | O(L) | O(L) | Reads every byte. |
-| direct address table, any operation | O(1) | O(1) | `len` is O(size) because nothing tracks the count. |
-| array hash map, any operation | O(1) | O(1) | Wrong under collisions, since it loses data. |
+| direct address table `insert` / `search` / `delete` / `contains` | O(1) | O(1) | |
+| direct address table `len` / `is_empty` | O(c) | O(c) | Nothing tracks the count, so it scans every slot. |
+| array hash map `get` / `put` / `remove` | O(1) | O(1) | Wrong under collisions, since it loses data. |
+| array hash map `len` / `entry_set` / `key_set` / `value_set` | O(c) | O(c) | Scans all 100 buckets. |
 | chaining `get` / `put` / `remove` | O(1) | O(n) | Worst case: every key lands in one bucket. |
 | chaining `put` including resizes | O(1) amortized | O(n) on the resizing call | Capacity doubles, the same argument as the dynamic array. |
+| chaining `entries` / `keys` / `longest_chain` | O(c + n) | O(c + n) | Visits every bucket. |
 | open addressing `get` / `put` / `remove` | O(1) | O(n) | Depends on the load factor staying at or below 2/3. |
-| open addressing rebuild | O(capacity) | O(capacity) | Triggered by live pairs plus tombstones; drops all tombstones. |
+| open addressing rebuild | O(c) | O(c) | Triggered by live pairs plus tombstones; drops all tombstones. |
+| open addressing `entries` | O(c) | O(c) | Visits every slot. |
 | set `insert` / `contains` / `remove` | O(1) | O(n) | Same as chaining. |
-| set `union` / `difference` | O(n + m) | | |
-| set `intersection` | O(min(n, m)) | | Iterates the smaller set and probes the larger. |
+| set `to_vec` | O(c + n) | O(c + n) | Same as chaining `keys`. |
+| set `union` / `difference` | O(c + n + m) | | Lists each input set, then inserts or probes per element. |
+| set `intersection` | O(c + min(n, m)) | | Lists the smaller set (its `c`) and probes the larger. |
 
 Memory: chaining keeps one `Vec` per bucket (each has its own allocation). Open addressing keeps one flat array, which is friendlier to the cache but needs the load factor kept low.
 

@@ -54,7 +54,8 @@ impl HashSet {
         self.map.keys()
     }
 
-    /// Elements in `self` or `other`. O(n + m) average.
+    /// Elements in `self` or `other`. O(n + m) average, plus a scan of each
+    /// set's buckets (tables never shrink, so that can exceed n + m).
     pub fn union(&self, other: &HashSet) -> HashSet {
         let mut result = HashSet::new();
         for value in self.to_vec().into_iter().chain(other.to_vec()) {
