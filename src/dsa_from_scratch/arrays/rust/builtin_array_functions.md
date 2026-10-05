@@ -69,11 +69,20 @@ v.sort_by(|a, b| b.cmp(a));      // descending
 v.sort_by_key(|x| x.abs());
 v.reverse();
 v.swap(i, j);
-v.rotate_left(k);
+v.rotate_left(k);                // panics if k > len (see below)
 v.fill(0);
 ```
 
-Floats do not implement `Ord`; use `sort_by(|a, b| a.partial_cmp(b).unwrap())`.
+`rotate_left` and `rotate_right` panic when `k > len`. Reduce `k` first, on its own line, because `v.rotate_left(k % v.len())` borrows `v` twice and does not compile:
+
+```rust
+if !v.is_empty() {
+    let k = k % v.len();
+    v.rotate_left(k);
+}
+```
+
+Floats do not implement `Ord`. Use `v.sort_by(|a, b| a.total_cmp(b))`, which gives a total order: negative NaN first, then -inf up to +inf, then positive NaN. The common `sort_by(|a, b| a.partial_cmp(b).unwrap())` panics as soon as the slice contains a NaN.
 
 ## Iterate
 

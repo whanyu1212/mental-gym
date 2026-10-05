@@ -24,7 +24,7 @@ Std equivalents for `algorithms.rs`:
 | Here | Std |
 | --- | --- |
 | `reverse` | `slice::reverse` |
-| `rotate_left`, `rotate_right` | `slice::rotate_left`, `slice::rotate_right` |
+| `rotate_left`, `rotate_right` | `slice::rotate_left`, `slice::rotate_right`. The std versions panic when `k > len`, while these reduce `k` modulo the length themselves. |
 | `lower_bound` | `slice::partition_point(\|&x\| x < target)` |
 | `binary_search` | `slice::binary_search`, which returns `Result<usize, usize>` and may return any matching index |
 | `merge_sorted` | none; the closest is concatenate and sort |
