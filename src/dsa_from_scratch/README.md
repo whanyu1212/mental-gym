@@ -47,7 +47,9 @@ to pytest's `pythonpath` in `pyproject.toml` when its tests use direct imports.
 All from-scratch Rust implementations share this directory's Cargo crate. The
 array topic is Rust-first: basic operations in `arrays/rust/common_operations.rs`,
 plus a dynamic array, array stack, circular buffer, matrix and classic in-place
-algorithms, each with unit tests beside it. The `rand` dependency and its locked
+algorithms, each with unit tests beside it; see
+[`arrays/rust/README.md`](arrays/rust/README.md) for the index, std comparisons and
+complexity table. The `rand` dependency and its locked
 version are retained. LeetCode has a separate crate at `src/leetcode/Cargo.toml`.
 
 For a new implementation, add its file to `<topic>/rust/` and declare it in that
