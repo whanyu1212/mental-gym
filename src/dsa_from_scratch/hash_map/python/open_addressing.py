@@ -8,17 +8,36 @@ class Pair:
 
 
 class HashMapOpenAddressing:
-    def __init__(self):
+    """
+    Hash map with open addressing.
+
+    Probing strategies (the i-th probe for a key whose home slot is h):
+    - "linear":    h + i
+    - "quadratic": h + i * (i + 1) / 2   (triangular numbers)
+    - "double":    h + i * step, where step = 2 * (key % (capacity // 2)) + 1
+
+    The capacity is always a power of two (4, 8, 16, ...). That is what makes
+    triangular offsets and an odd step visit every slot exactly once in
+    `capacity` probes, so a search can never cycle forever over a subset.
+    """
+
+    PROBINGS = ("linear", "quadratic", "double")
+
+    def __init__(self, probing: str = "linear"):
+        if probing not in self.PROBINGS:
+            raise ValueError(f"probing must be one of {self.PROBINGS}")
+        self.probing = probing
         self.size = 0  # Number of key-value pairs, 0 to begin with
         self.tombstones = 0  # Number of removal marks currently in the table
-        self.capacity = 4  # Hash table capacity
+        self.capacity = 4  # Hash table capacity, always a power of two
         self.load_thres = 2.0 / 3.0  # Load factor threshold for triggering expansion
-        self.extend_ratio = 2  # Expansion multiplier
+        self.extend_ratio = 2  # Expansion multiplier (keeps a power of two)
         self.buckets: list[Pair | None] = [None] * self.capacity  # Bucket array
         self.TOMBSTONE = Pair(-1, "-1")  # Removal mark
 
     def hash_func(self, key: int) -> int:
-        # Remains the same as the original hash table
+        # Python's % is always non-negative for a positive divisor,
+        # so negative keys still give a valid index.
         return key % self.capacity
 
     def load_factor(self) -> float:
@@ -26,62 +45,51 @@ class HashMapOpenAddressing:
         # removal marks filled every None bucket, find_bucket would loop forever.
         return (self.size + self.tombstones) / self.capacity
 
+    def probe(self, key: int, i: int) -> int:
+        """Return the bucket index of the i-th probe (i = 0 is the home slot)."""
+        home = self.hash_func(key)
+        if self.probing == "linear":
+            offset = i
+        elif self.probing == "quadratic":
+            offset = i * (i + 1) // 2
+        else:
+            # An odd step is coprime with a power-of-two capacity.
+            offset = i * (2 * (key % (self.capacity // 2)) + 1)
+        return (home + offset) % self.capacity
+
     def find_bucket(self, key: int) -> int:
-        index = self.hash_func(key)
+        """
+        Return the bucket holding `key`, or the bucket to insert it
+        into.
+
+        The insertion point is the first removal mark on the probe path
+        if there is one, otherwise the empty bucket that ended the
+        search.
+        """
         first_tombstone = -1  # a marker for a deleted element
-        # Linear probing, break when encountering an empty bucket
-        while self.buckets[index] is not None:
-            # If the key is encountered, return the corresponding bucket index
-            if self.buckets[index].key == key:
-                # If a removal mark was encountered earlier, move the key-value pair to
-                # that index
+        # At most `capacity` probes: the sequence visits each bucket once.
+        for i in range(self.capacity):
+            index = self.probe(key, i)
+            bucket = self.buckets[index]
+            if bucket is None:
+                # Key is absent. Prefer reusing an earlier removal mark.
+                return index if first_tombstone == -1 else first_tombstone
+            if bucket is self.TOMBSTONE:
+                # Record the first encountered removal mark
+                if first_tombstone == -1:
+                    first_tombstone = index
+            elif bucket.key == key:
+                # If a removal mark was encountered earlier, move the key-value
+                # pair there so the next lookup finds it sooner.
                 if first_tombstone != -1:
-                    self.buckets[first_tombstone] = self.buckets[index]
-                    self.buckets[index] = self.TOMBSTONE
-                    return first_tombstone  # Return the moved bucket index
-                return index  # Return bucket index
-            # Record the first encountered removal mark
-            if first_tombstone == -1 and self.buckets[index] is self.TOMBSTONE:
-                first_tombstone = index
-            # Calculate the bucket index, return to the head if exceeding the tail
-            index = (index + 1) % self.capacity
-        # If the key does not exist, return the index of the insertion point
-        return index if first_tombstone == -1 else first_tombstone
-
-    def find_bucket_quadratic(self, key: int, c1: int = 1, c2: int = 3) -> int:
-        index = self.hash_func(key)
-        first_tombstone = -1
-        i = 0  # Probe count
-        while self.buckets[index] is not None:
-            if self.buckets[index].key == key:
-                if first_tombstone != -1:
-                    self.buckets[first_tombstone] = self.buckets[index]
+                    self.buckets[first_tombstone] = bucket
                     self.buckets[index] = self.TOMBSTONE
                     return first_tombstone
                 return index
-            if first_tombstone == -1 and self.buckets[index] is self.TOMBSTONE:
-                first_tombstone = index
-            i += 1
-            index = (self.hash_func(key) + c1 * i + c2 * i * i) % self.capacity
-        return index if first_tombstone == -1 else first_tombstone
-
-    def find_bucket_double_hashing(self, key: int) -> int:
-        index = self.hash_func(key)
-        hash2 = 1 + (key % (self.capacity - 1))  # Second hash function
-        first_tombstone = -1
-        i = 0  # Probe count
-        while self.buckets[index] is not None:
-            if self.buckets[index].key == key:
-                if first_tombstone != -1:
-                    self.buckets[first_tombstone] = self.buckets[index]
-                    self.buckets[index] = self.TOMBSTONE
-                    return first_tombstone
-                return index
-            if first_tombstone == -1 and self.buckets[index] is self.TOMBSTONE:
-                first_tombstone = index
-            i += 1
-            index = (self.hash_func(key) + i * hash2) % self.capacity
-        return index if first_tombstone == -1 else first_tombstone
+        # Every bucket was probed without finding the key or an empty bucket.
+        if first_tombstone != -1:
+            return first_tombstone
+        raise RuntimeError("hash table is full; the load factor should prevent this")
 
     def get(self, key: int) -> str:
         # Search for the bucket index corresponding to key
@@ -151,23 +159,25 @@ class HashMapOpenAddressing:
 
 # example usage
 if __name__ == "__main__":
-    hash_map = HashMapOpenAddressing()
-    for key, name in [(1, "one"), (5, "five"), (9, "nine"), (2, "two")]:
-        hash_map.put(key, name)
-    hash_map.put(5, "FIVE")  # update an existing key
-    hash_map.remove(9)  # leaves a tombstone
+    for probing in HashMapOpenAddressing.PROBINGS:
+        hash_map = HashMapOpenAddressing(probing)
+        for key, name in [(1, "one"), (5, "five"), (9, "nine"), (2, "two")]:
+            hash_map.put(key, name)
+        hash_map.put(5, "FIVE")  # update an existing key
+        hash_map.remove(9)  # leaves a tombstone
 
-    assert hash_map.get(1) == "one"
-    assert hash_map.get(5) == "FIVE"
-    assert hash_map.get(9) is None
-    assert hash_map.get(2) == "two"
-    assert hash_map.size == 3
+        assert hash_map.get(1) == "one"
+        assert hash_map.get(5) == "FIVE"
+        assert hash_map.get(9) is None
+        assert hash_map.get(2) == "two"
+        assert hash_map.size == 3
 
-    # Repeated put/remove must not fill the table with removal marks.
-    for key in range(100, 200):
-        hash_map.put(key, "x")
-        hash_map.remove(key)
-    assert hash_map.size == 3
-    assert hash_map.capacity <= 16
+        # Repeated put/remove must not fill the table with removal marks.
+        for key in range(100, 200):
+            hash_map.put(key, "x")
+            hash_map.remove(key)
+        assert hash_map.size == 3
+        assert hash_map.capacity <= 16
 
-    hash_map.print()
+        print(f"--- {probing} probing")
+        hash_map.print()
