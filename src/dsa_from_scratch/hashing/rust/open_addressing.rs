@@ -54,6 +54,25 @@ enum Search {
     Full,
 }
 
+/// Slot index of the `attempt`-th probe (attempt 0 is the home slot) in a
+/// table of `capacity` slots, where `capacity` is a power of two.
+///
+/// The offset is computed in u128. `attempt` and the stride are both below
+/// `capacity`, so `attempt * (attempt + 1)` or `attempt * stride` can exceed
+/// usize once the capacity passes 2^32 (2^16 on a 32-bit target); in u128 it
+/// is exact. The result is below `capacity`, so the cast back is lossless.
+fn probe_index(probing: Probing, key: i32, attempt: usize, capacity: usize) -> usize {
+    let home = mod_hash(key, capacity) as u128;
+    let attempt = attempt as u128;
+    let offset = match probing {
+        Probing::Linear => attempt,
+        Probing::Quadratic => attempt * (attempt + 1) / 2,
+        // Odd stride, always in 1..capacity, so it is coprime with capacity.
+        Probing::DoubleHashing => attempt * (2 * mod_hash(key, capacity / 2) as u128 + 1),
+    };
+    ((home + offset) % capacity as u128) as usize
+}
+
 #[derive(Debug)]
 pub struct HashMapOpenAddressing {
     slots: Vec<Slot>,
@@ -90,15 +109,7 @@ impl HashMapOpenAddressing {
 
     /// Slot index for the `attempt`-th probe (attempt 0 is the home slot).
     fn probe(&self, key: i32, attempt: usize) -> usize {
-        let capacity = self.capacity();
-        let home = mod_hash(key, capacity);
-        let offset = match self.probing {
-            Probing::Linear => attempt,
-            Probing::Quadratic => attempt * (attempt + 1) / 2,
-            // Odd stride, always in 1..capacity, so it is coprime with capacity.
-            Probing::DoubleHashing => attempt * (2 * mod_hash(key, capacity / 2) + 1),
-        };
-        (home + offset) % capacity
+        probe_index(self.probing, key, attempt, self.capacity())
     }
 
     fn search(&self, key: i32) -> Search {
@@ -214,7 +225,7 @@ impl HashMapOpenAddressing {
 
 #[cfg(test)]
 mod tests {
-    use super::{HashMapOpenAddressing, Probing};
+    use super::{HashMapOpenAddressing, Probing, probe_index};
     use std::collections::HashMap;
 
     const ALL_PROBINGS: [Probing; 3] =
@@ -247,6 +258,45 @@ mod tests {
                 assert_eq!(map.get(key), Some(key * 10), "{probing:?}");
             }
         }
+    }
+
+    #[test]
+    fn every_probe_sequence_visits_every_slot() {
+        for probing in ALL_PROBINGS {
+            for capacity in [4, 8, 16, 64, 256] {
+                for key in -20..20 {
+                    let mut seen = vec![false; capacity];
+                    for attempt in 0..capacity {
+                        seen[probe_index(probing, key, attempt, capacity)] = true;
+                    }
+                    assert!(
+                        seen.iter().all(|&s| s),
+                        "{probing:?} cap {capacity} key {key}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn probe_index_does_not_overflow_on_huge_capacities() {
+        // No table is allocated; this checks the index arithmetic alone.
+        let capacity = 1usize << (usize::BITS - 1);
+        let attempt = capacity - 1;
+        // For key -1, `x mod m` is m - 1 for any modulus m.
+        let home = capacity as u128 - 1;
+        let wide = |offset: u128| ((home + offset) % capacity as u128) as usize;
+        let a = attempt as u128;
+        assert_eq!(probe_index(Probing::Linear, -1, attempt, capacity), wide(a));
+        assert_eq!(
+            probe_index(Probing::Quadratic, -1, attempt, capacity),
+            wide(a * (a + 1) / 2)
+        );
+        let stride = 2 * (capacity as u128 / 2 - 1) + 1;
+        assert_eq!(
+            probe_index(Probing::DoubleHashing, -1, attempt, capacity),
+            wide(a * stride)
+        );
     }
 
     #[test]
