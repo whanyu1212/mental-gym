@@ -934,12 +934,46 @@ class Solution:
         return maxSum
 
 
+def max_subarray_elements(nums: List[int]) -> List[int]:
+    """
+    Follow-up: return the subarray itself, not just its sum.
+
+    Tracks where the current candidate starts. A negative running sum is
+    discarded, so the candidate restarts at the current index. The
+    bounds are saved only on a strictly better sum, so the first maximum
+    subarray wins ties.
+    """
+    maxSum = nums[0]
+    curSum = 0
+    candidateStart = 0
+    bestStart = 0
+    bestEnd = 0
+
+    for index, n in enumerate(nums):
+        if curSum < 0:
+            curSum = 0
+            candidateStart = index
+
+        curSum += n
+
+        if curSum > maxSum:
+            maxSum = curSum
+            bestStart = candidateStart
+            bestEnd = index
+
+    return nums[bestStart : bestEnd + 1]
+
+
 if __name__ == "__main__":
     solution = Solution()
 
     assert solution.maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4]) == 6
     assert solution.maxSubArray([-3, -2, -5]) == -2
     assert solution.maxSubArray([5]) == 5
+
+    assert max_subarray_elements([-2, 1, -3, 4, -1, 2, 1, -5, 4]) == [4, -1, 2, 1]
+    assert max_subarray_elements([-3, -2, -5]) == [-2]
+    assert max_subarray_elements([5]) == [5]
 
     print("All Maximum Subarray tests passed.")`,
     },
@@ -1704,6 +1738,89 @@ decoded_strs = decode(encoded_str)
 println("Decoded: ", decoded_strs)`,
     },
     sourceUrl: "https://leetcode.com/problems/encode-and-decode-strings/",
+  },
+  {
+    id: "303",
+    slug: "303-range-sum-query-immutable",
+    leetcodeSlug: "range-sum-query-immutable",
+    title: "Range Sum Query - Immutable",
+    difficulty: "Easy",
+    group: "Arrays & Hashing",
+    topics: ["array", "design", "prefix-sum"],
+    description: `<p>Given an integer array <code>nums</code>, handle multiple queries of the following type:</p>
+
+<ol>
+	<li>Calculate the <strong>sum</strong> of the elements of <code>nums</code> between indices <code>left</code> and <code>right</code> <strong>inclusive</strong> where <code>left &lt;= right</code>.</li>
+</ol>
+
+<p>Implement the <code>NumArray</code> class:</p>
+
+<ul>
+	<li><code>NumArray(int[] nums)</code> Initializes the object with the integer array <code>nums</code>.</li>
+	<li><code>int sumRange(int left, int right)</code> Returns the <strong>sum</strong> of the elements of <code>nums</code> between indices <code>left</code> and <code>right</code> <strong>inclusive</strong> (i.e. <code>nums[left] + nums[left + 1] + ... + nums[right]</code>).</li>
+</ul>
+
+<p>&nbsp;</p>
+<p><strong class="example">Example 1:</strong></p>
+
+<pre>
+<strong>Input</strong>
+[&quot;NumArray&quot;, &quot;sumRange&quot;, &quot;sumRange&quot;, &quot;sumRange&quot;]
+[[[-2, 0, 3, -5, 2, -1]], [0, 2], [2, 5], [0, 5]]
+<strong>Output</strong>
+[null, 1, -1, -3]
+
+<strong>Explanation</strong>
+NumArray numArray = new NumArray([-2, 0, 3, -5, 2, -1]);
+numArray.sumRange(0, 2); // return (-2) + 0 + 3 = 1
+numArray.sumRange(2, 5); // return 3 + (-5) + 2 + (-1) = -1
+numArray.sumRange(0, 5); // return (-2) + 0 + 3 + (-5) + 2 + (-1) = -3
+</pre>
+
+<p>&nbsp;</p>
+<p><strong>Constraints:</strong></p>
+
+<ul>
+	<li><code>1 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>
+	<li><code>-10<sup>5</sup> &lt;= nums[i] &lt;= 10<sup>5</sup></code></li>
+	<li><code>0 &lt;= left &lt;= right &lt; nums.length</code></li>
+	<li>At most <code>10<sup>4</sup></code> calls will be made to <code>sumRange</code>.</li>
+</ul>
+`,
+    solutions: {
+      python: `from typing import List
+
+# 303. Range Sum Query - Immutable
+#
+# Given an integer array nums, handle multiple queries of the following type:
+# - sumRange(left, right): return the sum of nums[left..right], inclusive.
+#
+# Prefix sum idea: pad with a leading 0 so prefix[i] = sum of the first i
+# elements. Then sum(left..right) = prefix[right + 1] - prefix[left], with no
+# special case for left == 0. Build is O(n); each query is O(1).
+
+
+class NumArray:
+    def __init__(self, nums: List[int]):
+        self.prefix = [0]
+        for n in nums:
+            self.prefix.append(self.prefix[-1] + n)
+
+    def sumRange(self, left: int, right: int) -> int:
+        return self.prefix[right + 1] - self.prefix[left]
+
+
+if __name__ == "__main__":
+    num_array = NumArray([-2, 0, 3, -5, 2, -1])
+
+    assert num_array.sumRange(0, 2) == 1
+    assert num_array.sumRange(2, 5) == -1
+    assert num_array.sumRange(0, 5) == -3
+    assert num_array.sumRange(3, 3) == -5
+
+    print("All Range Sum Query - Immutable tests passed.")`,
+    },
+    sourceUrl: "https://leetcode.com/problems/range-sum-query-immutable/",
   },
   {
     id: "304",
