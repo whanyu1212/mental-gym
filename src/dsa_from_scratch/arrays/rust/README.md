@@ -43,7 +43,8 @@ Std equivalents for `algorithms.rs`:
 | `insert` / `remove` at the front | O(n) | O(1), but O(n) when `insert` grows | Worst case of the shifting. |
 | `shrink_to_fit` | O(n) | O(n) during the copy | |
 | stack `push` / `pop` / `peek` | O(1) | O(1) | |
-| circular buffer, either end | O(1) | O(1) | Modulo wraps the index. |
+| circular buffer, either end, and `get` | O(1) | O(1) | Modulo wraps the index. |
+| circular buffer `to_vec` | O(n) | O(n) | Copies every live element in logical order. |
 | matrix `get` / `set` / `row` | O(1) | O(1) | `row` borrows a slice. |
 | matrix `column` | O(rows) | O(rows) | Columns are not contiguous, so it copies. |
 | matrix `transpose` / `rotate_clockwise` | O(rows * cols) | O(rows * cols) | Returns a new matrix. |

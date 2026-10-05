@@ -103,23 +103,29 @@ impl Matrix {
     }
 
     /// Returns a new matrix where element (r, c) moves to (c, r).
+    ///
+    /// Walks the flat buffer once, recovering (r, c) from the flat index
+    /// i = r * cols + c. That is exactly rows * cols steps, so a shape like
+    /// N x 0 costs nothing (a row-by-row loop would still spin N times).
     pub fn transpose(&self) -> Matrix {
         let mut result = Matrix::new(self.cols, self.rows);
-        for r in 0..self.rows {
-            for c in 0..self.cols {
-                result.data[c * self.rows + r] = self.data[r * self.cols + c];
-            }
+        for (i, &value) in self.data.iter().enumerate() {
+            let (r, c) = (i / self.cols, i % self.cols); // cols > 0 if data is non-empty
+            result.data[c * self.rows + r] = value;
         }
         result
     }
 
     /// Returns a copy rotated 90 degrees clockwise.
-    /// Clockwise rotation = transpose, then reverse each row.
+    ///
+    /// Clockwise rotation is "transpose, then reverse each row", which sends
+    /// (r, c) to (c, rows - 1 - r). Applying that mapping directly takes one
+    /// pass over the buffer, again exactly rows * cols steps.
     pub fn rotate_clockwise(&self) -> Matrix {
-        let mut result = self.transpose();
-        for r in 0..result.rows {
-            let start = r * result.cols;
-            result.data[start..start + result.cols].reverse();
+        let mut result = Matrix::new(self.cols, self.rows);
+        for (i, &value) in self.data.iter().enumerate() {
+            let (r, c) = (i / self.cols, i % self.cols);
+            result.data[c * self.rows + (self.rows - 1 - r)] = value;
         }
         result
     }
@@ -135,6 +141,11 @@ impl Matrix {
             return None;
         }
         let mut result = Matrix::new(self.rows, other.cols);
+        if result.data.is_empty() {
+            // N x 0 or 0 x N result: nothing to compute, and the loops below
+            // would otherwise spin over a dimension with no output cells.
+            return Some(result);
+        }
         for i in 0..self.rows {
             for j in 0..other.cols {
                 let mut sum = 0;
@@ -242,6 +253,40 @@ mod tests {
         let m = Matrix::new(0, 3);
         assert_eq!(m.get(0, 0), None);
         assert_eq!(m.transpose().rows(), 3);
+    }
+
+    #[test]
+    fn degenerate_shapes_swap_dimensions_without_work() {
+        // usize::MAX x 0 holds no elements; a row-by-row loop would never finish.
+        for (rows, cols) in [(usize::MAX, 0), (0, usize::MAX)] {
+            let m = Matrix::new(rows, cols);
+            let t = m.transpose();
+            assert_eq!((t.rows(), t.cols()), (cols, rows));
+            let r = m.rotate_clockwise();
+            assert_eq!((r.rows(), r.cols()), (cols, rows));
+            assert!(t.as_slice().is_empty() && r.as_slice().is_empty());
+        }
+        let tall = Matrix::new(usize::MAX, 0);
+        let product = tall.multiply(&Matrix::new(0, 0)).unwrap();
+        assert_eq!((product.rows(), product.cols()), (usize::MAX, 0));
+    }
+
+    #[test]
+    fn rotate_clockwise_matches_transpose_then_reverse_rows() {
+        let m = Matrix::from_vec(3, 4, (1..=12).collect()).unwrap();
+        let mut expected = m.transpose();
+        let cols = expected.cols();
+        for row in expected.data.chunks_exact_mut(cols) {
+            row.reverse();
+        }
+        assert_eq!(m.rotate_clockwise(), expected);
+        // Four quarter turns are the identity.
+        let full_turn = m
+            .rotate_clockwise()
+            .rotate_clockwise()
+            .rotate_clockwise()
+            .rotate_clockwise();
+        assert_eq!(full_turn, m);
     }
 
     #[test]

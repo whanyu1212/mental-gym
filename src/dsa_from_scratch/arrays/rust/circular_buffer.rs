@@ -12,8 +12,10 @@
 // - `head`: physical index of the logical first element.
 // - `len`: number of live elements. Tracking `len` (instead of a tail index)
 //   removes the "full vs empty look identical" ambiguity.
-// All operations are O(1). Operating on both ends makes it a deque; using
-// only push_back + pop_front makes it a FIFO queue.
+// Pushing, popping and peeking at either end, and `get`, are O(1). `to_vec`
+// copies every live element into a new Vec, so it is O(n) time and space.
+// Operating on both ends makes it a deque; using only push_back + pop_front
+// makes it a FIFO queue.
 
 #[derive(Debug)]
 pub struct CircularBuffer {
@@ -110,7 +112,7 @@ impl CircularBuffer {
         }
     }
 
-    /// Copies the elements out in logical order (front to back).
+    /// Copies the elements out in logical order (front to back). O(n).
     pub fn to_vec(&self) -> Vec<i32> {
         (0..self.len).map(|i| self.buf[self.physical(i)]).collect()
     }
