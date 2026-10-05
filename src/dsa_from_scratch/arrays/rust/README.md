@@ -37,10 +37,10 @@ Std equivalents for `algorithms.rs`:
 | Operation | Time | Extra space | Note |
 | --- | --- | --- | --- |
 | index / `get` / `set` | O(1) | O(1) | |
-| `push` (dynamic array) | O(1) amortized, O(n) when it grows | O(1) amortized | Capacity doubles, so copying averages out. |
+| `push` (dynamic array) | O(1) amortized, O(n) when it grows | O(1), but O(n) when it grows | Capacity doubles, so the copying time averages out. Peak memory does not: while growing, the old and the doubled buffer are both alive. |
 | `pop` (any) | O(1) | O(1) | |
-| `insert` / `remove` in the middle | O(n) | O(1) | Shifts the elements after the index. |
-| `insert` / `remove` at the front | O(n) | O(1) | Worst case of the shifting. |
+| `insert` / `remove` in the middle | O(n) | O(1), but O(n) when `insert` grows | Shifts the elements after the index. `insert` into a full dynamic array reallocates like `push`. |
+| `insert` / `remove` at the front | O(n) | O(1), but O(n) when `insert` grows | Worst case of the shifting. |
 | `shrink_to_fit` | O(n) | O(n) during the copy | |
 | stack `push` / `pop` / `peek` | O(1) | O(1) | |
 | circular buffer, either end | O(1) | O(1) | Modulo wraps the index. |
