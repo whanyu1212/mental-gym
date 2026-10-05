@@ -16,7 +16,7 @@
 /// # Returns
 /// A vector of integers with the specified length, all initialized to zero.
 ///
-fn initialize_array(length: usize) -> Vec<i32> {
+pub fn initialize_array(length: usize) -> Vec<i32> {
     vec![0; length]
 }
 
@@ -31,7 +31,7 @@ fn initialize_array(length: usize) -> Vec<i32> {
 /// # Returns
 /// An `Option<i32>` which is `Some(value)` if the random access was successful, or `None` if the array is empty.
 ///
-fn random_access(nums: &[i32]) -> Option<i32> {
+pub fn random_access(nums: &[i32]) -> Option<i32> {
     if nums.is_empty() {
         return None;
     }
@@ -51,7 +51,7 @@ fn random_access(nums: &[i32]) -> Option<i32> {
 ///
 /// # Panics
 /// Panics if `index` is greater than the vector's length.
-fn insert(nums: &mut Vec<i32>, value: i32, index: usize) {
+pub fn insert(nums: &mut Vec<i32>, value: i32, index: usize) {
     let original_len = nums.len();
     assert!(index <= original_len, "insertion index out of bounds");
 
@@ -73,7 +73,7 @@ fn insert(nums: &mut Vec<i32>, value: i32, index: usize) {
 ///
 /// # Panics
 /// Panics if `index` is outside the vector, including when the vector is empty.
-fn remove(nums: &mut Vec<i32>, index: usize) {
+pub fn remove(nums: &mut Vec<i32>, index: usize) {
     let original_len = nums.len();
     assert!(index < original_len, "removal index out of bounds");
 
@@ -86,7 +86,7 @@ fn remove(nums: &mut Vec<i32>, index: usize) {
 /// Traverses a borrowed slice and prints each integer on its own line.
 ///
 /// Does not modify the input. An empty slice produces no output.
-fn traverse(nums: &[i32]) {
+pub fn traverse(nums: &[i32]) {
     for num in nums {
         println!("{}", num);
     }
@@ -102,7 +102,7 @@ fn traverse(nums: &[i32]) {
 /// `Some(index)` for the first match, or `None` if the target is absent.
 ///
 /// Takes O(n) time in the worst case and O(1) extra space.
-fn find(nums: &[i32], target: i32) -> Option<usize> {
+pub fn find(nums: &[i32], target: i32) -> Option<usize> {
     for (index, &num) in nums.iter().enumerate() {
         if num == target {
             return Some(index);
@@ -121,7 +121,7 @@ fn find(nums: &[i32], target: i32) -> Option<usize> {
 /// A new vector of length `nums.len() + enlarge`.
 ///
 /// Takes O(n + enlarge) time and space, where n is the input length.
-fn extend(nums: &[i32], enlarge: usize) -> Vec<i32> {
+pub fn extend(nums: &[i32], enlarge: usize) -> Vec<i32> {
     let mut result = nums.to_vec();
     result.resize(nums.len() + enlarge, 0);
     result

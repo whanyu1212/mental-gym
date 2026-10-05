@@ -1,0 +1,235 @@
+// 2D array stored in one flat, contiguous buffer (row-major order).
+//
+//   logical 3x4 matrix        flat buffer
+//   [ a b c d ]
+//   [ e f g h ]      ->       [ a b c d e f g h i j k l ]
+//   [ i j k l ]
+//
+// Element (row, col) lives at index `row * cols + col`.
+// Compared with `Vec<Vec<i32>>`, one allocation keeps rows adjacent in memory
+// (cache friendly), and every row has the same length by construction.
+// Iterating row by row walks memory in order; iterating column by column
+// jumps `cols` slots each step, which is slower on large matrices.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Matrix {
+    rows: usize,
+    cols: usize,
+    data: Vec<i32>,
+}
+
+impl Matrix {
+    /// Creates a `rows` x `cols` matrix filled with zeros.
+    pub fn new(rows: usize, cols: usize) -> Self {
+        Self {
+            rows,
+            cols,
+            data: vec![0; rows * cols],
+        }
+    }
+
+    /// Builds a matrix from row-major `data`. Returns `None` if the length is wrong.
+    pub fn from_vec(rows: usize, cols: usize, data: Vec<i32>) -> Option<Self> {
+        if data.len() == rows * cols {
+            Some(Self { rows, cols, data })
+        } else {
+            None
+        }
+    }
+
+    pub fn rows(&self) -> usize {
+        self.rows
+    }
+
+    pub fn cols(&self) -> usize {
+        self.cols
+    }
+
+    fn index(&self, row: usize, col: usize) -> usize {
+        row * self.cols + col
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> Option<i32> {
+        if row < self.rows && col < self.cols {
+            Some(self.data[self.index(row, col)])
+        } else {
+            None
+        }
+    }
+
+    /// Sets (row, col). Panics if out of bounds.
+    pub fn set(&mut self, row: usize, col: usize, value: i32) {
+        assert!(
+            row < self.rows && col < self.cols,
+            "matrix index out of bounds"
+        );
+        let i = self.index(row, col);
+        self.data[i] = value;
+    }
+
+    /// Borrows one row as a slice, or `None` if out of bounds.
+    pub fn row(&self, row: usize) -> Option<&[i32]> {
+        if row < self.rows {
+            let start = row * self.cols;
+            Some(&self.data[start..start + self.cols])
+        } else {
+            None
+        }
+    }
+
+    /// Copies one column out (columns are not contiguous, so no slice).
+    pub fn column(&self, col: usize) -> Option<Vec<i32>> {
+        if col < self.cols {
+            Some(
+                (0..self.rows)
+                    .map(|r| self.data[self.index(r, col)])
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    }
+
+    /// The flat row-major buffer.
+    pub fn as_slice(&self) -> &[i32] {
+        &self.data
+    }
+
+    /// Returns a new matrix where element (r, c) moves to (c, r).
+    pub fn transpose(&self) -> Matrix {
+        let mut result = Matrix::new(self.cols, self.rows);
+        for r in 0..self.rows {
+            for c in 0..self.cols {
+                result.data[c * self.rows + r] = self.data[r * self.cols + c];
+            }
+        }
+        result
+    }
+
+    /// Returns a copy rotated 90 degrees clockwise.
+    /// Clockwise rotation = transpose, then reverse each row.
+    pub fn rotate_clockwise(&self) -> Matrix {
+        let mut result = self.transpose();
+        for r in 0..result.rows {
+            let start = r * result.cols;
+            result.data[start..start + result.cols].reverse();
+        }
+        result
+    }
+
+    /// Matrix product `self * other`. Returns `None` if `self.cols != other.rows`.
+    /// O(rows * cols * other.cols).
+    pub fn multiply(&self, other: &Matrix) -> Option<Matrix> {
+        if self.cols != other.rows {
+            return None;
+        }
+        let mut result = Matrix::new(self.rows, other.cols);
+        for i in 0..self.rows {
+            for j in 0..other.cols {
+                let mut sum = 0;
+                for k in 0..self.cols {
+                    sum += self.data[i * self.cols + k] * other.data[k * other.cols + j];
+                }
+                result.data[i * other.cols + j] = sum;
+            }
+        }
+        Some(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Matrix;
+
+    fn sample() -> Matrix {
+        // [1 2 3]
+        // [4 5 6]
+        Matrix::from_vec(2, 3, vec![1, 2, 3, 4, 5, 6]).unwrap()
+    }
+
+    #[test]
+    fn new_is_zero_filled() {
+        let m = Matrix::new(2, 2);
+        assert_eq!(m.as_slice(), &[0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn from_vec_rejects_wrong_length() {
+        assert!(Matrix::from_vec(2, 2, vec![1, 2, 3]).is_none());
+    }
+
+    #[test]
+    fn get_uses_row_major_indexing() {
+        let m = sample();
+        assert_eq!(m.get(0, 2), Some(3));
+        assert_eq!(m.get(1, 0), Some(4));
+        assert_eq!(m.get(2, 0), None);
+        assert_eq!(m.get(0, 3), None);
+    }
+
+    #[test]
+    fn set_changes_only_one_cell() {
+        let mut m = sample();
+        m.set(1, 1, 50);
+        assert_eq!(m.as_slice(), &[1, 2, 3, 4, 50, 6]);
+    }
+
+    #[test]
+    #[should_panic(expected = "matrix index out of bounds")]
+    fn set_out_of_bounds_panics() {
+        sample().set(0, 3, 1);
+    }
+
+    #[test]
+    fn row_and_column_access() {
+        let m = sample();
+        assert_eq!(m.row(1), Some(&[4, 5, 6][..]));
+        assert_eq!(m.row(2), None);
+        assert_eq!(m.column(1), Some(vec![2, 5]));
+        assert_eq!(m.column(3), None);
+    }
+
+    #[test]
+    fn transpose_swaps_dimensions() {
+        let t = sample().transpose();
+        assert_eq!((t.rows(), t.cols()), (3, 2));
+        assert_eq!(t.as_slice(), &[1, 4, 2, 5, 3, 6]);
+    }
+
+    #[test]
+    fn transpose_twice_is_identity() {
+        let m = sample();
+        assert_eq!(m.transpose().transpose(), m);
+    }
+
+    #[test]
+    fn rotate_clockwise_turns_90_degrees() {
+        // [1 2 3]      [4 1]
+        // [4 5 6]  ->  [5 2]
+        //              [6 3]
+        let r = sample().rotate_clockwise();
+        assert_eq!((r.rows(), r.cols()), (3, 2));
+        assert_eq!(r.as_slice(), &[4, 1, 5, 2, 6, 3]);
+    }
+
+    #[test]
+    fn multiply_matches_hand_computation() {
+        let a = sample();
+        let b = Matrix::from_vec(3, 2, vec![7, 8, 9, 10, 11, 12]).unwrap();
+        let product = a.multiply(&b).unwrap();
+        assert_eq!((product.rows(), product.cols()), (2, 2));
+        assert_eq!(product.as_slice(), &[58, 64, 139, 154]);
+    }
+
+    #[test]
+    fn multiply_incompatible_shapes_is_none() {
+        assert!(sample().multiply(&sample()).is_none());
+    }
+
+    #[test]
+    fn empty_matrix_is_handled() {
+        let m = Matrix::new(0, 3);
+        assert_eq!(m.get(0, 0), None);
+        assert_eq!(m.transpose().rows(), 3);
+    }
+}
