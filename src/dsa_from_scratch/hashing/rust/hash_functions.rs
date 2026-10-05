@@ -18,16 +18,22 @@ pub fn mod_hash(key: i32, table_size: usize) -> usize {
 }
 
 /// Hashes a string of uppercase letters: A=1 .. Z=26, read as a base-26
-/// number and reduced mod `table_size` after every step so it never overflows.
+/// number and reduced mod `table_size` after every step.
 /// The +1 keeps 'A' from hashing like a missing digit (so "A" != "AA" != "").
+///
+/// Reducing each step keeps `hash` below `table_size`, but `hash * 26` can
+/// still overflow `usize` when `table_size` is huge. Doing the step in u128
+/// is exact for any `table_size`: hash * 26 + 26 < 2^64 * 27 < 2^128.
 pub fn hash_uppercase(text: &str, table_size: usize) -> usize {
     assert!(table_size > 0, "table size must be positive");
-    let mut hash = 0;
+    let table_size = table_size as u128;
+    let mut hash = 0u128;
     for byte in text.bytes() {
         assert!(byte.is_ascii_uppercase(), "only A-Z is supported");
-        hash = (hash * 26 + (byte - b'A' + 1) as usize) % table_size;
+        hash = (hash * 26 + (byte - b'A' + 1) as u128) % table_size;
     }
-    hash
+    // hash < table_size <= usize::MAX, so the cast back is lossless.
+    hash as usize
 }
 
 /// Polynomial rolling hash for any string: sum of byte * base^(n-1-i), mod
@@ -105,6 +111,19 @@ mod tests {
     fn hash_uppercase_distinguishes_lengths() {
         assert_ne!(hash_uppercase("A", 1000), hash_uppercase("AA", 1000));
         assert_eq!(hash_uppercase("", 1000), 0);
+    }
+
+    #[test]
+    fn hash_uppercase_handles_a_huge_table() {
+        // Same base-26 recurrence, computed independently in u128.
+        let expected = |text: &str, m: usize| {
+            text.bytes().fold(0u128, |hash, byte| {
+                (hash * 26 + (byte - b'A' + 1) as u128) % m as u128
+            }) as usize
+        };
+        let text = "ZZZZZZZZZZZZZZ";
+        assert_eq!(hash_uppercase(text, usize::MAX), expected(text, usize::MAX));
+        assert_eq!(hash_uppercase(text, 1000), expected(text, 1000));
     }
 
     #[test]
