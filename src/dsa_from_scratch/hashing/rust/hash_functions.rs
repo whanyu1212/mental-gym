@@ -33,17 +33,18 @@ pub fn hash_uppercase(text: &str, table_size: usize) -> usize {
 /// Polynomial rolling hash for any string: sum of byte * base^(n-1-i), mod
 /// `modulus`, evaluated with Horner's rule.
 ///   hash("abc") = ((a * base) + b) * base + c
-/// `modulus` must stay below 2^32 so `hash * base + byte` fits in a u64.
+/// Each step is computed in u128: `hash` and `base` are both below 2^64, so
+/// `hash * base + byte` is below 2^128 and cannot overflow for any `base` or
+/// `modulus`. In u64 the product would overflow as soon as both exceed 2^32.
 pub fn polynomial_hash(text: &str, base: u64, modulus: u64) -> u64 {
-    assert!(
-        modulus > 0 && modulus < (1 << 32),
-        "modulus must be in 1..2^32"
-    );
-    let mut hash = 0u64;
+    assert!(modulus > 0, "modulus must be positive");
+    let (base, modulus) = (base as u128, modulus as u128);
+    let mut hash = 0u128;
     for byte in text.bytes() {
-        hash = (hash * base + byte as u64) % modulus;
+        hash = (hash * base + byte as u128) % modulus;
     }
-    hash
+    // hash < modulus <= u64::MAX, so the cast back is lossless.
+    hash as u64
 }
 
 /// FNV-1a, a simple and well-mixed 64-bit hash for byte strings:
@@ -117,6 +118,21 @@ mod tests {
         // a=97, b=98: 97 * 31 + 98 = 3105
         assert_eq!(polynomial_hash("ab", 31, 1_000_003), 3105);
         assert_eq!(polynomial_hash("", 31, 1_000_003), 0);
+    }
+
+    #[test]
+    fn polynomial_hash_handles_large_base_and_modulus() {
+        // hash("ab") = (97 * base + 98) mod m, computed independently in u128.
+        let expected = |base: u64, m: u64| ((97 * base as u128 + 98) % m as u128) as u64;
+        assert_eq!(
+            polynomial_hash("ab", u64::MAX, 1_000_003),
+            expected(u64::MAX, 1_000_003)
+        );
+        assert_eq!(polynomial_hash("ab", 31, u64::MAX), expected(31, u64::MAX));
+        assert_eq!(
+            polynomial_hash("ab", u64::MAX, u64::MAX),
+            expected(u64::MAX, u64::MAX)
+        );
     }
 
     #[test]
