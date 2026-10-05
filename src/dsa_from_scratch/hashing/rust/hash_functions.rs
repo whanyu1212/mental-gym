@@ -12,9 +12,14 @@
 /// Maps an integer key to a bucket index in `0..table_size`.
 /// `rem_euclid` keeps the result non-negative for negative keys, where
 /// the plain `%` operator would return a negative remainder.
+///
+/// The remainder is taken in i128, which holds every `i32` key and every
+/// `usize` table size exactly. Casting `table_size` to i64 instead would turn
+/// sizes above i64::MAX into negative divisors and give the wrong bucket.
 pub fn mod_hash(key: i32, table_size: usize) -> usize {
     assert!(table_size > 0, "table size must be positive");
-    (key as i64).rem_euclid(table_size as i64) as usize
+    // The result is in 0..table_size, so the cast back to usize is lossless.
+    (key as i128).rem_euclid(table_size as i128) as usize
 }
 
 /// Hashes a string of uppercase letters: A=1 .. Z=26, read as a base-26
@@ -92,6 +97,15 @@ mod tests {
         for key in -50..50 {
             assert!(mod_hash(key, 8) < 8);
         }
+    }
+
+    #[test]
+    fn mod_hash_keeps_the_full_usize_table_size() {
+        // A table size above i64::MAX must not wrap to a negative divisor.
+        assert_eq!(mod_hash(-1, usize::MAX), usize::MAX - 1);
+        assert_eq!(mod_hash(i32::MIN, usize::MAX), usize::MAX - 2_147_483_648);
+        assert_eq!(mod_hash(5, usize::MAX), 5);
+        assert_eq!(mod_hash(-1, 1 << 63), (1 << 63) - 1);
     }
 
     #[test]
