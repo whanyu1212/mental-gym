@@ -27,8 +27,9 @@ def hash_function(text: str, table_size: int) -> int:
     for char in text:
         if not "A" <= char <= "Z":
             raise ValueError(f"only A-Z is supported, got {char!r}")
-        # A=1 .. Z=26; the +1 keeps "A" from acting like a 0 digit, so
-        # "A" and "AA" hash differently.
+        # A=1 .. Z=26; the +1 keeps "A" from acting like a leading 0 digit,
+        # so before reduction "A" is 1 and "AA" is 27. The % table_size can
+        # still make them collide (with table_size 26, both hash to 1).
         hash_value = (hash_value * 26 + (ord(char) - ord("A") + 1)) % table_size
     return hash_value
 

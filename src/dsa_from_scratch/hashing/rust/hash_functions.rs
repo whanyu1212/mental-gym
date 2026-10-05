@@ -24,7 +24,12 @@ pub fn mod_hash(key: i32, table_size: usize) -> usize {
 
 /// Hashes a string of uppercase letters: A=1 .. Z=26, read as a base-26
 /// number and reduced mod `table_size` after every step.
-/// The +1 keeps 'A' from hashing like a missing digit (so "A" != "AA" != "").
+///
+/// The +1 keeps 'A' from acting like a leading 0 digit. With A=0, "A", "AA"
+/// and "" would all be the number 0 before any reduction. With A=1 they are
+/// 1, 27 and 0. The final `% table_size` can still make different strings
+/// collide, though: with `table_size` 26, both "A" and "AA" hash to 1. Like
+/// any hash into a smaller range, this one cannot guarantee distinct values.
 ///
 /// Reducing each step keeps `hash` below `table_size`, but `hash * 26` can
 /// still overflow `usize` when `table_size` is huge. Doing the step in u128
@@ -123,8 +128,17 @@ mod tests {
 
     #[test]
     fn hash_uppercase_distinguishes_lengths() {
+        // Before reduction, "A" is 1 and "AA" is 27, so a big enough table
+        // keeps them apart.
         assert_ne!(hash_uppercase("A", 1000), hash_uppercase("AA", 1000));
         assert_eq!(hash_uppercase("", 1000), 0);
+    }
+
+    #[test]
+    fn hash_uppercase_can_still_collide_after_reduction() {
+        // 27 % 26 == 1, so a 26-slot table maps "A" and "AA" together.
+        assert_eq!(hash_uppercase("A", 26), 1);
+        assert_eq!(hash_uppercase("AA", 26), 1);
     }
 
     #[test]

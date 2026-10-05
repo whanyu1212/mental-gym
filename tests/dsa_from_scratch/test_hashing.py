@@ -189,6 +189,11 @@ def test_hash_function_matches_hand_computation():
     assert hash_function("A", 1000) != hash_function("AA", 1000)
 
 
+def test_hash_function_can_collide_after_reduction():
+    # Before reduction "A" is 1 and "AA" is 27; 27 % 26 == 1.
+    assert hash_function("A", 26) == hash_function("AA", 26) == 1
+
+
 @pytest.mark.parametrize("text", ["ky", "K Y", "K1"])
 def test_hash_function_rejects_non_uppercase(text):
     with pytest.raises(ValueError):
