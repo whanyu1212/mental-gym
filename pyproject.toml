@@ -46,4 +46,4 @@ quote-style = "preserve"
 exclude = ["*.md"]
 
 [tool.pytest.ini_options]
-pythonpath = ["tests/kattis", "src/dsa_from_scratch/two_pointers/python", "src/dsa_from_scratch/hash_map/python", "src/kattis/python", "src/leetcode/arrays_hashing/python", "src/leetcode/two_pointers/python", "src/leetcode/sliding_window/python", "src/leetcode/stack/python"]
+pythonpath = ["tests/kattis", "src/dsa_from_scratch/two_pointers/python", "src/dsa_from_scratch/hashing/python", "src/kattis/python", "src/leetcode/arrays_hashing/python", "src/leetcode/two_pointers/python", "src/leetcode/sliding_window/python", "src/leetcode/stack/python"]

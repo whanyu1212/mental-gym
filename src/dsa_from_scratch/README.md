@@ -21,7 +21,7 @@ dsa_from_scratch/
 │       ├── algorithms.rs
 │       └── builtin_array_functions.md
 ├── graph/python/
-├── hash_map/
+├── hashing/
 │   ├── python/
 │   └── rust/                # Rust-first: hash functions, hash tables, sets
 ├── list_adt/python/
@@ -53,7 +53,7 @@ algorithms, each with unit tests beside it; see
 [`arrays/rust/README.md`](arrays/rust/README.md) for the index, std comparisons and
 complexity table. Hashing is Rust-first too: hash functions, a direct address
 table, chaining and open-addressing hash maps, and a hash set, indexed in
-[`hash_map/rust/README.md`](hash_map/rust/README.md). The `rand` dependency and
+[`hashing/rust/README.md`](hashing/rust/README.md). The `rand` dependency and
 its locked version are retained. LeetCode has a separate crate at `src/leetcode/Cargo.toml`.
 
 For a new implementation, add its file to `<topic>/rust/` and declare it in that

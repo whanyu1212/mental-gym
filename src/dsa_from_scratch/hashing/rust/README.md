@@ -5,7 +5,7 @@ Index of what is built here, how it compares with the standard library, and what
 Run the tests from the repository root:
 
 ```sh
-cargo test --locked --manifest-path src/dsa_from_scratch/Cargo.toml hash_map
+cargo test --locked --manifest-path src/dsa_from_scratch/Cargo.toml hashing
 ```
 
 ## The progression

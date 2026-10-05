@@ -1,5 +1,5 @@
 """
-Tests for src/dsa_from_scratch/hash_map/python.
+Tests for src/dsa_from_scratch/hashing/python.
 
 Each hash table is checked on the edge cases that used to be bugs, and
 the resizing tables are compared with a plain dict on a fixed random

@@ -5,5 +5,5 @@
 
 #[path = "arrays/rust/mod.rs"]
 pub mod arrays;
-#[path = "hash_map/rust/mod.rs"]
-pub mod hash_map;
+#[path = "hashing/rust/mod.rs"]
+pub mod hashing;
