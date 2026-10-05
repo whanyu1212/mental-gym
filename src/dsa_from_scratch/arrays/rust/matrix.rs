@@ -20,17 +20,24 @@ pub struct Matrix {
 
 impl Matrix {
     /// Creates a `rows` x `cols` matrix filled with zeros.
+    /// Panics if `rows * cols` overflows `usize`, like `vec!` on a too-large size.
     pub fn new(rows: usize, cols: usize) -> Self {
+        // Plain `rows * cols` would wrap in release builds and build a buffer
+        // smaller than the recorded shape, so `get` would panic in bounds.
+        let len = rows
+            .checked_mul(cols)
+            .expect("matrix dimensions overflow usize");
         Self {
             rows,
             cols,
-            data: vec![0; rows * cols],
+            data: vec![0; len],
         }
     }
 
-    /// Builds a matrix from row-major `data`. Returns `None` if the length is wrong.
+    /// Builds a matrix from row-major `data`. Returns `None` if the length is
+    /// wrong, including when `rows * cols` overflows `usize`.
     pub fn from_vec(rows: usize, cols: usize, data: Vec<i32>) -> Option<Self> {
-        if data.len() == rows * cols {
+        if rows.checked_mul(cols) == Some(data.len()) {
             Some(Self { rows, cols, data })
         } else {
             None
@@ -119,6 +126,10 @@ impl Matrix {
 
     /// Matrix product `self * other`. Returns `None` if `self.cols != other.rows`.
     /// O(rows * cols * other.cols).
+    ///
+    /// Entries are `i32`, so a product or sum that leaves the `i32` range
+    /// follows normal integer rules: it panics in debug builds and wraps in
+    /// release builds. Use a wider element type if that can happen.
     pub fn multiply(&self, other: &Matrix) -> Option<Matrix> {
         if self.cols != other.rows {
             return None;
@@ -231,5 +242,20 @@ mod tests {
         let m = Matrix::new(0, 3);
         assert_eq!(m.get(0, 0), None);
         assert_eq!(m.transpose().rows(), 3);
+    }
+
+    #[test]
+    #[should_panic(expected = "matrix dimensions overflow usize")]
+    fn new_rejects_overflowing_dimensions() {
+        // rows * cols wraps to 0 here; it must not build an empty buffer.
+        let half = 1usize << (usize::BITS / 2);
+        Matrix::new(half, half);
+    }
+
+    #[test]
+    fn from_vec_rejects_overflowing_dimensions() {
+        let half = 1usize << (usize::BITS / 2);
+        assert!(Matrix::from_vec(half, half, Vec::new()).is_none());
+        assert!(Matrix::from_vec(usize::MAX, 2, vec![0; 2]).is_none());
     }
 }

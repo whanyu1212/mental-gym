@@ -121,9 +121,17 @@ pub fn find(nums: &[i32], target: i32) -> Option<usize> {
 /// A new vector of length `nums.len() + enlarge`.
 ///
 /// Takes O(n + enlarge) time and space, where n is the input length.
+///
+/// # Panics
+/// If `nums.len() + enlarge` overflows `usize`. Plain `+` would wrap in
+/// release builds and silently shrink the copy instead.
 pub fn extend(nums: &[i32], enlarge: usize) -> Vec<i32> {
+    let new_len = nums
+        .len()
+        .checked_add(enlarge)
+        .expect("extended length overflows usize");
     let mut result = nums.to_vec();
-    result.resize(nums.len() + enlarge, 0);
+    result.resize(new_len, 0);
     result
 }
 
@@ -176,6 +184,13 @@ mod tests {
     #[test]
     fn extend_empty_slice_by_zero_stays_empty() {
         assert_eq!(extend(&[], 0), Vec::<i32>::new());
+    }
+
+    #[test]
+    #[should_panic(expected = "extended length overflows usize")]
+    fn extend_rejects_an_overflowing_length() {
+        // nums.len() + enlarge wraps to 0 here; it must not shrink the copy.
+        extend(&[1], usize::MAX);
     }
 
     #[test]
