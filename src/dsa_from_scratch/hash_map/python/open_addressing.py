@@ -10,6 +10,7 @@ class Pair:
 class HashMapOpenAddressing:
     def __init__(self):
         self.size = 0  # Number of key-value pairs, 0 to begin with
+        self.tombstones = 0  # Number of removal marks currently in the table
         self.capacity = 4  # Hash table capacity
         self.load_thres = 2.0 / 3.0  # Load factor threshold for triggering expansion
         self.extend_ratio = 2  # Expansion multiplier
@@ -21,8 +22,9 @@ class HashMapOpenAddressing:
         return key % self.capacity
 
     def load_factor(self) -> float:
-        # Same as separate chaining
-        return self.size / self.capacity
+        # Tombstones count too: a search stops only at a None bucket, so if
+        # removal marks filled every None bucket, find_bucket would loop forever.
+        return (self.size + self.tombstones) / self.capacity
 
     def find_bucket(self, key: int) -> int:
         index = self.hash_func(key)
@@ -86,7 +88,7 @@ class HashMapOpenAddressing:
         index = self.find_bucket(key)
         # If the key-value pair is found, return the corresponding val
         if self.buckets[index] not in [None, self.TOMBSTONE]:
-            return self.buckets[index].val
+            return self.buckets[index].value
         # If the key-value pair does not exist, return None
         return None
 
@@ -98,9 +100,11 @@ class HashMapOpenAddressing:
         index = self.find_bucket(key)
         # If the key-value pair is found, overwrite val and return
         if self.buckets[index] not in [None, self.TOMBSTONE]:
-            self.buckets[index].val = val
+            self.buckets[index].value = val
             return
         # If the key-value pair does not exist, add the key-value pair
+        if self.buckets[index] is self.TOMBSTONE:
+            self.tombstones -= 1  # reusing a removal mark
         self.buckets[index] = Pair(key, val)
         self.size += 1
 
@@ -111,19 +115,29 @@ class HashMapOpenAddressing:
         if self.buckets[index] not in [None, self.TOMBSTONE]:
             self.buckets[index] = self.TOMBSTONE
             self.size -= 1
+            self.tombstones += 1
 
     def extend(self):
-        """Extend hash table."""
+        """
+        Rebuild the table, dropping every removal mark.
+
+        Only grow when live pairs fill at least a third of the table. If
+        the load comes mostly from tombstones, rebuilding at the same
+        capacity is enough; otherwise repeated put/remove would grow the
+        table forever.
+        """
         # Temporarily store the original hash table
         buckets_tmp = self.buckets
-        # Initialize the extended new hash table
-        self.capacity *= self.extend_ratio
+        # Initialize the new hash table
+        if self.size * 3 >= self.capacity:
+            self.capacity *= self.extend_ratio
         self.buckets = [None] * self.capacity
         self.size = 0
+        self.tombstones = 0
         # Move key-value pairs from the original hash table to the new hash table
         for pair in buckets_tmp:
             if pair not in [None, self.TOMBSTONE]:
-                self.put(pair.key, pair.val)
+                self.put(pair.key, pair.value)
 
     def print(self):
         for pair in self.buckets:
@@ -132,4 +146,28 @@ class HashMapOpenAddressing:
             elif pair is self.TOMBSTONE:
                 print("TOMBSTONE")
             else:
-                print(pair.key, "->", pair.val)
+                print(pair.key, "->", pair.value)
+
+
+# example usage
+if __name__ == "__main__":
+    hash_map = HashMapOpenAddressing()
+    for key, name in [(1, "one"), (5, "five"), (9, "nine"), (2, "two")]:
+        hash_map.put(key, name)
+    hash_map.put(5, "FIVE")  # update an existing key
+    hash_map.remove(9)  # leaves a tombstone
+
+    assert hash_map.get(1) == "one"
+    assert hash_map.get(5) == "FIVE"
+    assert hash_map.get(9) is None
+    assert hash_map.get(2) == "two"
+    assert hash_map.size == 3
+
+    # Repeated put/remove must not fill the table with removal marks.
+    for key in range(100, 200):
+        hash_map.put(key, "x")
+        hash_map.remove(key)
+    assert hash_map.size == 3
+    assert hash_map.capacity <= 16
+
+    hash_map.print()
