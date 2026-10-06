@@ -1,5 +1,11 @@
 # Implementing a hash table using an array
 # index = hash(key) % capacity
+#
+# Each bucket holds at most ONE pair, so this table does not handle collisions:
+# two keys with the same index (e.g. 1 and 101) evict each other on put. That
+# limitation is the point of this file. Separate chaining and open addressing
+# fix it. Even so, get and remove must check the stored key, or they would
+# return or delete the pair of a different key that shares the bucket.
 
 
 # Create a class Pair with two attributes key and value
@@ -24,22 +30,34 @@ class ArrayHashMap:
         index = key % 100
         return index
 
-    def get(self, key: int) -> str:
-        index = self.hash_func(key)
-        pair = self.buckets[index]
-        if pair is None:
-            return "Key not found"
+    def get(self, key: int) -> str | None:
+        """Return the value stored for `key`, or None if it is
+        absent."""
+        pair = self.buckets[self.hash_func(key)]
+        # The bucket may hold a different key with the same index.
+        if pair is None or pair.key != key:
+            return None
         return pair.value
 
-    def put(self, key: int, value: str) -> None:
-        pair = Pair(key, value)
+    def put(self, key: int, value: str) -> Pair | None:
+        """
+        Store the pair and return the pair it displaced, if any.
+
+        The displaced pair has the same key (a plain update) or a
+        different key (lost to a collision).
+        """
         index = self.hash_func(key)
-        self.buckets[index] = pair
+        displaced = self.buckets[index]
+        self.buckets[index] = Pair(key, value)
+        return displaced
 
     def remove(self, key: int) -> None:
-        # Setting the bucket to None
+        """Remove `key`; a different key in the same bucket is left
+        alone."""
         index = self.hash_func(key)
-        self.buckets[index] = None
+        pair = self.buckets[index]
+        if pair is not None and pair.key == key:
+            self.buckets[index] = None
 
     def entry_set(self) -> list[Pair]:
         # The method name is inspired by Java's HashMap interface
@@ -95,3 +113,14 @@ if __name__ == "__main__":
     print(array_hash_map)
 
     print(array_hash_map.entry_set())
+
+    # Collisions: 1 and 101 share bucket 1.
+    collisions = ArrayHashMap()
+    collisions.put(1, "one")
+    displaced = collisions.put(101, "hundred-one")
+    assert displaced is not None and displaced.key == 1  # key 1 was evicted
+    assert collisions.get(1) is None  # not the value of key 101
+    assert collisions.get(201) is None  # a key that was never stored
+    assert collisions.get(101) == "hundred-one"
+    collisions.remove(1)  # must not delete key 101's pair
+    assert collisions.get(101) == "hundred-one"
