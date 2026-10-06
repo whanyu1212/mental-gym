@@ -10,11 +10,16 @@ dsa_from_scratch/
 ├── arrays/
 │   ├── python/
 │   │   ├── common_operations.py
-│   │   ├── kadane.py
-│   │   └── prefix_sum.py
-│   └── rust/
+│   │   └── prefix_sum_3d.py
+│   └── rust/                # Rust-first: the array as a container
 │       ├── mod.rs
-│       └── common_operations.rs
+│       ├── common_operations.rs
+│       ├── dynamic_array.rs
+│       ├── array_stack.rs
+│       ├── circular_buffer.rs
+│       ├── matrix.rs
+│       ├── algorithms.rs
+│       └── builtin_array_functions.md
 ├── graph/python/
 ├── hash_map/python/
 ├── list_adt/python/
@@ -40,9 +45,12 @@ to pytest's `pythonpath` in `pyproject.toml` when its tests use direct imports.
 ## Rust
 
 All from-scratch Rust implementations share this directory's Cargo crate. The
-existing array operations and their 17 unit tests live in
-`arrays/rust/common_operations.rs`; the `rand` dependency and its locked version
-are retained. LeetCode has a separate crate at `src/leetcode/Cargo.toml`.
+array topic is Rust-first: basic operations in `arrays/rust/common_operations.rs`,
+plus a dynamic array, array stack, circular buffer, matrix and classic in-place
+algorithms, each with unit tests beside it; see
+[`arrays/rust/README.md`](arrays/rust/README.md) for the index, std comparisons and
+complexity table. The `rand` dependency and its locked
+version are retained. LeetCode has a separate crate at `src/leetcode/Cargo.toml`.
 
 For a new implementation, add its file to `<topic>/rust/` and declare it in that
 directory's `mod.rs`, such as `pub mod prefix_sum;`. Keep its unit tests in a

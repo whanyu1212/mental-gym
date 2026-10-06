@@ -815,6 +815,50 @@ export const guides = {
 		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
 	},
 
+	"303-range-sum-query-immutable": {
+		slug: "303-range-sum-query-immutable",
+		pattern: "1D prefix sum",
+		recognitionSignals: [
+			"repeated range-sum queries on a static array",
+			"sumRange(left, right) called many times",
+			"the array never changes between queries",
+		],
+		dissection:
+			"Precompute a prefix array once so any contiguous range sum becomes the difference of two stored totals.",
+		intuition:
+			"Pad with a leading 0 so prefix[i] is the sum of the first i elements. Then sum(left..right) = prefix[right + 1] − prefix[left]: everything up to right, minus everything before left. The padding removes the left = 0 special case.",
+		invariant:
+			"prefix[i] always equals nums[0] + nums[1] + … + nums[i − 1], and prefix[0] = 0.",
+		bruteForce: {
+			approach:
+				"For each sumRange call, loop from left to right and add the elements. No setup, but each query costs the length of the range.",
+			complexity: { time: "O(n) per query", space: "O(1)", note: "Worst case sums the whole array on every call." },
+		},
+		constraintReasoning:
+			"sumRange can be called up to ~10⁴ times on an array of up to ~10⁴ elements, so O(n) per query adds up to ~10⁸ operations. The array is immutable, so paying O(n) once to build prefix sums makes every query O(1).",
+		approachSteps: [
+			"Start prefix = [0].",
+			"For each n in nums, append prefix[-1] + n.",
+			"For sumRange(left, right), return prefix[right + 1] − prefix[left].",
+		],
+		complexity: { time: "O(1)", space: "O(n)", note: "Construction is O(n) once; each query is O(1)." },
+		pitfalls: [
+			"Off-by-one: without the leading 0, the answer is prefix[right] − prefix[left − 1] and left = 0 needs a special case.",
+			"Recomputing the prefix array inside sumRange instead of once in the constructor.",
+			"Forgetting that right is inclusive, so the upper index is right + 1 in the padded array.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [-2,0,3,-5,2,-1], sumRange(0,2)", expected: "1", note: "−2 + 0 + 3 via prefix[3] − prefix[0]." },
+			{ kind: "boundary", input: "nums = [-2,0,3,-5,2,-1], sumRange(3,3)", expected: "-5", note: "A single-element range is prefix[4] − prefix[3]." },
+			{ kind: "trap", input: "nums = [-2,0,3,-5,2,-1], sumRange(0,5)", expected: "-3", note: "Starts at index 0; an unpadded prefix that reads prefix[left − 1] would index −1." },
+		],
+		followUps: [
+			"What changes if elements can be updated between queries? (Fenwick tree or segment tree, LeetCode 307.)",
+			"Extend the idea to rectangle sums in a matrix (LeetCode 304).",
+		],
+		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
+	},
+
 	"304-range-sum-query-2d-immutable": {
 		slug: "304-range-sum-query-2d-immutable",
 		pattern: "2D prefix sum (summed-area table)",

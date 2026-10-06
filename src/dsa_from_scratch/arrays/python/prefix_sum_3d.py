@@ -1,43 +1,8 @@
-class PrefixSum:
-    def __init__(self, nums):
-        self.prefix = []
-        total = 0
-        for n in nums:
-            total += n
-            self.prefix.append(total)
-
-    def rangeSum(self, left, right):
-        preRight = self.prefix[right]
-        preLeft = self.prefix[left - 1] if left > 0 else 0
-        return preRight - preLeft
-
-
-class PrefixSum2D:
-    def __init__(self, matrix):
-        rows = len(matrix)
-        cols = len(matrix[0]) if rows > 0 else 0
-
-        # Padded with an extra row and column of zeros for easier calculations
-        self.prefix = [[0 for _ in range(cols + 1)] for _ in range(rows + 1)]
-
-        for r in range(rows):
-            for c in range(cols):
-                self.prefix[r + 1][c + 1] = (
-                    matrix[r][c]
-                    + self.prefix[r][c + 1]
-                    + self.prefix[r + 1][c]
-                    - self.prefix[r][c]
-                )
-
-    def rangeSum(self, row1, col1, row2, col2):
-        # Using the padded prefix matrix, indices are shifted by +1
-        # Sum = P[r2+1][c2+1] - P[r1][c2+1] - P[r2+1][c1] + P[r1][c1]
-        return (
-            self.prefix[row2 + 1][col2 + 1]
-            - self.prefix[row1][col2 + 1]
-            - self.prefix[row2 + 1][col1]
-            + self.prefix[row1][col1]
-        )
+# 3D prefix sum (inclusion-exclusion over a cube).
+#
+# 1D and 2D prefix sums are LeetCode problems (303 and 304) and live in
+# src/leetcode/arrays_hashing/python/. The 3D version has no LeetCode problem,
+# so it stays here as a generalization.
 
 
 class PrefixSum3D:

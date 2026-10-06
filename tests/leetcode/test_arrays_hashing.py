@@ -15,9 +15,11 @@ from majority_element import Solution as MajorityElement
 from majority_element_2 import Solution as MajorityElementII
 from majority_element_2 import SolutionBoyerMoore as MajorityElementIIBoyerMoore
 from maximum_subarray import Solution as MaximumSubarray
+from maximum_subarray import max_subarray_elements
 from maximum_sum_circular_subarray import Solution as MaxCircularSubarray
 from product_except_self import Solution as ProductExceptSelf
 from range_query_sum_2d_immutable import NumMatrix
+from range_sum_query_immutable import NumArray
 from sort_an_array import Solution as SortAnArray
 from sort_colors import Solution as SortColors
 from subarray_sum_equals_k import Solution as SubarraySumEqualsK
@@ -242,6 +244,22 @@ def test_maximum_subarray(nums, expected):
 @pytest.mark.parametrize(
     "nums, expected",
     [
+        ([-2, 1, -3, 4, -1, 2, 1, -5, 4], [4, -1, 2, 1]),
+        ([-3, -2, -5], [-2]),
+        ([5], [5]),
+        ([1, -5, 1], [1]),  # tie: the first maximum subarray wins
+        ([-1, 3, -1, 3], [3, -1, 3]),
+    ],
+)
+def test_max_subarray_elements(nums, expected):
+    result = max_subarray_elements(nums)
+    assert result == expected
+    assert sum(result) == MaximumSubarray().maxSubArray(nums)
+
+
+@pytest.mark.parametrize(
+    "nums, expected",
+    [
         ([1, -2, 3, -2], 3),
         ([5, -3, 5], 10),
         ([-3, -2, -3], -2),
@@ -280,6 +298,24 @@ def test_range_sum_query_2d():
     assert matrix.sumRegion(1, 2, 2, 4) == 12
     assert matrix.sumRegion(0, 0, 0, 0) == 3
     assert matrix.sumRegion(0, 0, 4, 4) == 58
+
+
+@pytest.mark.parametrize(
+    "left, right, expected",
+    [
+        (0, 2, 1),
+        (2, 5, -1),
+        (0, 5, -3),  # starts at index 0
+        (3, 3, -5),  # single element
+        (5, 5, -1),  # last element
+    ],
+)
+def test_range_sum_query_immutable(left, right, expected):
+    assert NumArray([-2, 0, 3, -5, 2, -1]).sumRange(left, right) == expected
+
+
+def test_range_sum_query_immutable_single_element_array():
+    assert NumArray([7]).sumRange(0, 0) == 7
 
 
 # LeetCode 912 guarantees 1 <= len(nums), so no empty case.
