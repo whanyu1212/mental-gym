@@ -1,6 +1,3 @@
-from colorama import Fore, Style, init
-
-init(autoreset=True)
 # Bucket Sort
 # Instead of comparison based sorting, we can use a divide and conquer approach to sort
 # the elements.
@@ -13,8 +10,9 @@ init(autoreset=True)
 
 def bucket_sort(nums: list[float]) -> None:
     """
-    Apply bucket sort on the input list of numbers. The nums is modified
-    in-place and thus the return value is None.
+    Apply bucket sort on the input list of numbers.
+
+    The nums is modified in-place and thus the return value is None.
 
     Args:
         nums (list[float]): List of numbers to be sorted.
@@ -22,7 +20,7 @@ def bucket_sort(nums: list[float]) -> None:
     # Initialize k = n/2 buckets, expected to allocate 2 elements per bucket
     # The number of buckets can be adjusted based on the input data distribution
     k = len(nums) // 2
-    print(Fore.YELLOW + f"Number of buckets: {k}\n" + Style.RESET_ALL)
+    print(f"Number of buckets: {k}\n")
 
     buckets = [[] for _ in range(k)]
     # 1. Distribute array elements into various buckets
@@ -32,12 +30,12 @@ def bucket_sort(nums: list[float]) -> None:
         # Add num to bucket i
         buckets[i].append(num)
 
-    print(Fore.YELLOW + f"Buckets after distribution: {buckets}\n\n" + Style.RESET_ALL)
+    print(f"Buckets after distribution: {buckets}\n\n")
     # 2. Sort each bucket
     for bucket in buckets:
         # Use built-in sorting function, can also replace with other sorting algorithms
         bucket.sort()  # Timsort, O(nlogn)
-        print(Fore.YELLOW + f"Sorted bucket: {bucket}\n" + Style.RESET_ALL)
+        print(f"Sorted bucket: {bucket}\n")
     # 3. Traverse buckets to merge results
     i = 0
     # for bucket in buckets:
@@ -53,6 +51,6 @@ def bucket_sort(nums: list[float]) -> None:
 # Example Usage
 if __name__ == "__main__":
     nums = [0.897, 0.565, 0.656, 0.1234, 0.665, 0.3434]
-    print(Fore.BLUE + "Original array: " + Style.RESET_ALL, nums)
+    print("Original array: ", nums)
     bucket_sort(nums)
-    print(Fore.BLUE + "Sorted array: " + Style.RESET_ALL, nums)
+    print("Sorted array: ", nums)

@@ -4,10 +4,6 @@
 # of numbers,
 # sorting each digit in turn to achieve the final sorted order.
 
-from colorama import Fore, Style, init
-
-init(autoreset=True)
-
 
 def digit(num: int, exp: int) -> int:
     """Get the k-th digit of element num, where exp = 10^(k-1)"""
@@ -58,6 +54,6 @@ def radix_sort(nums: list[int]):
 # Example Usage
 if __name__ == "__main__":
     nums = [170, 45, 75, 90, 802, 24, 2, 66]
-    print(Fore.BLUE + "Original array: " + Style.RESET_ALL, nums)
+    print("Original array: ", nums)
     radix_sort(nums)
-    print(Fore.BLUE + "Sorted array: " + Style.RESET_ALL, nums)
+    print("Sorted array: ", nums)
