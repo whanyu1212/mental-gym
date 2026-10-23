@@ -2,7 +2,8 @@ import sys
 
 
 def find_cheaters(player_list: list, pairs: list) -> tuple:
-    """Find the cheaters who imposed as hunters in the game.
+    """
+    Find the cheaters who imposed as hunters in the game.
 
     Args:
         player_list (list): participants in the game

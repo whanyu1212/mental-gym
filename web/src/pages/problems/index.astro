@@ -95,6 +95,7 @@ const sqlByCategory = Object.fromEntries(
 					id={`algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
 				>
 					<h2 class="group-title">{group}</h2>
+					<div class="table-scroll" role="region" aria-label={`${group} algorithm problems`} tabindex="0">
 					<table class="problem-table">
 						<thead>
 							<tr>
@@ -131,6 +132,7 @@ const sqlByCategory = Object.fromEntries(
 							))}
 						</tbody>
 					</table>
+					</div>
 				</section>
 			))
 		}
@@ -159,6 +161,7 @@ const sqlByCategory = Object.fromEntries(
 					id={`ml-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
 				>
 					<h2 class="group-title">{category}</h2>
+					<div class="table-scroll" role="region" aria-label={`${category} problems`} tabindex="0">
 					<table class="problem-table">
 						<thead>
 							<tr>
@@ -199,6 +202,7 @@ const sqlByCategory = Object.fromEntries(
 							))}
 						</tbody>
 					</table>
+					</div>
 				</section>
 			))
 		}
@@ -219,6 +223,7 @@ const sqlByCategory = Object.fromEntries(
 					id={`sql-${category.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
 				>
 					<h2 class="group-title">{category}</h2>
+					<div class="table-scroll" role="region" aria-label={`${category} problems`} tabindex="0">
 					<table class="problem-table">
 						<thead>
 							<tr>
@@ -255,6 +260,7 @@ const sqlByCategory = Object.fromEntries(
 							))}
 						</tbody>
 					</table>
+					</div>
 				</section>
 			))
 		}
@@ -726,6 +732,24 @@ const sqlByCategory = Object.fromEntries(
 		letter-spacing: 0.15em;
 		font-weight: 600;
 		font-family: var(--font-sans);
+	}
+
+	.table-scroll {
+		max-width: 100%;
+		overflow-x: auto;
+		position: relative;
+		border-radius: var(--radius-md);
+	}
+
+	.table-scroll:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
+
+	@media (max-width: 640px) {
+		.section-tabs {
+			flex-wrap: wrap;
+		}
 	}
 
 	.problem-table {

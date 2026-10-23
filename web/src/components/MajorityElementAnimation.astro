@@ -217,6 +217,14 @@ const steps: TeachingStep[] = [
 
 <script>
   class MajorityElementVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    candEl!: HTMLElement | null;
+    countEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    candidateBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll(".me-cell"));
       this.ptrs = Array.from(this.querySelectorAll(".me-ptr-col"));

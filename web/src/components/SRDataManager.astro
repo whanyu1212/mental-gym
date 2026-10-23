@@ -14,6 +14,7 @@
         <button class="sr-btn sr-reset">Reset</button>
       </div>
     </div>
+    <p class="sr-backup-reminder" hidden></p>
     <p class="sr-feedback"></p>
   </div>
 
@@ -21,7 +22,7 @@
   <dialog class="sr-dialog">
     <div class="sr-dialog-body">
       <p class="sr-dialog-title">Reset all review progress?</p>
-      <p class="sr-dialog-text">This will permanently delete all spaced repetition data <strong>and every note highlight</strong>. This cannot be undone.</p>
+      <p class="sr-dialog-text">This will permanently delete all attempts, spaced repetition data, <strong>and every note highlight</strong>. This cannot be undone.</p>
       <div class="sr-dialog-actions">
         <button class="sr-btn sr-dialog-cancel">Cancel</button>
         <button class="sr-btn sr-dialog-confirm">Reset</button>
@@ -34,17 +35,27 @@
   import {
     exportAll,
     getAllHighlightRecords,
+    getAllAttemptEvents,
     getAllRecords,
     getAllReviewEvents,
     importAll,
     resetDatabase,
   } from "../scripts/sr-db";
+  import {
+    activityCount,
+    needsBackup,
+    progressRevision,
+    readBackupSnapshot,
+  } from "../scripts/backup-status";
   import { todayISO } from "../scripts/sr-scheduler";
+
+  const BACKUP_SNAPSHOT_KEY = "mental-gym-last-export";
 
   class SRDataManagerElement extends HTMLElement {
     connectedCallback() {
       const summaryEl = this.querySelector(".sr-summary") as HTMLElement;
       const feedbackEl = this.querySelector(".sr-feedback") as HTMLElement;
+      const backupReminderEl = this.querySelector(".sr-backup-reminder") as HTMLElement;
       const exportBtn = this.querySelector(".sr-export") as HTMLButtonElement;
       const importInput = this.querySelector(".sr-import-input") as HTMLInputElement;
       const resetBtn = this.querySelector(".sr-reset") as HTMLButtonElement;
@@ -58,35 +69,80 @@
         setTimeout(() => feedbackEl.classList.remove("visible"), 3000);
       };
 
+      const saveBackupSnapshot = (count: number, dataRevision: string) => {
+        try {
+          localStorage.setItem(
+            BACKUP_SNAPSHOT_KEY,
+            JSON.stringify({
+              exportedAt: new Date().toISOString(),
+              activityCount: count,
+              dataRevision,
+            })
+          );
+        } catch {
+          // Browser storage can be unavailable without affecting exports.
+        }
+      };
+
       const updateSummary = async () => {
-        const records = await getAllRecords();
-        if (records.length === 0) {
-          summaryEl.textContent = "No review data yet. Rate a problem to start tracking.";
+        const [records, events, highlights, attempts] = await Promise.all([
+          getAllRecords(),
+          getAllReviewEvents(),
+          getAllHighlightRecords(),
+          getAllAttemptEvents(),
+        ]);
+        const activity = activityCount(
+          records.length,
+          events.length,
+          highlights.length,
+          attempts.length
+        );
+        const dataRevision = progressRevision(records, events, highlights, attempts);
+
+        if (records.length === 0 && activity === 0) {
+          summaryEl.textContent = "No progress data yet. Finish an attempt or rate a problem to start tracking.";
+          backupReminderEl.hidden = true;
           return;
         }
         const today = todayISO();
         const due = records.filter((r) => r.dueDate <= today).length;
-        summaryEl.textContent = `${records.length} problems tracked${due > 0 ? ` · ${due} due` : ""}`;
+        summaryEl.textContent = `${records.length} problems tracked · ${attempts.length} attempts${due > 0 ? ` · ${due} due` : ""}`;
+
+        let snapshot: ReturnType<typeof readBackupSnapshot>;
+        try {
+          snapshot = readBackupSnapshot(localStorage.getItem(BACKUP_SNAPSHOT_KEY));
+        } catch {
+          snapshot = undefined;
+        }
+        const showReminder = needsBackup({ activityCount: activity, dataRevision }, snapshot);
+        backupReminderEl.hidden = !showReminder;
+        backupReminderEl.textContent = showReminder
+          ? snapshot
+            ? "Your progress has changed since an older export. Download a fresh backup."
+            : "Your progress is only in this browser. Download a backup to keep it portable."
+          : "";
       };
 
       updateSummary();
 
       // Export
       exportBtn.addEventListener("click", async () => {
-        const [records, events, highlights] = await Promise.all([
+        const [records, events, highlights, attempts] = await Promise.all([
           getAllRecords(),
           getAllReviewEvents(),
           getAllHighlightRecords(),
+          getAllAttemptEvents(),
         ]);
         if (
           records.length === 0 &&
           events.length === 0 &&
-          highlights.length === 0
+          highlights.length === 0 &&
+          attempts.length === 0
         ) {
           showFeedback("Nothing to export.");
           return;
         }
-        const json = exportAll(records, events, highlights);
+        const json = exportAll(records, events, highlights, attempts);
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -94,9 +150,14 @@
         a.download = `mental-gym-sr-${todayISO()}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        showFeedback(
-          `Exported ${records.length} records, ${events.length} review events, and ${highlights.length} highlights.`
+        saveBackupSnapshot(
+          activityCount(records.length, events.length, highlights.length, attempts.length),
+          progressRevision(records, events, highlights, attempts)
         );
+        showFeedback(
+          `Exported ${records.length} records, ${events.length} review events, ${highlights.length} highlights, and ${attempts.length} attempts.`
+        );
+        await updateSummary();
       });
 
       // Import
@@ -107,7 +168,7 @@
           const text = await file.text();
           const result = await importAll(text);
           showFeedback(
-            `Imported ${result.recordCount} records, ${result.eventCount} review events, and ${result.highlightCount} highlights.`
+            `Imported ${result.recordCount} records, ${result.eventCount} review events, ${result.highlightCount} highlights, and ${result.attemptCount} attempts.`
           );
           await updateSummary();
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
@@ -128,8 +189,13 @@
 
       confirmBtn.addEventListener("click", async () => {
         await resetDatabase();
+        try {
+          localStorage.removeItem(BACKUP_SNAPSHOT_KEY);
+        } catch {
+          // Keep reset usable when local preference storage is unavailable.
+        }
         dialog.close();
-        showFeedback("All review data cleared.");
+        showFeedback("All progress data cleared.");
         await updateSummary();
         window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
       });
@@ -209,6 +275,12 @@
     opacity: 0;
     transition: opacity 0.2s;
     height: 1rem;
+  }
+  .sr-backup-reminder {
+    color: var(--accent);
+    font: var(--fs-fine) var(--font-sans);
+    line-height: 1.5;
+    margin: 0.65rem 0 0;
   }
   .sr-feedback.visible {
     opacity: 1;

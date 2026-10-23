@@ -7,6 +7,8 @@ category: Meta
 
 This directory contains reusable technical knowledge that complements the practice artifacts in `src/`.
 
+Public notes on the site are authored teaching content. Browser attempts, highlights, and weekly hours stay in IndexedDB and are never published by adding a Markdown file here.
+
 ## Scope
 
 Notes should help answer one or more of these questions:
@@ -20,16 +22,30 @@ Link related solutions and implementations when they provide useful practice con
 
 ## Organization
 
-Existing notes remain at this directory's root. For new topic collections, introduce a domain directory when it contains multiple related notes:
+Notes are filed by topic:
 
 ```text
 notes/
-├── dsa/
-├── ml/
-└── system-design/
+├── foundations/            # complexity analysis and interview questions
+├── patterns/               # DSA patterns: arrays & hashing, two pointers, sliding window, …
+├── languages/             # setup and essentials for Python, Julia, TypeScript, Rust
+├── toolkits/               # language references (Python, TypeScript, Rust)
+├── ml/                     # model foundations and from-scratch implementations
+├── system-design/          # architecture case studies
+├── recommendation-system/  # experimentation and metrics collection
+├── roadmap/examples/       # labeled course-note examples linked to a module
+└── templates/              # copy-paste outlines; kind: template
 ```
 
-Do not move existing notes solely to match this convention. Preserve links and migrate deliberately when a domain needs a fuller reorganization.
+A note's URL is `/notes/<id>/`. The id comes from `noteId` in `web/src/lib/note-id.ts`, which `web/src/content.config.ts` passes to the loader as `generateId`. By default the id is the note's path under `notes/` without the extension (for example `recommendation-system/metrics`). Notes in `foundations/`, `patterns/`, `toolkits/`, `ml/` and `system-design/` were filed there after they were published, so each pins its original id with a frontmatter `slug:` (for example `slug: two_pointers`). That id is part of public URLs, cross-links in `web/src/data/`, and the key for saved highlights in IndexedDB. Keep an existing note's `slug:` when you move or rename the file.
+
+New notes in those folders can omit `slug:` and use the folder path as their id, or set `slug:` to a short root-level id. Either way, `web/tests/notes.test.ts` fails if two notes publish the same id.
+
+## Learning tracks
+
+The Learn hub at `/learn/` groups Python, Julia, TypeScript, and Rust into ordered tracks. `web/src/data/learningTracks.ts` links to published note IDs and existing practice pages; it does not change where notes live or their URLs. Each track starts with a setup lesson and an essentials lesson in `notes/languages/`. Missing references and practice resources are labeled as coming next until content is available.
+
+The full library stays at `/notes/`. Add a lowercase `python`, `julia`, `typescript`, or `rust` tag to language-specific notes so they appear in the language filter. Shared algorithm foundations remain accessible from every track through the Learn hub.
 
 ## File Naming
 
@@ -41,7 +57,7 @@ logistic-regression-gradient-descent.mdx
 cache-aside-pattern.mdx
 ```
 
-Use `.md` for straightforward prose. Use `.mdx` when the note benefits from math, interactive components, or richer site presentation.
+Use `.md` for straightforward prose. Use `.mdx` **only** when the note imports an Astro component (for example `arrays_and_hashing.mdx`). Keep prose-only notes as `.md` so they stay on the lighter Markdown pipeline. Frontmatter fields are the same for both.
 
 ## Categories
 
@@ -50,8 +66,9 @@ Use one of these categories for new notes:
 - `DSA` for data structures, algorithms, patterns, and complexity.
 - `Machine Learning` for model foundations, implementations, evaluation, and ML systems.
 - `System Design` for architecture, scaling, reliability, and trade-offs.
+- `Templates` for copy-paste outlines (`kind: template` only).
 
-## Frontmatter for New Notes
+## Frontmatter
 
 New published notes should include frontmatter like this:
 
@@ -62,17 +79,37 @@ description: The decision rule and boundary handling behind binary search.
 category: DSA
 order: 10
 status: wip
+kind: concept
 tags:
   - dsa
   - binary-search
 ---
 ```
 
+Optional fields, all backward-compatible:
+
+| Field | Meaning |
+| --- | --- |
+| `slug` | Published id and URL segment. Omit to use the path under `notes/`; see [Organization](#organization). |
+| `kind` | `concept` (default if omitted), `course`, `weekly-review`, or `template`. |
+| `courseId` | Must match `courses[].id` in `web/src/data/roadmap.ts`. |
+| `moduleId` | Must match a `RoadmapModule.id`. |
+| `relatedExercises` | `{ domain, slug }` pairs using the same domains as the roadmap (`algorithm`, `ml`, `sql`, `note`, `system-design`). |
+| `sourceUrl` | Canonical course or paper URL. |
+
 Use `status: wip` while developing a note and `status: stable` once it is ready to rely on as a reference. Keep tags specific enough to support future navigation and discovery. `order` is optional; use it when notes in the same category need a deliberate reading sequence.
+
+`kind: template` notes are listed separately on `/notes` so they are not mixed in with teaching copy. `kind: weekly-review` is for the outline only; filled personal reviews do not belong in this directory.
+
+## Course notes and weekly reviews
+
+Copy `templates/course-note.md` for a public explanation tied to a roadmap week. Set `kind: course` plus `courseId` and `moduleId`. A labeled example lives at `roadmap/examples/foundation-01-course-note.md`.
+
+Copy `templates/weekly-review.md` locally for planned versus actual hours, work attempted, evidence links, a failure or misconception, what you can now explain, and next week's adjustment. `templates/weekly-review-example.md` shows the fields filled with placeholders. Do not commit actual hours or private attempts.
 
 ## Note Outline
 
-Copy and adapt this outline for a new note:
+Copy and adapt this outline for a new concept note:
 
 ```md
 # Topic Title

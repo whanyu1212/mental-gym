@@ -1,0 +1,79 @@
+<section class="illustration" aria-labelledby="learning-illustration-title">
+  <p class="panel-label"><span aria-hidden="true"></span> Inside the gym</p>
+  <h2 id="learning-illustration-title">Turn ideas<br />into intuition.</h2>
+
+  <svg viewBox="0 0 360 240" role="img" aria-label="Learning, building, practicing, and recalling connect to develop fluency.">
+    <g fill="none" stroke="#adc7b5">
+      <ellipse cx="180" cy="120" rx="137" ry="91" stroke-dasharray="2 7" opacity=".2" />
+      <path d="M79 68C132 7 230 15 285 69S306 187 253 201S110 220 75 175S34 112 79 68Z" opacity=".25" />
+      <path d="M79 68C128 68 127 120 180 120S232 69 285 69M75 175C126 175 128 120 180 120S228 180 281 180" stroke-width="1.5" opacity=".7" />
+      <path d="M79 68C116 116 226 143 281 180M75 175C130 141 245 115 285 69" opacity=".25" />
+      <circle cx="180" cy="120" r="47" opacity=".2" />
+      <circle cx="180" cy="120" r="57" stroke-dasharray="1 6" opacity=".3" />
+    </g>
+
+    <g fill="#b9d0bd">
+      <circle cx="149" cy="29" r="3" opacity=".5" />
+      <circle cx="309" cy="130" r="3" opacity=".5" />
+      <circle cx="154" cy="208" r="3" opacity=".5" />
+      <circle cx="46" cy="122" r="3" opacity=".5" />
+      <circle cx="121" cy="82" r="3" />
+      <circle cx="239" cy="158" r="3" />
+    </g>
+
+    <circle cx="180" cy="120" r="37" fill="#d1eda8" />
+    <path d="M168 115L177 124L192 109" fill="none" stroke="#245844" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="180" y="140" class="center-label" text-anchor="middle">FLUENCY</text>
+
+    <g fill="#233e33" stroke="#a4c5ac" stroke-width="1.5">
+      <circle cx="79" cy="68" r="12" />
+      <circle cx="285" cy="69" r="12" />
+      <circle cx="281" cy="180" r="12" />
+      <circle cx="75" cy="175" r="12" />
+    </g>
+    <g fill="#d1eda8">
+      <circle cx="79" cy="68" r="4" />
+      <circle cx="285" cy="69" r="4" />
+      <circle cx="281" cy="180" r="4" />
+      <circle cx="75" cy="175" r="4" />
+    </g>
+    <g class="node-label" text-anchor="middle">
+      <text x="79" y="42">Learn</text>
+      <text x="285" y="43">Build</text>
+      <text x="281" y="214">Practice</text>
+      <text x="75" y="209">Recall</text>
+    </g>
+  </svg>
+
+  <p class="panel-caption">Every rep builds a connection.</p>
+</section>
+
+<style>
+  .illustration {
+    min-width: 0;
+    color: #f5f2e9;
+    background: #182e29;
+    background-image: radial-gradient(#a9c5b516 1px, transparent 1px);
+    background-size: 18px 18px;
+    border-radius: 20px;
+    padding: 1.6rem;
+    overflow: hidden;
+    box-shadow: 0 18px 45px #182e2914;
+  }
+  .panel-label {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font: 500 .6rem var(--font-mono);
+    letter-spacing: .06em;
+    color: #b4c9bc;
+    margin: 0 0 1.6rem;
+  }
+  .panel-label span { background: #cbec97; width: 6px; height: 6px; border-radius: 50%; }
+  h2 { font: 500 2rem/1.05 var(--font-serif); letter-spacing: -.02em; margin: 0; }
+  svg { display: block; width: 100%; height: auto; margin: .6rem 0 .5rem; overflow: visible; }
+  .node-label { fill: #c4d6c8; font: 13px var(--font-mono); }
+  .center-label { fill: #245844; font: 600 8px var(--font-mono); letter-spacing: .6px; }
+  .panel-caption { margin: 0; padding-top: 1rem; border-top: 1px solid #ffffff21; color: #b4c9bc; font: .65rem/1.5 var(--font-sans); }
+  @media (max-width: 400px) { .illustration { padding: 1.15rem; } }
+</style>

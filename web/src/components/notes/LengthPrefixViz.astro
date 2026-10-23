@@ -179,6 +179,15 @@ const steps: TeachingStep[] = [
 
 <script>
   class LengthPrefixViz extends HTMLElement {
+    wordCells!: HTMLElement[];
+    encodedBox!: HTMLElement | null;
+    decodedList!: HTMLElement | null;
+    phaseVal!: HTMLElement | null;
+    pointerVal!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    phaseBox!: HTMLElement | null;
+    pointerBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.wordCells = Array.from(this.querySelectorAll('.lp-word-cell'));
       this.encodedBox = this.querySelector('.lp-encoded-box');

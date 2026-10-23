@@ -1,0 +1,26 @@
+---
+import PointerArrayPlayer from "./framework/PointerArrayPlayer.astro";
+import { compactionSteps } from "../lib/teaching/traces/twoPointerTraces";
+
+const nums = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4];
+
+const steps = compactionSteps(nums, 1).map((step) => ({
+	...step,
+	stats: [
+		["read", step.pointers.read >= 0 ? step.pointers.read : "done"],
+		["write", step.pointers.write],
+		["kept", step.settled.length],
+	],
+}));
+---
+
+<PointerArrayPlayer
+	title={`nums = [${nums.join(", ")}]`}
+	steps={steps}
+	mainLabel="nums (green = kept answer prefix)"
+	pointers={[
+		{ name: "read", label: "R", tone: "info" },
+		{ name: "write", label: "W", tone: "medium" },
+		{ name: "look", label: "W-1", tone: "easy" },
+	]}
+/>

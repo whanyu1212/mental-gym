@@ -2,8 +2,10 @@ import sys
 
 
 def sort_memes(memes: list) -> str:
-    """Sort a meme list by the product of the second and third element in the list.
-    If there are ties, sort by the first element in the list which is the meme name.
+    """
+    Sort a meme list by the product of the second and third element in
+    the list. If there are ties, sort by the first element in the list
+    which is the meme name.
 
     Args:
         memes (list): nested list

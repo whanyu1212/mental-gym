@@ -28,7 +28,6 @@ def name_query(name_dict: dict, name_list: list) -> list:
 
 
 if __name__ == "__main__":
-
     # with open("input.txt", "r") as file:
     #     lines = file.readlines()
     #     stripped_lines = [line.strip() for line in lines]

@@ -353,6 +353,19 @@ const steps: TeachingStep[] = [
 
 <script>
   class ThreeSumVisuals extends HTMLElement {
+    fixedEl!: HTMLElement | null;
+    targetEl!: HTMLElement | null;
+    sumEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    duplicateEl!: HTMLElement | null;
+    resultsEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrCols!: HTMLElement[];
+    sumBox!: HTMLElement | null;
+    resultsBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
+    duplicateBox!: HTMLElement | null;
     connectedCallback() {
       this.fixedEl = this.querySelector(".ts-fixed");
       this.targetEl = this.querySelector(".ts-target");

@@ -148,6 +148,10 @@ const steps: TeachingStep[] = [
 
 <script>
   class GreedyProfitViz extends HTMLElement {
+    barWrappers!: HTMLElement[];
+    totalEl!: HTMLElement | null;
+    deltaEl!: HTMLElement | null;
+    totalBox!: HTMLElement | null;
     connectedCallback() {
       this.barWrappers = Array.from(this.querySelectorAll('.bar-wrapper'));
       this.totalEl = this.querySelector('.gp-total');

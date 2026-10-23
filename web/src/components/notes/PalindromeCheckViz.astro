@@ -105,6 +105,11 @@ const steps: TeachingStep[] = [
 
 <script>
   class PcViz extends HTMLElement {
+    chars!: HTMLElement[];
+    resultEl!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
+    lLabel!: HTMLElement | null;
+    rLabel!: HTMLElement | null;
     connectedCallback() {
       this.chars = Array.from(this.querySelectorAll('.pc-char'));
       this.resultEl = this.querySelector('.pc-result');

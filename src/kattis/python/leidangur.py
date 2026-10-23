@@ -1,9 +1,8 @@
 def valid_parenthesis(input_str: str) -> None:
-    """A variation to the valid parenthesis problem
-    on leetcode. Here we have to check if the
-    string is a valid parenthesis and if it is
-    then we have to count the number of "p", "g"
-    and "o" in the string.
+    """
+    A variation to the valid parenthesis problem on leetcode. Here we
+    have to check if the string is a valid parenthesis and if it is then
+    we have to count the number of "p", "g" and "o" in the string.
 
     Args:
         input_str (str): The input string
@@ -31,12 +30,11 @@ def valid_parenthesis(input_str: str) -> None:
             print("Neibb")
             return
 
-    if not stack:
-        print("Neibb")
-    else:
-        print(str(stack.count("p")))
-        print(str(stack.count("g")))
-        print(str(stack.count("o")))
+    # Every demand was met, so the journey is complete. An empty bag is a
+    # valid ending (0 0 0), not a failure.
+    print(str(stack.count("p")))
+    print(str(stack.count("g")))
+    print(str(stack.count("o")))
 
 
 if __name__ == "__main__":

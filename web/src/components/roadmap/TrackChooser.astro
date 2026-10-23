@@ -1,0 +1,100 @@
+---
+import { tracks, type TrackId } from "../../data/roadmap";
+import { withBase } from "../../lib/url";
+
+interface Props {
+	activeTrackId?: TrackId;
+}
+
+const { activeTrackId } = Astro.props;
+---
+
+<div class="track-grid" aria-label="AI engineering tracks">
+	{tracks.map((track) => (
+		<a
+			class:list={["track-card", { active: track.id === activeTrackId }]}
+			href={withBase(`/roadmap/${track.id}/`)}
+			aria-current={track.id === activeTrackId ? "page" : undefined}
+		>
+			<p>{track.shortTitle}</p>
+			<h2>{track.title}</h2>
+			<span>{track.description}</span>
+			<b>{track.id === activeTrackId ? "Current path" : "Explore path"} <i aria-hidden="true">→</i></b>
+		</a>
+	))}
+</div>
+
+<style>
+	.track-grid {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.track-card {
+		background: var(--glass-surface);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-md);
+		box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-sm);
+		color: var(--text);
+		display: flex;
+		flex-direction: column;
+		min-height: 210px;
+		padding: 1.25rem;
+		text-decoration: none;
+		transition: border-color var(--dur-mid), transform var(--dur-mid);
+	}
+
+	.track-card:hover,
+	.track-card:focus-visible,
+	.track-card.active {
+		border-color: var(--accent);
+		text-decoration: none;
+		transform: translateY(-2px);
+	}
+
+	.track-card:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+	}
+
+	p,
+	b {
+		color: var(--accent);
+		font: 600 var(--fs-eyebrow) var(--font-sans);
+		letter-spacing: 0.11em;
+		margin: 0;
+		text-transform: uppercase;
+	}
+
+	h2 {
+		font: 600 var(--fs-xl) var(--font-serif);
+		margin: 0.7rem 0 0.45rem;
+	}
+
+	span {
+		color: var(--muted);
+		font: var(--fs-sm) / var(--lh-normal) var(--font-sans);
+	}
+
+	b {
+		margin-top: auto;
+		padding-top: 1.2rem;
+	}
+
+	i {
+		font-style: normal;
+		transition: transform var(--dur-fast);
+	}
+
+	.track-card:hover i {
+		display: inline-block;
+		transform: translateX(4px);
+	}
+
+	@media (max-width: 680px) {
+		.track-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

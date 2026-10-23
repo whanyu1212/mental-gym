@@ -1,7 +1,7 @@
 using Test
 
 # Include the module
-include("../../src/leetcode/arrays_hashing/LongestCommonPrefix.jl")
+include("../../src/leetcode/arrays_hashing/julia/LongestCommonPrefix.jl")
 using .LongestCommonPrefix
 
 @testset "LongestCommonPrefix Tests" begin

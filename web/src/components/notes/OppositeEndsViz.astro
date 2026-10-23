@@ -113,6 +113,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class OeViz extends HTMLElement {
+    cells!: HTMLElement[];
+    sumEl!: HTMLElement | null;
+    answerEl!: HTMLElement | null;
+    answerBox!: HTMLElement | null;
+    ptrLeft!: HTMLElement | null;
+    ptrRight!: HTMLElement | null;
+    ptrRow!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.oe-cell'));
       this.sumEl = this.querySelector('.oe-sum');

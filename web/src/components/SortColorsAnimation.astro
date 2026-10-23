@@ -1,9 +1,10 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const initialArray = [2, 0, 2, 1, 1, 0];
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     array: [2, 0, 2, 1, 1, 0],
     low: 0,
@@ -247,6 +248,13 @@ const steps = [
 
 <script>
   class SortColorsVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    ptrCols!: HTMLElement[];
+    lowVal!: HTMLElement | null;
+    midVal!: HTMLElement | null;
+    highVal!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.sc-cell'));
       this.ptrCols = Array.from(this.querySelectorAll('.sc-ptr-col'));

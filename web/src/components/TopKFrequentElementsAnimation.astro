@@ -423,6 +423,17 @@ const emptyBuckets = [[], [], [], [], [], [], []];
 
 <script>
   class TopKFrequentVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    mapEl!: HTMLElement | null;
+    bucketCells!: HTMLElement[];
+    bucketPtrs!: HTMLElement[];
+    resEl!: HTMLElement | null;
+    phaseEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    resSummaryEl!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll(".tkf-cell"));
       this.mapEl = this.querySelector(".tkf-map");

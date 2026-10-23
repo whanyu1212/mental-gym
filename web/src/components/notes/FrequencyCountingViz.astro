@@ -114,6 +114,10 @@ const steps: TeachingStep[] = [
 
 <script>
   class FreqViz extends HTMLElement {
+    cells!: HTMLElement[];
+    mapEl!: HTMLElement | null;
+    resultEl!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.fv-cell'));
       this.mapEl = this.querySelector('.fv-map');

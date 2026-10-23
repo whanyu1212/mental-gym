@@ -158,6 +158,11 @@ const steps: TeachingStep[] = [
 
 <script>
   class PrefixXorViz extends HTMLElement {
+    preCells!: HTMLElement[];
+    arrCells!: HTMLElement[];
+    queryValEl!: HTMLElement | null;
+    resultValEl!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.preCells = Array.from(this.querySelectorAll('.pxv-pre-cell'));
       this.arrCells = Array.from(this.querySelectorAll('.pxv-arr-cell'));

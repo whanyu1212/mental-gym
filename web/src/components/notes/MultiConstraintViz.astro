@@ -176,6 +176,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class SudokuViz extends HTMLElement {
+    cells!: HTMLElement[];
+    rowSetEl!: HTMLElement | null;
+    colSetEl!: HTMLElement | null;
+    boxSetEl!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    phaseVal!: HTMLElement | null;
+    statusBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.mc-cell'));
       this.rowSetEl = this.querySelector('.mc-row-set');

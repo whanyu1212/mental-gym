@@ -5,24 +5,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev        # Start dev server at localhost:4321
-npm run build      # Build to ./dist/
-npm run preview    # Preview the production build locally
-npm run astro check  # Type-check .astro files
+bun run --cwd web dev          # Start dev server at localhost:4321
+bun run --cwd web build        # Build to ./dist/
+bun run --cwd web preview      # Preview the production build locally
+bun run --cwd web astro check  # Type-check .astro files
 ```
 
 The site deploys to GitHub Pages at `https://whanyu1212.github.io/mental-gym`. The `base` path is set to `/mental-gym` in production and `""` in dev — all internal links must use relative paths or Astro's built-in `base`-aware helpers.
 
 ## Regenerating problems.ts
 
-`src/data/problems.ts` is **auto-generated** — never edit it by hand. To regenerate after adding Python solutions:
+`src/data/problems.ts` is **auto-generated** — never edit it by hand. To regenerate after adding or changing solutions in any supported language:
 
 ```bash
 # from repo root (mental-gym/), not web/
-poetry run python scripts/generate_problems.py
+uv run python scripts/generate_problems.py
 ```
 
-The script reads `src/leetcode/<category>/<problem>.py`, fetches problem metadata from the LeetCode GraphQL API (with local cache in `scripts/leetcode_cache.json`), and writes `web/src/data/problems.ts`.
+The script reads `src/leetcode/<category>/<language>/<problem>.<extension>`, joins Python/Julia/TypeScript/Rust implementations by canonical LeetCode slug, fetches metadata from the LeetCode GraphQL API (with local cache in `scripts/leetcode_cache.json`), and writes `web/src/data/problems.ts`. A problem can exist in any one language; its first available implementation is the default solution panel.
 
 ## Architecture
 
@@ -33,11 +33,12 @@ The site has four content sources that feed different pages:
 | Source | How it's used |
 |---|---|
 | `src/data/problems.ts` | Auto-generated. Drives all algorithm problem pages via `getStaticPaths()`. |
-| `src/data/mlProblems.ts` | Hand-authored. ML coding interview problems with prompts, hints, and follow-ups. |
+| `src/data/mlProblems.ts` | Four hand-authored capstone problems, then the drills from `mlProblemCatalog.ts` spread in after them. Import `mlProblems` from here; it is the whole bank. |
+| `src/data/mlProblemCatalog.ts` | Independently authored teaching briefs keyed to the joinai.com catalog listing by `sourceNumber`. They are Placeholder coaching copy, not production APIs and have no runtime. Slugs are `<3-digit source number>-<kebab title>` so retitling never breaks saved progress. `web/tests/ml-problems.test.ts` enforces unique ids/slugs and non-empty coaching fields. Flag a prompt only when it contradicts itself or omits an input the named algorithm cannot run without; do not demand exhaustive empty/negative/tie validation on Placeholder drills. |
 | `src/data/sqlProblems.ts` | Hand-authored SQL exercise metadata. Each imports its reference answer from `src/sql/`. |
 | `../notes/` (outside `web/`) | Markdown files collected via Astro content collections. Rendered with KaTeX math support. |
 
-The notes loader globs `**/*.{md,mdx}`, so both extensions are valid. Use `.mdx` **only** when a note imports an Astro component (e.g. `arrays_and_hashing.mdx`, `two_pointers.mdx` embed the `notes/*Viz.astro` visualizations); keep prose-only notes as `.md` so they stay on the lighter Markdown pipeline. Frontmatter is identical for both: `title`, `description`, `category`, optional `order`.
+The notes loader globs `**/*.{md,mdx}`, so both extensions are valid. Use `.mdx` **only** when a note imports an Astro component (e.g. `arrays_and_hashing.mdx`, `two_pointers.mdx` embed the `notes/*Viz.astro` visualizations); keep prose-only notes as `.md` so they stay on the lighter Markdown pipeline. Shared frontmatter: `title`, `description`, `category`, optional `order` / `status` / `tags`. Optional roadmap fields: `kind` (`concept` | `course` | `weekly-review` | `template`), `courseId`, `moduleId`, `relatedExercises`, `sourceUrl`. Templates are listed separately; filled weekly reviews are private and do not belong in `notes/`.
 
 ### SQL practice
 
@@ -49,6 +50,14 @@ SQL answers live in `src/sql/`, next to deterministic fixtures and test harnesse
 
 PostgreSQL exercises run locally with Homebrew PostgreSQL 17 through `scripts/run_postgres_sql.sh`; SQLite exercises run with `sqlite3`. The PostgreSQL service must be started with `brew services start postgresql@17`. See `src/sql/README.md` for commands. Add a problem to `src/data/sqlProblems.ts`; the `/sql/[slug]` routes and Problems Bank SQL tab are generated from that data.
 
+### Practice-flow authoring
+
+Every algorithm page is an attempt-first learning loop: the problem statement is visible, but the guide, animation, and solution are opened by either saving an attempt or explicitly choosing **Study instead**. Attempt history is local-only and separate from spaced-repetition review ratings.
+
+When adding an algorithm problem, add a solution in a supported language and a complete entry in `src/data/algorithmGuides.ts`; CI runs `scripts/validate_algorithm_guides.py --strict`. Add a bespoke animation only when motion makes the invariant or state change materially clearer than a guide and worked test cases do.
+
+The IndexedDB export format is versioned. Preserve all prior import versions when adding new local progress stores, and add migration plus export/import tests for the new version.
+
 ### Teaching motion framework
 
 Each algorithm page can embed a step-by-step animation built on the `teaching-motion` system:
@@ -58,7 +67,7 @@ Each algorithm page can embed a step-by-step animation built on the `teaching-mo
 - **`src/lib/teaching/highlight.ts`** — applies CSS classes (`teach-focus`, `teach-write`, `teach-discard`, etc.) to DOM elements matched by `data-teach-target` attribute. This is how individual cells/nodes get visually highlighted per step.
 - **Individual animation components** (e.g. `TwoSumAnimation.astro`, `SortColorsAnimation.astro`) — each wraps `<AlgorithmPlayer>` with a hardcoded `steps` array and renders SVG/HTML visuals as the slot. The `data-teach-target` attributes on visual elements must match `target` strings in the step's `highlights` array.
 
-To add a new animation: create `src/components/<ProblemName>Animation.astro`, define a `TeachingStep[]` array, wrap it in `<AlgorithmPlayer>`, render visuals in the slot, and register the slug in `[slug].astro`'s `animatedSlugs` set.
+To add a new animation: create `src/components/<ProblemName>Animation.astro`, define a `TeachingStep[]` array, wrap it in `<AlgorithmPlayer>`, render visuals in the slot, and register the slug in `[slug].astro`'s `animationBySlug` map.
 
 ### Spaced repetition (SR) system
 

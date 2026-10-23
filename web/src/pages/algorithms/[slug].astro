@@ -1,6 +1,7 @@
 ---
 import { Code } from "astro:components";
 import { problems } from "../../data/problems";
+import { getProblemSolutions } from "../../lib/problem-solutions";
 import { withBase } from "../../lib/url";
 import TwoSumAnimation from "../../components/TwoSumAnimation.astro";
 import SortColorsAnimation from "../../components/SortColorsAnimation.astro";
@@ -40,7 +41,13 @@ import MaximumSubarrayAnimation from "../../components/MaximumSubarrayAnimation.
 import MaximumSumCircularSubarrayAnimation from "../../components/MaximumSumCircularSubarrayAnimation.astro";
 import SubarraySumAnimation from "../../components/notes/PrefixSumHashmapViz.astro";
 import XorQueriesAnimation from "../../components/notes/PrefixXorViz.astro";
+import RemoveDuplicatesAnimation from "../../components/RemoveDuplicatesAnimation.astro";
+import RemoveDuplicatesIIAnimation from "../../components/RemoveDuplicatesIIAnimation.astro";
+import MergeSortedArrayAnimation from "../../components/MergeSortedArrayAnimation.astro";
+import ReverseStringAnimation from "../../components/ReverseStringAnimation.astro";
+import MergeStringsAlternatelyAnimation from "../../components/MergeStringsAlternatelyAnimation.astro";
 import RecallRating from "../../components/RecallRating.astro";
+import AttemptMode from "../../components/AttemptMode.astro";
 import LastVisited from "../../components/LastVisited.astro";
 import Layout from "../../layouts/Layout.astro";
 import { getGuide } from "../../data/algorithmGuides";
@@ -53,7 +60,7 @@ export function getStaticPaths() {
 }
 
 const { problem } = Astro.props;
-const hasJulia = problem.solutions.julia.trim().length > 0;
+const solutions = getProblemSolutions(problem.solutions);
 
 // slug → animation component. Replaces the old animatedSlugs Set + ~35
 // duplicated `{slug === "…" && <X/>}` branches with a single lookup.
@@ -97,6 +104,11 @@ const animationBySlug = {
 	"918-maximum-sum-circular-subarray": MaximumSumCircularSubarrayAnimation,
 	"560-subarray-sum-equals-k": SubarraySumAnimation,
 	"1310-xor-queries-of-a-subarray": XorQueriesAnimation,
+	"26-remove-duplicates-from-sorted-array": RemoveDuplicatesAnimation,
+	"80-remove-duplicates-from-sorted-array-ii": RemoveDuplicatesIIAnimation,
+	"88-merge-sorted-array": MergeSortedArrayAnimation,
+	"344-reverse-string": ReverseStringAnimation,
+	"1768-merge-strings-alternately": MergeStringsAlternatelyAnimation,
 } as const;
 
 const Animation = animationBySlug[problem.slug as keyof typeof animationBySlug];
@@ -137,6 +149,16 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 		<div class="prose" set:html={problem.description} />
 	</section>
 
+	<AttemptMode
+		domain="algorithms"
+		slug={problem.slug}
+		title={problem.title}
+		difficulty={problem.difficulty}
+		group={problem.group}
+		recognitionSignal={guide?.recognitionSignals[0] ?? "Identify the relationship the prompt asks you to preserve, then name the simplest pattern that can maintain it in one pass."}
+	/>
+
+	<div class="post-attempt-study" data-study-content>
 	<section class="content-switcher">
 		<div class="content-tabs" role="tablist" aria-label="Problem detail views">
 			{hasGuide && (
@@ -352,31 +374,25 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 				</div>
 
 				{
-					hasJulia && (
+					solutions.length > 1 && (
 						<div class="lang-tab-bar">
-							<button class="lang-tab active" data-lang="python">
-								<span class="lang-icon lang-icon-python" aria-hidden="true"></span>
-								<span>Python</span>
-							</button>
-							<button class="lang-tab" data-lang="julia">
-								<span class="lang-icon lang-icon-julia" aria-hidden="true"></span>
-								<span>Julia</span>
-							</button>
+							{solutions.map(({ language, label }, index) => (
+								<button class:list={["lang-tab", { active: index === 0 }]} data-lang={language}>
+									<span class={`lang-icon lang-icon-${language}`} aria-hidden="true"></span>
+									<span>{label}</span>
+								</button>
+							))}
 						</div>
 					)
 				}
 
 				<div class="code-panels">
-					<div class="code-panel" data-lang-panel="python">
-						<Code code={problem.solutions.python} lang="python" theme="github-dark" />
-					</div>
-
 					{
-						hasJulia && (
-							<div class="code-panel hidden" data-lang-panel="julia">
-								<Code code={problem.solutions.julia} lang="julia" theme="github-dark" />
+						solutions.map(({ language, code }, index) => (
+							<div class:list={["code-panel", { hidden: index !== 0 }]} data-lang-panel={language}>
+								<Code code={code} lang={language} theme="github-dark" />
 							</div>
-						)
+						))
 					}
 				</div>
 			</section>
@@ -390,6 +406,7 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 		difficulty={problem.difficulty}
 		group={problem.group}
 	/>
+	</div>
 	<LastVisited title={problem.title} kind="Algorithms" />
 </Layout>
 
@@ -697,6 +714,14 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 
 	.lang-icon-julia {
 		background: var(--status-easy);
+	}
+
+	.lang-icon-typescript {
+		background: var(--status-info);
+	}
+
+	.lang-icon-rust {
+		background: var(--accent);
 	}
 
 	.content-tab:hover:not(.active),
@@ -1291,6 +1316,21 @@ const defaultView = hasGuide ? "guide" : hasAnimation ? "animation" : "solution"
 		}
 		.test-kind {
 			justify-self: start;
+		}
+	}
+
+	/* Three pill tabs at 1.25rem side padding need ~21rem, wider than a
+	   320-375px phone after page padding. Stretch the bar to the container
+	   and let the tabs share it, with tighter padding. */
+	@media (max-width: 480px) {
+		.content-tabs {
+			display: flex;
+			max-width: 100%;
+		}
+		.content-tab {
+			flex: 1 1 0;
+			min-width: 0;
+			padding: 0.4rem 0.5rem;
 		}
 	}
 </style>

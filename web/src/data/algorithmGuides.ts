@@ -81,6 +81,53 @@ export interface AlgorithmGuide {
 export type AlgorithmGuides = Record<string, AlgorithmGuide>;
 
 export const guides = {
+	"76-minimum-window-substring": {
+		slug: "76-minimum-window-substring",
+		pattern: "Variable sliding window with frequency coverage",
+		recognitionSignals: [
+			"find the shortest contiguous substring satisfying a requirement",
+			"the target may contain repeated characters",
+			"expanding can establish validity; shrinking finds a shorter valid window",
+		],
+		dissection:
+			"Find the shortest slice of s containing at least the frequency of every character in t. Return an empty string if no window covers the target.",
+		intuition:
+			"Expand right until the window covers every target frequency. While coverage holds, record the current window and move left to remove unnecessary characters. Once coverage breaks, expand again; neither pointer needs to move backward.",
+		invariant:
+			"The window counts describe exactly s[left:right], and have counts exactly the distinct target characters whose required frequency is met. The saved result is the shortest valid window examined so far.",
+		bruteForce: {
+			approach:
+				"For every starting position, extend a window while counting characters and check coverage against the target frequencies. This repeats scans of the same suffixes.",
+			complexity: { time: "O(m² + n)", space: "O(1)", note: "For the fixed English-letter alphabet; m = s.length, n = t.length." },
+		},
+		constraintReasoning:
+			"Both strings can have length 10⁵, so quadratic scans are too expensive. Each pointer moving forward at most m times gives the requested O(m + n) bound.",
+		approachSteps: [
+			"Build target frequency counts and set need to the number of distinct target characters.",
+			"Expand right, updating window counts; increment have only when a target count first reaches its requirement.",
+			"While have equals need, save the current window if shorter than the best.",
+			"Before removing the left character, decrement have if its count equals the required count; then update its count and advance left.",
+			"Return the saved slice, or an empty string if no valid window was found.",
+		],
+		complexity: { time: "O(m + n)", space: "O(1)", note: "The prompt fixes the alphabet to English letters. Saving boundaries avoids repeatedly copying candidate windows; the final substring is the output." },
+		pitfalls: [
+			"Using a set loses multiplicity: t = 'AA' requires two occurrences, not one.",
+			"Incrementing have for every extra occurrence rather than only when the required count is reached.",
+			"Shrinking only once instead of continuing until coverage breaks.",
+			"Treating Julia string byte indices as character positions for arbitrary Unicode; this solution follows the prompt's English-letter constraint.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "s = 'ADOBECODEBANC', t = 'ABC'", expected: "'BANC'", note: "The optimal window appears after an earlier valid but longer window." },
+			{ kind: "boundary", input: "s = 'a', t = 'a'", expected: "'a'", note: "A single-character window can be the entire answer." },
+			{ kind: "trap", input: "s = 'a', t = 'aa'", expected: "''", note: "Presence alone is insufficient: target multiplicity must be satisfied." },
+			{ kind: "trap", input: "s = 'AAABBC', t = 'AABC'", expected: "'AABBC'", note: "Shrinking past the second required A would invalidate coverage." },
+		],
+		followUps: [
+			"How would you change the space bound for an unrestricted character alphabet?",
+			"Why can left advance without losing a future shorter answer?",
+		],
+		relatedNotes: ["sliding_window", "arrays_and_hashing"],
+	},
 	"1-two-sum": {
 		slug: "1-two-sum",
 		pattern: "Hashmap complement lookup",
@@ -764,6 +811,50 @@ export const guides = {
 		followUps: [
 			"Why does the +1 offset appear in prefix[r+1] ^ prefix[l]?",
 			"Which other operations support this prefix trick (sum, product) and which don't (max)?",
+		],
+		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
+	},
+
+	"303-range-sum-query-immutable": {
+		slug: "303-range-sum-query-immutable",
+		pattern: "1D prefix sum",
+		recognitionSignals: [
+			"repeated range-sum queries on a static array",
+			"sumRange(left, right) called many times",
+			"the array never changes between queries",
+		],
+		dissection:
+			"Precompute a prefix array once so any contiguous range sum becomes the difference of two stored totals.",
+		intuition:
+			"Pad with a leading 0 so prefix[i] is the sum of the first i elements. Then sum(left..right) = prefix[right + 1] − prefix[left]: everything up to right, minus everything before left. The padding removes the left = 0 special case.",
+		invariant:
+			"prefix[i] always equals nums[0] + nums[1] + … + nums[i − 1], and prefix[0] = 0.",
+		bruteForce: {
+			approach:
+				"For each sumRange call, loop from left to right and add the elements. No setup, but each query costs the length of the range.",
+			complexity: { time: "O(n) per query", space: "O(1)", note: "Worst case sums the whole array on every call." },
+		},
+		constraintReasoning:
+			"sumRange can be called up to ~10⁴ times on an array of up to ~10⁴ elements, so O(n) per query adds up to ~10⁸ operations. The array is immutable, so paying O(n) once to build prefix sums makes every query O(1).",
+		approachSteps: [
+			"Start prefix = [0].",
+			"For each n in nums, append prefix[-1] + n.",
+			"For sumRange(left, right), return prefix[right + 1] − prefix[left].",
+		],
+		complexity: { time: "O(1)", space: "O(n)", note: "Construction is O(n) once; each query is O(1)." },
+		pitfalls: [
+			"Off-by-one: without the leading 0, the answer is prefix[right] − prefix[left − 1] and left = 0 needs a special case.",
+			"Recomputing the prefix array inside sumRange instead of once in the constructor.",
+			"Forgetting that right is inclusive, so the upper index is right + 1 in the padded array.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [-2,0,3,-5,2,-1], sumRange(0,2)", expected: "1", note: "−2 + 0 + 3 via prefix[3] − prefix[0]." },
+			{ kind: "boundary", input: "nums = [-2,0,3,-5,2,-1], sumRange(3,3)", expected: "-5", note: "A single-element range is prefix[4] − prefix[3]." },
+			{ kind: "trap", input: "nums = [-2,0,3,-5,2,-1], sumRange(0,5)", expected: "-3", note: "Starts at index 0; an unpadded prefix that reads prefix[left − 1] would index −1." },
+		],
+		followUps: [
+			"What changes if elements can be updated between queries? (Fenwick tree or segment tree, LeetCode 307.)",
+			"Extend the idea to rectangle sums in a matrix (LeetCode 304).",
 		],
 		relatedNotes: ["prefix_sum_pattern", "arrays_and_hashing"],
 	},
@@ -1565,7 +1656,7 @@ export const guides = {
 			"Convert infix to postfix (the shunting-yard algorithm) — why is the stack central there too?",
 			"Basic Calculator (#224): how do parentheses and precedence reintroduce a second stack?",
 		],
-		relatedNotes: ["python_builtins_for_leetcode", "time-complexity"],
+		relatedNotes: ["stack", "python_builtins_for_leetcode", "time-complexity"],
 	},
 	"155-min-stack": {
 		slug: "155-min-stack",
@@ -1613,7 +1704,7 @@ export const guides = {
 			"Can you do it with ONE stack by storing (value, min-so-far) tuples? Or by encoding deltas?",
 			"Design a Max Stack — what changes, and what new ambiguity (popMax) appears?",
 		],
-		relatedNotes: ["python_builtins_for_leetcode", "space-complexity", "time-complexity"],
+		relatedNotes: ["stack", "python_builtins_for_leetcode", "space-complexity", "time-complexity"],
 	},
 	"22-generate-parentheses": {
 		slug: "22-generate-parentheses",
@@ -1662,7 +1753,7 @@ export const guides = {
 			"Why is the number of results the Catalan number? Can you derive the recurrence?",
 			"How would you adapt this to generate valid combinations for k different bracket types?",
 		],
-		relatedNotes: ["time-complexity", "space-complexity"],
+		relatedNotes: ["stack", "time-complexity", "space-complexity"],
 	},
 	"21-merge-two-sorted-lists": {
 		slug: "21-merge-two-sorted-lists",
@@ -1802,7 +1893,7 @@ export const guides = {
 			"Implement the monotonic-deque version for true O(n) — how does it keep candidates in decreasing order?",
 			"When is the heap approach actually preferable despite the extra log factor?",
 		],
-		relatedNotes: ["sliding_window", "python_builtins_for_leetcode", "time-complexity", "space-complexity"],
+		relatedNotes: ["stack", "sliding_window", "python_builtins_for_leetcode", "time-complexity", "space-complexity"],
 	},
 	"53-maximum-subarray": {
 		slug: "53-maximum-subarray",
@@ -1943,6 +2034,338 @@ export const guides = {
 			"Compare this O(n)/O(1) approach with the doubled-array + monotonic-deque formulation.",
 		],
 		relatedNotes: ["kadane_algorithm", "arrays_and_hashing", "python-big-o-cheatsheet", "time-complexity"],
+	},
+	"1768-merge-strings-alternately": {
+		slug: "1768-merge-strings-alternately",
+		pattern: "Paired streaming merge with a tail append",
+		recognitionSignals: [
+			"take one item from each of two ordered sequences in turn",
+			"the inputs may have unequal lengths, so one sequence can outlive the other",
+			"the output preserves order within each input rather than globally sorting values",
+		],
+		dissection:
+			"Build one result by alternating the next unused character from word1 and word2. Once either word is exhausted, append the untouched suffix of the other word exactly as it appears.",
+		intuition:
+			"The alternating portion has a simple paired structure: each loop consumes one character from both words. That structure ends at the shorter word, leaving a contiguous tail in the longer word; slicing and appending that tail avoids extra special cases.",
+		invariant:
+			"After each paired iteration, result contains the correct alternating merge of word1[:i] and word2[:j], with i == j and no character from either consumed prefix missing or reordered.",
+		bruteForce: {
+			approach:
+				"Repeatedly concatenate single characters onto an immutable string. It expresses the right order, but each concatenation may copy the accumulated prefix again.",
+			complexity: { time: "O((m+n)²)", space: "O(m+n)", note: "Repeated string copies can make append-heavy concatenation quadratic." },
+		},
+		constraintReasoning:
+			"The strings can each be large enough that repeatedly rebuilding the output is needless work. Collecting characters in a list and joining once keeps every input character to one append and one final copy.",
+		approachSteps: [
+			"Initialize i = j = 0 and an empty list result.",
+			"While both words still have a character, append word1[i], then word2[j], and advance both indices.",
+			"Append word1[i:] and word2[j:]; exactly one is non-empty, except when both words end together.",
+			"Join result into the final string.",
+		],
+		complexity: { time: "O(m+n)", space: "O(m+n)", note: "The output list stores every character once." },
+		pitfalls: [
+			"Stopping after the paired loop and forgetting the remaining suffix of the longer word.",
+			"Appending only one tail with an if/else when appending both slices is simpler and harmless.",
+			"Repeated string concatenation inside the loop instead of buffering characters and joining once.",
+		],
+		testCases: [
+			{ kind: "canonical", input: 'word1 = "abc", word2 = "pqr"', expected: '"apbqcr"', note: "Equal-length inputs alternate through their final characters." },
+			{ kind: "boundary", input: 'word1 = "", word2 = "abc"', expected: '"abc"', note: "An empty word leaves the other word unchanged." },
+			{ kind: "trap", input: 'word1 = "ab", word2 = "pqrs"', expected: '"apbqrs"', note: "After two paired steps, the tail rs must remain in order." },
+		],
+		followUps: [
+			"Generalize from two inputs to k iterators: what data structure controls whose turn it is?",
+			"How would the approach change if alternation started with the longer word rather than always word1?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"18-4sum": {
+		slug: "18-4sum",
+		pattern: "Sort, fix two values, then solve a two-sum with opposite pointers",
+		recognitionSignals: [
+			"find unique groups of four values that sum to a target",
+			"the output contains value combinations rather than original indices",
+			"sorting makes duplicate removal and sum-directed pointer motion possible",
+		],
+		dissection:
+			"Return every unique quadruplet whose values add to target. Sort first, choose the first two positions with nested loops, then use left and right pointers to find the remaining pair in the suffix.",
+		intuition:
+			"Sorting turns the remaining two-sum into a monotone search: if the four-value sum is too small, only moving left rightward can increase it; if it is too large, only moving right leftward can decrease it. Skipping repeated values at every level gives each value combination one canonical construction.",
+		invariant:
+			"For fixed i and j, left and right delimit all unexamined pairs in the sorted suffix nums[j+1:], and every emitted quadruplet is sorted, sums to target, and has not been emitted before.",
+		bruteForce: {
+			approach:
+				"Enumerate every i < j < k < l quadruple, test its sum, and store normalized matches in a set to remove duplicates.",
+			complexity: { time: "O(n⁴)", space: "O(number of answers)", note: "Four nested choices are too expensive before duplicate handling is even considered." },
+		},
+		constraintReasoning:
+			"With n up to roughly 200, n⁴ can reach billions of candidate tuples. Sorting once and reducing the last two choices to a linear pointer sweep makes the dominant work O(n³), which is practical for the stated scale.",
+		approachSteps: [
+			"Sort nums so equal values are adjacent and pointer moves have a predictable effect on the sum.",
+			"For each first index i, skip it when it repeats the previous first value.",
+			"For each second index j after i, skip it when it repeats the previous second value for this same i.",
+			"Set left = j + 1 and right = n − 1. Move left for a sum below target and right for a sum above target.",
+			"On an exact sum, record the quadruplet, move both pointers, then skip equal left and right values before continuing.",
+		],
+		complexity: { time: "O(n³)", space: "O(1)", note: "Ignoring the returned quadruplets; sorting may use implementation-dependent auxiliary space." },
+		pitfalls: [
+			"Skipping nums[j] whenever it equals nums[j-1] instead of only when j > i + 1; a valid quadruplet may use the same value in both fixed positions.",
+			"After finding a match, moving only one pointer or failing to skip pair duplicates, which emits repeated quadruplets.",
+			"Using an overflow-prone integer type in languages where four values can exceed 32-bit range.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,0,-1,0,-2,2], target = 0", expected: "[[-2,-1,1,2],[-2,0,0,2],[-1,0,0,1]]", note: "Several solutions share values; sorting gives every answer a canonical order." },
+			{ kind: "boundary", input: "nums = [1,2,3], target = 6", expected: "[]", note: "Fewer than four elements cannot form a quadruplet." },
+			{ kind: "trap", input: "nums = [2,2,2,2,2], target = 8", expected: "[[2,2,2,2]]", note: "All equal values produce one valid combination, not several duplicates." },
+		],
+		followUps: [
+			"Generalize to k-sum: where is the recursion base case and where do two pointers take over?",
+			"Add lower/upper-bound pruning after sorting. What sums can the smallest or largest remaining values make?",
+		],
+		relatedNotes: ["two_pointers", "time-complexity"],
+	},
+	"26-remove-duplicates-from-sorted-array": {
+		slug: "26-remove-duplicates-from-sorted-array",
+		pattern: "Read/write two pointers over a sorted sequence",
+		recognitionSignals: [
+			"modify a sorted array in place and return the meaningful prefix length",
+			"duplicates appear in adjacent runs because the input is sorted",
+			"one pointer scans while another marks the next output position",
+		],
+		dissection:
+			"Keep exactly one copy of each distinct value at the front of nums. A fast pointer inspects every value; a slow pointer marks the last unique value written. When fast discovers a new value, extend the unique prefix and copy it there.",
+		intuition:
+			"In sorted order, a number is new precisely when it differs from the last unique value. That makes the array itself a valid output buffer: no separate set is needed, and the prefix before slow always contains the final answer so far.",
+		invariant:
+			"Before each fast iteration, nums[:slow+1] contains every distinct value from nums[:fast] exactly once in sorted order, and slow points at that prefix's final element.",
+		bruteForce: {
+			approach:
+				"Scan the array and delete each duplicate in place as it appears. Each deletion shifts the remaining suffix left.",
+			complexity: { time: "O(n²)", space: "O(1)", note: "A long duplicate run repeatedly shifts O(n) remaining elements." },
+		},
+		constraintReasoning:
+			"n can reach tens of thousands, so repeated middle deletions turn one linear scan into quadratic shifting. A read/write sweep inspects each entry once and writes only when the distinct prefix grows.",
+		approachSteps: [
+			"Return 0 for an empty input; otherwise set slow = 0 for the first unique value.",
+			"Advance fast from index 1 through the array.",
+			"If nums[fast] differs from nums[slow], increment slow and write nums[fast] at nums[slow].",
+			"Return slow + 1 because slow is an index, while the task asks for a count.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "The input array doubles as the output buffer." },
+		pitfalls: [
+			"Returning slow instead of slow + 1, which confuses the last written index with the number of unique values.",
+			"Comparing fast to nums[fast-1] after overwriting positions; compare to nums[slow], the last unique value kept.",
+			"Assuming there is a first value without handling nums = [].",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,1,2]", expected: "k = 2; nums[:2] = [1,2]", note: "The second 1 is skipped and 2 is copied into the next output slot." },
+			{ kind: "boundary", input: "nums = []", expected: "k = 0", note: "There is no first unique value to seed the prefix." },
+			{ kind: "trap", input: "nums = [1,1,1,1]", expected: "k = 1; nums[:1] = [1]", note: "A whole duplicate run must not advance the write pointer." },
+		],
+		followUps: [
+			"Keep at most two copies of each value: how do you decide whether the current read value is allowed? See #80.",
+			"Remove a chosen value rather than duplicates. What does the write-pointer invariant become?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"80-remove-duplicates-from-sorted-array-ii": {
+		slug: "80-remove-duplicates-from-sorted-array-ii",
+		pattern: "Read/write two pointers, keep at most two copies",
+		recognitionSignals: [
+			"sorted array, modify in place, return the compacted prefix length",
+			"each value may appear at most twice, not once",
+			"O(1) extra space — the input is also the output buffer",
+		],
+		dissection:
+			"Keep at most two copies of each value at the front of nums. A read pointer scans every candidate; a write pointer marks the next keep-slot. Write the candidate only when it would not become a third copy of the prefix already accepted.",
+		intuition:
+			"This is the same read/write compaction as #26, with the keep rule relaxed from 1 to 2. l is the next keep-slot; nums[:l] is already a legal answer. When a value is rejected, l stays put — that slot is now a hole, not a swap partner. The next keeper is copied into the waiting l. Sorted order makes the third-copy test a single comparison against the value two accepted slots behind: nums[r] != nums[l - 2].",
+		invariant:
+			"After each read, nums[:l] is the correct compaction of nums[:r+1] — sorted, at most two of each value. Values from l onward may be holes or unread input and do not matter.",
+		bruteForce: {
+			approach:
+				"Count each equal-value run, then delete extras beyond the second copy by shifting the remaining suffix left.",
+			complexity: {
+				time: "O(n²)",
+				space: "O(1)",
+				note: "A long run of extras repeatedly shifts O(n) remaining elements.",
+			},
+		},
+		constraintReasoning:
+			"n reaches 3·10⁴, so deleting extras with suffix shifts is quadratic and risks TLE. A single read/write pass inspects each entry once and writes only when the compacted prefix grows.",
+		approachSteps: [
+			"Set l = 0 as the next keep-slot.",
+			"Scan every index r.",
+			"If l < 2, the first two values are always legal — write nums[r] at l and increment l. The l < 2 check must come first so Python never evaluates nums[l - 2] as nums[-2].",
+			"Otherwise write iff nums[r] != nums[l - 2]: that comparison asks whether the candidate would be a third copy of the already-accepted prefix.",
+			"Return l. Unlike #26, l is already a length (the next open index), not the last-written index.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "One pass; the input array doubles as the output buffer." },
+		pitfalls: [
+			"Evaluating nums[l - 2] before guarding with l < 2. In Python that silently reads nums[-2] from the tail instead of raising IndexError.",
+			"Comparing against nums[r - 2] instead of nums[l - 2]. r still sits in the dirty suffix; only l indexes the compacted prefix.",
+			"Returning l + 1. In #26, slow is a last-written index so you add 1. Here l is already the compacted length.",
+			"Treating a stalled l as a swap. Rejecting a value parks l on a hole; the next keeper overwrites that hole. The old nums[l] is already either kept earlier or a discarded extra.",
+		],
+		testCases: [
+			{
+				kind: "canonical",
+				input: "nums = [1,1,1,2,2,3]",
+				expected: "k = 5; nums[:5] = [1,1,2,2,3]",
+				note: "The third 1 is skipped; l stays on that hole and the next keeper (2) is copied there.",
+			},
+			{
+				kind: "boundary",
+				input: "nums = [1,1]",
+				expected: "k = 2; nums[:2] = [1,1]",
+				note: "Both values are kept by the l < 2 base case; the l - 2 comparison never runs.",
+			},
+			{
+				kind: "trap",
+				input: "nums = [1,1,1,1]",
+				expected: "k = 2; nums[:2] = [1,1]",
+				note: "After two writes, every later 1 equals nums[l - 2], so l never moves again.",
+			},
+		],
+		followUps: [
+			"Generalize to at most k copies: what do you compare against, and what is the base-case guard?",
+			"How does this keep rule differ from #26 (keep 1) and from removing a chosen value (#27)?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"88-merge-sorted-array": {
+		slug: "88-merge-sorted-array",
+		pattern: "Backward merge with two read pointers and one write pointer",
+		recognitionSignals: [
+			"merge two sorted arrays into the spare capacity of the first one",
+			"writing from the front could overwrite unread nums1 values",
+			"the largest remaining value belongs safely at the final open position",
+		],
+		dissection:
+			"nums1 has m meaningful sorted values followed by n empty slots. Compare the largest unused values in nums1 and nums2, write the larger into nums1's last open slot, and move backward until nums2 is exhausted.",
+		intuition:
+			"The empty capacity is at nums1's right edge, so fill it from right to left. That direction protects nums1's smaller unread values: every write goes into a slot that is either empty or has already been consumed as a source.",
+		invariant:
+			"At every step, nums1[k+1:] contains the largest values from the original inputs in their final sorted order; nums1[:i+1] and nums2[:j+1] are the only unread values.",
+		bruteForce: {
+			approach:
+				"Copy nums2 into nums1's spare slots, then sort all m+n values.",
+			complexity: { time: "O((m+n) log(m+n))", space: "O(1)", note: "It works but ignores that both inputs are already sorted." },
+		},
+		constraintReasoning:
+			"Both inputs arrive sorted, so a comparison merge can use one linear pass rather than paying for a fresh sort. The in-place requirement also rules out constructing a separate merged array as the primary answer.",
+		approachSteps: [
+			"Set i = m − 1, j = n − 1, and k = m + n − 1.",
+			"While i and j are both valid, copy the larger of nums1[i] and nums2[j] into nums1[k], then decrement its read pointer and k.",
+			"If nums2 still has entries, copy its remaining prefix into nums1; those values have no earlier nums1 value left to compare.",
+			"Do not copy a remaining nums1 prefix: it is already in its correct positions.",
+		],
+		complexity: { time: "O(m+n)", space: "O(1)", note: "Three indices and no auxiliary merged array." },
+		pitfalls: [
+			"Merging left to right and overwriting a nums1 value that has not been compared yet.",
+			"Forgetting the nums2 cleanup loop when nums1 is exhausted first.",
+			"Adding an unnecessary nums1 cleanup loop, which can overwrite already-correct values.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums1 = [1,2,3,0,0,0], m = 3; nums2 = [2,5,6], n = 3", expected: "nums1 = [1,2,2,3,5,6]", note: "Each largest remaining value is placed at the far right." },
+			{ kind: "boundary", input: "nums1 = [0], m = 0; nums2 = [1], n = 1", expected: "nums1 = [1]", note: "All output comes from nums2, so its cleanup loop does the work." },
+			{ kind: "trap", input: "nums1 = [4,5,6,0,0,0], m = 3; nums2 = [1,2,3], n = 3", expected: "nums1 = [1,2,3,4,5,6]", note: "Once nums1 is consumed from the right, nums2's remaining prefix still must be copied." },
+		],
+		followUps: [
+			"Merge when nums1 has no spare capacity: what additional storage is unavoidable?",
+			"How do stable merge requirements change the tie decision when equal values appear?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"189-rotate-array": {
+		slug: "189-rotate-array",
+		pattern: "Three-step sequence reversal (Algebraic Monoid Anti-automorphism)",
+		recognitionSignals: [
+			"rotate array right by k steps in-place with O(1) extra space",
+			"cyclic shift of blocks: XY -> YX",
+			"in-place requirement forbids auxiliary buffer copy",
+		],
+		dissection:
+			"Rotating the array right by k positions moves the suffix of length k (Y) to the front and the prefix of length n-k (X) to the back. Reversing the entire array places the two blocks into their target relative positions (Y^R X^R), and subsequent local reversals of the first k elements and the remaining n-k elements restore the internal ordering to produce YX.",
+		intuition:
+			"Sequence reversal acts like the matrix transpose: (XY)^R = Y^R X^R. Flipping the whole container swaps the two segments, but inverts each segment's contents. Applying two targeted sub-reversals cancels the local inversions via the involution property ((A^R)^R = A), achieving in-place rotation in O(n) time and O(1) space.",
+		invariant:
+			"After full reversal, the suffix block occupies index range [0, k-1] (inverted) and the prefix block occupies [k, n-1] (inverted). Each sub-reversal restores a block to its forward orientation.",
+		bruteForce: {
+			approach:
+				"Rotate by 1 step k times, shifting all n elements to the right on each step.",
+			complexity: { time: "O(n * k)", space: "O(1)", note: "Shifting the entire array k times is too slow for large inputs." },
+		},
+		constraintReasoning:
+			"Allocating a helper array makes rotation trivial in O(n) time and O(n) space, but the follow-up strictly demands O(1) auxiliary space. The three-reversal trick provides the optimal balance of O(n) time and O(1) memory without cyclic jump book-keeping.",
+		approachSteps: [
+			"Normalize k = k % n to handle rotations where k >= n.",
+			"Reverse the entire array from index 0 to n - 1.",
+			"Reverse the first k elements from index 0 to k - 1.",
+			"Reverse the remaining n - k elements from index k to n - 1.",
+		],
+		complexity: { time: "O(n)", space: "O(1)", note: "Each element is visited and swapped at most twice." },
+		pitfalls: [
+			"Forgetting to normalize k with k %= len(nums), which causes IndexError when k > n.",
+			"Reversing ranges with wrong endpoints (e.g. index k instead of k - 1 for the first block).",
+			"Assuming k is strictly less than array length.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "nums = [1,2,3,4,5,6,7], k = 3", expected: "[5,6,7,1,2,3,4]", note: "Suffix [5,6,7] shifts to front, prefix [1,2,3,4] shifts to back." },
+			{ kind: "boundary", input: "nums = [1,2], k = 3", expected: "[2,1]", note: "k > n: k % 2 = 1, so effective rotation is 1 step." },
+			{ kind: "trap", input: "nums = [1,2,3], k = 0", expected: "[1,2,3]", note: "k = 0 is an identity no-op rotation." },
+		],
+		followUps: [
+			"How does the cyclic replacement (juggling algorithm) achieve the same in O(1) space using gcd(n, k)?",
+			"How do you rotate left by k steps instead of right using reversal?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
+	},
+	"881-boats-to-save-people": {
+		slug: "881-boats-to-save-people",
+		pattern: "Greedy + Two Pointers (Extreme-ends pairing)",
+		recognitionSignals: [
+			"minimize number of containers/boats with fixed capacity and max 2 items",
+			"pairing elements subject to a sum constraint",
+			"sorting allows pairing the heaviest with the lightest available",
+		],
+		dissection:
+			"Each boat carries at most 2 people and has a weight limit. The heaviest person currently waiting must get on a boat; to minimize boats, pair them with the lightest person if their sum fits within the limit. Otherwise, the heaviest person must ride alone.",
+		intuition:
+			"The heaviest person is the hardest constraint to satisfy. If they cannot share a boat with the lightest person available, they cannot share with anyone, so they must ride solo. If they can share with the lightest person, doing so is always optimal because it preserves lighter spots for heavier remaining people.",
+		invariant:
+			"At each iteration, people with indices > right have been assigned to boats, and people with indices < left have been paired. The person at `right` is always assigned to the current boat.",
+		bruteForce: {
+			approach:
+				"Try all pairwise combinations of people and count minimum valid boat configurations.",
+			complexity: { time: "Exponential / O(2^n)", space: "O(n)", note: "Combinatorial search is infeasible for n up to 50,000." },
+		},
+		constraintReasoning:
+			"With n up to 50,000, an O(n log n) sorting step followed by a linear O(n) two-pointer sweep easily runs within limits while providing guaranteed optimal pairing.",
+		approachSteps: [
+			"Sort people array in ascending order.",
+			"Initialize `left = 0` (lightest) and `right = len(people) - 1` (heaviest).",
+			"While left <= right, check if people[left] + people[right] <= limit.",
+			"If sum <= limit, advance `left += 1` to pair the lightest person.",
+			"Always decrement `right -= 1` because the heaviest person takes this boat.",
+			"Increment the boat count and repeat until all people are accommodated.",
+		],
+		complexity: { time: "O(n log n)", space: "O(1)", note: "Sorting dominates the time complexity; auxiliary space is O(1) (or O(n) for sort)." },
+		pitfalls: [
+			"Forgetting that a boat can hold AT MOST 2 people (not arbitrarily many within the weight limit).",
+			"Using `<` instead of `<=` in the while condition, stranding the final middle person.",
+			"Trying to pair the two lightest people together instead of the heaviest with the lightest.",
+		],
+		testCases: [
+			{ kind: "canonical", input: "people = [3,2,2,1], limit = 3", expected: "3", note: "Pairs: (1,2), (2), (3) = 3 boats." },
+			{ kind: "boundary", input: "people = [1,2], limit = 3", expected: "1", note: "1 + 2 = 3 <= 3 fits in a single boat." },
+			{ kind: "trap", input: "people = [3,5,3,4], limit = 5", expected: "4", note: "None can be paired because smallest sum 3+3=6 > 5; all 4 ride solo." },
+		],
+		followUps: [
+			"What if boats could hold up to 3 people or unlimited people? (Reduces to Bin Packing NP-hard problem).",
+			"Can this be solved in O(n + limit) time using counting sort if limit is small?",
+		],
+		relatedNotes: ["two_pointers", "python-dsa-toolkit"],
 	},
 } satisfies AlgorithmGuides;
 

@@ -1,14 +1,14 @@
 import type { Highlight } from "./highlight-types";
-
-const DB_NAME = "mental-gym-sr";
-const DB_VERSION = 3;
-const HIGHLIGHTS_STORE = "highlights";
+import {
+  DB_NAME,
+  DB_VERSION,
+  ensureDatabaseStores,
+  HIGHLIGHTS_STORE,
+} from "./db-schema.ts";
 
 /**
- * Opens the shared Mental Gym database. This mirrors the store creation in
- * sr-db.ts because either module may be the first to trigger an upgrade —
- * onupgradeneeded must create every store the app expects, whichever page
- * opened the connection first.
+ * Opens the shared Mental Gym database. Any feature may trigger the upgrade,
+ * so the shared schema initializer creates every store the app expects.
  */
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -16,33 +16,7 @@ function open(): Promise<IDBDatabase> {
     let settled = false;
 
     request.onupgradeneeded = () => {
-      const db = request.result;
-
-      if (!db.objectStoreNames.contains("reviews")) {
-        const reviews = db.createObjectStore("reviews", {
-          keyPath: "problemKey",
-        });
-        reviews.createIndex("dueDate", "dueDate", { unique: false });
-        reviews.createIndex("domain", "domain", { unique: false });
-      }
-
-      if (!db.objectStoreNames.contains("reviewEvents")) {
-        const events = db.createObjectStore("reviewEvents", {
-          keyPath: "id",
-          autoIncrement: true,
-        });
-        events.createIndex("reviewDate", "reviewDate", { unique: false });
-        events.createIndex("problemKey", "problemKey", { unique: false });
-        events.createIndex("domain", "domain", { unique: false });
-      }
-
-      if (!db.objectStoreNames.contains(HIGHLIGHTS_STORE)) {
-        const highlights = db.createObjectStore(HIGHLIGHTS_STORE, {
-          keyPath: "id",
-        });
-        highlights.createIndex("noteId", "noteId", { unique: false });
-        highlights.createIndex("createdAt", "createdAt", { unique: false });
-      }
+      ensureDatabaseStores(request.result);
     };
 
     request.onblocked = () => {

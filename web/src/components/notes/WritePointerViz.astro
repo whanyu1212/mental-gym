@@ -161,6 +161,8 @@ const steps: TeachingStep[] = [
 
 <script>
   class WritePtrViz extends HTMLElement {
+    cells!: HTMLElement[];
+    keptEl!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.wp-cell'));
       this.keptEl = this.querySelector('.wp-kept');

@@ -129,6 +129,10 @@ const steps: TeachingStep[] = [
 
 <script>
   class ClViz extends HTMLElement {
+    cells!: HTMLElement[];
+    mapEl!: HTMLElement | null;
+    answerEl!: HTMLElement | null;
+    answerBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.cl-cell'));
       this.mapEl = this.querySelector('.cl-map');

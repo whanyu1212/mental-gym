@@ -1,11 +1,12 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const nums = [1, 2, 1];
 const n = nums.length;
 const ansTemplate = Array.from({ length: n * 2 }, () => null);
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     i: -1,
     ansState: [...ansTemplate],
@@ -113,6 +114,10 @@ const steps = [
 
 <script>
   class ConcatenationVisuals extends HTMLElement {
+    numCells!: HTMLElement[];
+    ansCells!: HTMLElement[];
+    resultVal!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.numCells = Array.from(this.querySelectorAll('.ca-num-cell'));
       this.ansCells = Array.from(this.querySelectorAll('.ca-ans-cell'));

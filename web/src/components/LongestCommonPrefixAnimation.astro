@@ -1,10 +1,11 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const strs = ['flower', 'flow', 'flight'];
 const maxLength = Math.max(...strs.map((s) => s.length));
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     i: -1,
     char: '',
@@ -111,6 +112,12 @@ const steps = [
 
 <script>
   class LongestCommonPrefixVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    modeVal!: HTMLElement | null;
+    prefixVal!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    phaseBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll('.lcp-cell'));
       this.modeVal = this.querySelector('.lcp-mode-val');

@@ -240,6 +240,15 @@ const steps: TeachingStep[] = [
 
 <script>
   class GroupAnagramsVisuals extends HTMLElement {
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    wordEl!: HTMLElement | null;
+    keyEl!: HTMLElement | null;
+    formulaEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    mapEl!: HTMLElement | null;
+    mapBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
     connectedCallback() {
       this.cells = Array.from(this.querySelectorAll(".ga-cell"));
       this.ptrs = Array.from(this.querySelectorAll(".ga-ptr-col"));

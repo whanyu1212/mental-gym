@@ -198,6 +198,13 @@ const steps: TeachingStep[] = [
 
 <script>
   class DesignHashSetVisuals extends HTMLElement {
+    opEl!: HTMLElement | null;
+    hashEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    resultEl!: HTMLElement | null;
+    bucketCells!: HTMLElement[];
+    resultBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
     connectedCallback() {
       this.opEl = this.querySelector(".hs-op");
       this.hashEl = this.querySelector(".hs-hash");

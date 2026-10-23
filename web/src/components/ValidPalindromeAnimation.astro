@@ -332,6 +332,14 @@ const steps: TeachingStep[] = [
 
 <script>
   class ValidPalindromeVisuals extends HTMLElement {
+    origCells!: HTMLElement[];
+    cleanCells!: HTMLElement[];
+    ptrCols!: HTMLElement[];
+    compareEl!: HTMLElement | null;
+    skipEl!: HTMLElement | null;
+    decisionEl!: HTMLElement | null;
+    compareBox!: HTMLElement | null;
+    decisionBox!: HTMLElement | null;
     connectedCallback() {
       this.origCells = Array.from(this.querySelectorAll(".vp-orig-cell"));
       this.cleanCells = Array.from(this.querySelectorAll(".vp-clean-cell"));

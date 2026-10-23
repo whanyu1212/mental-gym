@@ -1,9 +1,10 @@
 ---
+import type { TeachingStep } from '../lib/teaching/types';
 import AlgorithmPlayer from './framework/AlgorithmPlayer.astro';
 
 const nums = [5, 2, 3, 1];
 
-const steps = [
+const steps: TeachingStep[] = [
   {
     phase: 'init',
     arrFull: [5, 2, 3, 1],
@@ -208,6 +209,13 @@ const steps = [
 
 <script>
   class SortArrayVisuals extends HTMLElement {
+    mainCells!: HTMLElement[];
+    focusArray!: HTMLElement | null;
+    actionLabel!: HTMLElement | null;
+    phaseVal!: HTMLElement | null;
+    statusVal!: HTMLElement | null;
+    phaseBox!: HTMLElement | null;
+    resultBox!: HTMLElement | null;
     connectedCallback() {
       this.mainCells = Array.from(this.querySelectorAll('.sa-cell'));
       this.focusArray = this.querySelector('.sa-focus-array');

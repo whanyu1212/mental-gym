@@ -192,6 +192,18 @@ const s1Keys = Object.keys(steps[0].s1Count).sort();
 
 <script>
   class PermutationInStringVisuals extends HTMLElement {
+    windowEl!: HTMLElement | null;
+    cells!: HTMLElement[];
+    ptrs!: HTMLElement[];
+    windowMapEl!: HTMLElement | null;
+    windowTextEl!: HTMLElement | null;
+    matchCountEl!: HTMLElement | null;
+    updateTextEl!: HTMLElement | null;
+    leavingCharEl!: HTMLElement | null;
+    enteringCharEl!: HTMLElement | null;
+    windowStatusBox!: HTMLElement | null;
+    matchCountBox!: HTMLElement | null;
+    updateHighlight!: any;
     connectedCallback() {
       this.windowEl = this.querySelector(".pis-window");
       this.cells = Array.from(this.querySelectorAll(".pis-cell"));

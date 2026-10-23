@@ -10,9 +10,10 @@ class TreeNode:
 
 
 def sorted_list_to_balanced_bst(values: list) -> TreeNode:
-    """Convert a sorted list to a balanced binary search tree
-    using recursion. A balanced BST has lower height and search
-    time complexity as compared to an unbalanced BST.
+    """
+    Convert a sorted list to a balanced binary search tree using
+    recursion. A balanced BST has lower height and search time
+    complexity as compared to an unbalanced BST.
 
     Args:
         values (list): input list of values
@@ -37,8 +38,9 @@ def sorted_list_to_balanced_bst(values: list) -> TreeNode:
 
 
 def find_value_or_closest_smaller(root: TreeNode, num: int) -> int:
-    """Find the value in the BST that is closest to the target number
-    and smaller than the target number.
+    """
+    Find the value in the BST that is closest to the target number and
+    smaller than the target number.
 
     Args:
         root (TreeNode): starting root node
@@ -61,6 +63,24 @@ def find_value_or_closest_smaller(root: TreeNode, num: int) -> int:
             cur = cur.left
 
     return closest_value
+
+
+def winner_for(root: TreeNode, names_by_guess: dict, idea: int) -> str:
+    """
+    Name of the contestant who wins if ``idea`` is the true value, or
+    ``:(`` if every guess is above it.
+
+    Args:
+        root (TreeNode): balanced BST of all guesses
+        names_by_guess (dict): guess -> contestant name
+        idea (int): the hypothetical true value
+
+    Returns:
+        str: the winner's name, or ":(" when nobody wins
+    """
+    val = find_value_or_closest_smaller(root, idea)
+    # Compare with None, not truthiness: 0 is a legal winning guess.
+    return names_by_guess[val] if val is not None else ":("
 
 
 # def print_tree(node, level=0):
@@ -94,8 +114,4 @@ if __name__ == "__main__":
     # print_tree(root)
 
     for i in ideas:
-        val = find_value_or_closest_smaller(root, i)
-        if val:
-            print(d[val])
-        else:
-            print(":(")
+        print(winner_for(root, d, i))

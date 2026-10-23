@@ -20,12 +20,32 @@ Most problems are solved with an explicit invariant and complexity justification
 
 | Area | Scope | Where |
 | --- | --- | --- |
-| DSA (LeetCode) | 43 unique solved problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack, each with a Python solution; 16 also have a Julia port | `src/leetcode/` |
-| Competitive programming (Kattis) | 27 unique solved problems (26 Python, 1 Julia-only), 10 with pytest coverage in CI | `src/kattis/`, `tests/kattis/` |
+| DSA (LeetCode) | 48 unique problems across Arrays & Hashing, Two Pointers, Sliding Window, and Stack: 47 Python implementations, 22 Julia implementations, and a TypeScript port; Rust module scaffolding is ready for new solutions | `src/leetcode/`, `tests/leetcode/` |
+| Competitive programming (Kattis) | 26 unique solved problems (25 Python, 1 Julia-only), every Python solution covered by pytest in CI against the official Kattis samples | `src/kattis/`, `tests/kattis/` |
 | ML from scratch | A NumPy-only logistic regression implementation (vectorized forward pass, gradient descent) — no framework shortcuts | `src/ml/` |
 | SQL practice | PostgreSQL and SQLite exercises with fixtures, reference answers, and deterministic test harnesses | `src/sql/` |
-| Technical notes | 15 long-form guides on complexity analysis, algorithmic patterns, ML foundations, and system design, rendered with KaTeX math support | `notes/` |
-| Pattern references | Reusable algorithmic templates independent of any single problem | `src/patterns/` |
+| Technical notes | 16 long-form guides on complexity analysis, algorithmic patterns, ML foundations, and system design, rendered with KaTeX math support | `notes/` |
+| DSA from scratch | Data structures and reusable algorithmic pattern templates (prefix sum, Kadane, sliding window, three pointers, backtracking), grouped by topic and language; one shared Rust crate | `src/dsa_from_scratch/` |
+
+## How to study a topic
+
+Each DSA topic follows the same loop. Pick a row and work left to right:
+
+1. **Read the note** for the core idea, the invariant, and when the pattern applies.
+2. **Implement it from scratch** without looking, then compare against the reference.
+3. **Solve the problems** on the site. Each problem page shows the invariant and complexity; most (38 of 47) also have a step-by-step animation.
+4. **Check yourself** with the tests, then let spaced repetition schedule the review.
+
+| Topic | 1. Note | 2. From scratch | 3. Problems | 4. Tests |
+| --- | --- | --- | --- | --- |
+| Arrays & Hashing | [Arrays & Hashing](https://whanyu1212.github.io/mental-gym/notes/arrays_and_hashing/) · [Prefix Sum](https://whanyu1212.github.io/mental-gym/notes/prefix_sum_pattern/) · [Kadane's Algorithm](https://whanyu1212.github.io/mental-gym/notes/kadane_algorithm/) | [`arrays/`](src/dsa_from_scratch/arrays/) · [`hashing/`](src/dsa_from_scratch/hashing/) | [23 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-arrays-hashing) · [`src`](src/leetcode/arrays_hashing/) | [`test_arrays_hashing.py`](tests/leetcode/test_arrays_hashing.py) |
+| Two Pointers | [Two Pointers](https://whanyu1212.github.io/mental-gym/notes/two_pointers/) | [`two_pointers/`](src/dsa_from_scratch/two_pointers/) · [`three_pointers/`](src/dsa_from_scratch/three_pointers/) (three-way partition) | [14 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-two-pointers) · [`src`](src/leetcode/two_pointers/) | [`test_two_pointers.py`](tests/leetcode/test_two_pointers.py) |
+| Sliding Window | [Sliding Window](https://whanyu1212.github.io/mental-gym/notes/sliding_window/) | [`sliding_window/`](src/dsa_from_scratch/sliding_window/) | [6 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-sliding-window) · [`src`](src/leetcode/sliding_window/) | [`test_sliding_window.py`](tests/leetcode/test_sliding_window.py) |
+| Stack | [Stack](https://whanyu1212.github.io/mental-gym/notes/stack/) | [`list_adt/`](src/dsa_from_scratch/list_adt/) (stacks, queues, linked lists) | [6 problems](https://whanyu1212.github.io/mental-gym/problems/#algo-stack) · [`src`](src/leetcode/stack/) | [`test_stack.py`](tests/leetcode/test_stack.py) |
+
+**Before any topic**, the foundations apply everywhere: [Asymptotic Analysis](https://whanyu1212.github.io/mental-gym/notes/asymptotic-analysis/), [Time Complexity](https://whanyu1212.github.io/mental-gym/notes/time-complexity/), and [Space Complexity](https://whanyu1212.github.io/mental-gym/notes/space-complexity/). Keep the [Python DSA Quick Reference](https://whanyu1212.github.io/mental-gym/notes/python-dsa-toolkit/) open while solving.
+
+**Other areas** follow the same shape: [Logistic Regression from Scratch](https://whanyu1212.github.io/mental-gym/notes/ml-logistic-regression/) pairs with [`src/ml/`](src/ml/), and the [Real-Time ML Inference](https://whanyu1212.github.io/mental-gym/notes/sd-real-time-ml-inference/) case study is the system-design entry point. Topics with a from-scratch implementation but no problems yet (graphs, heaps, sorting, binary search, DP, and more) live under [`src/dsa_from_scratch/`](src/dsa_from_scratch/).
 
 ## The practice site
 
@@ -42,47 +62,77 @@ See [`web/README.md`](web/README.md) for the site's architecture and local dev i
 
 ```text
 src/
-├── leetcode/         # LeetCode solutions (Python + Julia), organized by pattern
+├── leetcode/         # Topic → language → problem; one shared Rust Cargo crate
 ├── kattis/           # Kattis competitive-programming solutions (Python + Julia)
 ├── ml/               # NumPy-first ML implementations
 ├── sql/              # SQL exercises: answers, fixtures, test harnesses
-├── patterns/         # Reusable algorithmic pattern templates
-└── dsa_from_scratch/ # Core data structures implemented without stdlib shortcuts
+└── dsa_from_scratch/ # Topic → language → implementation; shared Rust crate
 
-notes/                # Technical knowledge notes — see notes/README.md
+notes/                # Technical notes by topic (foundations, patterns, toolkits, ml, …) — see notes/README.md
 web/                  # Astro practice site (problems, notes, spaced repetition)
 scripts/              # Problem-data generation and content validation
-tests/                # pytest (Kattis) and Julia test suites
+tests/                # pytest (LeetCode, Kattis) and Julia test suites
 .github/workflows/    # CI: test suite + GitHub Pages deploy
 ```
 
 ## Development
 
+Run the commands below from the repository root. Install uv for Python tooling and Bun 1.3.11 (pinned in `package.json`) for JavaScript dependencies. The Astro site runs on Node 24; `.nvmrc` selects it with `nvm use`. Bun manages both the TypeScript solutions and `web/` through the root `bun.lock`.
+
 **Python (solutions, scripts, tests):**
 
 ```bash
-poetry install
-poetry run pytest tests/kattis/ -v
+uv sync --locked
+uv run pytest tests/ -v
 ```
+
+Add the notebook dependency group when you need Jupyter tooling: `uv sync --locked --group notebook`.
 
 **Astro site:**
 
 ```bash
-cd web && npm install && npm run dev
+bun install
+bun run --cwd web dev
 ```
 
-**Regenerate problem data** after adding or editing a Python LeetCode solution (the generator collects `.py` files only; a Julia-only addition needs a matching Python file before it will appear):
+Web tests also run Python reference solutions through uv. After `uv sync --locked`, run `bun run web:test`.
+
+**Regenerate problem data** after adding or editing a LeetCode solution in Python, Julia, TypeScript, or Rust. Solutions live in `src/leetcode/<topic>/<language>/` and are joined by canonical LeetCode slug; Python is not required. See [`src/leetcode/README.md`](src/leetcode/README.md).
 
 ```bash
-poetry run python scripts/generate_problems.py
+uv run python scripts/generate_problems.py
 ```
 
 **Julia solutions and tests** run via `julia --project=.`; see `Project.toml`.
 
+**TypeScript LeetCode ports** (repo root, separate from `web/`):
+
+```bash
+bun src/leetcode/sliding_window/typescript/contains_duplicate_2.ts
+```
+
+**Rust LeetCode solutions** share one crate, with unit tests beside each implementation:
+
+```bash
+cargo test --locked --manifest-path src/leetcode/Cargo.toml
+cargo clean --manifest-path src/leetcode/Cargo.toml
+```
+
+**DSA from scratch** uses the same topic/language layout and a separate Rust crate:
+
+```bash
+cargo test --locked --manifest-path src/dsa_from_scratch/Cargo.toml
+cargo clean --manifest-path src/dsa_from_scratch/Cargo.toml
+```
+
+See [`src/dsa_from_scratch/README.md`](src/dsa_from_scratch/README.md) for Python commands and Rust module registration.
+
 ## CI
 
-Two GitHub Actions workflows: a test workflow (`pytest` over the Kattis suite, a guide-content validator, and the Julia test suite) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
+Two GitHub Actions workflows: a test workflow (Python tests, a guide-content validator, Julia and Rust tests, SQL exercises, and web tests/build) runs on pushes to `main`/`hy-dev` and on PRs targeting `main`; a deploy workflow builds and publishes the Astro site to GitHub Pages on pushes to `develop` and `main`. Note the gap — a push straight to `develop` deploys without the test workflow running.
 
 ## Tooling
 
-Python code is enforced with `black`, `isort`, `flake8`, and `docformatter` (docstring formatting and wrapping) via pre-commit hooks. The Astro site is TypeScript-checked with `astro check`.
+Python code is enforced with `ruff` (linting, import sorting, and formatting) and `docformatter` (docstring formatting and wrapping) via pre-commit hooks. The Astro site is TypeScript-checked with `astro check`.
+
+Install the hooks with `uv run --locked pre-commit install` after syncing dependencies. Keep `uv` on your PATH when committing; the docformatter hook uses uv to locate the project environment, including when `UV_PROJECT_ENVIRONMENT` selects a custom location.
