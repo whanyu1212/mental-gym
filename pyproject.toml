@@ -16,7 +16,7 @@ test = [
 lint = [
     "docformatter>=1.7.5,<2",
     "pre-commit>=3.7.1,<5",
-    "ruff>=0.16.9,<0.17",
+    "ruff>=0.17.2,<0.18",
 ]
 notebook = [
     "ipykernel>=6.29.5,<8",
