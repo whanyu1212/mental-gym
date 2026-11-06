@@ -211,6 +211,374 @@ assert caught
 Do not use a broad `except Exception` merely to continue: it can hide programming
 errors such as a misspelled variable or an invalid assumption.
 
+## Properties: expose state without exposing its calculation
+
+`@property` lets callers read a method's result using attribute syntax. It
+hides how a value is obtained behind a stable interface: **encapsulation, not
+secrecy**. The source is still visible; callers simply do not need to depend
+on its implementation.
+
+For example, our dynamic array exposes capacity as derived state:
+
+```python
+class CapacityExample:
+    def __init__(self, capacity: int) -> None:
+        self._data: list[object] = [None] * capacity
+
+    @property
+    def capacity(self) -> int:
+        return len(self._data)
+
+array = CapacityExample(5)
+assert array.capacity == 5  # Attribute access calls the getter.
+
+try:
+    array.capacity = 100  # No setter: assignment raises AttributeError.
+except AttributeError:
+    pass
+else:
+    raise AssertionError("capacity should be read-only")
+```
+
+The caller asks “what is the capacity?” without knowing whether it is stored
+or calculated. Deriving it from the backing storage avoids maintaining two
+values that might disagree after a resize. With no setter, callers cannot
+assign a misleading capacity through the public interface. This is not total
+mutation protection: `_data` remains accessible, but the underscore marks it
+as an implementation detail.
+
+### Validating assignment with a setter
+
+A setter is useful when assignment is natural but must preserve an invariant:
+
+```python
+class Temperature:
+    def __init__(self, celsius: float) -> None:
+        self.celsius = celsius  # Uses the setter, including its validation.
+
+    @property
+    def celsius(self) -> float:
+        return self._celsius
+
+    @celsius.setter
+    def celsius(self, value: float) -> None:
+        if value < -273.15:
+            raise ValueError("Below absolute zero")
+        self._celsius = value  # Separate backing attribute avoids recursion.
+
+temperature = Temperature(20)
+temperature.celsius = 25
+assert temperature.celsius == 25
+
+try:
+    temperature.celsius = -300
+except ValueError:
+    pass
+else:
+    raise AssertionError("Invalid temperature should be rejected")
+assert temperature.celsius == 25
+```
+
+### When to use which interface
+
+| Interface | Use it for | Example |
+| --- | --- | --- |
+| Ordinary attribute | Plain data with no special behavior | `user.name` |
+| Property | Cheap derived state or controlled access | `array.capacity` |
+| Method | Actions, expensive work, I/O, or operations needing arguments | `array.append(value)`, `account.fetch_transactions()` |
+
+Do not wrap every attribute in a getter and setter without a reason. Avoid
+hiding network requests, database queries, or surprising mutations behind
+attribute reads: the syntax suggests cheap, unsurprising access.
+
+**A property does not cache its result.** Its getter runs on every access.
+For container size, prefer Python's existing `len(array)` protocol via
+`__len__`; capacity is a separate concept that fits a property.
+
+## Other common decorators
+
+A decorator wraps, modifies, or registers a function or class. For a single
+function decorator, `@decorate` above `def function(...)` roughly means
+`function = decorate(function)` after the definition. Some decorators take
+configuration first, such as `@lru_cache(maxsize=128)`.
+
+### `@classmethod` and `@staticmethod`
+
+An ordinary method receives the instance as `self`. A class method receives
+the class as `cls`; a static method receives neither automatically.
+
+```python
+class User:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    @classmethod
+    def from_dict(cls, data: dict[str, str]) -> "User":
+        return cls(data["name"])
+
+    @staticmethod
+    def normalize_name(name: str) -> str:
+        return name.strip()
+
+user = User.from_dict({"name": "Alice"})
+assert user.name == "Alice"
+assert User.normalize_name(" Alice ") == "Alice"
+```
+
+- **Class method:** useful for alternative constructors such as `from_dict`
+  or `from_config`. Calling `cls(...)` rather than hard-coding `User(...)`
+  allows a subclass with a compatible constructor to inherit this behavior
+  and produce its own instances.
+- **Static method:** useful for a related utility needing no instance or class
+  state. A module-level function is often equally good; do not create a class
+  just to hold static methods.
+
+### `@dataclass`: structured data without boilerplate
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: float
+    y: float
+
+point = Point(2.0, 3.0)
+assert point == Point(2.0, 3.0)
+assert repr(point) == "Point(x=2.0, y=3.0)"
+```
+
+Dataclasses generate methods such as `__init__`, `__repr__`, and `__eq__`.
+Use them for configuration objects, structured results, and domain records.
+They do not validate field types at runtime. `@dataclass(frozen=True)` blocks
+ordinary field reassignment, but does not freeze nested mutable objects.
+For per-instance mutable defaults, use `field(default_factory=list)` rather
+than sharing a single list.
+
+### `@cache` and `@lru_cache`: reuse function results
+
+```python
+from functools import cache, lru_cache
+
+@cache
+def fibonacci(n: int) -> int:
+    # Assumes n is a nonnegative integer.
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+@lru_cache(maxsize=128)
+def parse_fields(header: str) -> tuple[str, ...]:
+    return tuple(field.strip() for field in header.split(","))
+
+assert fibonacci(10) == 55
+assert parse_fields("name, age") == ("name", "age")
+assert parse_fields("name, age") == ("name", "age")  # Cached result.
+assert parse_fields.cache_info().hits == 1
+```
+
+Use caching for memoized recursion or repeated deterministic computations.
+`@cache` is unbounded; `@lru_cache` limits the number of entries and evicts the
+least recently used. Arguments must be hashable, so lists and dictionaries
+cannot be passed directly as cache keys.
+
+Caches retain arguments and results. Avoid caching functions whose purpose is
+side effects, whose results must reflect changing external state, or whose
+callers need a fresh mutable result. Use `.cache_clear()` to explicitly clear
+a cache; neither decorator provides automatic time-based expiry.
+
+### `@cached_property`: compute once per instance
+
+```python
+from functools import cached_property
+
+class Dataset:
+    def __init__(self, values: tuple[float, ...]) -> None:
+        self.values = values
+
+    @cached_property
+    def mean(self) -> float:
+        # Assumes a non-empty dataset.
+        return sum(self.values) / len(self.values)
+
+dataset = Dataset((1.0, 2.0, 3.0))
+assert dataset.mean == 2.0  # Calculates and stores the result.
+assert dataset.mean == 2.0  # Reads the stored result.
+dataset.values = (10.0, 20.0)
+assert dataset.mean == 2.0  # Changing inputs does not invalidate it.
+del dataset.mean
+assert dataset.mean == 15.0  # Recomputes after explicit invalidation.
+```
+
+Use this for expensive derived state on mostly immutable objects. Unlike
+`@property`, it caches the value and normally allows assignment to the cached
+attribute. It requires an instance with a writable `__dict__`, so it does not
+work with ordinary slots-only classes.
+
+Our dynamic array's capacity should use **`@property`**, not
+`@cached_property`: capacity changes during growth, and calculating it is cheap.
+
+### `@wraps`: preserve metadata in custom decorators
+
+```python
+from functools import wraps
+
+def log_call(function):
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        print(f"Calling {function.__name__}")
+        return function(*args, **kwargs)
+    return wrapper
+
+@log_call
+def greet(name: str) -> str:
+    """Return a greeting."""
+    return f"Hello, {name}"
+
+assert greet("Alice") == "Hello, Alice"
+assert greet.__name__ == "greet"
+assert greet.__doc__ == "Return a greeting."
+```
+
+Use `@wraps` when building logging, timing, retry, or authorization decorators.
+It preserves metadata such as the original name and docstring and exposes the
+wrapped function through `__wrapped__`. It does not itself implement logging
+or preserve the wrapper's static typing; this example omits wrapper annotations
+for clarity.
+
+### Other decorators you will encounter
+
+| Decorator | Engineering use case | Important detail |
+| --- | --- | --- |
+| `@contextlib.contextmanager` | Implement resource setup and cleanup for a `with` block | Yield once; put cleanup in `finally` so exceptions also trigger it |
+| `@abc.abstractmethod` | Require subclasses to implement an interface | Use with `ABC` or `ABCMeta`; incomplete concrete subclasses cannot be instantiated |
+| `@pytest.fixture` | Reuse test dependencies, setup, and cleanup | Tests request fixtures by parameter name; yield fixtures support teardown |
+| `@pytest.mark.parametrize` | Run a test against several input cases | Each parameter set becomes a separate test case |
+| `@app.get("/users")` | Register an HTTP GET handler in frameworks such as FastAPI | Framework-specific registration, not a Python built-in |
+
+For this repository, prioritize class methods, static methods, dataclasses,
+and caching. The array tests already demonstrate `pytest.mark.parametrize`.
+
+## Typing reusable code: `TypeVar`, `Generic`, and `cast`
+
+These tools help editors and type checkers such as mypy and Pyright. They do
+not enforce types at runtime. You can write plenty of Python without them;
+they become useful when building reusable infrastructure or integrating dynamic
+code with typed code.
+
+| Tool | Mental model | Engineering use cases |
+| --- | --- | --- |
+| `TypeVar` | Connect input and output types | Collection helpers, retry wrappers, factories |
+| `Generic` | Give a class a type parameter | Caches, repositories, queues, paginated responses |
+| `cast` | Ask the checker to trust a type claim | Dynamic registries, gaps in third-party typing |
+
+### `TypeVar`: preserve a type relationship
+
+A type variable is a placeholder for a type, not an ordinary runtime value.
+Here, the return type follows the input element type:
+
+```python
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def first(items: list[T]) -> T:
+    return items[0]
+
+name = first(["Alice", "Bob"])  # checker infers str
+count = first([10, 20])        # checker infers int
+assert name.upper() == "ALICE"
+assert count + 1 == 11
+# count.upper() would be a type-checking error (and fail at runtime).
+```
+
+This helper requires a non-empty list. With `list[Any] -> Any` instead, the
+checker loses the input/output relationship and would allow `count.upper()`.
+`Any` effectively opts out of checking; `TypeVar` preserves information.
+
+In engineering code, a retry helper can similarly accept `Callable[[], T]`
+and return `T`: retrying a function that returns `User` still produces `User`,
+without writing a separate retry helper for each result type.
+
+### `Generic`: choose the type a container holds
+
+`Generic[T]` lets the caller specialize a reusable class, just as `list[int]`
+specializes a list:
+
+```python
+from typing import Generic, TypeVar
+
+T = TypeVar("T")
+
+class Cache(Generic[T]):
+    def __init__(self) -> None:
+        self._data: dict[str, T] = {}
+
+    def put(self, key: str, value: T) -> None:
+        self._data[key] = value
+
+    def get(self, key: str) -> T | None:
+        return self._data.get(key)
+
+counts = Cache[int]()
+counts.put("active_users", 42)
+count = counts.get("active_users")  # int | None
+assert count == 42
+assert counts.get("missing") is None
+# counts.put("active_users", "forty-two") would be a checker error.
+```
+
+The same implementation could serve as `Cache[User]`. Other common examples
+are `Repository[Order]`, `Queue[EmailJob]`, and `Page[Product]`. The type
+parameter connects methods and stored values across the class. It does not
+prevent incorrectly typed values from being inserted if you ignore the checker.
+
+### `cast`: a claim, not a conversion or validation
+
+Use `cast(TargetType, value)` when you have evidence about a type that the
+checker cannot infer. It returns the original object unchanged.
+
+A dependency-injection registry may store several kinds of service as `object`:
+
+```python
+from typing import cast
+
+class Mailer:
+    def send(self, message: str) -> str:
+        return f"Sent: {message}"
+
+services: dict[str, object] = {"mailer": Mailer()}
+
+# Application setup establishes that this key contains a Mailer.
+mailer = cast(Mailer, services["mailer"])
+assert mailer.send("Hello") == "Sent: Hello"
+assert mailer is services["mailer"]
+
+value = cast(int, "123")  # checker sees int; runtime value is still str
+assert isinstance(value, str)
+assert int("123") == 123  # int(), unlike cast(), actually converts
+```
+
+If the registry can contain an unexpected value, check it instead. An
+`isinstance(value, Mailer)` check both validates the runtime type and lets the
+checker narrow the type within the matching branch.
+
+Likewise, `cast(UserPayload, response.json())` does **not** check JSON fields.
+Validate external data with explicit checks or a schema library such as
+Pydantic. Do not use a cast merely to silence an error you have not understood.
+
+### When to reach for these
+
+- Start with concrete types such as `str`, `User`, or `list[int]`.
+- Use `TypeVar` when reusable code must preserve a type relationship.
+- Use `Generic` when that relationship spans a class's state and methods.
+- Use `cast` sparingly, when you can explain why the type claim is safe.
+
+Python 3.12+ also supports type-parameter syntax: `def first[T](...)` and
+`class Cache[T]:`. This often replaces explicit `TypeVar` and `Generic`
+declarations; the concepts are unchanged. The examples above use the older,
+still-supported syntax to remain compatible with Python 3.10+.
+
 ## Practice
 
 1. Write `positions_of_even(values)` with `enumerate` and a list comprehension.

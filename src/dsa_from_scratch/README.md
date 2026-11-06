@@ -9,8 +9,10 @@ dsa_from_scratch/
 ├── lib.rs                   # Registers Rust topic modules
 ├── arrays/
 │   ├── python/
+│   │   ├── README.md
 │   │   ├── common_operations.py
-│   │   └── prefix_sum_3d.py
+│   │   ├── dynamic_array.py
+│   │   └── matrix.py
 │   └── rust/                # Rust-first: the array as a container
 │       ├── mod.rs
 │       ├── common_operations.rs
@@ -40,6 +42,10 @@ Run a Python implementation from the repository root:
 uv run python src/dsa_from_scratch/arrays/python/common_operations.py
 uv run --locked pytest tests/dsa_from_scratch/
 ```
+
+See [Python arrays](arrays/python/README.md) for fixed-capacity operations,
+a dynamic array, a flat-backed matrix, complexity notes, and comparisons with
+Python containers.
 
 Python tests stay in `tests/dsa_from_scratch/`. Add a topic's `python/` directory
 to pytest's `pythonpath` in `pyproject.toml` when its tests use direct imports.

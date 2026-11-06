@@ -33,9 +33,10 @@ This note covers the patterns, data structures, and decision logic needed for th
 
 ## Table of Contents
 
+- [Core Mental Models](#core-mental-models)
+- [Pattern Recognition Guide](#pattern-recognition-guide)
 - [Why Hashing Matters for Arrays](#why-hashing-matters-for-arrays)
 - [Hash Table Internals](#hash-table-internals-what-the-interview-asks)
-- [Pattern Recognition Guide](#pattern-recognition-guide)
 - [Core Patterns](#core-patterns)
   - [1. Complement Lookup](#1-complement-lookup-two-sum-family)
   - [2. Frequency Counting](#2-frequency-counting)
@@ -52,6 +53,21 @@ This note covers the patterns, data structures, and decision logic needed for th
 - [Sorting Algorithms](#sorting-algorithms-sort-an-array-sort-colors)
 - [Decision Guide: Which Structure?](#decision-guide-which-structure)
 - [Complexity Reference](#complexity-reference-for-this-topic)
+
+---
+
+## Core Mental Models
+
+Instead of memorizing individual problems, run through these **6 underlying mental models** as diagnostic questions when reading an array or hashing prompt:
+
+| Mental Model | Diagnostic Question | Patterns It Unlocks |
+|---|---|---|
+| **1. Past Memory** | *"As I scan left-to-right, have I already seen the complement, duplicate, or root of `nums[i]`?"* | [Complement Lookup](#1-complement-lookup-two-sum-family), [Set Membership](#4-set-membership-for-sequence-problems), Prefix Sum + Hash Map |
+| **2. Canonical Fingerprinting** | *"What invariant maps equivalent items (anagrams, shifted strings, board constraints) to the exact same key?"* | [Grouping by Canonical Key](#3-grouping-by-canonical-key), [Multi-Constraint Hashing](#5-multi-constraint-hashing-valid-sudoku) |
+| **3. Prefix & Suffix Decomposition** | *"Does index `i` depend on everything to its left AND everything to its right?"* | [Prefix/Suffix Pass](#6-prefixsuffix-pass-product-except-self), [Prefix Sum Pattern](/notes/prefix_sum_pattern/) |
+| **4. Domain-Bounded Indexing** | *"Is $O(n \log n)$ sorting too slow, or are frequencies/values bounded by $n$?"* | [Frequency Bucket Sort](#2-frequency-counting), [Counting Sort](#counting-sort--on--k-time-ok-space) |
+| **5. The Array *Is* the Hash Table** | *"Are values in `[1, n]` with $O(1)$ extra space required, or do I need to compact in-place?"* | [Index-as-Hash / Cyclic Sort](#12-index-as-hash--cyclic-sort-first-missing-positive), [Write Pointer](#9-write-pointer-remove-element), [Dutch National Flag](#dutch-national-flag--on-time-o1-space) |
+| **6. Amortized State Cancellation** | *"Can non-matching or negative contributions cancel out in a single pass with $O(1)$ space?"* | [Boyer-Moore Voting](#7-boyer-moore-voting), [Greedy Daily Profit](#11-greedy-daily-profit-best-time-to-buy-and-sell-stock-ii), [Kadane's Algorithm](/notes/kadane_algorithm/) |
 
 ---
 
@@ -227,6 +243,17 @@ for s in strs:
 ```
 
 **Why `tuple` and not `list`:** Lists are mutable and therefore not hashable. Tuples are frozen and can be dict keys.
+
+**Other common canonical keys:**
+- **Relative shift offset** (*Group Shifted Strings*): Strings like `"abc"` and `"xyz"` share the same step differences from their first character:
+  ```python
+  key = tuple((ord(c) - ord(s[0])) % 26 for c in s)
+  ```
+- **First-occurrence pattern** (*Isomorphic Strings*, *Word Pattern*): Map each item to the index where it first appeared (`"egg" → (0, 1, 1)`, `"add" → (0, 1, 1)`):
+  ```python
+  first_seen = {}
+  key = tuple(first_seen.setdefault(ch, i) for i, ch in enumerate(s))
+  ```
 
 **The pattern:** Ask "what property do things in the same group share?" → that property becomes the key.
 
@@ -529,6 +556,23 @@ return len(nums) + 1  # all of [1..n] present, answer is n+1
 ```
 
 **Why it's still O(n):** Each swap moves at least one value to its final position. A value can be swapped at most once (the guard `nums[i] != nums[j]` prevents cycling on duplicates). Total swaps ≤ n.
+
+**Variant — In-Place Sign Flipping (Find All Duplicates / Disappeared Numbers):**
+When all values are in `[1, n]` and you only need to mark **presence** without rearranging elements, flip the sign at index `abs(x) - 1` instead of swapping:
+
+```python
+# Find All Duplicates in an Array (LC 442) — O(n) time, O(1) extra space
+duplicates = []
+for x in nums:
+    idx = abs(x) - 1
+    if nums[idx] < 0:          # already negated → x was seen before
+        duplicates.append(abs(x))
+    else:
+        nums[idx] = -nums[idx] # mark value abs(x) as seen
+return duplicates
+```
+
+Why sign flipping works: `abs(nums[idx])` preserves the original value stored at `idx` while the negative sign acts as a 1-bit boolean flag (`seen = True`). For *Find All Numbers Disappeared in an Array* (LC 448), run the same negation pass, then collect every index `i` where `nums[i] > 0` (meaning `i + 1` never appeared).
 
 ---
 

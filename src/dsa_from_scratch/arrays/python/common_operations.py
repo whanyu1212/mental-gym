@@ -1,25 +1,31 @@
+"""
+Manual array operations.
+
+For insert/remove, len(nums) is capacity; size is the live prefix
+length. Unused slots contain None. Both operations return the new
+logical size. The other helpers operate on ordinary lists of live
+values.
+"""
+
 import random
-
-from colorama import Fore, Style, init
-
-init(autoreset=True)
 
 
 def initialize_array(length: int) -> list[int | float | str | None]:
     """
-    Initialize an array of length `length` with None values. 0 is not
-    used as it can be a valid value in some cases but if we want to
-    include str as a potential value, we can't use 0 to initialize it.
+    Initialize storage of capacity `length` with None values.
+
+    None marks unused slots for the fixed-capacity examples; callers track logical
+    size separately. Zero remains available as a live value.
 
     Args:
         length (int): Length of the array to be initialized
 
     Returns:
-        List[Union[int, float, str]]: Array of length `length` with None values
+        list[int | float | str | None]: Storage filled with None
     """
-    print(
-        f"{Fore.BLUE}Initializing an array of length {length} with None values{Style.RESET_ALL}"  # noqa: E501
-    )
+    print(f"Initializing an array of length {length} with None values")
+    if length < 0:
+        raise ValueError("length must be nonnegative")
     return [None] * length
 
 
@@ -34,45 +40,46 @@ def random_access(nums: list[int]) -> int:
         int: Randomly accessed element from the array
     """
     random_index = random.randint(0, len(nums) - 1)
-    print(
-        f"{Fore.GREEN}Randomly accessing element at index {random_index} in the array{Style.RESET_ALL}"  # noqa: E501
-    )
+    print(f"Randomly accessing element at index {random_index} in the array")
     random_num = nums[random_index]
-    print(f"{Fore.CYAN}Randomly accessed element: {random_num}{Style.RESET_ALL}")
+    print(f"Randomly accessed element: {random_num}")
     return random_num
 
 
-def insert(nums: list[int], num: int, index: int) -> None:
+def insert(nums: list[int | None], num: int, index: int, size: int) -> int:
     """
-    Insert a number `num` at index `index` in the array `nums`
+    Insert into a fixed-capacity buffer; return size + 1.
 
-    Args:
-        nums (list[int]): original list of integers
-        num (int): number to be inserted
-        index (int): index at which `num` is to be inserted
+    Requires 0 <= size <= capacity and 0 <= index <= size.
+    A full buffer raises OverflowError rather than discarding a live value.
+    Shifting costs O(size - index) time and O(1) extra space.
     """
-    for i in range(len(nums) - 1, index, -1):
+    if not 0 <= size <= len(nums):
+        raise ValueError("size must be between zero and capacity")
+    if not 0 <= index <= size:
+        raise IndexError("insertion index out of range")
+    if size == len(nums):
+        raise OverflowError("array is full")
+    for i in range(size, index, -1):
         nums[i] = nums[i - 1]
-
     nums[index] = num
-    print(f"{Fore.GREEN}Inserting {num} at index {index} in the array{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}Updated array: {nums}{Style.RESET_ALL}")
+    return size + 1
 
 
-def remove(nums: list[int], index: int) -> None:
+def remove(nums: list[int | None], index: int, size: int) -> int:
+    """Remove a live element, clear its vacated slot, and return size - 1.
+
+    Requires 0 <= size <= capacity and 0 <= index < size.
+    Shifting costs O(size - index) time and O(1) extra space.
     """
-    Remove an element at index `index` in the array `nums`
-
-    Args:
-        nums (list[int]): original list of integers
-        index (int): index at which element is to be removed
-    """
-    for i in range(index, len(nums) - 1):
+    if not 0 <= size <= len(nums):
+        raise ValueError("size must be between zero and capacity")
+    if not 0 <= index < size:
+        raise IndexError("removal index out of range")
+    for i in range(index, size - 1):
         nums[i] = nums[i + 1]
-    print(
-        f"{Fore.GREEN}Removing element at index {index} from the array{Style.RESET_ALL}"
-    )
-    print(f"{Fore.CYAN}Updated array: {nums}{Style.RESET_ALL}")
+    nums[size - 1] = None
+    return size - 1
 
 
 def traverse(nums: list[int]) -> None:
@@ -84,10 +91,10 @@ def traverse(nums: list[int]) -> None:
     """
     count = 0
     # Traverse array by index
-    print(f"{Fore.GREEN}Traversing array by index{Style.RESET_ALL}")
+    print("Traversing array by index")
     for i in range(len(nums)):
         count += nums[i]
-    print(f"{Fore.GREEN}Sum of array elements: {count}{Style.RESET_ALL}")
+    print(f"Sum of array elements: {count}")
 
 
 def find(nums: list[int], target: int) -> int:
@@ -103,11 +110,9 @@ def find(nums: list[int], target: int) -> int:
     """
     for i in range(len(nums)):
         if nums[i] == target:
-            print(
-                f"{Fore.GREEN}Element {target} found at index {i} in the array{Style.RESET_ALL}"  # noqa: E501
-            )
+            print(f"Element {target} found at index {i} in the array")
             return i
-    print(f"{Fore.RED}Element {target} not found in the array{Style.RESET_ALL}")
+    print(f"Element {target} not found in the array")
     return -1
 
 
@@ -122,11 +127,13 @@ def extend(nums: list[int], enlarge: int) -> list[int]:
     Returns:
         list[int]: new array after expansion
     """
+    if enlarge < 0:
+        raise ValueError("enlarge must be nonnegative")
     res = [0] * (len(nums) + enlarge)
     # Copy all elements from the original array to the new array
     for i in range(len(nums)):
         res[i] = nums[i]
     # Return the new array after expansion
-    print(f"{Fore.GREEN}Extending array by {enlarge} elements{Style.RESET_ALL}")
-    print(f"{Fore.CYAN}Updated array: {res}{Style.RESET_ALL}")
+    print(f"Extending array by {enlarge} elements")
+    print(f"Updated array: {res}")
     return res
