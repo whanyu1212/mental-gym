@@ -1,0 +1,801 @@
+{
+  "arrays_hashing/python/contains_duplicate.py": {
+    "source_sha256": "e6369e0884e9c831efdd69b05c37892335aab0096ac0e2a8e82f217f46589249",
+    "functions": {
+      "Solution.hasDuplicate": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums.",
+        "reason": "set(nums) attempts n insertions and retains at most n distinct keys. Both length reads take constant time.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/design_hashmap.py": {
+    "source_sha256": "22eaf7d4a5b382c94ba511d79518645cd80cde3e6964033fa96be7b5a09dfd4d",
+    "functions": {
+      "MyHashMap.__init__": {
+        "time": "O(b)",
+        "space": "O(b)",
+        "time_kind": "worst case",
+        "sizes": "b is the bucket count, fixed at 1,000,000 in this implementation.",
+        "reason": "The list comprehension constructs b empty bucket lists."
+      },
+      "MyHashMap.hash_function": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "Keys and bucket indices are treated as fixed-width integers.",
+        "reason": "One remainder operation selects the bucket."
+      },
+      "MyHashMap.put": {
+        "time": "O(b + 1)",
+        "space": "O(b + 1)",
+        "time_kind": "worst case",
+        "sizes": "b is the number of entries in the selected bucket.",
+        "reason": "Updating takes one scan. Appending uses amortized constant time, with a possible resize that takes linear time and temporary space."
+      },
+      "MyHashMap.get": {
+        "time": "O(b + 1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "b is the number of entries in the selected bucket.",
+        "reason": "The method scans the bucket and retains only the current entry."
+      },
+      "MyHashMap.remove": {
+        "time": "O(b + 1)",
+        "space": "O(b + 1)",
+        "time_kind": "worst case",
+        "sizes": "b is the number of entries in the selected bucket.",
+        "reason": "Finding the entry and shifting its successors each take at most b steps. Shrinking a bucket list can temporarily use linear storage."
+      }
+    }
+  },
+  "arrays_hashing/python/design_hashset.py": {
+    "source_sha256": "2dad86dd6e3ebbb0a513dc960b43d907a89c8a3bf0246d5260e4de8b45765a2a",
+    "functions": {
+      "MyHashSet.__init__": {
+        "time": "O(b)",
+        "space": "O(b)",
+        "time_kind": "worst case",
+        "sizes": "b is the bucket count, fixed at 1,000,000 in this implementation.",
+        "reason": "The list comprehension constructs b empty bucket lists."
+      },
+      "MyHashSet.hash_function": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "Keys and bucket indices are treated as fixed-width integers.",
+        "reason": "One remainder operation selects the bucket."
+      },
+      "MyHashSet.add": {
+        "time": "O(b + 1)",
+        "space": "O(b + 1)",
+        "time_kind": "worst case",
+        "sizes": "b is the number of entries in the selected bucket.",
+        "reason": "List membership scans the bucket. A subsequent append can resize it and temporarily copy the bucket."
+      },
+      "MyHashSet.remove": {
+        "time": "O(b + 1)",
+        "space": "O(b + 1)",
+        "time_kind": "worst case",
+        "sizes": "b is the number of entries in the selected bucket.",
+        "reason": "Membership, removal, and shifting each take at most b steps. A shrink can temporarily copy the bucket."
+      },
+      "MyHashSet.contains": {
+        "time": "O(b + 1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "b is the number of entries in the selected bucket.",
+        "reason": "List membership scans up to b entries without building another collection."
+      }
+    }
+  },
+  "arrays_hashing/python/encode_decode_string.py": {
+    "source_sha256": "9d5cbc842ef9f378b87b9a950db289e261e7a36ce56146fef35f9de2d75d9fa2",
+    "functions": {
+      "Solution.encode": {
+        "time": "O(w * L)",
+        "space": "O(L)",
+        "time_kind": "worst case",
+        "sizes": "w is the number of words and L is the encoded length.",
+        "reason": "Each iteration can copy the accumulated prefix. Summing w prefix lengths bounded by L gives O(w * L) time. Only a constant number of strings of length up to L are live together."
+      },
+      "Solution.decode": {
+        "time": "O(L)",
+        "space": "O(L)",
+        "time_kind": "worst case",
+        "sizes": "L is the encoded length. Header integers fit within the problem bounds.",
+        "reason": "The indices scan each header once and copy each payload once. Returned strings and their list take at most linear space."
+      }
+    }
+  },
+  "arrays_hashing/python/get_concatenation.py": {
+    "source_sha256": "835e891ed5c0e464aa3fb64fde287c2e8fdb386a3ed233684638908bc322d69e",
+    "functions": {
+      "Solution.getConcatenation": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums. Space includes the new output list.",
+        "reason": "The allocation holds 2n items and one loop copies both halves.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/group_anagram.py": {
+    "source_sha256": "0dc4ad6a5eb809ff82c82df65ff790344fb7380b7578e6599d60d7865e0a3382",
+    "functions": {
+      "Solution.groupAnagrams": {
+        "time": "O(w + c)",
+        "space": "O(w)",
+        "time_kind": "expected",
+        "sizes": "w is the number of words, c is the total character count, and the alphabet has 26 letters.",
+        "reason": "Each character updates a counter once. Counting tuples have constant size, and the groups store w references to input words."
+      }
+    }
+  },
+  "arrays_hashing/python/is_anagram.py": {
+    "source_sha256": "2b095c3423c1c1b20ea367b67ca251539dbdf88c0af7628a0f3650769fec6d49",
+    "functions": {
+      "Solution.isAnagram": {
+        "time": "O(n + m)",
+        "space": "O(d + 1)",
+        "time_kind": "expected",
+        "sizes": "n and m are string lengths, and d is the number of distinct characters across both.",
+        "reason": "The two scans build frequency dictionaries, and their comparison reads at most d entries. With a fixed alphabet, the space is O(1)."
+      }
+    }
+  },
+  "arrays_hashing/python/is_valid_sudoku.py": {
+    "source_sha256": "f3445633f2b387ff116668233ec15f48b915c33b72eb972af7bdcc0bdf24bd39",
+    "functions": {
+      "Solution.isValidSudoku": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The problem fixes the board at 9 by 9.",
+        "reason": "The two loops visit at most 81 cells and track a bounded number of entries in the row, column, and square sets."
+      }
+    }
+  },
+  "arrays_hashing/python/longest_common_prefix.py": {
+    "source_sha256": "b00de3cd6402eccc3605c364721de45c06b1985f25f4f525226e97cc5d823fe5",
+    "functions": {
+      "Solution.longestCommonPrefix": {
+        "time": "O(w * (p + 1) + p^2)",
+        "space": "O(w + p)",
+        "time_kind": "expected",
+        "sizes": "w is the number of words and p is the length of the shortest word.",
+        "reason": "zip creates w iterators and yields up to p columns of width w. Each set costs expected O(w). Appending one character at a time can also copy up to p accumulated characters per step."
+      }
+    }
+  },
+  "arrays_hashing/python/longest_consecutive.py": {
+    "source_sha256": "ebc17364094e7439776df033fbb47ce070d2062cc1a8738d6daac89c94a0b98a",
+    "functions": {
+      "Solution.longestConsecutive": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums.",
+        "reason": "Set construction and the outer scan are linear. Each consecutive run is expanded only from its smallest value, so inner scans collectively visit at most n values.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/majority_element.py": {
+    "source_sha256": "68153cd9db91884d9d983986be54d93498abbbdda5646f3c3468eb3c19440b85",
+    "functions": {
+      "Solution.majorityElement": {
+        "time": "O(n)",
+        "space": "O(d + 1)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums and d is its number of distinct values.",
+        "reason": "Each input item updates one map counter and the current maximum. The map stores d counters.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/majority_element_2.py": {
+    "source_sha256": "f1fdece4b60ff6f80eeca0d6f5890022e16ea08816e73336a04de8f3f583ccad",
+    "functions": {
+      "Solution.majorityElement": {
+        "time": "O(n)",
+        "space": "O(d + 1)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums and d is its number of distinct values.",
+        "reason": "Counting takes n updates and filtering checks d counters. The map dominates space, and at most two values can exceed n/3.",
+        "sequence": "nums"
+      },
+      "SolutionBoyerMoore.majorityElement": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums.",
+        "reason": "The vote pass uses two candidate slots. At most two list.count calls verify candidates, and at most two values are returned.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/maximum_subarray.py": {
+    "source_sha256": "c531badbbba681d007191576079b3cfde01ad6c94fe048ac580d7801443161cf",
+    "functions": {
+      "Solution.maxSubArray": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums.",
+        "reason": "Kadane's loop visits each number once and keeps only the current and best sums.",
+        "sequence": "nums"
+      },
+      "max_subarray_elements": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums. Space includes the returned slice.",
+        "reason": "One scan updates sums and boundaries. The final slice copies up to n items.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/maximum_sum_circular_subarray.py": {
+    "source_sha256": "db88ce4f7beeea1f43963517a5d6feca597bca8e8b6c9a335c9e99e4acbfb373",
+    "functions": {
+      "Solution.maxSubarraySumCircular": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums.",
+        "reason": "One pass maintains the total and both Kadane sums in a fixed number of scalar variables.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/product_except_self.py": {
+    "source_sha256": "f0e855bdc3fd62a6e2f322a72ee89a6434a4209ab650029b243397f59e9291a1",
+    "functions": {
+      "Solution.productExceptSelf": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums. Space includes the output list.",
+        "reason": "Prefix and postfix passes each take n steps. Excluding the output, only two running products and indices are needed.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/range_query_sum_2d_immutable.py": {
+    "source_sha256": "5d78742c6cadbb9cbe5e9c75ad32d3d837c1b387441ca3eea2bd26eb5f8d396e",
+    "functions": {
+      "NumMatrix.__init__": {
+        "time": "O(r * c)",
+        "space": "O(r * c)",
+        "time_kind": "worst case",
+        "sizes": "r and c are the row and column counts of the nonempty rectangular input.",
+        "reason": "The constructor delegates to calcPrefixMatrix and retains the resulting table."
+      },
+      "NumMatrix.calcPrefixMatrix": {
+        "time": "O(r * c)",
+        "space": "O(r * c)",
+        "time_kind": "worst case",
+        "sizes": "r and c are the row and column counts of the nonempty rectangular input.",
+        "reason": "Allocation creates r * c table cells. A nested traversal fills each cell using a fixed number of neighbors."
+      },
+      "NumMatrix.sumRegion": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The prefix table has already been built.",
+        "reason": "Inclusion-exclusion reads up to four stored prefix sums and combines them."
+      }
+    }
+  },
+  "arrays_hashing/python/range_sum_query_immutable.py": {
+    "source_sha256": "b36913b78319cbeb1f3f278f3c44c8c4fc373233cb168d0ccdfde8e0b6980468",
+    "functions": {
+      "NumArray.__init__": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums.",
+        "reason": "Each item contributes one cumulative sum to a retained prefix list of length n + 1.",
+        "sequence": "nums"
+      },
+      "NumArray.sumRange": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The prefix list has already been built.",
+        "reason": "Two indexed reads and a subtraction answer the query."
+      }
+    }
+  },
+  "arrays_hashing/python/sort_an_array.py": {
+    "source_sha256": "4c4d9415f7ce4d56886437adbe9f22895d588d203fb803e85913deee5c2730b4",
+    "functions": {
+      "Solution.sortArray": {
+        "time": "O(n + r)",
+        "space": "O(r)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums and r is max(nums) - min(nums) + 1 for a nonempty input.",
+        "reason": "The method delegates to counting_sort_with_array. Its count table spans r values and it visits or writes each input element a constant number of times.",
+        "sequence": "nums"
+      },
+      "Solution.counting_sort_with_hashmap": {
+        "time": "O(n + r)",
+        "space": "O(n + d)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums, d is its number of distinct values, and r is its integer range width.",
+        "reason": "Counting and rewriting take n steps each, and the outer reconstruction loop walks all r values. The dictionary holds d counts. Rebuilding the cleared list can temporarily copy a buffer of up to n items.",
+        "sequence": "nums"
+      },
+      "Solution.counting_sort_with_array": {
+        "time": "O(n + r)",
+        "space": "O(r)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums and r is its integer range width.",
+        "reason": "The count list has r slots. The inner while loops perform n writes in total because each write consumes one stored occurrence.",
+        "sequence": "nums"
+      },
+      "Solution.heap_sort": {
+        "time": "O(n log(n + 1))",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums. Space includes the new output list.",
+        "reason": "Heapify takes linear time. n heap pops each cost at most logarithmic time, and the output accumulates n values.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/sort_colors.py": {
+    "source_sha256": "f514a09b2cd5bbff79714f2b8d8017a8e6e064bce03236917279b6737de283a4",
+    "functions": {
+      "Solution.sortColors": {
+        "time": "O(n log(n + 1))",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums.",
+        "reason": "Heapify takes linear time, followed by n heap pops. The comprehension holds n values before the slice assignment.",
+        "sequence": "nums"
+      },
+      "Solution.sortColorsThreePointer": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of nums.",
+        "reason": "Each iteration shrinks the unclassified interval by advancing mid or decrementing right. Swaps use constant storage.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/subarray_sum_equals_k.py": {
+    "source_sha256": "5cfeef31530116f7bbc4921a97a55c8518a1ed3cddd508854abf3f721f2ca883",
+    "functions": {
+      "Solution.subarraySum": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums.",
+        "reason": "Each step computes one prefix sum and performs a fixed number of hash-table operations. At most n + 1 distinct prefixes are retained.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/top_k_frequent_elements.py": {
+    "source_sha256": "e02902796f6b127497779b9623da610f692fa414ef155d29735e852d8e6ab436",
+    "functions": {
+      "Solution.topKFrequent": {
+        "time": "O(n + d log(d + 1))",
+        "space": "O(d + 1)",
+        "time_kind": "expected",
+        "sizes": "n is the input length and d is the distinct-value count. The prompt guarantees k <= d.",
+        "reason": "Counting takes expected O(n). This implementation sorts the d count/value pairs and then reads up to k results. The map, pairs, and sort workspace use O(d) space.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/two_sum.py": {
+    "source_sha256": "5c0d8d89103f7dff3cf30c65c1ef75d8a7047588e4ac6cdcd48b53decb3d67ff",
+    "functions": {
+      "Solution.twoSum": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "expected",
+        "sizes": "n is the length of nums.",
+        "reason": "The scan does a fixed amount of arithmetic and hash-table work per item. The map stores at most n previously seen values.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "arrays_hashing/python/xor_queries_subarray.py": {
+    "source_sha256": "e88ae74b80b6f70ba942f6c605a3860b348a5a5559aaf3fe23a929c9215c93c5",
+    "functions": {
+      "Solution.xorQueries": {
+        "time": "O(n + q)",
+        "space": "O(n + q)",
+        "time_kind": "worst case",
+        "sizes": "n is the array length and q is the number of queries. Space includes the returned results.",
+        "reason": "One scan builds n + 1 prefix XORs, and each query takes two indexed reads and an XOR.",
+        "sequence": "arr"
+      }
+    }
+  },
+  "sliding_window/python/character_replacement.py": {
+    "source_sha256": "a4f8bc3d4402ac901c654146cc660796c37ebaddb431bce8ce585aa56491a624",
+    "functions": {
+      "Solution.characterReplacement": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "expected",
+        "sizes": "n is the string length and the problem fixes a 26-character alphabet.",
+        "reason": "The right index advances n times, each with at most one left advance. The map holds at most 26 character counts."
+      }
+    }
+  },
+  "sliding_window/python/contains_duplicate_2.py": {
+    "source_sha256": "11cf6108ca8c4c53c23b3f705eacf1ab7d3a15998680585635ef8177c3c256da",
+    "functions": {
+      "Solution.containsNearbyDuplicate": {
+        "time": "O(n)",
+        "space": "O(min(n, k + 1) + 1)",
+        "time_kind": "expected",
+        "sizes": "n is the input length and k is the nonnegative maximum distance.",
+        "reason": "Each right step performs a bounded number of set operations. The maintained window holds at most k + 1 items.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "sliding_window/python/longest_substring.py": {
+    "source_sha256": "a1315821a2b95f986d374faa3c4242d7606e7fe15588461c55174809e9470f88",
+    "functions": {
+      "Solution.lengthOfLongestSubstring": {
+        "time": "O(n)",
+        "space": "O(min(n, a) + 1)",
+        "time_kind": "expected",
+        "sizes": "n is the string length and a is the alphabet size.",
+        "reason": "Each right step inserts once, and each left step removes an item at most once across the entire run. The window set contains distinct characters."
+      }
+    }
+  },
+  "sliding_window/python/max_profit.py": {
+    "source_sha256": "4bae211c16bc315e545d9e6493890efa449b7daef8e20f4644c3be057bb17670",
+    "functions": {
+      "Solution.maxProfit": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of prices.",
+        "reason": "Each loop iteration advances the right index once and updates scalar state.",
+        "sequence": "prices"
+      }
+    }
+  },
+  "sliding_window/python/subarrays_with_avg_geq_threshold.py": {
+    "source_sha256": "82beb50e5c49d140cc4114687d513d8cc2b96351023407cb4d5a5525fd41e6fa",
+    "functions": {
+      "Solution.numOfSubarrays": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of arr.",
+        "reason": "One pass adds each entering value and subtracts at most one leaving value. The window sum and count are scalars.",
+        "sequence": "arr"
+      }
+    }
+  },
+  "stack/python/eval_rpn.py": {
+    "source_sha256": "46625bf7eafadea5487a8a054a82e30f1927b2921059b529a527102daa9e55a2",
+    "functions": {
+      "Solution.evalRPN": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the token count. Numeric tokens and intermediate values have the problem's bounded width.",
+        "reason": "Each token does constant arithmetic and a bounded number of amortized list operations. Up to n operands can accumulate on the stack."
+      }
+    }
+  },
+  "stack/python/generate_parenthesis.py": {
+    "source_sha256": "27c48c042c72ed2831322be4f444367811273dc3227d1a53b361ac9e62356aa7",
+    "functions": {
+      "Solution.generateParenthesis": {
+        "time": "O(n * C_n)",
+        "space": "O(n * C_n)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of pairs and C_n is the nth Catalan number. Space includes the returned strings.",
+        "reason": "Every valid partial prefix extends to an answer, and each answer has at most 2n + 1 prefixes. Each of the C_n leaves joins a length-2n string. The recursion and working stack alone take O(n) space."
+      }
+    }
+  },
+  "stack/python/max_sliding_window.py": {
+    "source_sha256": "4e88a7ac3e6513c60badc91a0ccdb457812795877919006ae605b2937528101a",
+    "functions": {
+      "Solution.maxSlidingWindow": {
+        "time": "O(n log(n + 1))",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the input length. The window size k is at most n.",
+        "reason": "Each element is pushed once and popped at most once. Stale entries are removed only when they reach the heap top, so the heap can grow to n entries even for a smaller window.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "stack/python/merge_2_sorted_lists.py": {
+    "source_sha256": "aecae11d997e38fabeac6ca468b08c24b7c9505e04f1ff1f144f88b23ef83f4a",
+    "functions": {
+      "ListNode.__init__": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The constructor receives a value and a reference to the next node.",
+        "reason": "It stores the two fields without traversing any list."
+      },
+      "Solution.mergeTwoLists": {
+        "time": "O(n + m)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n and m are the two input-list lengths.",
+        "reason": "Each loop step advances one input pointer. The remaining tail is linked in constant time, and the existing nodes are reused."
+      }
+    }
+  },
+  "stack/python/min_stack.py": {
+    "source_sha256": "b45c6890ec15184796f73bd737d20c55ffcad607267a328385c40dca91396226",
+    "functions": {
+      "MinStack.__init__": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The stack starts empty.",
+        "reason": "The constructor allocates two empty lists."
+      },
+      "MinStack.push": {
+        "time": "O(1)",
+        "space": "O(d + 1)",
+        "time_kind": "amortized",
+        "sizes": "The operation adds one element to a stack of depth d.",
+        "reason": "It appends the value and the current minimum and increases retained storage by a constant amount. A resize can temporarily use O(d + 1) time and space."
+      },
+      "MinStack.pop": {
+        "time": "O(1)",
+        "space": "O(d)",
+        "time_kind": "amortized",
+        "sizes": "The stack is nonempty and d is its depth.",
+        "reason": "It removes the last entry from each list. A shrink can temporarily use O(d) time and space."
+      },
+      "MinStack.top": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The stack is nonempty.",
+        "reason": "It reads the last value by index."
+      },
+      "MinStack.getMin": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The stack is nonempty.",
+        "reason": "It reads the cached minimum at the end of the second list."
+      }
+    }
+  },
+  "stack/python/permutation_in_string.py": {
+    "source_sha256": "403d700f3c75483ac7b3fd9dba03dee218a2f53e04a59af91fe9aa0f21f70da0",
+    "functions": {
+      "Solution.checkInclusion": {
+        "time": "O(n + m)",
+        "space": "O(1)",
+        "time_kind": "expected",
+        "sizes": "n and m are the two string lengths, and the alphabet has 26 letters.",
+        "reason": "It counts the first string and scans the second. Each map comparison and update touches at most 26 keys."
+      }
+    }
+  },
+  "stack/python/valid_sudoku.py": {
+    "source_sha256": "b90f254201da3e05a9248816923eaf9f10ad4d344baf05d6d0bb4c665472dd32",
+    "functions": {
+      "Solution.isValidSudoku": {
+        "time": "O(1)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "The problem fixes the board at 9 by 9.",
+        "reason": "Both loops have constant bounds and the tracked sets hold at most a fixed number of entries."
+      }
+    }
+  },
+  "two_pointers/python/boats_to_save_people.py": {
+    "source_sha256": "d85f4093c24536132f5e85889959212bf20e664568276af96b27323350456142",
+    "functions": {
+      "Solution.numRescueBoats": {
+        "time": "O(n log(n + 1))",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of people.",
+        "reason": "Python's sort dominates the linear two-pointer pass and can use linear temporary workspace.",
+        "sequence": "people"
+      }
+    }
+  },
+  "two_pointers/python/four_sum.py": {
+    "source_sha256": "e234dd951e8e3796f49e5563425bbb6f04d3dad675c415ef604c9e8ff3f30e95",
+    "functions": {
+      "Solution.fourSum": {
+        "time": "O(n^3)",
+        "space": "O(n + z)",
+        "time_kind": "worst case",
+        "sizes": "n is the input length and z is the number of returned quadruplets.",
+        "reason": "There are O(n^2) pairs of fixed indices. Each pair gets one O(n) scan because duplicate-skipping loops advance the same pointers. Sorting can use O(n) workspace and results use O(z).",
+        "sequence": "nums"
+      }
+    }
+  },
+  "two_pointers/python/max_area.py": {
+    "source_sha256": "b3411d52558fe8ff0f935b8d06574751b7821b0db09a6d4909e4ee474d3d2c28",
+    "functions": {
+      "Solution.maxArea": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of heights.",
+        "reason": "Each iteration moves one pointer inward, so the interval shrinks at least once per step. The method maintains only a few scalars.",
+        "sequence": "height"
+      }
+    }
+  },
+  "two_pointers/python/merge_alternatively.py": {
+    "source_sha256": "b6261f76c390dfafc85f6e252bb16f204d0cf131f21cf3fd79cad8cca308e7b0",
+    "functions": {
+      "Solution.mergeAlternately": {
+        "time": "O(n + m)",
+        "space": "O(n + m)",
+        "time_kind": "worst case",
+        "sizes": "n and m are the lengths of the input strings.",
+        "reason": "The alternating scan, tail slices, and final join process O(n + m) characters in total. The list and returned string can each grow to that size."
+      }
+    }
+  },
+  "two_pointers/python/merge_sorted_array.py": {
+    "source_sha256": "15a9fe342ee604ce6d3027a675c98f64f23037f9e72318b750554f9042d05017",
+    "functions": {
+      "Solution.merge": {
+        "time": "O(m + n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "m and n are the counts of valid input elements.",
+        "reason": "Each step consumes one input element and writes into an existing slot of nums1."
+      }
+    }
+  },
+  "two_pointers/python/remove_duplicate.py": {
+    "source_sha256": "63a4837e3ddac2e30d32fdd7b1d6f11ab5ff8ed2aca326324b0b8514c0cb4ded",
+    "functions": {
+      "Solution.removeDuplicates": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of the sorted input.",
+        "reason": "The read index scans once. Updates write into the existing list using just the two indices.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "two_pointers/python/remove_duplicates_ii.py": {
+    "source_sha256": "aded31cf76a4d9d93d36a8398885796b6a731c93ed546461d5a11f3937471d2f",
+    "functions": {
+      "Solution.removeDuplicates": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of the sorted input.",
+        "reason": "Each value is checked once against the compacted prefix and valid values are written in place.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "two_pointers/python/reverse_string.py": {
+    "source_sha256": "3d94a3ae0c6561e270737030b881d0cc61079e5d27829e0c7e0a39c82d9589b2",
+    "functions": {
+      "Solution.reverseString": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of characters.",
+        "reason": "Each iteration swaps two existing entries and moves both indices inward."
+      }
+    }
+  },
+  "two_pointers/python/rotate_array.py": {
+    "source_sha256": "4093cdee29a46934424cb3224d1ca3d7c10c502c74f0ed794adc347b41e1ca00",
+    "functions": {
+      "Solution.rotate": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the positive input length.",
+        "reason": "Three in-place reversals collectively touch O(n) entries. The helper is nonrecursive and uses two indices.",
+        "sequence": "nums"
+      }
+    }
+  },
+  "two_pointers/python/three_sum.py": {
+    "source_sha256": "c7f0b341b1b8f68a523bcf901bcca93ec27a932fe87b47a2ceaa7db75f177de1",
+    "functions": {
+      "Solution.threeSum": {
+        "time": "O(n^2)",
+        "space": "O(n + z)",
+        "time_kind": "worst case",
+        "sizes": "n is the input length and z is the number of returned triplets.",
+        "reason": "Each of n outer positions starts a linear two-pointer scan. Duplicate skipping advances the same pointer. Sorting can use O(n) workspace and results use O(z).",
+        "sequence": "nums"
+      }
+    }
+  },
+  "two_pointers/python/trap.py": {
+    "source_sha256": "536732b176dd12565eb0f1de4e8f191cb73699147ba5ad4f8bb0c7141ef8f8fb",
+    "functions": {
+      "Solution.trap_bruteforce": {
+        "time": "O(n^2)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of heights.",
+        "reason": "For each of O(n) positions, the left and right maximum scans together inspect O(n) heights.",
+        "sequence": "height"
+      },
+      "Solution.trap_prefix_suffix_sum": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of heights.",
+        "reason": "The three sequential scans are all linear. Two auxiliary lists store n maxima each.",
+        "sequence": "height"
+      },
+      "Solution.trap_two_pointers": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the number of heights.",
+        "reason": "Either left advances or right retreats on every iteration. Running maxima and the answer are scalar values.",
+        "sequence": "height"
+      }
+    }
+  },
+  "two_pointers/python/two_sum2.py": {
+    "source_sha256": "0bd6ac89c73b7f4b5f45a1e5eac8d9d7336dab8d2ecdf52dd91631c9ab35f68e",
+    "functions": {
+      "Solution.twoSum": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the length of the sorted array.",
+        "reason": "Each unsuccessful comparison moves one pointer inward. A result has two indices.",
+        "sequence": "numbers"
+      }
+    }
+  },
+  "two_pointers/python/valid_palindrome.py": {
+    "source_sha256": "9792b93504465943256204a9923e88c64802b7e08e2b1bab6b75f520493c74aa",
+    "functions": {
+      "Solution.isPalindrome": {
+        "time": "O(n)",
+        "space": "O(1)",
+        "time_kind": "worst case",
+        "sizes": "n is the string length. Character tests and normalization work on individual characters.",
+        "reason": "The outer comparisons and inner skip loops move the same two pointers inward, so they collectively advance at most n times."
+      }
+    }
+  },
+  "two_pointers/python/valid_palindrome_2.py": {
+    "source_sha256": "a8e75703295fa6d9fc7ed8eea9db2efd9190526111582dd4c79f06d77e54b77c",
+    "functions": {
+      "Solution.validPalindrome": {
+        "time": "O(n)",
+        "space": "O(n)",
+        "time_kind": "worst case",
+        "sizes": "n is the string length.",
+        "reason": "The scan stops at the first mismatch and tries at most two deletions. Each candidate uses linear slicing, reversal, and comparison."
+      }
+    }
+  }
+}
