@@ -50,6 +50,29 @@ duplicates instead of deleting files.
 For a new topic, add its display name to `CATEGORY_TITLE_MAP`. For Python, add
 `src/leetcode/<topic>/python` to pytest's `pythonpath` in `pyproject.toml`.
 
+## Check Python complexity
+
+Run the catalog report from the repository root.
+
+```bash
+uv run --no-sync python -m src.complexity_analyzer --leetcode
+```
+
+Each row identifies an inferred or reviewed bound. To see the derivation for
+one implementation, pass its file and function name.
+
+```bash
+uv run --no-sync python -m src.complexity_analyzer \
+  src/leetcode/arrays_hashing/python/two_sum.py --function Solution.twoSum
+```
+
+Reviewed entries in [leetcode_catalog.json](../complexity_analyzer/leetcode_catalog.json)
+describe the actual Python source and define their input sizes. Extra space
+includes newly allocated output.
+After changing a solution, recheck its derivation and update the source hash in
+the catalog. To run inference alone with an explicit size, use `--sequence nums`
+for the input list length or `--size n` for an integer bound.
+
 ## Rust module wiring
 
 The crate is intentionally empty of solutions until you write them. For example,
