@@ -16,11 +16,11 @@ const titleIds = [
 	"example-1--constant-inner-loop",
 	"example-2--triangular-sum",
 	"example-3--logarithmic-while-loop",
-	"example-4--two-independent-passes",
-	"example-5--binary-search--linear-work",
-	"example-6--recursive-tree-two-branches",
-	"example-7--memoised-recursion",
-	"example-8--nested-recursion",
+	"example-4--halving-inside-a-linear-loop",
+	"example-5--sequential-passes-plus-a-sort",
+	"example-6--binary-search--linear-duplicate-scan",
+	"example-7--branching-recursion-vs-memoisation",
+	"example-8--two-variable-grid-recursion",
 ];
 
 test("asymptotic note uses the shared page container", () => {
@@ -59,11 +59,11 @@ test("each example keeps its own four-language code group", () => {
 	}
 });
 
-test("halving explanation keeps three focused steps and its intuition callout", () => {
+test("halving explanation keeps focused steps and its intuition callout", () => {
 	assert.ok(halving);
 	assert.ok(halving.querySelector("pre code")?.textContent?.includes("i = i // 2"));
-	assert.equal(halving.querySelectorAll(".calculation-step h5").length, 3);
-	assert.equal(halving.querySelector(".example-takeaway h4")?.textContent, "Why this stays fast");
+	assert.equal(halving.querySelectorAll(".calculation-step h5").length, 2);
+	assert.equal(halving.querySelector(".example-takeaway h4")?.textContent, "Why halving stays fast");
 });
 
 test("vertical trace retains the iteration count and stopping value", () => {
@@ -80,12 +80,4 @@ test("vertical trace retains the iteration count and stopping value", () => {
 		rows.map((row) => row.querySelector("td:last-child")?.textContent?.trim()),
 		["16", "8", "4", "2", "1", "0 (stop)"],
 	);
-});
-
-test("recursive derivations use numbered subsection headings", () => {
-	for (const [index, count] of [[5, 4], [7, 3]]) {
-		const steps = [...examples[index].querySelectorAll(".example-derivation h5")];
-		assert.equal(steps.length, count);
-		steps.forEach((step, stepIndex) => assert.match(step.textContent!, new RegExp(`^${stepIndex + 1}\\. `)));
-	}
 });

@@ -1,7 +1,7 @@
 ---
-title: Time Complexity Interview Questions & Cheat Sheet
+title: Time Complexity Interview Questions & Playbook
 slug: time_complexity_interview_questions
-description: A comprehensive guide to time complexity analysis for DSA interviews, covering common questions, patterns, and quick reference tables.
+description: Graded time complexity interview drills with hidden answers, plus a step-by-step playbook for analysing and optimising solutions in interviews.
 category: Complexity
 order: 4
 status: stable
@@ -11,89 +11,30 @@ tags:
   - big-o
 ---
 
-# Time Complexity Interview Questions & Cheat Sheet
+# Time Complexity Interview Questions & Playbook
 
-A comprehensive guide to time complexity analysis for DSA interviews, covering common questions, patterns, and quick reference tables.
+Use this note to **test yourself** on common time complexity interview questions and rehearse how to talk through complexity under time pressure.
 
----
-
-## Table of Contents
-1. [Quick Reference Tables](#quick-reference-tables)
-2. [Common Interview Questions](#common-interview-questions)
-3. [Pattern Recognition Guide](#pattern-recognition-guide)
-4. [Tricky Cases & Gotchas](#tricky-cases--gotchas)
-5. [Interview Strategies](#interview-strategies)
+Need a refresher first? See [Asymptotic Analysis](../asymptotic-analysis/) for the core derivations and [Time Complexity](../time-complexity/) for pattern recognition, constraint heuristics, and data structure / sorting / graph tables.
 
 ---
 
-## Quick Reference Tables
+## Warm-Up Drills
 
-### Data Structure Operations
+### Q1. Triangular nested loop
 
-| Data Structure | Access | Search | Insert | Delete | Space |
-|----------------|--------|--------|--------|--------|-------|
-| **Array** | O(1) | O(n) | O(n) | O(n) | O(n) |
-| **Dynamic Array** | O(1) | O(n) | O(1)* | O(n) | O(n) |
-| **Linked List** | O(n) | O(n) | O(1) | O(1) | O(n) |
-| **Stack** | O(n) | O(n) | O(1) | O(1) | O(n) |
-| **Queue** | O(n) | O(n) | O(1) | O(1) | O(n) |
-| **Hash Table** | N/A | O(1)* | O(1)* | O(1)* | O(n) |
-| **Binary Search Tree** | O(log n)* | O(log n)* | O(log n)* | O(log n)* | O(n) |
-| **AVL Tree** | O(log n) | O(log n) | O(log n) | O(log n) | O(n) |
-| **Binary Heap** | N/A | O(n) | O(log n) | O(log n) | O(n) |
-| **Trie** | O(k) | O(k) | O(k) | O(k) | O(n*k) |
-
-*Average case (worst case can differ)
-k = key/word length
-
-### Sorting Algorithms
-
-| Algorithm | Best | Average | Worst | Space | Stable |
-|-----------|------|---------|-------|-------|--------|
-| **Bubble Sort** | O(n) | O(n²) | O(n²) | O(1) | Yes |
-| **Selection Sort** | O(n²) | O(n²) | O(n²) | O(1) | No |
-| **Insertion Sort** | O(n) | O(n²) | O(n²) | O(1) | Yes |
-| **Merge Sort** | O(n log n) | O(n log n) | O(n log n) | O(n) | Yes |
-| **Quick Sort** | O(n log n) | O(n log n) | O(n²) | O(log n) | No |
-| **Heap Sort** | O(n log n) | O(n log n) | O(n log n) | O(1) | No |
-| **Counting Sort** | O(n+k) | O(n+k) | O(n+k) | O(k) | Yes |
-| **Radix Sort** | O(d(n+k)) | O(d(n+k)) | O(d(n+k)) | O(n+k) | Yes |
-| **Bucket Sort** | O(n+k) | O(n+k) | O(n²) | O(n) | Yes |
-
-k = range of values, d = number of digits
-
-### Graph Algorithms
-
-| Algorithm | Time | Space | Notes |
-|-----------|------|-------|-------|
-| **BFS** | O(V + E) | O(V) | Shortest path (unweighted) |
-| **DFS** | O(V + E) | O(V) | Stack-based traversal |
-| **Dijkstra** | O((V + E) log V) | O(V) | Shortest path (weighted, non-negative) |
-| **Bellman-Ford** | O(V * E) | O(V) | Shortest path (handles negative weights) |
-| **Floyd-Warshall** | O(V³) | O(V²) | All-pairs shortest path |
-| **Prim's MST** | O(E log V) | O(V) | Minimum spanning tree |
-| **Kruskal's MST** | O(E log E) | O(V) | Minimum spanning tree |
-| **Topological Sort** | O(V + E) | O(V) | DAG ordering |
-| **Union-Find** | O(α(n))* | O(n) | Disjoint sets |
-
-V = vertices, E = edges, α = inverse Ackermann function (effectively constant)
-
----
-
-## Common Interview Questions
-
-### Question 1: "What's the time complexity of this code?"
+What is the time complexity of this function? How would you optimize it if the goal were finding two elements that sum to a target?
 
 ```python
 def example(arr):
-    for i in range(len(arr)):          # O(n)
-        for j in range(i + 1, len(arr)):  # O(n)
+    for i in range(len(arr)):
+        for j in range(i + 1, len(arr)):
             print(arr[i], arr[j])
 ```
 ```julia
 function example(arr)
-    for i in 1:length(arr)              # O(n)
-        for j in i+1:length(arr)        # O(n)
+    for i in 1:length(arr)
+        for j in i+1:length(arr)
             println(arr[i], " ", arr[j])
         end
     end
@@ -101,8 +42,8 @@ end
 ```
 ```ts
 function example(arr: number[]): void {
-  for (let i = 0; i < arr.length; i++) {        // O(n)
-    for (let j = i + 1; j < arr.length; j++) {  // O(n)
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
       console.log(arr[i], arr[j]);
     }
   }
@@ -110,391 +51,26 @@ function example(arr: number[]): void {
 ```
 ```rust
 fn example(arr: &[i32]) {
-    for i in 0..arr.len() {             // O(n)
-        for j in i + 1..arr.len() {     // O(n)
+    for i in 0..arr.len() {
+        for j in i + 1..arr.len() {
             println!("{} {}", arr[i], arr[j]);
         }
     }
 }
 ```
 
-**Answer**: O(n²)
-- Outer loop: n iterations
-- Inner loop: (n-1) + (n-2) + ... + 1 = n(n-1)/2 iterations
-- Total: O(n²)
+<details>
+<summary>Show answer</summary>
 
-**Follow-up**: "How would you optimize this?"
-- Depends on the goal (e.g., if finding pairs, hash map might reduce to O(n))
+**Time:** $\Theta(n^2)$. The inner loop runs $(n - 1) + (n - 2) + \cdots + 1 = \frac{n(n - 1)}{2}$ times.
 
----
+**Optimization:** If you must print all pairs, $\Omega(n^2)$ is unavoidable. If you are searching for a pair with a target sum (Two Sum), store seen values in a hash map to drop time to $O(n)$ at the cost of $O(n)$ space.
 
-### Question 2: "Binary search time complexity?"
+</details>
 
-**Answer**: O(log n)
+### Q2. Halving loop
 
-**Why?**
-- Each iteration cuts search space in half
-- After k iterations: n/2^k elements remain
-- When n/2^k = 1, we've found the element
-- Solving: k = log₂(n)
-
-**Follow-ups**:
-- "What about space complexity?"
-  - Iterative: O(1)
-  - Recursive: O(log n) due to call stack
-- "When does it become O(n)?"
-  - Unbalanced/unsorted data, or degenerate BST
-
----
-
-### Question 3: "Explain O(n log n)"
-
-**Answer**: Common in efficient sorting (merge sort, heap sort)
-
-**Intuition**:
-- Divide problem into log n levels (divide-and-conquer)
-- At each level, do O(n) work
-- Total: O(n) * O(log n) = O(n log n)
-
-**Example**: Merge sort
-```text
-Level 0: [8,3,5,4,7,2,1,6]           - O(n) merge work
-         /                \
-Level 1: [8,3,5,4]    [7,2,1,6]      - O(n) merge work
-         /    \        /    \
-Level 2: [8,3] [5,4]  [7,2] [1,6]    - O(n) merge work
-         ...
-         (log n levels total)
-```
-
----
-
-### Question 4: "What's the difference between O(2n) and O(n)?"
-
-**Answer**: They're the same: O(n)
-
-**Why?**
-- Big-O ignores constants
-- Focus: growth rate, not exact operations
-- O(2n) = O(n), O(n/2) = O(n), O(100n) = O(n)
-
-**When constants matter**:
-- Real-world performance optimization
-- Comparing algorithms with same Big-O
-- Cache efficiency, memory access patterns
-
----
-
-### Question 5: "Two nested loops always O(n²)?"
-
-**Answer**: Not always! Depends on iteration counts.
-
-**Examples**:
-
-```python
-# O(n²) - both loops depend on n
-for i in range(n):
-    for j in range(n):
-        print(i, j)
-
-# O(n) - inner loop is constant
-for i in range(n):
-    for j in range(10):  # Always 10 iterations
-        print(i, j)
-
-# O(n log n) - inner loop decreases exponentially
-for i in range(n):
-    j = i
-    while j > 0:
-        print(j)
-        j //= 2  # Halves each time
-```
-```julia
-# O(n²) - both loops depend on n
-for i in 1:n
-    for j in 1:n
-        println(i, " ", j)
-    end
-end
-
-# O(n) - inner loop is constant
-for i in 1:n
-    for j in 1:10  # Always 10 iterations
-        println(i, " ", j)
-    end
-end
-
-# O(n log n) - inner loop decreases exponentially
-for i in 1:n
-    j = i
-    while j > 0
-        println(j)
-        j ÷= 2  # Halves each time
-    end
-end
-```
-```ts
-// O(n²) - both loops depend on n
-for (let i = 0; i < n; i++) {
-  for (let j = 0; j < n; j++) {
-    console.log(i, j);
-  }
-}
-
-// O(n) - inner loop is constant
-for (let i = 0; i < n; i++) {
-  for (let j = 0; j < 10; j++) {  // Always 10 iterations
-    console.log(i, j);
-  }
-}
-
-// O(n log n) - inner loop decreases exponentially
-for (let i = 0; i < n; i++) {
-  let j = i;
-  while (j > 0) {
-    console.log(j);
-    j = Math.floor(j / 2);  // Halves each time
-  }
-}
-```
-```rust
-// O(n²) - both loops depend on n
-for i in 0..n {
-    for j in 0..n {
-        println!("{i} {j}");
-    }
-}
-
-// O(n) - inner loop is constant
-for i in 0..n {
-    for j in 0..10 {  // Always 10 iterations
-        println!("{i} {j}");
-    }
-}
-
-// O(n log n) - inner loop decreases exponentially
-for i in 0..n {
-    let mut j = i;
-    while j > 0 {
-        println!("{j}");
-        j /= 2;  // Halves each time
-    }
-}
-```
-
----
-
-### Question 6: "Recursive Fibonacci time complexity?"
-
-```python
-def fib(n):
-    if n <= 1:
-        return n
-    return fib(n-1) + fib(n-2)
-```
-```julia
-function fib(n)
-    if n <= 1
-        return n
-    end
-    return fib(n-1) + fib(n-2)
-end
-```
-```ts
-function fib(n: number): number {
-  if (n <= 1) {
-    return n;
-  }
-  return fib(n - 1) + fib(n - 2);
-}
-```
-```rust
-fn fib(n: u64) -> u64 {
-    if n <= 1 {
-        return n;
-    }
-    fib(n - 1) + fib(n - 2)
-}
-```
-
-**Answer**: O(2^n)
-
-**Why?**
-- Each call spawns 2 more calls (except base case)
-- Forms binary tree of depth n
-- Total calls: ~2^n
-
-**Recurrence relation**: T(n) = T(n-1) + T(n-2) + O(1) ≈ O(2^n)
-
-**Optimization**:
-- Memoization: O(n) time, O(n) space
-- Iteration: O(n) time, O(1) space
-
----
-
-### Question 7: "Hash table lookup is O(1), always?"
-
-**Answer**: Average O(1), worst O(n)
-
-**Why worst case O(n)?**
-- Hash collisions → all n keys map to same bucket
-- Linked list traversal in bucket
-- Rare with good hash function, but possible
-
-**Follow-up**: "How to ensure O(1)?"
-- Use good hash function (uniform distribution)
-- Maintain low load factor (resize when needed)
-- Perfect hashing (theory)
-
----
-
-### Question 8: "What's space complexity of recursion?"
-
-**Answer**: O(max recursion depth)
-
-**Examples**:
-
-```python
-# O(n) space - linear recursion depth
-def factorial(n):
-    if n <= 1:
-        return 1
-    return n * factorial(n-1)  # Max depth: n
-
-# O(log n) space - binary tree depth
-def binary_search(arr, target, left, right):
-    if left > right:
-        return -1
-    mid = (left + right) // 2
-    if arr[mid] == target:
-        return mid
-    elif arr[mid] < target:
-        return binary_search(arr, target, mid+1, right)
-    else:
-        return binary_search(arr, target, left, mid-1)
-
-# O(n) space - tree with n nodes (worst case)
-def tree_height(node):
-    if not node:
-        return 0
-    return 1 + max(tree_height(node.left), tree_height(node.right))
-```
-```julia
-# O(n) space - linear recursion depth
-# (named fact so it doesn't clash with Base.factorial)
-function fact(n)
-    if n <= 1
-        return 1
-    end
-    return n * fact(n-1)  # Max depth: n
-end
-
-# O(log n) space - binary tree depth
-# Call with left = 1, right = length(arr) (Julia is 1-based)
-function binary_search(arr, target, left, right)
-    if left > right
-        return nothing
-    end
-    mid = (left + right) ÷ 2
-    if arr[mid] == target
-        return mid
-    elseif arr[mid] < target
-        return binary_search(arr, target, mid+1, right)
-    else
-        return binary_search(arr, target, left, mid-1)
-    end
-end
-
-# O(n) space - tree with n nodes (worst case)
-function tree_height(node)
-    if node === nothing
-        return 0
-    end
-    return 1 + max(tree_height(node.left), tree_height(node.right))
-end
-```
-```ts
-// O(n) space - linear recursion depth
-function factorial(n: number): number {
-  if (n <= 1) {
-    return 1;
-  }
-  return n * factorial(n - 1);  // Max depth: n
-}
-
-// O(log n) space - binary tree depth
-function binarySearch(arr: number[], target: number, left: number, right: number): number {
-  if (left > right) {
-    return -1;
-  }
-  const mid = Math.floor((left + right) / 2);
-  if (arr[mid] === target) {
-    return mid;
-  } else if (arr[mid] < target) {
-    return binarySearch(arr, target, mid + 1, right);
-  } else {
-    return binarySearch(arr, target, left, mid - 1);
-  }
-}
-
-// O(n) space - tree with n nodes (worst case)
-interface TreeNode {
-  val: number;
-  left: TreeNode | null;
-  right: TreeNode | null;
-}
-
-function treeHeight(node: TreeNode | null): number {
-  if (node === null) {
-    return 0;
-  }
-  return 1 + Math.max(treeHeight(node.left), treeHeight(node.right));
-}
-```
-```rust
-// O(n) space - linear recursion depth
-fn factorial(n: u64) -> u64 {
-    if n <= 1 {
-        return 1;
-    }
-    n * factorial(n - 1)  // Max depth: n
-}
-
-// O(log n) space - binary tree depth
-// Searches arr[left..right] with right exclusive (call with 0, arr.len()),
-// so there is no `mid - 1` to underflow.
-fn binary_search(arr: &[i32], target: i32, left: usize, right: usize) -> Option<usize> {
-    if left >= right {
-        return None;
-    }
-    let mid = left + (right - left) / 2;
-    if arr[mid] == target {
-        Some(mid)
-    } else if arr[mid] < target {
-        binary_search(arr, target, mid + 1, right)
-    } else {
-        binary_search(arr, target, left, mid)
-    }
-}
-
-// O(n) space - tree with n nodes (worst case)
-struct TreeNode {
-    val: i32,
-    left: Option<Box<TreeNode>>,
-    right: Option<Box<TreeNode>>,
-}
-
-fn tree_height(node: Option<&TreeNode>) -> usize {
-    match node {
-        None => 0,
-        Some(n) => 1 + tree_height(n.left.as_deref()).max(tree_height(n.right.as_deref())),
-    }
-}
-```
-
----
-
-### Question 9: "Analyzing this code?"
+What is the time complexity of `mystery(n)`?
 
 ```python
 def mystery(n):
@@ -539,675 +115,289 @@ fn mystery(n: u64) -> u32 {
 }
 ```
 
-**Answer**: O(log n)
+<details>
+<summary>Show answer</summary>
 
-**Analysis**:
-- Loop divides i by 2 each iteration
-- Stops when i reaches 0
-- Iterations: log₂(n)
+**Time:** $\Theta(\log n)$. Each iteration halves `i`, so the loop runs $\lfloor \log_2 n \rfloor + 1$ times (once per binary digit of $n$).
 
-**Pattern**: Division/multiplication by constant → logarithmic
+</details>
 
----
+### Q3. Are two nested loops always $O(n^2)$?
 
-### Question 10: "Master Theorem application?"
+Give the tight time complexity for each of these three snippets:
 
-**Given**: T(n) = 2T(n/2) + O(n)
-
-**Answer**: O(n log n)
-
-**Master Theorem**:
-- T(n) = aT(n/b) + f(n)
-- Here: a=2, b=2, f(n)=O(n)
-- n^(log_b(a)) = n^(log_2(2)) = n^1 = n
-- Since f(n) = Θ(n^(log_b(a))), case 2 applies
-- **Result**: T(n) = Θ(n log n)
-
-**Common recurrences**:
-- T(n) = T(n/2) + O(1) → O(log n) (binary search)
-- T(n) = 2T(n/2) + O(n) → O(n log n) (merge sort)
-- T(n) = T(n-1) + O(1) → O(n) (linear recursion)
-
----
-
-## Pattern Recognition Guide
-
-### Logarithmic O(log n)
-**Patterns**:
-- Dividing problem size by constant each step
-- Binary search, tree height
-- Powers of 2: 1, 2, 4, 8, 16...
-
-**Code signals**:
 ```python
-while i > 0:
-    i //= 2  # or i *= 2, or i = i >> 1
-
-# Binary search
-mid = (left + right) // 2
-```
-```julia
-while i > 0
-    i ÷= 2  # or i *= 2, or i >>= 1
-end
-
-# Binary search
-mid = (left + right) ÷ 2
-```
-```ts
-while (i > 0) {
-  i = Math.floor(i / 2);  // or i *= 2, or i >>= 1 (32-bit integers only)
-}
-
-// Binary search
-const mid = Math.floor((left + right) / 2);
-```
-```rust
-while i > 0 {
-    i /= 2;  // or i *= 2, or i >>= 1
-}
-
-// Binary search (written this way so left + right can't overflow)
-let mid = left + (right - left) / 2;
-```
-
----
-
-### Linear O(n)
-**Patterns**:
-- Single pass through data
-- Constant work per element
-
-**Code signals**:
-```python
-for item in collection:
-    # O(1) operation
-
+# A
 for i in range(n):
-    if condition:  # O(1) check
-        result.append(i)
+    for j in range(10):
+        print(i, j)
+
+# B
+for i in range(n):
+    j = i
+    while j > 0:
+        j //= 2
+
+# C
+for i in range(n):
+    for j in range(m):
+        print(i, j)
 ```
 ```julia
-for item in collection
-    # O(1) operation
+# A
+for i in 1:n
+    for j in 1:10
+        println(i, " ", j)
+    end
 end
 
+# B
 for i in 1:n
-    if condition  # O(1) check
-        push!(result, i)
+    j = i
+    while j > 0
+        j ÷= 2
+    end
+end
+
+# C
+for i in 1:n
+    for j in 1:m
+        println(i, " ", j)
     end
 end
 ```
 ```ts
-for (const item of collection) {
-  // O(1) operation
+// A
+for (let i = 0; i < n; i++) {
+  for (let j = 0; j < 10; j++) {
+    console.log(i, j);
+  }
 }
 
+// B
 for (let i = 0; i < n; i++) {
-  if (condition) {  // O(1) check
-    result.push(i);
+  let j = i;
+  while (j > 0) {
+    j = Math.floor(j / 2);
+  }
+}
+
+// C
+for (let i = 0; i < n; i++) {
+  for (let j = 0; j < m; j++) {
+    console.log(i, j);
   }
 }
 ```
 ```rust
-for item in &collection {
-    // O(1) operation
+// A
+for i in 0..n {
+    for j in 0..10 {
+        println!("{i} {j}");
+    }
 }
 
+// B
 for i in 0..n {
-    if condition {  // O(1) check
-        result.push(i);
+    let mut j = i;
+    while j > 0 {
+        j /= 2;
+    }
+}
+
+// C
+for i in 0..n {
+    for j in 0..m {
+        println!("{i} {j}");
     }
 }
 ```
 
+<details>
+<summary>Show answer</summary>
+
+- **A:** $\Theta(n)$ — the inner loop is a constant 10 iterations.
+- **B:** $\Theta(n \log n)$ — the inner loop halves `j`, running $\Theta(\log i)$ times for each $i$.
+- **C:** $\Theta(n \cdot m)$ — `n` and `m` are independent input sizes; do not collapse to $O(n^2)$ unless $m = \Theta(n)$.
+
+</details>
+
+### Q4. Why is $O(2n)$ the same as $O(n)$, and when do constants still matter?
+
+<details>
+<summary>Show answer</summary>
+
+Big O captures how work **scales** with $n$, ignoring constant multipliers ($2n \leq c \cdot n$ for $c = 2$). Constants still matter in production when comparing two algorithms in the **same** complexity class, or when $n$ is small enough that lower overhead and cache locality beat a better asymptotic curve (e.g. insertion sort vs. merge sort on small subarrays).
+
+</details>
+
 ---
 
-### Linearithmic O(n log n)
-**Patterns**:
-- Divide-and-conquer with O(n) merge
-- Efficient sorting algorithms
+## Recursion & Data Structure Drills
 
-**Code signals**:
+### Q5. Binary search — time, space, and failure mode
+
+Explain why binary search is $O(\log n)$, compare iterative vs. recursive space, and state when a binary-search-like lookup degrades to $O(n)$.
+
+<details>
+<summary>Show answer</summary>
+
+- **Time:** Each comparison discards half the search space. After $k$ steps, $n / 2^k$ items remain; stopping at $1$ gives $k = \log_2 n \implies O(\log n)$.
+- **Space:** Iterative is $O(1)$; recursive is $O(\log n)$ due to the call stack.
+- **When it degrades to $O(n)$:** On an unbalanced (skewed) binary search tree, or when binary search is followed by a linear scan across duplicates (see [Asymptotic Analysis Example 6](../asymptotic-analysis/#example-6--binary-search--linear-duplicate-scan)).
+
+</details>
+
+### Q6. Explain $O(n \log n)$ in merge sort without citing the Master Theorem
+
+<details>
+<summary>Show answer</summary>
+
+Picture the recursion tree: splitting the array in half at each step creates $\log_2 n$ levels. At every level, the subarrays partition all $n$ elements, so merging across the entire level touches every element once — $O(n)$ work per level. Multiplying $O(n)$ work per level by $O(\log n)$ levels gives $O(n \log n)$.
+
+</details>
+
+### Q7. Recursive Fibonacci — naive vs. optimized
+
 ```python
-# Merge sort structure
-def merge_sort(arr):
-    if len(arr) <= 1:
-        return arr
-    mid = len(arr) // 2
-    left = merge_sort(arr[:mid])    # T(n/2)
-    right = merge_sort(arr[mid:])   # T(n/2)
-    return merge(left, right)        # O(n)
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
 ```
 ```julia
-# Merge sort structure
-# (merge_sorted, not merge: Base.merge already exists for dictionaries)
-function merge_sort(arr)
-    if length(arr) <= 1
-        return arr
-    end
-    mid = length(arr) ÷ 2
-    left = merge_sort(arr[1:mid])       # T(n/2)
-    right = merge_sort(arr[mid+1:end])  # T(n/2)
-    return merge_sorted(left, right)    # O(n)
+function fib(n)
+    n <= 1 && return n
+    return fib(n - 1) + fib(n - 2)
 end
 ```
 ```ts
-// Merge sort structure
-function mergeSort(arr: number[]): number[] {
-  if (arr.length <= 1) {
-    return arr;
-  }
-  const mid = Math.floor(arr.length / 2);
-  const left = mergeSort(arr.slice(0, mid));  // T(n/2)
-  const right = mergeSort(arr.slice(mid));    // T(n/2)
-  return merge(left, right);                  // O(n)
+function fib(n: number): number {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
 }
 ```
 ```rust
-// Merge sort structure
-fn merge_sort(arr: &[i32]) -> Vec<i32> {
-    if arr.len() <= 1 {
-        return arr.to_vec();
-    }
-    let mid = arr.len() / 2;
-    let left = merge_sort(&arr[..mid]);   // T(n/2)
-    let right = merge_sort(&arr[mid..]);  // T(n/2)
-    merge(&left, &right)                  // O(n)
+fn fib(n: u64) -> u64 {
+    if n <= 1 { return n; }
+    fib(n - 1) + fib(n - 2)
 }
 ```
 
+State the time and space complexity of: (1) naive recursion, (2) memoisation, and (3) iterative DP.
+
+<details>
+<summary>Show answer</summary>
+
+1. **Naive recursion:** $O(2^n)$ loose upper bound (tight: $\Theta(\phi^n)$, $\phi \approx 1.618$) time; $O(n)$ call-stack space.
+2. **Memoisation:** $O(n)$ time (each of $0 \dots n$ computed once); $O(n)$ space (cache + call stack).
+3. **Iterative (two variables):** $O(n)$ time; $O(1)$ space.
+
+</details>
+
+### Q8. Is hash table lookup *always* $O(1)$?
+
+<details>
+<summary>Show answer</summary>
+
+No: **$O(1)$ average, $O(n)$ worst case**. If all $n$ keys hash to the same bucket, lookup degrades to scanning all $n$ colliding entries. Good hash functions, randomised hash seeds, and resizing to keep the load factor low make the worst case negligible in practice.
+
+</details>
+
 ---
 
-### Quadratic O(n²)
-**Patterns**:
-- Nested loops over same data
-- Comparing all pairs
+## Tricky & Optimization Drills
 
-**Code signals**:
+### Q9. Dynamic array append: $O(1)$ or $O(n)$?
+
+<details>
+<summary>Show answer</summary>
+
+**$O(1)$ amortized, $O(n)$ worst-case single call.** Most appends write into spare capacity in $O(1)$. When full, resizing doubles capacity and copies $n$ elements ($O(n)$), but doubling means copies across $n$ appends sum to $1 + 2 + 4 + \cdots < 2n$, so $n$ appends take $O(n)$ total time.
+
+</details>
+
+### Q10. Spot the hidden $O(n^2)$ in string building
+
+Why can building a string with `+=` inside a loop be $O(n^2)$, and how do you fix it in your language?
+
+<details>
+<summary>Show answer</summary>
+
+In languages with immutable strings (Python, Julia, JS spec), concatenating allocates a new string and copies the entire prefix so far: $1 + 2 + \cdots + n = O(n^2)$.
+
+- **Python:** collect parts in a list and call `"".join(parts)` — $O(n)$.
+- **Julia:** write to an `IOBuffer` or call `join(parts)` — $O(n)$.
+- **TypeScript:** collect parts in an array and call `parts.join("")` — $O(n)$ portably.
+- **Rust:** `String` is mutable, so `result.push_str(part)` is already amortized $O(n)$; avoid `result = format!("{result}{part}")`, which copies every iteration.
+
+</details>
+
+### Q11. Spot the hidden $O(n^2)$ in slicing
+
 ```python
 for i in range(n):
-    for j in range(n):  # Both loops n times
-        # O(1) operation
-
-# Or
-for i in range(n):
-    for j in range(i, n):  # Triangle: n(n+1)/2 = O(n²)
-        # O(1) operation
+    process(arr[i:])
 ```
 ```julia
 for i in 1:n
-    for j in 1:n  # Both loops n times
-        # O(1) operation
-    end
-end
-
-# Or
-for i in 1:n
-    for j in i:n  # Triangle: n(n+1)/2 = O(n²)
-        # O(1) operation
-    end
+    process(arr[i:end])
 end
 ```
 ```ts
 for (let i = 0; i < n; i++) {
-  for (let j = 0; j < n; j++) {  // Both loops n times
-    // O(1) operation
-  }
-}
-
-// Or
-for (let i = 0; i < n; i++) {
-  for (let j = i; j < n; j++) {  // Triangle: n(n+1)/2 = O(n²)
-    // O(1) operation
-  }
+  process(arr.slice(i));
 }
 ```
 ```rust
 for i in 0..n {
-    for j in 0..n {  // Both loops n times
-        // O(1) operation
-    }
-}
-
-// Or
-for i in 0..n {
-    for j in i..n {  // Triangle: n(n+1)/2 = O(n²)
-        // O(1) operation
-    }
+    process(arr[i..].to_vec());
 }
 ```
+
+Assuming `process` itself does $O(1)$ work, what is the total time complexity and how do you make it $O(n)$?
+
+<details>
+<summary>Show answer</summary>
+
+**$O(n^2)$.** Each slice copies $n - i$ elements, summing to $\frac{n(n + 1)}{2}$. Fix by passing the start index `i` alongside `arr`, or using a zero-copy view (`@view arr[i:end]` in Julia, `&arr[i..]` in Rust).
+
+</details>
+
+### Q12. Master Theorem — when does it apply and when doesn't it?
+
+Solve $T(n) = 2T(n/2) + n$, and explain why the Master Theorem does **not** apply to $T(n) = T(n - 1) + O(1)$ or $T(n) = T(n/3) + T(2n/3) + n$.
+
+<details>
+<summary>Show answer</summary>
+
+- **$T(n) = 2T(n/2) + n$:** $a = 2, b = 2 \implies c^* = \log_2 2 = 1$, so $n^{c^*} = n = f(n)$ (Case 2, $k = 0$) $\implies \Theta(n \log n)$.
+- **$T(n) = T(n - 1) + O(1)$:** Subproblem shrinks by subtraction, not division by $b > 1$. Unroll directly $\implies \Theta(n)$.
+- **$T(n) = T(n/3) + T(2n/3) + n$:** Subproblems have unequal sizes. Use a recursion tree (each full level sums to $n$; shortest path has depth $\log_3 n$, longest has $\log_{3/2} n \implies \Theta(n \log n)$).
+
+</details>
 
 ---
 
-### Exponential O(2^n)
-**Patterns**:
-- Recursive branching (each call spawns 2+ calls)
-- Generating all subsets/permutations
-
-**Code signals**:
-```python
-def recursive(n):
-    if n <= 0:
-        return
-    recursive(n-1)  # Branch 1
-    recursive(n-1)  # Branch 2
-```
-```julia
-function recursive(n)
-    if n <= 0
-        return
-    end
-    recursive(n-1)  # Branch 1
-    recursive(n-1)  # Branch 2
-end
-```
-```ts
-function recursive(n: number): void {
-  if (n <= 0) {
-    return;
-  }
-  recursive(n - 1);  // Branch 1
-  recursive(n - 1);  // Branch 2
-}
-```
-```rust
-fn recursive(n: i32) {
-    if n <= 0 {
-        return;
-    }
-    recursive(n - 1);  // Branch 1
-    recursive(n - 1);  // Branch 2
-}
-```
-
----
-
-## Tricky Cases & Gotchas
-
-### 1. Amortized Analysis
-
-**Question**: "Dynamic array append is O(1) or O(n)?"
-
-**Answer**: O(1) amortized, O(n) worst case
-
-**Explanation**:
-- Most appends: O(1) (add to end)
-- Resize (when full): O(n) (copy all elements)
-- Resize happens rarely (e.g., every doubling)
-- Over n operations: total O(n), average O(1)
-
----
-
-### 2. String Concatenation in Loops
-
-```python
-# O(n²) - string immutable, creates new string each time
-result = ""
-for i in range(n):
-    result += str(i)  # O(len(result)) each iteration
-
-# O(n) - list append O(1), join O(n) once
-result = []
-for i in range(n):
-    result.append(str(i))
-final = "".join(result)
-```
-```julia
-# O(n²) - strings are immutable, creates a new string each time
-result = ""
-for i in 1:n
-    result *= string(i)  # O(length(result)) each iteration
-end
-
-# O(n) - write into a growable buffer, take the string once
-buf = IOBuffer()
-for i in 1:n
-    print(buf, i)
-end
-final = String(take!(buf))
-```
-```ts
-// Often fine in practice: engines build a "rope" for += instead of copying,
-// but that's an optimisation, not a guarantee
-let result = "";
-for (let i = 0; i < n; i++) {
-  result += String(i);
-}
-
-// O(n) - collect the parts, join once
-const parts: string[] = [];
-for (let i = 0; i < n; i++) {
-  parts.push(String(i));
-}
-const joined = parts.join("");
-```
-```rust
-// O(n) amortised - String is mutable, so push_str appends in place
-let mut result = String::new();
-for i in 0..n {
-    result.push_str(&i.to_string());
-}
-
-// The O(n²) trap in Rust is rebuilding the string every time
-let mut slow = String::new();
-for i in 0..n {
-    slow = format!("{slow}{i}");  // allocates and copies a new String
-}
-```
-
----
-
-### 3. Slice Operations
-
-```python
-# O(k) where k = slice size
-arr[i:j]  # Creates new array of size j-i
-
-# Common mistake: O(n²) due to slicing in loop
-for i in range(n):
-    process(arr[i:])  # O(n-i) each iteration → O(n²) total
-```
-```julia
-# O(k) where k = slice size
-arr[i:j]        # Creates a new array of size j-i+1 (Julia ranges include both ends)
-@view arr[i:j]  # O(1) - a view, no copy
-
-# Common mistake: O(n²) due to slicing in loop
-for i in 1:n
-    process(arr[i:end])  # O(n-i) each iteration → O(n²) total
-end
-```
-```ts
-// O(k) where k = slice size
-arr.slice(i, j);  // Creates new array of size j-i
-
-// Common mistake: O(n²) due to slicing in loop
-for (let i = 0; i < n; i++) {
-  process(arr.slice(i));  // O(n-i) each iteration → O(n²) total
-}
-```
-```rust
-// O(1) - a slice borrows, nothing is copied
-let view = &arr[i..j];
-// O(k) where k = slice size - only when you ask for a copy
-let copy = arr[i..j].to_vec();
-
-// So slicing in a loop doesn't copy...
-for i in 0..n {
-    process(&arr[i..]);  // the slice itself is O(1)
-}
-// ...unless you write process(arr[i..].to_vec()), which is O(n²) total
-```
-
----
-
-### 4. Set/Dict Operations
-
-```python
-# O(1) average, O(n) worst
-x in my_set
-my_dict[key]
-
-# O(n) - iterating
-for item in my_set:
-    pass
-
-# O(n) - set operations
-set1.union(set2)
-set1.intersection(set2)
-```
-```julia
-# O(1) average, O(n) worst
-x in my_set
-my_dict[key]
-
-# O(n) - iterating
-for item in my_set
-    # ...
-end
-
-# O(n) - set operations
-union(set1, set2)
-intersect(set1, set2)
-```
-```ts
-// O(1) average, O(n) worst
-mySet.has(x);
-myMap.get(key);
-
-// O(n) - iterating
-for (const item of mySet) {
-  // ...
-}
-
-// O(n) - set operations (Set methods added in ES2025;
-// on older runtimes use new Set([...set1, ...set2]))
-set1.union(set2);
-set1.intersection(set2);
-```
-```rust
-// O(1) average, O(n) worst
-my_set.contains(&x);
-my_map[&key];
-
-// O(n) - iterating
-for item in &my_set {
-    // ...
-}
-
-// O(n) - set operations (lazy iterators; collect() builds the new set)
-let all: HashSet<_> = set1.union(&set2).collect();
-let both: HashSet<_> = set1.intersection(&set2).collect();
-```
-
----
-
-### 5. Sorting Already Sorted Data
-
-| Algorithm | Random | Already Sorted |
-|-----------|--------|----------------|
-| Quick Sort | O(n log n) | O(n²)* |
-| Merge Sort | O(n log n) | O(n log n) |
-| Insertion Sort | O(n²) | O(n) |
-| Tim Sort (Python) | O(n log n) | O(n) |
-
-*Without randomized pivot selection
-
----
-
-### 6. Tree Traversal Space
-
-```python
-# Recursive: O(h) space where h = tree height
-def inorder(node):
-    if not node:
-        return
-    inorder(node.left)
-    print(node.val)
-    inorder(node.right)
-
-# Best case: h = log n (balanced tree)
-# Worst case: h = n (skewed tree)
-```
-```julia
-# Recursive: O(h) space where h = tree height
-function inorder(node)
-    if node === nothing
-        return
-    end
-    inorder(node.left)
-    println(node.val)
-    inorder(node.right)
-end
-
-# Best case: h = log n (balanced tree)
-# Worst case: h = n (skewed tree)
-```
-```ts
-// Recursive: O(h) space where h = tree height
-// (TreeNode as defined in Question 8)
-function inorder(node: TreeNode | null): void {
-  if (node === null) {
-    return;
-  }
-  inorder(node.left);
-  console.log(node.val);
-  inorder(node.right);
-}
-
-// Best case: h = log n (balanced tree)
-// Worst case: h = n (skewed tree)
-```
-```rust
-// Recursive: O(h) space where h = tree height
-// (TreeNode as defined in Question 8)
-fn inorder(node: Option<&TreeNode>) {
-    let Some(node) = node else { return };
-    inorder(node.left.as_deref());
-    println!("{}", node.val);
-    inorder(node.right.as_deref());
-}
-
-// Best case: h = log n (balanced tree)
-// Worst case: h = n (skewed tree)
-```
-
----
-
-## Interview Strategies
-
-### Step 1: Clarify the Problem
-- Input size/constraints
-- Expected output
-- Edge cases
-
-### Step 2: Analyze Brute Force
-- What's the naive O(n²) or O(n³) solution?
-- Establishes baseline complexity
-
-### Step 3: Identify Bottlenecks
-- What operation is repeated?
-- Can we cache results?
-- Can we use better data structure?
-
-### Step 4: Optimize
-Common optimizations:
-- **O(n²) → O(n log n)**: Sorting
-- **O(n²) → O(n)**: Hash map/set
-- **O(n) → O(log n)**: Binary search (if sorted)
-- **O(2^n) → O(n)**: Dynamic programming
-
-### Step 5: Trade-offs
-- Time vs space
-- Average vs worst case
-- Simplicity vs performance
-
-### Step 6: Communicate Clearly
-- State assumptions
-- Walk through examples
-- Explain why, not just what
-
----
-
-## Quick Interview Checklist
-
-**Before coding**:
-- [ ] What's the brute force approach?
-- [ ] What's its time/space complexity?
-- [ ] Can I sort the data? (often helps)
-- [ ] Can I use hash map/set? (O(1) lookup)
-- [ ] Is this a known pattern? (two pointers, sliding window, etc.)
-
-**After coding**:
-- [ ] What's the time complexity? (worst & average)
-- [ ] What's the space complexity?
-- [ ] Are there edge cases? (empty input, single element, duplicates)
-- [ ] Can I optimize further?
-
----
-
-## Common Mistakes to Avoid
-
-1. **Ignoring hidden complexity**
-   - `arr.sort()` is O(n log n), not O(1)
-   - `list.remove(x)` is O(n), not O(1)
-   - String operations are often O(n)
-
-2. **Confusing average vs worst case**
-   - Hash table: O(1) average, O(n) worst
-   - Quick sort: O(n log n) average, O(n²) worst
-
-3. **Forgetting space complexity**
-   - Recursion uses O(depth) space
-   - Hash maps use O(n) space
-
-4. **Overcounting constants**
-   - O(2n) = O(n), not O(2n)
-   - O(n + 100) = O(n), not O(n + 100)
-
-5. **Not considering input characteristics**
-   - Already sorted → insertion sort is O(n)
-   - Small range → counting sort is O(n)
-
----
-
-## Practice Problems by Complexity
-
-### O(1) - Constant
-- Array access by index
-- Hash table insert/lookup (average)
-- Math formulas (sum of 1..n = n(n+1)/2)
-
-### O(log n) - Logarithmic
-- Binary search
-- Balanced BST operations
-- Finding power of number
-
-### O(n) - Linear
-- Single array scan
-- Hash table building
-- Two pointers technique
-
-### O(n log n) - Linearithmic
-- Merge sort / Quick sort
-- Sorting then processing
-- Heap-based algorithms
-
-### O(n²) - Quadratic
-- Bubble/Selection/Insertion sort
-- Checking all pairs
-- Naive string matching
-
-### O(2^n) - Exponential
-- Recursive Fibonacci
-- Generating all subsets
-- Backtracking without pruning
-
-### O(n!) - Factorial
-- Generating all permutations
-- Traveling salesman (brute force)
-- N-queens without optimization
-
----
-
-## Resources for Further Study
-
-1. **Books**:
-   - "Introduction to Algorithms" (CLRS)
-   - "The Algorithm Design Manual" (Skiena)
-
-2. **Online**:
-   - [Big-O Cheat Sheet](https://www.bigocheatsheet.com/)
-   - LeetCode Discuss - complexity analysis posts
-   - GeeksforGeeks - time complexity articles
-
-3. **Practice**:
-   - LeetCode (tag: time-complexity)
-   - HackerRank (algorithm challenges)
-   - Codeforces (competitive programming)
-
----
-
-**Last Updated**: January 2026
-**Maintained by**: Hanyu Wu
+## Interview Playbook
+
+Use this six-step sequence when solving any algorithm question aloud:
+
+1. **Clarify constraints first:** Ask for $n$ bounds, value ranges, and whether input is sorted — they immediately narrow down the required complexity class.
+2. **State the brute force + its complexity:** Establish a clear baseline (e.g. "$O(n^2)$ checking all pairs") before optimising.
+3. **Name the bottleneck:** Point to the repeated work (e.g. "linear search inside the outer loop").
+4. **Apply the matching move:** Hash map ($O(n^2) \to O(n)$), sort + two pointers ($O(n^2) \to O(n \log n)$), binary search ($O(n) \to O(\log n)$), or DP ($O(2^n) \to O(n)$).
+5. **Call out trade-offs:** Explicitly state what space you spent to buy that speedup, and note any worst-case caveats (hash collisions, skewed trees).
+6. **Verify after coding:** Re-scan every loop, recursive call, and library call (`sort`, `in`, slicing, string concat) so hidden costs don't slip past you.
+
+### Quick Interview Checklist
+
+**Before coding:**
+- [ ] Identified input size(s) — are there two independent variables ($n$ and $m$, $V$ and $E$)?
+- [ ] Stated brute-force time & space complexity.
+- [ ] Checked whether sorting, a hash map/set, a heap, or a standard pattern (two pointers, sliding window, prefix sums) removes the bottleneck.
+
+**After coding:**
+- [ ] Stated both **time** and **space** complexity (worst and average if they differ).
+- [ ] Counted recursion stack depth and any hidden library copies (`slice`, `remove`, `in`).
+- [ ] Checked edge cases (empty input, single element, all duplicates, already sorted).

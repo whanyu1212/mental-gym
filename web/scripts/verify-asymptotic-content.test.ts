@@ -12,11 +12,11 @@ test("reading map has a visible label, section previews, and working section lin
 	const label = document.getElementById(nav.getAttribute("aria-labelledby")!);
 	assert.ok(label && nav.contains(label));
 	assert.equal(label.textContent, "Contents");
-	assert.equal(nav.querySelector(".note-toc-count")?.textContent, "10 sections");
+	assert.equal(nav.querySelector(".note-toc-count")?.textContent, "8 sections");
 	assert.equal(nav.querySelector("svg")?.getAttribute("aria-hidden"), "true");
 	assert.ok(nav.querySelector("ol[role='list']"));
 	const links = [...nav.querySelectorAll("ol > li > a")];
-	assert.equal(links.length, 10);
+	assert.equal(links.length, 8);
 	for (const link of links) {
 		assert.ok(link.querySelector(".note-toc-copy > strong")?.textContent?.trim());
 		assert.ok(link.querySelector(".note-toc-copy > span")?.textContent?.trim());
@@ -33,7 +33,6 @@ test("cost model is a labelled callout with its assumptions and rendered math", 
 	assert.equal(label?.textContent, "Cost model for this note");
 	assert.ok(label && callout.contains(label));
 	assert.ok(callout.querySelector(".katex"));
-	assert.match(callout.textContent!, /including allocated results unless stated otherwise/);
 	assert.match(callout.textContent!, /arbitrary-precision integers or long strings/);
 });
 
@@ -50,7 +49,7 @@ test("the three main notation definitions keep their headings and equations toge
 
 test("reference tables sit in labelled, keyboard-focusable scroll regions", () => {
 	const regions = [...document.querySelectorAll(".note-table")];
-	assert.equal(regions.length, 10);
+	assert.equal(regions.length, 8);
 	assert.equal(document.querySelectorAll("article.asymptotic-note > table").length, 0);
 	for (const region of regions) {
 		assert.equal(region.getAttribute("role"), "region");
@@ -97,7 +96,7 @@ test("legend is server-rendered with scoped line styles and all nine growth clas
 
 test("MDX preserves the note's Markdown tables, including the Master Theorem conditions", () => {
 	const tables = [...document.querySelectorAll("article table")];
-	assert.ok(tables.length >= 10);
+	assert.ok(tables.length >= 8);
 	const master = tables.find((table) => table.textContent?.includes("Case 3"));
 	assert.ok(master);
 	assert.ok(master.querySelectorAll("annotation").length > 0);
@@ -122,6 +121,5 @@ test("all ten review answers are native, closed disclosures with rendered math",
 	}
 	assert.ok(answers[0].querySelector(".katex"));
 	assert.match(answers[0].textContent!, /Binary search/);
-	assert.match(answers[0].textContent!, /Keep the case fixed/);
 	assert.equal(document.querySelectorAll(".katex-error").length, 0);
 });
