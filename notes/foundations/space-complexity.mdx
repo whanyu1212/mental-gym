@@ -1,0 +1,631 @@
+---
+title: Space Complexity
+slug: space-complexity
+description: A clear mental model for memory usage — auxiliary vs. total space, live call-stack traces, algorithm space costs, time-space trade-offs, and language memory semantics.
+category: Complexity
+order: 3
+status: stable
+tags:
+  - complexity
+  - space-complexity
+  - memory
+---
+
+import StackDepthChart from '../../web/src/components/StackDepthChart.astro';
+
+# Space Complexity
+
+Space complexity measures the **peak memory** an algorithm holds simultaneously as a function of input size $n$. An algorithm that runs in $O(n \log n)$ time can still crash or fail on large inputs if it uses $O(n^2)$ memory.
+
+## Auxiliary Space vs. Total Space
+
+Always be clear about which one you mean:
+
+- **Total space** = memory for the input + extra memory used by the algorithm.
+- **Auxiliary space** = memory used *beyond* the input (extra variables, helper collections, call stack).
+
+When we say an algorithm is **in-place** or uses $O(1)$ space, we mean $O(1)$ **auxiliary** space — the input itself still occupies $O(n)$ memory.
+
+**Example:** Merge sort needs an $O(n)$ temporary merge buffer, so its auxiliary space is $O(n)$ (and total space is $O(n) + O(n) = O(n)$). Heap sort sorts in-place: $O(1)$ auxiliary space, $O(n)$ total space.
+
+## Four Sources of Memory Usage
+
+### 1. Fixed overhead — $O(1)$
+
+Scalar variables, loop counters, and pointers take constant space regardless of $n$:
+
+```python
+def sum_array(arr):
+    total = 0           # O(1) — one integer
+    for x in arr:       # loop variable: O(1)
+        total += x
+    return total        # O(1) auxiliary space
+```
+```julia
+function sum_array(arr)
+    total = 0           # O(1) — one integer
+    for x in arr        # loop variable: O(1)
+        total += x
+    end
+    return total        # O(1) auxiliary space
+end
+```
+```ts
+function sumArray(arr: number[]): number {
+  let total = 0;           // O(1) — one number
+  for (const x of arr) {   // loop variable: O(1)
+    total += x;
+  }
+  return total;            // O(1) auxiliary space
+}
+```
+```rust
+fn sum_array(arr: &[i64]) -> i64 {
+    let mut total = 0;  // O(1) — one integer
+    for &x in arr {     // loop variable: O(1)
+        total += x;
+    }
+    total               // O(1) auxiliary space
+}
+```
+
+### 2. Allocated collections — $O(n)$
+
+Any new array, hash map, set, or string whose size grows with the input:
+
+```python
+def copy_and_double(arr):
+    return [x * 2 for x in arr]   # O(n) — new list of same length
+```
+```julia
+function copy_and_double(arr)
+    return [x * 2 for x in arr]   # O(n) — new array of same length
+end
+```
+```ts
+function copyAndDouble(arr: number[]): number[] {
+  return arr.map((x) => x * 2);   // O(n) — new array of same length
+}
+```
+```rust
+fn copy_and_double(arr: &[i64]) -> Vec<i64> {
+    arr.iter().map(|x| x * 2).collect()   // O(n) — new Vec of same length
+}
+```
+
+### 3. The call stack — $O(\text{max depth})$
+
+Every active function call pushes a **stack frame** (arguments, local variables, return address). When a call returns, its frame is popped and that memory is reused.
+
+> **Key rule:** Call-stack space is determined by **maximum simultaneous depth** — *not* the total number of calls made over the entire run.
+
+### 4. Output — context-dependent
+
+If a problem requires returning a new array of size $n$, interviews often exclude that output from auxiliary space (since any valid solution must allocate it). State your convention explicitly: *"O(1) auxiliary space, excluding the output list."*
+
+## The Call Stack in Depth
+
+For when recursion depth should push you to write an explicit loop instead, see [Recursion vs Iteration](../recursion-and-iteration/).
+
+### Linear recursion — $O(n)$
+
+```python
+def sum_to(n):
+    if n == 0:
+        return 0
+    return n + sum_to(n - 1)
+```
+```julia
+function sum_to(n)
+    n == 0 && return 0
+    return n + sum_to(n - 1)
+end
+```
+```ts
+function sumTo(n: number): number {
+  if (n === 0) return 0;
+  return n + sumTo(n - 1);
+}
+```
+```rust
+fn sum_to(n: u64) -> u64 {
+    if n == 0 { return 0; }
+    n + sum_to(n - 1)
+}
+```
+
+At the base case, `sum_to(n) → sum_to(n-1) → ... → sum_to(0)` are all waiting on the stack at once: $n + 1$ frames $\implies O(n)$ space.
+
+### Halving recursion — $O(\log n)$
+
+```python
+def binary_search(arr, lo, hi, target):
+    if lo > hi:
+        return -1
+    mid = (lo + hi) // 2
+    if arr[mid] == target:
+        return mid
+    elif arr[mid] < target:
+        return binary_search(arr, mid + 1, hi, target)
+    else:
+        return binary_search(arr, lo, mid - 1, target)
+```
+```julia
+# Call with lo = 1, hi = length(arr) (Julia is 1-based).
+function binary_search(arr, lo, hi, target)
+    lo > hi && return nothing
+    mid = (lo + hi) ÷ 2
+    if arr[mid] == target
+        return mid
+    elseif arr[mid] < target
+        return binary_search(arr, mid + 1, hi, target)
+    else
+        return binary_search(arr, lo, mid - 1, target)
+    end
+end
+```
+```ts
+function binarySearch(arr: number[], lo: number, hi: number, target: number): number {
+  if (lo > hi) return -1;
+  const mid = Math.floor((lo + hi) / 2);
+  if (arr[mid] === target) return mid;
+  return arr[mid] < target
+    ? binarySearch(arr, mid + 1, hi, target)
+    : binarySearch(arr, lo, mid - 1, target);
+}
+```
+```rust
+use std::cmp::Ordering;
+
+// Searches arr[lo..hi] with hi exclusive (call with 0, arr.len()).
+fn binary_search(arr: &[i32], lo: usize, hi: usize, target: i32) -> Option<usize> {
+    if lo >= hi { return None; }
+    let mid = lo + (hi - lo) / 2;
+    match arr[mid].cmp(&target) {
+        Ordering::Equal => Some(mid),
+        Ordering::Less => binary_search(arr, mid + 1, hi, target),
+        Ordering::Greater => binary_search(arr, lo, mid, target),
+    }
+}
+```
+
+Only one branch is taken per level, halving the range each time: at most $\lfloor \log_2 n \rfloor + 1$ frames live at once $\implies O(\log n)$ space (compared to $O(1)$ for an iterative loop).
+
+### Two-branch recursion — $O(n)$ space, even with $O(2^n)$ calls
+
+```python
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
+```
+```julia
+function fib(n)
+    n <= 1 && return n
+    return fib(n - 1) + fib(n - 2)
+end
+```
+```ts
+function fib(n: number): number {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+```
+```rust
+fn fib(n: u64) -> u64 {
+    if n <= 1 { return n; }
+    fib(n - 1) + fib(n - 2)
+}
+```
+
+Why is space only $O(n)$ when the call tree has exponentially many nodes? Watch the live stack during `fib(4)`:
+
+```text
+Step 1: [ fib(4) ]                              depth 1
+Step 2: [ fib(4) → fib(3) ]                     depth 2
+Step 3: [ fib(4) → fib(3) → fib(2) ]            depth 3
+Step 4: [ fib(4) → fib(3) → fib(2) → fib(1) ]   depth 4 (peak!)  returns 1
+Step 5: [ fib(4) → fib(3) → fib(2) → fib(0) ]   depth 4          reuses slot! returns 0
+Step 6: [ fib(4) → fib(3) → fib(1) ]            depth 3          fib(2) popped; fib(1) reuses slot
+Step 7: [ fib(4) → fib(2) → ... ]               depth ≤ 3        fib(3) popped before fib(2) starts
+```
+
+Because `fib(n - 1)` finishes and pops its entire subtree *before* `fib(n - 2)` even starts, at most **one root-to-leaf path** is ever on the stack at once. Peak depth is $n$, so space is $O(n)$.
+
+### Tree recursion — $O(h)$
+
+```python
+def max_depth(node):
+    if not node:
+        return 0
+    return 1 + max(max_depth(node.left), max_depth(node.right))
+```
+```julia
+function max_depth(node)
+    node === nothing && return 0
+    return 1 + max(max_depth(node.left), max_depth(node.right))
+end
+```
+```ts
+interface TreeNode {
+  val: number;
+  left: TreeNode | null;
+  right: TreeNode | null;
+}
+
+function maxDepth(node: TreeNode | null): number {
+  if (node === null) return 0;
+  return 1 + Math.max(maxDepth(node.left), maxDepth(node.right));
+}
+```
+```rust
+struct TreeNode {
+    val: i32,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
+}
+
+fn max_depth(node: Option<&TreeNode>) -> usize {
+    match node {
+        None => 0,
+        Some(node) => 1 + max_depth(node.left.as_deref()).max(max_depth(node.right.as_deref())),
+    }
+}
+```
+
+By the same rule, only one root-to-leaf path is live at a time, so space is $O(h)$ where $h$ is the tree height: $O(\log n)$ for a balanced tree, $O(n)$ for a skewed tree.
+
+<div class="chart-section">
+  <h3>Call Stack Depth by Recursion Pattern</h3>
+  <p class="chart-intro">Maximum simultaneous stack frames as <em>n</em> grows. The gap between $O(\log n)$ and $O(n)$ depth is what separates safe recursion from a stack overflow on large inputs.</p>
+  <StackDepthChart />
+</div>
+
+### Tail recursion
+
+A function is **tail-recursive** when the recursive call is the very last action — no multiplication or addition waits for it to return:
+
+```python
+# Not tail-recursive: must multiply by n after the call returns
+def factorial(n):
+    if n == 0: return 1
+    return n * factorial(n - 1)
+
+# Tail-recursive: accumulator carries the result forward
+def factorial_tail(n, acc=1):
+    if n == 0: return acc
+    return factorial_tail(n - 1, n * acc)
+```
+```julia
+function fact(n)
+    n == 0 && return 1
+    return n * fact(n - 1)
+end
+
+function fact_tail(n, acc=1)
+    n == 0 && return acc
+    return fact_tail(n - 1, n * acc)
+end
+```
+```ts
+function factorial(n: number): number {
+  if (n === 0) return 1;
+  return n * factorial(n - 1);
+}
+
+function factorialTail(n: number, acc = 1): number {
+  if (n === 0) return acc;
+  return factorialTail(n - 1, n * acc);
+}
+```
+```rust
+fn factorial(n: u64) -> u64 {
+    if n == 0 { return 1; }
+    n * factorial(n - 1)
+}
+
+fn factorial_tail(n: u64, acc: u64) -> u64 {
+    if n == 0 { return acc; }
+    factorial_tail(n - 1, n * acc)
+}
+```
+
+Compilers with **tail-call optimisation (TCO)** reuse the current stack frame, reducing space from $O(n)$ to $O(1)$. However, **do not assume TCO** in Python, Julia, TypeScript on V8 (Chrome/Node), or unoptimised Rust — count $O(n)$ stack space unless your runtime guarantees TCO (e.g. Scheme, Haskell, Scala `@tailrec`).
+
+## Space Costs of Common Algorithms and Structures
+
+### Sorting
+
+| Algorithm | Auxiliary space | Why |
+|-----------|----------------|-----|
+| Bubble / Insertion / Selection / Heap sort | $O(1)$ | Swaps elements in place |
+| Quick sort | $O(\log n)$ avg, $O(n)$ worst | Recursion call stack |
+| Merge sort / Timsort | $O(n)$ | Temporary merge buffer |
+| Counting sort | $O(k)$ | Count array of size $k$ (value range) |
+| Radix sort | $O(n + k)$ | Output buffer + digit counts |
+
+### Graph and Tree Traversals
+
+| Traversal | Tree space | Graph space | What fills memory |
+|-----------|-----------|-------------|-------------------|
+| BFS (queue) | $O(w)$ (max width; $O(n)$ balanced) | $O(V)$ | Frontier queue + visited set |
+| DFS (recursive or stack) | $O(h)$ (height; $O(\log n)$ balanced, $O(n)$ skewed) | $O(V)$ | Active path + visited set |
+| Dijkstra | — | $O(V)$ | Priority queue + distance map |
+
+Notice the symmetry: on a balanced binary tree, DFS uses $O(\log n)$ space while BFS uses $O(n)$ (the bottom level holds $n/2$ nodes). On a single long chain, BFS uses $O(1)$ queue space while DFS uses $O(n)$.
+
+### Data Structures
+
+| Structure | Space |
+|-----------|-------|
+| Array / list / heap / binary tree ($n$ items) | $O(n)$ |
+| Hash table ($n$ entries) | $O(n)$ |
+| Graph: adjacency list | $O(V + E)$ |
+| Graph: adjacency matrix | $O(V^2)$ |
+| Trie ($n$ strings, average length $k$) | $O(n \cdot k)$ |
+
+## The Time-Space Trade-off
+
+Most classic speedups spend extra memory to avoid repeating work — or eliminate extra memory when you can track state with pointers instead.
+
+### Spend $O(n)$ space to save time
+
+1. **Memoisation / DP:** Cache solved subproblems to turn $O(2^n)$ recursive Fibonacci into $O(n)$ time and $O(n)$ space.
+2. **Hash maps / sets:** Spend $O(n)$ space once to drop repeated membership checks from $O(n)$ to $O(1)$.
+3. **Prefix sums:** Precompute cumulative sums in an $O(n)$ array so every range-sum query runs in $O(1)$ instead of $O(n)$:
+
+```python
+# O(n) space once, O(1) per range sum query
+prefix = [0] * (len(arr) + 1)
+for i, x in enumerate(arr):
+    prefix[i + 1] = prefix[i] + x
+
+def range_sum(l, r):
+    return prefix[r + 1] - prefix[l]
+```
+```julia
+# O(n) space once, O(1) per range sum query (1-based inclusive)
+prefix = zeros(Int, length(arr) + 1)
+for (i, x) in enumerate(arr)
+    prefix[i + 1] = prefix[i] + x
+end
+
+range_sum(l, r) = prefix[r + 1] - prefix[l]
+```
+```ts
+// O(n) space once, O(1) per range sum query
+const prefix = new Array<number>(arr.length + 1).fill(0);
+arr.forEach((x, i) => {
+  prefix[i + 1] = prefix[i] + x;
+});
+
+function rangeSum(l: number, r: number): number {
+  return prefix[r + 1] - prefix[l];
+}
+```
+```rust
+// O(n) space once, O(1) per range sum query
+let mut prefix = vec![0; arr.len() + 1];
+for (i, &x) in arr.iter().enumerate() {
+    prefix[i + 1] = prefix[i] + x;
+}
+
+let range_sum = |l: usize, r: usize| prefix[r + 1] - prefix[l];
+```
+
+### Save space with two pointers ($O(n) \to O(1)$)
+
+```python
+# O(n) space — builds a reversed copy
+def is_palindrome_copy(s):
+    return s == s[::-1]
+
+# O(1) space — compares in place with two indices
+def is_palindrome(s):
+    l, r = 0, len(s) - 1
+    while l < r:
+        if s[l] != s[r]:
+            return False
+        l += 1; r -= 1
+    return True
+```
+```julia
+# O(n) space — builds a reversed copy
+is_palindrome_copy(s) = s == reverse(s)
+
+# O(1) space — compares ASCII bytes with two indices
+function is_palindrome(s)
+    l, r = 1, ncodeunits(s)
+    while l < r
+        codeunit(s, l) != codeunit(s, r) && return false
+        l += 1; r -= 1
+    end
+    return true
+end
+```
+```ts
+// O(n) space — builds a reversed copy
+function isPalindromeCopy(s: string): boolean {
+  return s === [...s].reverse().join("");
+}
+
+// O(1) space — compares UTF-16 code units in place
+function isPalindrome(s: string): boolean {
+  let l = 0;
+  let r = s.length - 1;
+  while (l < r) {
+    if (s[l] !== s[r]) return false;
+    l += 1; r -= 1;
+  }
+  return true;
+}
+```
+```rust
+// O(n) space — allocates a reversed String
+fn is_palindrome_copy(s: &str) -> bool {
+    let reversed: String = s.chars().rev().collect();
+    s == reversed
+}
+
+// O(1) space — lazy double-ended iterator (handles Unicode too)
+fn is_palindrome(s: &str) -> bool {
+    s.chars().eq(s.chars().rev())
+}
+```
+
+## Language-Specific Memory Patterns
+
+Switch tabs to compare how the same operation allocates (or avoids allocating) across languages.
+
+### Lazy iterators vs. materialised collections
+
+```python
+# O(n) space — materialises every value upfront
+squares_list = [x**2 for x in range(n)]
+
+# O(1) space — yields one value at a time
+squares_gen = (x**2 for x in range(n))
+```
+```julia
+# O(n) space — materialises every value upfront
+squares_list = [x^2 for x in 0:n-1]
+
+# O(1) space — yields one value at a time
+squares_gen = (x^2 for x in 0:n-1)
+```
+```ts
+// O(n) space — materialises every value upfront
+const squaresList = Array.from({ length: n }, (_, x) => x ** 2);
+
+// O(1) space — yields one value at a time
+function* squares(n: number) {
+  for (let x = 0; x < n; x++) yield x ** 2;
+}
+const squaresGen = squares(n);
+```
+```rust
+// O(n) space — collect allocates a Vec
+let squares_vec: Vec<u64> = (0..n).map(|x| x * x).collect();
+
+// O(1) space — Rust iterators are lazy by default
+let squares_iter = (0..n).map(|x| x * x);
+```
+
+### Slicing copies vs. zero-copy views
+
+```python
+# O(n) space — slicing copies the elements
+half = arr[:len(arr) // 2]
+
+# O(1) space — pass index bounds instead
+left, right = 0, len(arr) // 2
+```
+```julia
+# O(n) space — slicing copies the elements
+half = arr[1:length(arr) ÷ 2]
+
+# O(1) space — @view shares the parent's memory
+half_view = @view arr[1:length(arr) ÷ 2]
+```
+```ts
+// O(n) space — slice() and spread copy the elements
+const half = arr.slice(0, Math.floor(arr.length / 2));
+
+// O(1) space — pass index bounds (or .subarray() on TypedArrays)
+let left = 0;
+let right = Math.floor(arr.length / 2);
+```
+```rust
+// O(1) space — a slice borrows without copying
+let half = &arr[..arr.len() / 2];
+
+// O(n) space — copying is always explicit
+let half_copy = arr[..arr.len() / 2].to_vec();
+```
+
+### Reference semantics, moves, and copies
+
+```python
+a = [1, 2, 3]
+b = a           # O(1) extra space — alias to the same list
+c = a[:]        # O(n) extra space — independent copy
+```
+```julia
+a = [1, 2, 3]
+b = a           # O(1) extra space — alias to the same array
+c = copy(a)     # O(n) extra space — independent copy
+```
+```ts
+const a = [1, 2, 3];
+const b = a;      // O(1) extra space — alias to the same array
+const c = [...a]; // O(n) extra space — independent copy
+```
+```rust
+let a = vec![1, 2, 3];
+let b = &a;        // O(1) extra space — borrows a
+let c = a.clone(); // O(n) extra space — independent copy
+let d = a;         // O(1) extra space — moves ownership of a into d
+```
+
+*(In Python, note that `sys.getsizeof(lst)` only reports the size of the pointer array, not the objects it points to; use `tracemalloc` for real profiling.)*
+
+## Common Mistakes
+
+1. **Forgetting the call stack** — recursive depth $d$ always uses $O(d)$ space even with zero heap allocations.
+2. **Ignoring slice copies** — passing `arr[1:]` to a recursive call copies $O(n)$ per frame, turning $O(n)$ into $O(n^2)$ time and space.
+3. **Confusing in-place with zero space** — in-place means $O(1)$ *auxiliary* space; the input still takes $O(n)$.
+4. **Forgetting memoisation cache lifetimes** — an unbounded `@lru_cache(maxsize=None)` in a long-running service grows forever unless cleared or bounded.
+5. **Leaving output space ambiguous** — explicitly say whether you are counting the returned structure.
+
+## Quick Check
+
+Try each question before opening its answer. For more scenario drills, continue to [Space Complexity Questions](../space-complexity-questions/).
+
+**Q1.** What is the auxiliary space complexity of iterative vs. recursive binary search?
+
+<details>
+<summary>Show answer</summary>
+
+Iterative: $O(1)$ (just `lo`, `hi`, `mid`). Recursive: $O(\log n)$ for the call stack.
+
+</details>
+
+**Q2.** Recursive DFS runs on a balanced binary tree of $n$ nodes. What is its space complexity, and how does it change if the tree is skewed?
+
+<details>
+<summary>Show answer</summary>
+
+$O(\log n)$ on a balanced tree (stack depth equals height). On a skewed tree (a chain), height is $n$, so space degrades to $O(n)$.
+
+</details>
+
+**Q3.** Compare the space complexity of naive recursive Fibonacci vs. memoised Fibonacci.
+
+<details>
+<summary>Show answer</summary>
+
+Both use $O(n)$ space: naive uses $O(n)$ call stack; memoised uses $O(n)$ cache + $O(n)$ call stack = $O(n)$. What changes dramatically is time ($O(\phi^n) \to O(n)$).
+
+</details>
+
+**Q4.** Why do iterative BFS and recursive DFS have the same $O(V)$ worst-case space on a graph?
+
+<details>
+<summary>Show answer</summary>
+
+They hit $O(V)$ on opposite graph shapes: BFS fills its queue with $V - 1$ neighbours on a star graph, while DFS fills its stack with all $V$ vertices on a single long path.
+
+</details>
+
+**Q5.** Why does dynamic-array `append` temporarily use $O(n)$ space during a resize?
+
+<details>
+<summary>Show answer</summary>
+
+When capacity is full, the runtime allocates a larger backing array and copies all $n$ elements before freeing the old one — briefly holding both buffers in memory at once.
+
+</details>
+
+---
+
+**Next:** Test yourself with [Time Complexity Interview Questions](../time_complexity_interview_questions/) and [Space Complexity Questions](../space-complexity-questions/).

@@ -1,7 +1,7 @@
 ---
 title: Space Complexity Questions for DSA Assessments
 slug: space-complexity-questions
-description: A collection of common space complexity interview questions, patterns, and Python-specific memory considerations.
+description: Graded space complexity drills with hidden answers — covering auxiliary vs. total space, recursion stacks, traversals, hidden allocations, and code trade-offs.
 category: Complexity
 order: 5
 status: stable
@@ -13,370 +13,88 @@ tags:
 
 # Space Complexity Questions for DSA Assessments
 
-## Common Question Types
+Use this note to **drill space complexity** for interviews and coding assessments. For the full mental model, stack traces, and language memory guides, see [Space Complexity](../space-complexity/).
 
-### 1. Auxiliary Space vs Total Space
-- **What is the difference between auxiliary space and total space?**
-  - Auxiliary space: Extra space used by the algorithm (excluding input)
-  - Total space: Auxiliary space + space taken by input
-
-### 2. Recursion Stack Space
-- **What is the space complexity of a recursive function?**
-  - Consider the maximum depth of the recursion call stack
-  - Example: Recursive factorial → O(n) due to n stack frames
-  - Example: Recursive binary search → O(log n) due to halving
-
-### 3. In-Place Algorithms
-- **What does "in-place" mean?**
-  - Algorithm uses O(1) auxiliary space
-  - Examples: Bubble sort, insertion sort, heap sort
-  - Counter-examples: Merge sort (O(n)), standard quicksort (O(log n) to O(n) for call stack)
-
-### 4. Data Structure Space
-
-| Data Structure | Space Complexity |
-|----------------|------------------|
-| Array | O(n) |
-| Linked List | O(n) |
-| Hash Table | O(n) |
-| Binary Tree | O(n) |
-| Graph (Adjacency List) | O(V + E) |
-| Graph (Adjacency Matrix) | O(V²) |
-| Heap | O(n) |
-| Trie | O(alphabet_size × key_length × n) |
-
-### 5. Algorithm-Specific Questions
-
-#### Sorting Algorithms
-| Algorithm | Space Complexity | Notes |
-|-----------|------------------|-------|
-| Merge Sort | O(n) | Requires auxiliary array |
-| Quick Sort | O(log n) to O(n) | Call stack depth |
-| Heap Sort | O(1) | In-place |
-| Counting Sort | O(k) | k = range of input |
-| Radix Sort | O(n + k) | k = range of digits |
-
-#### Tree/Graph Traversals
-- BFS: O(w) where w = maximum width of tree, or O(V) for graphs
-- DFS: O(h) where h = height of tree, or O(V) for graphs
-- Iterative with explicit stack: Same as recursive space
-
-### 6. Tricky Questions
-
-**Q: What's the space complexity of creating a substring?**
-- Language-dependent: Some languages share memory, others copy
-
-**Q: What's the space complexity of int variables in a loop?**
-- O(1) - variables are reused each iteration
-
-**Q: Space complexity of storing all subsets of a set?**
-- O(2^n × n) - 2^n subsets, each up to size n
-
-**Q: Space for memoization in dynamic programming?**
-- Usually O(n) for 1D, O(n×m) for 2D problems
-
-### 7. Common Pitfalls
-
-1. **Forgetting recursion stack space** - Always count call stack depth
-2. **Ignoring input modification** - If you modify input, clarify if it counts
-3. **Language-specific behaviors** - String immutability, garbage collection
-4. **Hidden allocations** - Slicing arrays, string concatenation
-
-### 8. Practice Problems
-
-1. Reverse a linked list → O(1) iterative, O(n) recursive
-2. Find duplicates in array → O(1) if modify input, O(n) with hash set
-3. Level order traversal → O(w) where w = max width
-4. DFS on graph → O(V) for visited set + O(V) for stack
-5. Two-pointer technique → Usually O(1) auxiliary space
+> **The 90% mental checklist:** Before answering any space question, ask three things:
+> 1. *Am I allocating a collection that grows with $n$?* (list, hash map, set, DP table) $\to$ usually $O(n)$ or $O(nm)$.
+> 2. *Am I recursing?* $\to$ add $O(\text{max call-stack depth})$.
+> 3. *Am I only keeping a fixed number of variables/pointers?* $\to$ $O(1)$ auxiliary.
 
 ---
 
-## Python-Focused Guide
+## Core Concept Drills
 
-*For developers coming from a Python background who aren't familiar with low-level memory concepts.*
+### Q1. What is the difference between auxiliary space and total space?
 
-### Mindset Shift
+<details>
+<summary>Show answer</summary>
 
-Python hides memory details, but the costs still exist. When you call `list.append()` or add to a dictionary, memory is allocated—you just don't see it.
+- **Auxiliary space:** Extra memory allocated by the algorithm beyond the input (helper data structures, variables, call stack).
+- **Total space:** Input space + auxiliary space.
 
-**Key principle:** Don't think in bytes. Think about *what grows with input size*.
+In interviews, "space complexity" usually means **auxiliary space** — always clarify if unsure.
 
-### Quick Reference: Python Operations
+</details>
 
-| What you're doing | Space Cost | Why |
-|-------------------|------------|-----|
-| Single variable (`x = 5`) | O(1) | Fixed size |
-| Loop counter (`for i in range(n)`) | O(1) | Reused each iteration |
-| New list of size n (`[0] * n`) | O(n) | n elements stored |
-| Dictionary with n keys | O(n) | n key-value pairs |
-| Set with n elements | O(n) | n elements stored |
-| Recursive call | O(depth) | Each call adds a stack frame |
-| List slicing (`arr[1:n]`) | O(n) | **Creates a copy!** |
-| String concatenation in loop | O(n) per concat | Strings are immutable |
+### Q2. What does "in-place" mean? Give examples and counter-examples.
 
-### Language-Specific Gotchas
+<details>
+<summary>Show answer</summary>
 
-The same everyday operations cost different amounts in each language. Switch tabs to compare: slicing copies in Python, Julia, and TypeScript, but Rust slices are borrowed views.
+**In-place** means $O(1)$ **auxiliary** space (not zero total space — the input still takes $O(n)$).
 
-```python
-# O(n) space - creates new list
-new_list = [x * 2 for x in arr]
+- **In-place ($O(1)$ auxiliary):** bubble sort, insertion sort, heap sort, reversing an array with two pointers.
+- **Not strictly $O(1)$:** merge sort ($O(n)$ merge buffer), standard recursive quicksort ($O(\log n)$ average / $O(n)$ worst call stack).
 
-# O(1) space - generator, evaluates lazily
-gen = (x * 2 for x in arr)
+</details>
 
-# O(n) space - slicing COPIES the data
-half = arr[:len(arr)//2]
+### Q3. What is the space complexity of declaring a scalar variable inside a `for` loop that runs $n$ times?
 
-# O(1) space - just two integer pointers
-left, right = 0, len(arr) - 1
+<details>
+<summary>Show answer</summary>
 
-# O(n) space - each concat creates new string
-result = ""
-for char in arr:
-    result += char  # Bad! Use ''.join() instead
+**$O(1)$.** The variable is overwritten/reused on each iteration — it does not accumulate $n$ simultaneous copies in memory.
 
-# O(n) space but efficient - single allocation
-result = ''.join(arr)  # Good!
-```
-```julia
-# O(n) space - comprehension builds a new array
-new_list = [x * 2 for x in arr]
+</details>
 
-# O(1) space - generator, evaluates lazily
-gen = (x * 2 for x in arr)
+### Q4. When should the return value (output) count toward space complexity?
 
-# O(n) space - slicing COPIES the data
-half = arr[1:length(arr) ÷ 2]
+<details>
+<summary>Show answer</summary>
 
-# O(1) space - @view shares the parent's memory instead
-half_view = @view arr[1:length(arr) ÷ 2]
+If the problem requires returning a collection of size $k$ (e.g., all $n$ results or all $2^n$ subsets), interviewers often exclude the output from **auxiliary** space because any valid solution must allocate it. State both clearly: *"O(1) auxiliary space excluding the $O(n)$ output."*
 
-# O(n) space - broadcasting allocates a new array...
-doubled = arr .* 2
-# O(1) extra space - ...unless you write into an existing one
-arr .*= 2
+</details>
 
-# O(1) space - just two integer indices (Julia is 1-based)
-left, right = 1, length(arr)
+---
 
-# O(n) space - each concat creates a new string
-result = ""
-for char in chars
-    result *= char  # Bad! Use join(chars) or an IOBuffer instead
-end
+## Recursion & Traversal Drills
 
-# O(n) space but efficient - single allocation
-result = join(chars)  # Good!
-```
-```ts
-// O(n) space - map builds a new array
-const newList = arr.map((x) => x * 2);
+### Q5. Compare the space complexity of recursive factorial vs. recursive binary search.
 
-// O(1) space - generator, evaluates lazily
-function* doubledLazily(xs: number[]) {
-  for (const x of xs) yield x * 2;
-}
-const gen = doubledLazily(arr);
+<details>
+<summary>Show answer</summary>
 
-// O(n) space - slice COPIES the data, and so does spread
-const half = arr.slice(0, Math.floor(arr.length / 2));
-const copy = [...arr];
+- **Recursive factorial:** $O(n)$ — each call reduces $n$ by 1, so $n$ frames sit on the call stack simultaneously.
+- **Recursive binary search:** $O(\log n)$ — each call halves the search range, so at most $\lfloor \log_2 n \rfloor + 1$ frames are live at once.
 
-// O(1) space - just two integer pointers
-let left = 0;
-let right = arr.length - 1;
+</details>
 
-// Usually fine: engines like V8 represent += results as "ropes", so a loop
-// of concatenations doesn't copy the whole string each time
-let result = "";
-for (const char of chars) {
-  result += char;
-}
+### Q6. Binary tree DFS space complexity
 
-// O(n) space - one join at the end is the portable choice
-const joined = chars.join("");
-```
-```rust
-// O(n) space - collect builds a new Vec
-let new_list: Vec<i32> = arr.iter().map(|x| x * 2).collect();
+What is the auxiliary space complexity of `max_depth` on a binary tree of $n$ nodes?
 
-// O(1) space - iterators are lazy until something consumes them
-let lazy = arr.iter().map(|x| x * 2);
-
-// O(1) space - a slice BORROWS the data, no copy
-let half = &arr[..arr.len() / 2];
-
-// O(n) space - .to_vec() (or .clone()) is the explicit copy
-let half_copy = arr[..arr.len() / 2].to_vec();
-
-// O(1) space - just two integer indices
-// (arr.len() - 1 underflows and panics on an empty slice: check first)
-let (left, right) = (0, arr.len() - 1);
-
-// Amortised O(1) per push: String is a growable buffer, not immutable
-let mut result = String::new();
-for &c in chars {
-    result.push(c);
-}
-
-// O(n) space - one allocation, sized from the iterator
-let result: String = chars.iter().collect();
-```
-
-### Questions to Ask Yourself
-
-1. **Am I creating a new collection (list, dict, set)?** → Probably O(n)
-2. **Am I using recursion?** → Add O(max depth) for the call stack
-3. **Am I modifying the input in-place?** → Could be O(1) auxiliary
-4. **Am I using a hash set/dict for lookups?** → O(n) space trade-off for O(1) time
-
-### Common Patterns and Their Space
-
-| Pattern | Typical Space | Python Example |
-|---------|---------------|----------------|
-| Two pointers | O(1) | `left, right = 0, len(arr)-1` |
-| Hash map for lookup | O(n) | `seen = {}` or `seen = set()` |
-| Recursion | O(depth) | Any recursive function |
-| BFS with queue | O(width) | `from collections import deque` |
-| DFS with stack | O(depth) | Explicit stack or recursion |
-| DP memoization | O(states) | `@lru_cache` or manual dict |
-| Building result | O(n) | `result = []` then append |
-
-### The 90% Rule
-
-For most DSA assessments, space complexity boils down to:
-
-1. **O(1)** - You're only using a fixed number of variables
-2. **O(n)** - You're using a hash map, set, or building a result list
-3. **O(depth)** - You're using recursion (depth could be n, log n, etc.)
-
-### Worked Examples
-
-**Example 1: Two Sum**
-```python
-def two_sum(nums, target):
-    seen = {}  # O(n) space - hash map
-    for i, num in enumerate(nums):
-        if target - num in seen:
-            return [seen[target - num], i]
-        seen[num] = i
-# Space: O(n) for the hash map
-```
-```julia
-function two_sum(nums, target)
-    seen = Dict{Int, Int}()  # O(n) space - hash map
-    for (i, num) in enumerate(nums)
-        if haskey(seen, target - num)
-            return [seen[target - num], i]
-        end
-        seen[num] = i
-    end
-    return nothing
-end
-# Space: O(n) for the hash map (indices are 1-based)
-```
-```ts
-function twoSum(nums: number[], target: number): number[] | undefined {
-  const seen = new Map<number, number>();  // O(n) space - hash map
-  for (let i = 0; i < nums.length; i++) {
-    const j = seen.get(target - nums[i]);
-    if (j !== undefined) {
-      return [j, i];
-    }
-    seen.set(nums[i], i);
-  }
-  return undefined;
-}
-// Space: O(n) for the hash map
-```
-```rust
-use std::collections::HashMap;
-
-fn two_sum(nums: &[i32], target: i32) -> Option<(usize, usize)> {
-    let mut seen = HashMap::new();  // O(n) space - hash map
-    for (i, &num) in nums.iter().enumerate() {
-        if let Some(&j) = seen.get(&(target - num)) {
-            return Some((j, i));
-        }
-        seen.insert(num, i);
-    }
-    None
-}
-// Space: O(n) for the hash map
-```
-
-**Example 2: Reverse List In-Place**
-```python
-def reverse_list(arr):
-    left, right = 0, len(arr) - 1  # O(1)
-    while left < right:
-        arr[left], arr[right] = arr[right], arr[left]
-        left += 1
-        right -= 1
-# Space: O(1) - only using two pointers
-```
-```julia
-function reverse_list!(arr)
-    left, right = 1, length(arr)  # O(1)
-    while left < right
-        arr[left], arr[right] = arr[right], arr[left]
-        left += 1
-        right -= 1
-    end
-end
-# Space: O(1) - only using two pointers
-```
-```ts
-function reverseList(arr: number[]): void {
-  let left = 0;
-  let right = arr.length - 1;  // O(1)
-  while (left < right) {
-    const tmp = arr[left];
-    arr[left] = arr[right];
-    arr[right] = tmp;
-    left += 1;
-    right -= 1;
-  }
-}
-// Space: O(1) - only using two pointers
-```
-```rust
-fn reverse_list(arr: &mut [i32]) {
-    if arr.is_empty() {
-        return;
-    }
-    let (mut left, mut right) = (0, arr.len() - 1);  // O(1)
-    while left < right {
-        arr.swap(left, right);
-        left += 1;
-        right -= 1;
-    }
-}
-// Space: O(1) - only using two pointers
-```
-
-**Example 3: Binary Tree DFS**
 ```python
 def max_depth(root):
     if not root:
         return 0
     return 1 + max(max_depth(root.left), max_depth(root.right))
-# Space: O(h) where h = height of tree (recursion stack)
-# Worst case: O(n) for skewed tree
-# Best case: O(log n) for balanced tree
 ```
 ```julia
 function max_depth(root)
-    if root === nothing
-        return 0
-    end
+    root === nothing && return 0
     return 1 + max(max_depth(root.left), max_depth(root.right))
 end
-# Space: O(h) where h = height of tree (recursion stack)
-# Worst case: O(n) for skewed tree
-# Best case: O(log n) for balanced tree
 ```
 ```ts
 interface TreeNode {
@@ -386,14 +104,9 @@ interface TreeNode {
 }
 
 function maxDepth(root: TreeNode | null): number {
-  if (root === null) {
-    return 0;
-  }
+  if (root === null) return 0;
   return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
 }
-// Space: O(h) where h = height of tree (recursion stack)
-// Worst case: O(n) for skewed tree
-// Best case: O(log n) for balanced tree
 ```
 ```rust
 struct TreeNode {
@@ -408,19 +121,172 @@ fn max_depth(root: Option<&TreeNode>) -> usize {
         Some(node) => 1 + max_depth(node.left.as_deref()).max(max_depth(node.right.as_deref())),
     }
 }
-// Space: O(h) where h = height of tree (recursion stack)
-// Worst case: O(n) for skewed tree
-// Best case: O(log n) for balanced tree
 ```
+
+<details>
+<summary>Show answer</summary>
+
+**$O(h)$** where $h$ is the tree height (call stack holds one root-to-leaf path at a time):
+- **Balanced tree:** $h = O(\log n) \implies O(\log n)$ space.
+- **Skewed tree (degenerate linked list):** $h = n \implies O(n)$ space.
+
+</details>
+
+### Q7. Compare BFS vs. DFS space complexity on trees and on general graphs.
+
+<details>
+<summary>Show answer</summary>
+
+- **Trees:** BFS uses $O(w)$ where $w$ is the maximum width ($O(n)$ on a balanced binary tree, $O(1)$ on a chain). DFS uses $O(h)$ where $h$ is the height ($O(\log n)$ on a balanced tree, $O(n)$ on a chain).
+- **Graphs:** Both use **$O(V)$** worst-case space (BFS for its queue + visited set; DFS for its recursion/explicit stack + visited set).
+
+</details>
+
+### Q8. What is the space complexity of generating and storing all subsets of an $n$-element set?
+
+<details>
+<summary>Show answer</summary>
+
+- **Output storage:** $O(n \cdot 2^n)$ — there are $2^n$ subsets with an average size of $n/2$.
+- **Auxiliary space (excluding output):** $O(n)$ for the backtracking call stack and current working subset.
+
+</details>
 
 ---
 
-## Key Takeaways
+## Hidden Allocations & Code Trade-Off Drills
 
-- Always clarify if question asks for auxiliary or total space
-- Recursion depth = stack space
-- Hash maps/sets add O(n) space
-- In-place doesn't mean O(0), it means O(1) auxiliary
-- Consider worst-case scenarios (unbalanced trees, bad pivot choices)
-- In Python: watch out for slicing (copies data) and string concatenation (immutable)
-- In other languages: Julia and TypeScript slices copy too (Julia's `@view` doesn't), while Rust slices are borrowed views and copying is always explicit (`.to_vec()`, `.clone()`)
+### Q9. What is the space complexity of creating a substring or array slice?
+
+<details>
+<summary>Show answer</summary>
+
+**Language-dependent:**
+- **Python, Julia (`arr[a:b]`), TypeScript (`slice`):** $O(k)$ where $k$ is the slice length — they allocate and copy.
+- **Rust (`&arr[a..b]`, `&s[a..b]`), Julia (`@view arr[a:b]`):** $O(1)$ — they borrow a view into the existing memory without copying.
+
+Passing copies into recursive calls (e.g. `f(arr[1:])`) silently creates $O(n^2)$ total allocation overhead.
+
+</details>
+
+### Q10. What is the space complexity of DP memoisation, and when can you compress it?
+
+<details>
+<summary>Show answer</summary>
+
+Typically $O(\text{number of states})$: $O(n)$ for 1D DP, $O(n \cdot m)$ for 2D DP. When each state only depends on the previous row (or previous 1–2 states, as in Fibonacci or 0/1 Knapsack), you can drop a dimension — turning $O(nm) \to O(m)$ or $O(n) \to O(1)$ with rolling arrays/variables.
+
+</details>
+
+### Q11. Code drill — Two Sum
+
+What is the auxiliary space complexity of this solution, and what is the trade-off if you want $O(1)$ auxiliary space?
+
+```python
+def two_sum(nums, target):
+    seen = {}
+    for i, num in enumerate(nums):
+        if target - num in seen:
+            return [seen[target - num], i]
+        seen[num] = i
+```
+```julia
+function two_sum(nums, target)
+    seen = Dict{Int, Int}()
+    for (i, num) in enumerate(nums)
+        if haskey(seen, target - num)
+            return [seen[target - num], i]
+        end
+        seen[num] = i
+    end
+    return nothing
+end
+```
+```ts
+function twoSum(nums: number[], target: number): number[] | undefined {
+  const seen = new Map<number, number>();
+  for (let i = 0; i < nums.length; i++) {
+    const j = seen.get(target - nums[i]);
+    if (j !== undefined) return [j, i];
+    seen.set(nums[i], i);
+  }
+  return undefined;
+}
+```
+```rust
+use std::collections::HashMap;
+
+fn two_sum(nums: &[i32], target: i32) -> Option<(usize, usize)> {
+    let mut seen = HashMap::new();
+    for (i, &num) in nums.iter().enumerate() {
+        if let Some(&j) = seen.get(&(target - num)) {
+            return Some((j, i));
+        }
+        seen.insert(num, i);
+    }
+    None
+}
+```
+
+<details>
+<summary>Show answer</summary>
+
+- **Hash map approach:** $O(n)$ auxiliary space for `seen`, buying $O(n)$ time.
+- **$O(1)$ auxiliary space alternative:** Either brute-force pairs ($O(n^2)$ time), or—if returning values rather than original indices—sort in-place ($O(n \log n)$ time) and use two pointers.
+
+</details>
+
+### Q12. Code drill — Reverse list in-place vs. recursively
+
+```python
+def reverse_list(arr):
+    left, right = 0, len(arr) - 1
+    while left < right:
+        arr[left], arr[right] = arr[right], arr[left]
+        left += 1
+        right -= 1
+```
+```julia
+function reverse_list!(arr)
+    left, right = 1, length(arr)
+    while left < right
+        arr[left], arr[right] = arr[right], arr[left]
+        left += 1
+        right -= 1
+    end
+end
+```
+```ts
+function reverseList(arr: number[]): void {
+  let left = 0;
+  let right = arr.length - 1;
+  while (left < right) {
+    const tmp = arr[left];
+    arr[left] = arr[right];
+    arr[right] = tmp;
+    left += 1;
+    right -= 1;
+  }
+}
+```
+```rust
+fn reverse_list(arr: &mut [i32]) {
+    if arr.is_empty() { return; }
+    let (mut left, mut right) = (0, arr.len() - 1);
+    while left < right {
+        arr.swap(left, right);
+        left += 1;
+        right -= 1;
+    }
+}
+```
+
+What is the auxiliary space here, and how does reversing a **linked list** iteratively vs. recursively compare?
+
+<details>
+<summary>Show answer</summary>
+
+- **Array two-pointer swap:** $O(1)$ auxiliary space (only `left`, `right`, and a swap temp).
+- **Linked list reversal:** Iterative pointer rewiring is $O(1)$ auxiliary space; recursive reversal uses $O(n)$ call-stack space.
+
+</details>

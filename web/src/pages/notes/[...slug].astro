@@ -2,8 +2,6 @@
 import { getCollection, render } from "astro:content";
 import CodeTabs from "../../components/CodeTabs.astro";
 import { withBase } from "../../lib/url";
-import SortingChart from "../../components/SortingChart.astro";
-import StackDepthChart from "../../components/StackDepthChart.astro";
 import LastVisited from "../../components/LastVisited.astro";
 import NoteHighlighter from "../../components/NoteHighlighter.astro";
 import Layout from "../../layouts/Layout.astro";
@@ -83,20 +81,6 @@ const kindLabel = note.data.kind === "template"
 
 	<article class:list={["prose", { "asymptotic-note": note.id === "asymptotic-analysis" }]}>
 		<Content />
-		{note.id === "time-complexity" && (
-			<div class="chart-section">
-				<h2>Sorting Algorithm Comparison</h2>
-				<p class="chart-intro">Best, average, and worst-case time complexity for common sorting algorithms. Quick sort's worst case stands out — it degrades to O(n²) on sorted input without a randomised pivot.</p>
-				<SortingChart />
-			</div>
-		)}
-		{note.id === "space-complexity" && (
-			<div class="chart-section">
-				<h2>Call Stack Depth by Recursion Pattern</h2>
-				<p class="chart-intro">Maximum simultaneous stack frames as <em>n</em> grows. The difference between O(log n) and O(n) stack depth becomes critical at large inputs — the latter risks stack overflow.</p>
-				<StackDepthChart />
-			</div>
-		)}
 	</article>
 	<CodeTabs />
 	<NoteHighlighter noteId={note.id} />
@@ -290,7 +274,7 @@ const kindLabel = note.data.kind === "template"
 	.asymptotic-note :global(.note-toc ol) {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		grid-template-rows: repeat(5, auto);
+		grid-template-rows: repeat(4, auto);
 		grid-auto-flow: column;
 		gap: 0.5rem 0.75rem;
 		list-style: none;
