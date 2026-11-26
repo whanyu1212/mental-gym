@@ -1,0 +1,407 @@
+---
+title: Prefix Sum & Product
+slug: prefix_sum_pattern
+description: A problem-first guide to prefix sums, prefix/suffix products, prefix XOR, 2D/3D inclusion-exclusion, difference arrays, and prefix-hash patterns.
+category: Patterns
+order: 2
+status: stable
+tags:
+  - dsa
+  - prefix-sum
+  - prefix-product
+  - range-queries
+---
+
+import PatternVizModal from '../../web/src/components/notes/PatternVizModal.astro';
+import PrefixSumHashmapViz from '../../web/src/components/notes/PrefixSumHashmapViz.astro';
+import PrefixSuffixViz from '../../web/src/components/notes/PrefixSuffixViz.astro';
+import PrefixXorViz from '../../web/src/components/notes/PrefixXorViz.astro';
+import RangeSumQuery2DImmutableAnimation from '../../web/src/components/RangeSumQuery2DImmutableAnimation.astro';
+
+# Prefix Sum & Product
+
+A **prefix aggregate** precomputes cumulative summaries from the start of an array or matrix so that later queries or per-index answers run in $O(1)$ time instead of rescanning the range.
+
+The single most important design split depends on **the query shape and whether the operation is invertible**:
+
+- **Range queries `[L, R]` with invertible operations (`+`, `^`):** Cancel the prefix before `L` (`P[R + 1] - P[L]` or `P[R + 1] ^ P[L]`).
+- **Exclusion queries ("everything except `i`") with non-invertible operations (`*` when zeros may appear, `min`, `max`, `gcd`):** You cannot undo a global aggregate at `i`, so combine a **prefix pass** (`0..i-1`) and a **suffix pass** (`i+1..n-1`) around index `i`. (For arbitrary `[L, R]` range `min`/`max`/`gcd` queries, use a Segment Tree or Sparse Table instead.)
+
+---
+
+## Pattern Map
+
+| If the problem says... | Reach for... | State / invariant | Start with |
+|---|---|---|---|
+| Multiple static range sum queries `[L, R]` | 1D Padded Prefix Sum | `P[i]` = sum of `nums[0..i-1]` | [Range Sum Query - Immutable](../../algorithms/303-range-sum-query-immutable) |
+| Count or detect subarrays summing to `k` (negatives allowed) | Running Prefix Sum + Hash Map | `seen[s]` = count (or earliest index) of prefix sum `s` | [Subarray Sum Equals K](../../algorithms/560-subarray-sum-equals-k) |
+| Output at `i` combines everything except `nums[i]`, no division | Prefix + Suffix Pass | Left pass stores `0..i-1`; right pass multiplies `i+1..n-1` | [Product of Array Except Self](../../algorithms/238-product-of-array-except-self) |
+| Multiple range XOR queries `[L, R]` | 1D Padded Prefix XOR | `P[i]` = XOR of `nums[0..i-1]` (`x ^ x == 0`) | [XOR Queries of a Subarray](../../algorithms/1310-xor-queries-of-a-subarray) |
+| Multiple static rectangle sum queries `(r1, c1)..(r2, c2)` | 2D Padded Prefix Matrix | `P[r+1][c+1]` = sum of `M[0..r][0..c]` | [Range Sum Query 2D - Immutable](../../algorithms/304-range-sum-query-2d-immutable) |
+| Many batch updates `"add X to [L, R]"` before reading the final array | Difference Array | `diff[L] += X`, `diff[R+1] -= X`, then prefix sum | — |
+
+### Suggested Study Route
+
+| Step | Problem | New idea to own |
+|---|---|---|
+| 1 | [Range Sum Query - Immutable](../../algorithms/303-range-sum-query-immutable) | Zero-padded `N + 1` array removes `L == 0` edge cases |
+| 2 | [Subarray Sum Equals K](../../algorithms/560-subarray-sum-equals-k) | Turn `prefix[j] - prefix[i] == k` into a hash lookup (`{0: 1}`) |
+| 3 | [Product of Array Except Self](../../algorithms/238-product-of-array-except-self) | Replace division with a prefix pass and a suffix pass |
+| 4 | [XOR Queries of a Subarray](../../algorithms/1310-xor-queries-of-a-subarray) | Swap `+`/`-` for `^` because XOR is its own inverse |
+| 5 | [Range Sum Query 2D - Immutable](../../algorithms/304-range-sum-query-2d-immutable) | Extend `R+1` minus `L` to 2D inclusion-exclusion |
+
+---
+
+## When to Use (and When Not to Use)
+
+- **Static array + many range queries:** Use a prefix array ($O(N)$ build, $O(1)$ per query).
+- **Negatives break sliding-window monotonicity:** A [Sliding Window](../sliding_window/) only works for sum thresholds when shrinking is guaranteed to move the sum in one direction. Once negative numbers are allowed, reach for **Prefix Sum + Hash Map** to count/find exact targets, or [Kadane's Algorithm](../kadane_algorithm/) ([Maximum Subarray](../../algorithms/53-maximum-subarray)) to maximize a contiguous sum.
+- **Interleaved point updates and range queries:** If elements change between queries, a plain prefix array takes $O(N)$ to rebuild on each update. Switch to a **Fenwick Tree (Binary Indexed Tree)** or **Segment Tree** for $O(\log N)$ updates and queries.
+- **Batch range updates + single final read:** Use a **Difference Array** instead of applying each update across `[L, R]`.
+
+---
+
+## 1D Prefix Sum
+
+### The `N + 1` Padded Convention
+
+Always prefer an array of length `N + 1` with `prefix[0] = 0`, where:
+
+- `prefix[i]` = sum of the first `i` elements (`arr[0..i-1]`)
+- `prefix[i + 1] = prefix[i] + arr[i]`
+- `sum(L, R) = prefix[R + 1] - prefix[L]` (for inclusive `0 <= L <= R < N`)
+
+Because `prefix[0] = 0` represents the empty prefix, querying from index `0` (`L = 0`) uses the exact same formula `prefix[R + 1] - prefix[0]` with no `if L == 0` branch.
+
+```python
+def build_prefix_sum(arr: list[int]) -> list[int]:
+    prefix = [0] * (len(arr) + 1)
+    for i, val in enumerate(arr):
+        prefix[i + 1] = prefix[i] + val
+    return prefix
+
+
+def range_sum(prefix: list[int], left: int, right: int) -> int:
+    return prefix[right + 1] - prefix[left]
+```
+
+**Worked example:**
+
+```text
+arr    =    [1, 2, 3,  4,  5]
+prefix = [0, 1, 3, 6, 10, 15]
+index     0  1  2  3   4   5
+
+sum(1, 3) = sum([2, 3, 4]) = prefix[4] - prefix[1] = 10 - 1 = 9
+sum(0, 2) = sum([1, 2, 3]) = prefix[3] - prefix[0] =  6 - 0 = 6
+```
+
+---
+
+## Prefix Sum + Hash Map
+
+<PatternVizModal label="Prefix Sum + Hash Map">
+  <PrefixSumHashmapViz />
+</PatternVizModal>
+
+When the task asks to **count subarrays whose sum equals `k`**, a plain sliding window runs into two distinct problems depending on the input:
+
+- **Negative numbers** break monotonicity: expanding the window can decrease the sum, and shrinking can increase it.
+- **Zeros** preserve monotonicity on a non-negative array, *but* they break the assumption that each right endpoint has at most one valid left boundary (for example, `[0, 1]` has two subarrays ending at index `1` with sum `1`: `[0, 1]` and `[1]`).
+
+Prefix Sum + Hash Map handles both negatives and zeros in a single pass.
+
+Rewrite the subarray sum using padded prefix sums:
+
+```text
+sum(i..j-1) == k
+  <==>  prefix[j] - prefix[i] == k
+  <==>  prefix[i] == prefix[j] - k
+```
+
+At each step while scanning left-to-right with the current running `prefix`, you only need to ask: *"How many earlier prefixes had sum `prefix - k`?"*
+
+```python
+def subarray_sum(nums: list[int], k: int) -> int:
+    count = 0
+    prefix = 0
+    seen = {0: 1}  # Empty prefix has sum 0 once
+
+    for num in nums:
+        prefix += num
+        # Look up BEFORE inserting current prefix (essential when k == 0)
+        count += seen.get(prefix - k, 0)
+        seen[prefix] = seen.get(prefix, 0) + 1
+
+    return count
+```
+
+Two details make or break this template:
+
+1. **Seeding `{0: 1}`:** A subarray starting at index `0` has `prefix == k`, which looks up `prefix - k == 0`. Without `{0: 1}`, every subarray anchored at index `0` is missed.
+2. **Lookup before insert:** Updating `seen[prefix]` before adding `seen.get(prefix - k, 0)` would count the current prefix against itself whenever `k == 0`, falsely counting an empty subarray.
+
+### Longest-Span & Modulo Variants (LeetCode 523)
+
+When the task asks for the **longest** subarray hitting a condition—or checks for a subarray of length `>= 2`—instead of counting all matches:
+
+- **Shared rule:** Seed `{0: -1}` (so a match starting at index `0` has length `i - (-1) = i + 1`) and store the **earliest index** in `first_seen`, never overwriting an existing key so `i - first_seen[key]` stays as wide as possible.
+- **Exact target vs. modulo lookup:** For an **exact target sum**, store full `prefix` sums and look up `first_seen[prefix - target]`. For **divisibility by `k` (Continuous Subarray Sum, LC 523)**, store `rem = prefix % k` and look up `first_seen[rem]`, checking `i - first_seen[rem] >= 2` (two prefixes `i < j` give a sum divisible by `k` iff `prefix[j] % k == prefix[i] % k`).
+- **Remainder normalization:** In Python, `prefix % k` is always non-negative for `k > 0`. In C++, Java, or JavaScript, compute `rem = prefix % k` once and add `k` only if `rem < 0` (or use a wider integer type)—doing `((prefix % k) + k) % k` directly can overflow a 32-bit signed `int` when `k` is near `INT_MAX`.
+
+```python
+def check_subarray_sum(nums: list[int], k: int) -> bool:
+    first_seen = {0: -1}
+    prefix = 0
+
+    for i, num in enumerate(nums):
+        prefix += num
+        rem = prefix % k
+        if rem in first_seen:
+            if i - first_seen[rem] >= 2:
+                return True
+        else:
+            first_seen[rem] = i
+
+    return False
+```
+
+---
+
+## Prefix & Suffix Products (Non-Invertible Decomposition)
+
+<PatternVizModal label="Prefix / Suffix Pass">
+  <PrefixSuffixViz />
+</PatternVizModal>
+
+Suppose you want `answer[i]` = the product of every element in `nums` except `nums[i]`.
+
+Why can't you just compute `total_product // nums[i]` like a range sum?
+
+1. **Zeros break inversion:** If `nums[i] == 0`, `total_product` is `0` and dividing by `nums[i]` raises `ZeroDivisionError`. Even if you special-case zeros, one zero vs. two or more zeros behaves differently, and many prompts explicitly forbid division.
+2. **Non-invertibility is general:** Multiplication with `0` has no inverse—just like `min`, `max`, and `gcd`.
+
+Instead of inverting a global aggregate, split `"everything except i"` into two disjoint halves that never include `nums[i]`:
+
+- **Left pass (prefix product):** `result[i]` receives the product of `nums[0..i-1]`.
+- **Right pass (suffix product):** multiply `result[i]` by the running product of `nums[i+1..n-1]`.
+
+```python
+def product_except_self(nums: list[int]) -> list[int]:
+    n = len(nums)
+    result = [1] * n
+
+    prefix = 1
+    for i in range(n):
+        result[i] = prefix
+        prefix *= nums[i]
+
+    suffix = 1
+    for i in range(n - 1, -1, -1):
+        result[i] *= suffix
+        suffix *= nums[i]
+
+    return result
+```
+
+**Trace with a zero (`nums = [1, 2, 0, 4]`):**
+
+```text
+index:        0    1    2    3
+nums:         1    2    0    4
+prefix pass:  1    1    2    0    (left of i: 1, 1, 1*2, 1*2*0)
+suffix val:   0    0    4    1    (right of i: 2*0*4, 0*4, 4, 1)
+result:       0    0    8    0    (handles zero cleanly in O(N) time, O(1) extra space)
+```
+
+Notice the same two-pass pattern solves non-invertible per-index problems beyond products: **left max / right max** in *Trapping Rain Water*, prefix/suffix `min`, or prefix/suffix `gcd` when removing one element.
+
+---
+
+## Prefix XOR
+
+<PatternVizModal label="Prefix XOR">
+  <PrefixXorViz />
+</PatternVizModal>
+
+Bitwise XOR (`^`) is both associative and **its own inverse** (`x ^ x = 0`, `x ^ 0 = x`). That means prefix XOR works identically to 1D prefix sums, replacing `+` and `-` with `^`:
+
+```text
+xor(L, R) = P[R + 1] ^ P[L]
+```
+
+Everything in `arr[0..L-1]` appears in both `P[R + 1]` and `P[L]`, so those bits cancel to `0`, leaving only `arr[L] ^ ... ^ arr[R]`.
+
+```python
+def xor_queries(arr: list[int], queries: list[list[int]]) -> list[int]:
+    prefix = [0] * (len(arr) + 1)
+    for i, val in enumerate(arr):
+        prefix[i + 1] = prefix[i] ^ val
+    return [prefix[right + 1] ^ prefix[left] for left, right in queries]
+```
+
+Just like prefix sum + hash map, pairing **running prefix XOR + hash map** counts subarrays with a target XOR (`prefix ^ target`).
+
+---
+
+## 2D Prefix Sum (Prefix Matrix)
+
+<PatternVizModal label="2D Prefix Sum">
+  <RangeSumQuery2DImmutableAnimation />
+</PatternVizModal>
+
+Using the **padded** matrix `P` of size `(rows + 1) x (cols + 1)` (row `0` and column `0` filled with `0`), every cell `P[r + 1][c + 1]` stores the sum of the rectangle `M[0..r][0..c]`.
+
+### Construction (Inclusion-Exclusion)
+
+To compute `P[r + 1][c + 1]`, take the cell `M[r][c]`, add the rectangle above (`P[r][c + 1]`) and the rectangle to the left (`P[r + 1][c]`), then subtract the top-left overlap (`P[r][c]`) that was counted twice:
+
+```text
+P[r + 1][c + 1] = M[r][c] + P[r][c + 1] + P[r + 1][c] - P[r][c]
+```
+
+**Visualizing construction for `P[2][2]` on `M = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]`:**
+
+Each diagram shows which cells of `M` belong to that term:
+
+```text
+  P[2][2]        =     P[1][2]      +     P[2][1]      -     P[1][1]      +   M[1][1]
++---+---+---+        +---+---+---+      +---+---+---+      +---+---+---+
+| 1 | 2 | . |        | 1 | 2 | . |      | 1 | . | . |      | 1 | . | . |
++---+---+---+        +---+---+---+      +---+---+---+      +---+---+---+
+| 4 | 5 | . |    =   | . | . | . |  +   | 4 | . | . |  -   | . | . | . |  +    [5]
++---+---+---+        +---+---+---+      +---+---+---+      +---+---+---+
+| . | . | . |        | . | . | . |      | . | . | . |      | . | . | . |
++---+---+---+        +---+---+---+      +---+---+---+      +---+---+---+
+ sum = 12             sum = 3            sum = 5            sum = 1           val = 5
+```
+
+Check: `3 + 5 - 1 + 5 = 12`.
+
+### Range Query (Inclusion-Exclusion)
+
+To query the inclusive rectangle from top-left `(r1, c1)` to bottom-right `(r2, c2)` using the **same padded matrix `P`**:
+
+```text
+Sum(r1, c1, r2, c2) = P[r2 + 1][c2 + 1] - P[r1][c2 + 1] - P[r2 + 1][c1] + P[r1][c1]
+```
+
+**Worked example:** Query `(1, 1)` to `(2, 2)` (`5 + 6 + 8 + 9 = 28`) using padded `P`:
+
+```text
+M = [1, 2, 3]          P = [ 0,  0,  0,  0]
+    [4, 5, 6]              [ 0,  1,  3,  6]
+    [7, 8, 9]              [ 0,  5, 12, 21]
+                           [ 0, 12, 27, 45]
+
+Sum(1, 1, 2, 2) = P[3][3] - P[1][3] - P[3][1] + P[1][1]
+                =   45    -    6    -   12    +    1
+                = 28
+```
+
+Visualized on the cells of `M`:
+
+```text
+  P[3][3] (45)       P[1][3] (6)        P[3][1] (12)       P[1][1] (1)
++---+---+---+      +---+---+---+      +---+---+---+      +---+---+---+
+| 1 | 2 | 3 |      | 1 | 2 | 3 |      | 1 | . | . |      | 1 | . | . |
++---+---+---+      +---+---+---+      +---+---+---+      +---+---+---+
+| 4 | 5 | 6 |  -   | . | . | . |  -   | 4 | . | . |  +   | . | . | . |  =  [5, 6, 8, 9] = 28
++---+---+---+      +---+---+---+      +---+---+---+      +---+---+---+
+| 7 | 8 | 9 |      | . | . | . |      | 7 | . | . |      | . | . | . |
++---+---+---+      +---+---+---+      +---+---+---+      +---+---+---+
+ (whole 0..2)       (rows above r1)    (cols left of c1)  (restored overlap)
+```
+
+```python
+def build_2d_prefix_sum(matrix: list[list[int]]) -> list[list[int]]:
+    rows, cols = len(matrix), len(matrix[0])
+    P = [[0] * (cols + 1) for _ in range(rows + 1)]
+
+    for r in range(rows):
+        for c in range(cols):
+            P[r + 1][c + 1] = (
+                matrix[r][c]
+                + P[r][c + 1]
+                + P[r + 1][c]
+                - P[r][c]
+            )
+    return P
+
+
+def query_2d(P: list[list[int]], r1: int, c1: int, r2: int, c2: int) -> int:
+    return (
+        P[r2 + 1][c2 + 1]
+        - P[r1][c2 + 1]
+        - P[r2 + 1][c1]
+        + P[r1][c1]
+    )
+```
+
+**Common 2D follow-ups:**
+
+- **Matrix Block Sum (LeetCode 1314):** Clamp each cell's `k`-radius row interval `[max(0, r - k), min(rows - 1, r + k)]` and column interval `[max(0, c - k), min(cols - 1, c + k)]`, then call `query_2d(P, r1, c1, r2, c2)`.
+- **Number of Submatrices That Sum to Target (LeetCode 1074):** Fix a pair of top/bottom rows `(r1, r2)`, collapse column sums into a 1D array using the 2D prefix matrix, and run 1D **Prefix Sum + Hash Map** across columns.
+
+---
+
+## Difference Array (Inverse of Prefix Sum)
+
+A **difference array** flips the workflow: instead of *read-many, write-never*, you have *many range updates* (`"add delta to every index in [L, R]"`) followed by a single final pass to materialize the array.
+
+For a non-empty array `arr`, define `diff[0] = arr[0]` and `diff[i] = arr[i] - arr[i - 1]` for `i > 0`. Adding `delta` to `[L, R]` only changes two boundaries:
+
+- `diff[L] += delta` (starts the offset at `L`)
+- `diff[R + 1] -= delta` (cancels the offset right after `R`, if `R + 1 < n`)
+
+Taking the prefix sum of `diff` at the end reconstructs the updated array in $O(N + U)$ total time instead of $O(N \cdot U)$. In `apply_range_updates` below, the starting array is all zeros, so `diff` starts at all zeros.
+
+```python
+def apply_range_updates(n: int, updates: list[tuple[int, int, int]]) -> list[int]:
+    diff = [0] * (n + 1)
+    for left, right, delta in updates:
+        diff[left] += delta
+        diff[right + 1] -= delta
+
+    result = [0] * n
+    running = 0
+    for i in range(n):
+        running += diff[i]
+        result[i] = running
+    return result
+```
+
+Common problems: *Range Addition (LeetCode 370)*, *Car Pooling (LeetCode 1094)*, and *Corporate Flight Bookings (LeetCode 1109)*.
+
+---
+
+## 3D Prefix Sum (Extension)
+
+For a 3D grid `M`, padded `P[i + 1][j + 1][k + 1]` stores the sum of `M[0..i][0..j][0..k]`. Inclusion-exclusion uses $2^3 = 8$ terms—add 3 faces, subtract 3 edges, add back 1 corner:
+
+```python
+# Build
+P[i + 1][j + 1][k + 1] = (
+    M[i][j][k]
+    + P[i][j + 1][k + 1] + P[i + 1][j][k + 1] + P[i + 1][j + 1][k]
+    - P[i][j][k + 1] - P[i][j + 1][k] - P[i + 1][j][k]
+    + P[i][j][k]
+)
+
+# Query inclusive box (x1, y1, z1)..(x2, y2, z2)
+box_sum = (
+    P[x2 + 1][y2 + 1][z2 + 1]
+    - P[x1][y2 + 1][z2 + 1] - P[x2 + 1][y1][z2 + 1] - P[x2 + 1][y2 + 1][z1]
+    + P[x1][y1][z2 + 1] + P[x1][y2 + 1][z1] + P[x2 + 1][y1][z1]
+    - P[x1][y1][z1]
+)
+```
+
+---
+
+## Common Pitfalls
+
+1. **Mixing padded and unpadded indices:** Pick the `N + 1` padded convention once and stick to it in both construction and queries (`P[R + 1] - P[L]`, `P[r2 + 1][c2 + 1] - ...`).
+2. **Wrong seed or insertion order in prefix + hash map:** Use `{0: 1}` when **counting** subarrays (LC 560) and `{0: -1}` when **maximizing span / checking length** (LC 523). Always query `seen` *before* inserting the current prefix.
+3. **Dividing in product problems:** Zeros in the input break `total_product // nums[i]`. Use a prefix + suffix pass instead.
+4. **Using prefix sums on a mutable array:** If point updates are interleaved with queries, switch to a Fenwick Tree or Segment Tree rather than rebuilding the prefix array every time.

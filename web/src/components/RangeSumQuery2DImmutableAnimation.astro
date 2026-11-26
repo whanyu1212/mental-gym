@@ -48,9 +48,9 @@ const steps: TeachingStep[] = [
     },
     highlights: [
       { target: 'matrix:1,1', kind: 'focus', label: 'Current matrix cell' },
-      { target: 'prefix:1,2', kind: 'region-subtract', label: 'Above' },
-      { target: 'prefix:2,1', kind: 'region-subtract', label: 'Left' },
-      { target: 'prefix:1,1', kind: 'region-add', label: 'Overlap back' },
+      { target: 'prefix:1,2', kind: 'region-add', label: 'Above' },
+      { target: 'prefix:2,1', kind: 'region-add', label: 'Left' },
+      { target: 'prefix:1,1', kind: 'region-subtract', label: 'Subtract overlap' },
       { target: 'prefix:2,2', kind: 'write', label: 'Write result' },
     ],
   },
