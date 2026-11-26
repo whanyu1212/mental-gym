@@ -173,7 +173,7 @@ dimension product still initializes its R-by-C output, taking O(RC) time.
 
 ## Related topics (do not duplicate here)
 
-- [Prefix sum pattern](../../../../notes/patterns/prefix_sum_pattern.md):
+- [Prefix sum pattern](../../../../notes/patterns/prefix_sum_pattern.mdx):
   1D, 2D, and 3D construction and range queries using inclusion–exclusion.
 
 - [1D prefix sums](../../../leetcode/arrays_hashing/python/range_sum_query_immutable.py)
