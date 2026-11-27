@@ -10,6 +10,7 @@ import {
   getAllRecords,
   importAll,
   putAttemptEvent,
+  putRecords,
   resetDatabase,
 } from "../src/scripts/sr-db.ts";
 import type { ReviewRecord } from "../src/scripts/sr-types.ts";
@@ -123,4 +124,30 @@ test("v3 progress upgrades to v4 without losing reviews and includes attempts in
   await resetDatabase();
   assert.deepEqual(await getAllRecords(), []);
   assert.deepEqual(await getAllAttemptEvents(), []);
+});
+
+test("putRecords writes multiple records including lapses and note and ignores empty batches", async () => {
+  await resetDatabase();
+  await putRecords([]);
+  assert.deepEqual(await getAllRecords(), []);
+
+  const first: ReviewRecord = {
+    ...record,
+    lapses: 2,
+    note: "Check duplicate keys",
+  };
+  const second: ReviewRecord = {
+    ...record,
+    problemKey: "algorithms:49-group-anagrams",
+    slug: "49-group-anagrams",
+    title: "Group Anagrams",
+    lapses: 0,
+  };
+
+  await putRecords([first, second]);
+  const stored = (await getAllRecords()).sort((a, b) =>
+    a.problemKey.localeCompare(b.problemKey)
+  );
+  assert.deepEqual(stored, [first, second]);
+  await resetDatabase();
 });

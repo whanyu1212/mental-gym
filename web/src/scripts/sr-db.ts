@@ -99,6 +99,17 @@ export async function putRecord(record: ReviewRecord): Promise<void> {
   await complete(transaction);
 }
 
+export async function putRecords(records: ReviewRecord[]): Promise<void> {
+  if (records.length === 0) return;
+  const db = await open();
+  const transaction = db.transaction(REVIEWS_STORE, "readwrite");
+  const reviewsStore = transaction.objectStore(REVIEWS_STORE);
+  for (const record of records) {
+    reviewsStore.put(record);
+  }
+  await complete(transaction);
+}
+
 export async function putReviewAndEvent(
   record: ReviewRecord,
   event: ReviewEvent

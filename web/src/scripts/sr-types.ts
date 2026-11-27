@@ -20,6 +20,8 @@ export interface ReviewRecord {
   dueDate: string; // local "YYYY-MM-DD"
   lastReviewDate: string | null;
   lastRating: ReviewQuality | null;
+  lapses?: number; // count of "Again" ratings (defaults to 0 on legacy records)
+  note?: string; // personal "My Trap" note, omitted when empty
 }
 
 export interface ReviewEvent {
