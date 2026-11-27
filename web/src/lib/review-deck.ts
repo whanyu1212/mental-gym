@@ -16,6 +16,8 @@ export interface ReviewDeckCard {
   href: string;
   promptHtml?: string;
   promptText?: string;
+  dialect?: "PostgreSQL" | "SQLite";
+  schemaSql?: string;
   pattern: string;
   trigger: string;
   invariant: string;
@@ -32,7 +34,7 @@ export interface ReviewDeckSources {
   mlProblems: MLProblem[];
   sqlProblems: Pick<
     SQLProblem,
-    "id" | "slug" | "title" | "difficulty" | "category" | "summary" | "prompt" | "hints"
+    "id" | "slug" | "title" | "difficulty" | "category" | "dialect" | "fixture" | "summary" | "prompt" | "hints"
   >[];
 }
 
@@ -102,6 +104,8 @@ export function buildReviewDeck(
       group: sql.category,
       href: `${prefix}/sql/${sql.slug}/`,
       promptText: sql.prompt,
+      dialect: sql.dialect === "postgres" ? "PostgreSQL" : "SQLite",
+      schemaSql: (sql.fixture ?? "").trim(),
       pattern: sql.category,
       trigger: sql.summary,
       invariant: "",

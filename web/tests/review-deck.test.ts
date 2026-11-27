@@ -19,6 +19,8 @@ test("buildReviewDeck includes algorithm, ML, and SQL cards with normalized base
           title: "Customers Without Orders",
           difficulty: "Easy",
           category: "Joins",
+          dialect: "postgres",
+          fixture: "CREATE TABLE customers (id INT);",
           summary: "Find customers with no orders.",
           prompt: "Return customers without matching rows in orders.",
           hints: ["Use LEFT JOIN or NOT EXISTS."],
@@ -43,6 +45,8 @@ test("buildReviewDeck includes algorithm, ML, and SQL cards with normalized base
   const sqlCard = deck["sql:customers-without-orders"];
   assert.ok(sqlCard);
   assert.equal(sqlCard.href, "/mental-gym/sql/customers-without-orders/");
+  assert.equal(sqlCard.dialect, "PostgreSQL");
+  assert.equal(sqlCard.schemaSql, "CREATE TABLE customers (id INT);");
   assert.equal(sqlCard.hints[0], "Use LEFT JOIN or NOT EXISTS.");
 });
 
@@ -58,6 +62,8 @@ test("serializeReviewDeck escapes closing script sequences and round-trips clean
         title: "Escape Test",
         difficulty: "Easy",
         category: "SQL",
+        dialect: "sqlite",
+        fixture: "",
         summary: "Summary",
         prompt: "Test </script><script>alert(1)</script>",
         hints: [],

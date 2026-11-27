@@ -385,6 +385,12 @@ const deckJson = serializeReviewDeck(
 				cardTitleEl.textContent = cardData?.title ?? current.title;
 
 				cardPromptEl.innerHTML = "";
+				if (cardData?.dialect) {
+					const dialectTag = document.createElement("p");
+					dialectTag.className = "sql-dialect-label";
+					dialectTag.textContent = `SQL dialect: ${cardData.dialect}`;
+					cardPromptEl.appendChild(dialectTag);
+				}
 				if (cardData?.promptHtml) {
 					cardPromptEl.innerHTML = cardData.promptHtml;
 				} else if (cardData?.promptText) {
@@ -395,6 +401,17 @@ const deckJson = serializeReviewDeck(
 					const p = document.createElement("p");
 					p.textContent = "Recall the pattern, key invariant, traps, and complexity from memory.";
 					cardPromptEl.appendChild(p);
+				}
+				if (cardData?.schemaSql) {
+					const schemaLabel = document.createElement("p");
+					schemaLabel.className = "sql-schema-label";
+					schemaLabel.textContent = "Schema & Sample Data";
+					const pre = document.createElement("pre");
+					pre.className = "sql-schema-pre";
+					const code = document.createElement("code");
+					code.textContent = cardData.schemaSql;
+					pre.appendChild(code);
+					cardPromptEl.append(schemaLabel, pre);
 				}
 				cardPromptEl.scrollTop = 0;
 
@@ -919,6 +936,33 @@ const deckJson = serializeReviewDeck(
 	}
 
 	.review-prompt :global(pre) {
+		overflow-x: auto;
+	}
+
+	.review-prompt :global(.sql-dialect-label),
+	.review-prompt :global(.sql-schema-label) {
+		margin: 0 0 0.45rem;
+		font-size: var(--fs-eyebrow);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--accent);
+		font-weight: 600;
+	}
+
+	.review-prompt :global(.sql-schema-label) {
+		margin-top: 0.9rem;
+		color: var(--muted);
+	}
+
+	.review-prompt :global(.sql-schema-pre) {
+		margin: 0;
+		padding: 0.75rem;
+		border-radius: var(--radius-xs);
+		background: var(--panel);
+		border: 1px solid var(--border);
+		font-family: var(--font-mono);
+		font-size: var(--fs-fine);
+		line-height: 1.45;
 		overflow-x: auto;
 	}
 
