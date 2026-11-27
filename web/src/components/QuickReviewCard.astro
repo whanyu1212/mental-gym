@@ -1,0 +1,595 @@
+---
+import type { QuickReviewItem } from "../lib/quick-review";
+import { withBase } from "../lib/url";
+
+interface Props {
+  item: QuickReviewItem;
+  showHeader?: boolean;
+}
+
+const { item, showHeader = true } = Astro.props;
+const complexityLabel = [item.timeComplexity, item.spaceComplexity]
+  .filter(Boolean)
+  .join(" · ");
+---
+
+<quick-review-card
+  class="qr-card"
+  data-sr-key={item.problemKey}
+  data-slug={item.slug}
+  data-title={item.title}
+  data-difficulty={item.difficulty}
+  data-group={item.group}
+  data-difficulty-filter={item.difficulty.toLowerCase()}
+  data-topics={item.topics.join(" ")}
+>
+  {showHeader && (
+    <header class="qr-header">
+      <div class="qr-title-wrap">
+        <span class="qr-id">#{item.id}</span>
+        <a class="qr-title" href={withBase(`/algorithms/${item.slug}/`)}>
+          {item.title}
+        </a>
+      </div>
+      <div class="qr-badges">
+        <span class={`qr-diff ${item.difficulty.toLowerCase()}`}>{item.difficulty}</span>
+        {complexityLabel && <span class="qr-complexity">{complexityLabel}</span>}
+        <span class="qr-sr-badge" data-qr-status hidden></span>
+        <span class="qr-weak-badge" data-qr-weakspot hidden>Weak spot</span>
+      </div>
+    </header>
+  )}
+
+  <p class="qr-pattern">{item.pattern}</p>
+
+  <dl class="qr-facts">
+    {item.trigger && (
+      <div class="qr-fact">
+        <dt>Trigger</dt>
+        <dd>{item.trigger}</dd>
+      </div>
+    )}
+    {item.invariant && (
+      <div class="qr-fact">
+        <dt>Invariant</dt>
+        <dd>{item.invariant}</dd>
+      </div>
+    )}
+    {(item.topTrap || item.trapCase) && (
+      <div class="qr-fact qr-fact--trap">
+        <dt>Top trap</dt>
+        <dd>
+          {item.topTrap && <p class="qr-trap-text">{item.topTrap}</p>}
+          {item.trapCase && (
+            <div class="qr-trap-case">
+              <span class="qr-trap-case-io">
+                <code>{item.trapCase.input}</code>
+                <span aria-hidden="true">→</span>
+                <code>{item.trapCase.expected}</code>
+              </span>
+              {item.trapCase.note && (
+                <span class="qr-trap-case-note">{item.trapCase.note}</span>
+              )}
+            </div>
+          )}
+        </dd>
+      </div>
+    )}
+  </dl>
+
+  <div class="qr-note-box">
+    <div class="qr-note-header">
+      <label class="qr-note-label" for={`qr-note-${item.slug}`}>My trap</label>
+      <span class="qr-save-status" data-qr-save-status aria-live="polite"></span>
+    </div>
+    <textarea
+      id={`qr-note-${item.slug}`}
+      class="qr-note-input"
+      rows="2"
+      data-qr-note
+      placeholder="Jot down what tripped you up…"
+    ></textarea>
+    <div class="qr-note-actions">
+      <button type="button" class="qr-save-btn" data-qr-save hidden>Save</button>
+    </div>
+  </div>
+</quick-review-card>
+
+<script>
+  import { getAllRecords } from "../scripts/sr-db";
+  import { formatCardStatus, savePersonalNote } from "../scripts/sr-notes";
+  import type { ReviewRecord } from "../scripts/sr-types";
+
+  let recordsPromise: Promise<Map<string, ReviewRecord>> | null = null;
+
+  function loadRecordsMap(): Promise<Map<string, ReviewRecord>> {
+    if (!recordsPromise) {
+      recordsPromise = getAllRecords()
+        .then((records) => new Map(records.map((r) => [r.problemKey, r])))
+        .catch((err) => {
+          recordsPromise = null;
+          throw err;
+        });
+    }
+    return recordsPromise;
+  }
+
+  window.addEventListener("mental-gym:progress-updated", (event) => {
+    const detail = (event as CustomEvent<{ source?: string }>).detail;
+    if (detail?.source === "quick-review-note") return;
+    recordsPromise = null;
+  });
+
+  class QuickReviewCardElement extends HTMLElement {
+    private initialized = false;
+    private onExternalUpdate: ((event: Event) => void) | null = null;
+    private statusTimer: number | undefined;
+
+    connectedCallback() {
+      if (this.initialized) return;
+      this.initialized = true;
+
+      const srKey = this.dataset.srKey ?? "";
+      const slug = this.dataset.slug ?? "";
+      const title = this.dataset.title ?? "";
+      const difficulty = this.dataset.difficulty ?? "";
+      const group = this.dataset.group ?? "";
+      if (!srKey || !slug) return;
+
+      const statusEl = this.querySelector<HTMLElement>("[data-qr-status]");
+      const weakEl = this.querySelector<HTMLElement>("[data-qr-weakspot]");
+      const textarea = this.querySelector<HTMLTextAreaElement>("[data-qr-note]");
+      const saveBtn = this.querySelector<HTMLButtonElement>("[data-qr-save]");
+      const saveStatus = this.querySelector<HTMLElement>("[data-qr-save-status]");
+
+      let savedNote = "";
+      let isSaving = false;
+      let pendingCommit = false;
+      let hasLocalSave = false;
+
+      const applyStatus = (record: ReviewRecord | undefined) => {
+        const formatted = formatCardStatus(record);
+        if (statusEl) {
+          if (formatted.text) {
+            statusEl.textContent = formatted.text;
+            statusEl.className = `qr-sr-badge sr-${formatted.kind}`;
+            statusEl.hidden = false;
+          } else {
+            statusEl.textContent = "";
+            statusEl.hidden = true;
+          }
+        }
+        if (weakEl) {
+          weakEl.hidden = !formatted.weakSpot;
+        }
+      };
+
+      const syncDirty = () => {
+        if (!textarea || !saveBtn) return;
+        const dirty = textarea.value.trim() !== savedNote;
+        saveBtn.hidden = !dirty;
+      };
+
+      const showSaveMessage = (msg: string, isError = false) => {
+        if (!saveStatus) return;
+        window.clearTimeout(this.statusTimer);
+        saveStatus.textContent = msg;
+        saveStatus.classList.toggle("is-error", isError);
+        if (msg) {
+          this.statusTimer = window.setTimeout(() => {
+            saveStatus.textContent = "";
+            saveStatus.classList.remove("is-error");
+          }, 2000);
+        }
+      };
+
+      const hydrate = (force = false) => {
+        loadRecordsMap()
+          .then((map) => {
+            if (!force && (hasLocalSave || isSaving)) return;
+            const record = map.get(srKey);
+            const prevSaved = savedNote;
+            savedNote = record?.note ?? "";
+            if (textarea && textarea.value.trim() === prevSaved) {
+              textarea.value = savedNote;
+            }
+            applyStatus(record);
+            syncDirty();
+          })
+          .catch(() => {
+            // Keep card interactive if IndexedDB read fails transiently.
+          });
+      };
+
+      const commitNote = async () => {
+        if (!textarea) return;
+        if (isSaving) {
+          pendingCommit = true;
+          return;
+        }
+        const snapshot = textarea.value;
+        const trimmed = snapshot.trim();
+        if (trimmed === savedNote) {
+          textarea.value = savedNote;
+          syncDirty();
+          return;
+        }
+
+        isSaving = true;
+        if (saveBtn) saveBtn.disabled = true;
+        try {
+          const updated = await savePersonalNote(
+            { domain: "algorithms", slug, title, difficulty, group },
+            snapshot
+          );
+          hasLocalSave = true;
+          savedNote = updated.note ?? "";
+          if (textarea.value === snapshot) {
+            textarea.value = savedNote;
+          }
+          syncDirty();
+          applyStatus(updated);
+          showSaveMessage(savedNote ? "Saved" : "Cleared");
+          window.dispatchEvent(
+            new CustomEvent("mental-gym:progress-updated", {
+              detail: { source: "quick-review-note", problemKey: srKey },
+            })
+          );
+        } catch {
+          showSaveMessage("Could not save", true);
+        } finally {
+          isSaving = false;
+          if (saveBtn) saveBtn.disabled = false;
+          if (pendingCommit) {
+            pendingCommit = false;
+            void commitNote();
+          }
+        }
+      };
+
+      hydrate(false);
+
+      this.onExternalUpdate = (event: Event) => {
+        const detail = (event as CustomEvent<{ source?: string; problemKey?: string }>).detail;
+        if (detail?.source === "quick-review-note" && detail.problemKey === srKey) {
+          return;
+        }
+        hasLocalSave = false;
+        queueMicrotask(() => hydrate(true));
+      };
+      window.addEventListener("mental-gym:progress-updated", this.onExternalUpdate);
+
+      textarea?.addEventListener("input", () => {
+        if (saveStatus?.textContent) showSaveMessage("");
+        syncDirty();
+      });
+
+      textarea?.addEventListener("blur", () => {
+        void commitNote();
+      });
+
+      textarea?.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+          event.preventDefault();
+          void commitNote();
+        }
+      });
+
+      saveBtn?.addEventListener("click", () => {
+        void commitNote();
+      });
+    }
+
+    disconnectedCallback() {
+      window.clearTimeout(this.statusTimer);
+      if (this.onExternalUpdate) {
+        window.removeEventListener("mental-gym:progress-updated", this.onExternalUpdate);
+        this.onExternalUpdate = null;
+      }
+    }
+  }
+
+  if (!customElements.get("quick-review-card")) {
+    customElements.define("quick-review-card", QuickReviewCardElement);
+  }
+</script>
+
+<style>
+  quick-review-card.qr-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1.15rem 1.25rem;
+    background: color-mix(in srgb, var(--glass-surface-strong) 92%, transparent);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 1px 0 var(--glass-highlight-strong), var(--shadow-sm);
+    font-family: var(--font-sans);
+  }
+
+  quick-review-card[hidden] {
+    display: none;
+  }
+
+  .qr-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.45rem 0.75rem;
+  }
+
+  .qr-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .qr-id {
+    font-size: var(--fs-eyebrow);
+    font-family: var(--font-mono);
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .qr-title {
+    font-weight: 600;
+    font-size: var(--fs-base);
+    color: var(--text);
+    text-decoration: none;
+    line-height: var(--lh-tight);
+  }
+
+  .qr-title:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .qr-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .qr-diff,
+  .qr-complexity,
+  .qr-sr-badge,
+  .qr-weak-badge {
+    font-size: var(--fs-micro);
+    padding: 0.14rem 0.45rem;
+    border-radius: var(--radius-xs);
+    white-space: nowrap;
+    line-height: 1.3;
+  }
+
+  .qr-diff {
+    border: 1px solid var(--border);
+  }
+  .qr-diff.easy {
+    color: var(--status-easy);
+  }
+  .qr-diff.medium {
+    color: var(--status-medium);
+  }
+  .qr-diff.hard {
+    color: var(--status-hard);
+  }
+
+  .qr-complexity {
+    font-family: var(--font-mono);
+    color: var(--muted);
+    background: var(--surface-base);
+    border: 1px solid var(--border);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .qr-sr-badge {
+    font-weight: 600;
+  }
+  .qr-sr-badge.sr-overdue {
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 15%, transparent);
+  }
+  .qr-sr-badge.sr-due {
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .qr-sr-badge.sr-upcoming {
+    color: var(--muted);
+    background: color-mix(in srgb, var(--muted) 10%, transparent);
+  }
+
+  .qr-weak-badge {
+    font-weight: 600;
+    color: var(--status-hard);
+    background: color-mix(in srgb, var(--status-hard) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--status-hard) 30%, transparent);
+  }
+
+  .qr-sr-badge[hidden],
+  .qr-weak-badge[hidden],
+  .qr-save-btn[hidden] {
+    display: none;
+  }
+
+  .qr-pattern {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: var(--accent);
+    line-height: var(--lh-tight);
+  }
+
+  .qr-facts {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .qr-fact {
+    display: grid;
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .qr-fact dt {
+    font-size: var(--fs-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .qr-fact dd {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    line-height: 1.5;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .qr-trap-text {
+    margin: 0;
+  }
+
+  .qr-trap-case {
+    margin-top: 0.35rem;
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--radius-xs);
+    background: var(--surface-base);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .qr-trap-case-io {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: var(--fs-fine);
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+
+  .qr-trap-case-io code {
+    font-family: var(--font-mono);
+    font-size: var(--fs-fine);
+    background: transparent;
+    padding: 0;
+    color: var(--accent);
+    overflow-wrap: anywhere;
+  }
+
+  .qr-trap-case-note {
+    font-size: var(--fs-fine);
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .qr-note-box {
+    margin-top: auto;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .qr-note-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .qr-note-label {
+    font-size: var(--fs-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .qr-save-status {
+    font-size: var(--fs-micro);
+    color: var(--status-easy);
+    min-height: 1em;
+  }
+
+  .qr-save-status.is-error {
+    color: var(--status-hard);
+  }
+
+  .qr-note-input {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.6rem;
+    background: var(--surface-base);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-sans);
+    font-size: var(--fs-fine);
+    line-height: 1.45;
+  }
+
+  .qr-note-input::placeholder {
+    color: var(--muted);
+    opacity: 0.75;
+  }
+
+  .qr-note-input:focus {
+    border-color: var(--accent);
+  }
+
+  .qr-note-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .qr-note-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .qr-save-btn {
+    padding: 0.25rem 0.65rem;
+    font-size: var(--fs-fine);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    color: var(--on-accent);
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+  }
+
+  .qr-save-btn:disabled {
+    opacity: var(--dim-soft);
+    cursor: default;
+  }
+
+  @media (max-width: 480px) {
+    quick-review-card.qr-card {
+      padding: 1rem;
+    }
+
+    .qr-fact {
+      grid-template-columns: 1fr;
+      gap: 0.15rem;
+    }
+  }
+</style>
