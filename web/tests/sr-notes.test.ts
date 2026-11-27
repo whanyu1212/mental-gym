@@ -3,7 +3,11 @@ import test from "node:test";
 import "fake-indexeddb/auto";
 
 import { getRecord, putRecord, resetDatabase } from "../src/scripts/sr-db.ts";
-import { formatCardStatus, savePersonalNote } from "../src/scripts/sr-notes.ts";
+import {
+  formatCardStatus,
+  savePersonalNote,
+  seedPersonalNoteIfEmpty,
+} from "../src/scripts/sr-notes.ts";
 import { createNewRecord, schedule } from "../src/scripts/sr-scheduler.ts";
 
 const SEED = {
@@ -116,4 +120,29 @@ test("formatCardStatus handles unreviewed, due, overdue, upcoming, and weak-spot
     kind: "upcoming",
     weakSpot: false,
   });
+});
+
+test("seedPersonalNoteIfEmpty seeds blank cards and never overwrites existing notes", async () => {
+  await resetDatabase();
+
+  assert.equal(await seedPersonalNoteIfEmpty(SEED, undefined), false);
+  assert.equal(await seedPersonalNoteIfEmpty(SEED, "   \n "), false);
+  assert.equal(await getRecord("algorithms:1-two-sum"), undefined);
+
+  assert.equal(
+    await seedPersonalNoteIfEmpty(SEED, "  Store complement before inserting  "),
+    true
+  );
+  const seeded = await getRecord("algorithms:1-two-sum");
+  assert.equal(seeded?.note, "Store complement before inserting");
+  assert.equal(seeded?.lastReviewDate, null);
+
+  assert.equal(
+    await seedPersonalNoteIfEmpty(SEED, "Should not overwrite existing note"),
+    false
+  );
+  const unchanged = await getRecord("algorithms:1-two-sum");
+  assert.equal(unchanged?.note, "Store complement before inserting");
+
+  await resetDatabase();
 });

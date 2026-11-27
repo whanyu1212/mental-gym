@@ -142,6 +142,7 @@ const {
     type AttemptSession,
   } from "../scripts/attempt-state";
   import { getAttemptsForProblem, putAttemptEvent } from "../scripts/sr-db";
+  import { seedPersonalNoteIfEmpty } from "../scripts/sr-notes";
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -295,8 +296,21 @@ const {
             this.finishedAt
           );
           await putAttemptEvent(attempt);
+          let seededNote = false;
+          try {
+            seededNote = await seedPersonalNoteIfEmpty(
+              { domain, slug, title, difficulty, group },
+              attempt.reflection
+            );
+          } catch {
+            seededNote = false;
+          }
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
-          if (feedback) feedback.textContent = "Attempt saved. Opening the study material…";
+          if (feedback) {
+            feedback.textContent = seededNote
+              ? "Attempt saved and reflection copied to My trap. Opening the study material…"
+              : "Attempt saved. Opening the study material…";
+          }
           await renderHistory();
           unlockStudyMaterial();
         } catch {

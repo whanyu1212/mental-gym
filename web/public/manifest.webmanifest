@@ -1,0 +1,23 @@
+{
+  "name": "Mental Gym",
+  "short_name": "Mental Gym",
+  "description": "Daily spaced-repetition practice for algorithms, ML, SQL, and system design.",
+  "start_url": "./review/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101613",
+  "theme_color": "#101613",
+  "icons": [
+    {
+      "src": "./apple-touch-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
