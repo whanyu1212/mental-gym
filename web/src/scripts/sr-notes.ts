@@ -62,6 +62,22 @@ export async function savePersonalNote(
   return updated;
 }
 
+/** Copy an attempt reflection into "My trap" only when no personal note exists yet. */
+export async function seedPersonalNoteIfEmpty(
+  seed: RecordSeed,
+  rawReflection: string | undefined
+): Promise<boolean> {
+  if (!rawReflection || rawReflection.trim().length === 0) {
+    return false;
+  }
+  const existing = await getRecord(`${seed.domain}:${seed.slug}`);
+  if (existing?.note && existing.note.trim().length > 0) {
+    return false;
+  }
+  await savePersonalNote(seed, rawReflection);
+  return true;
+}
+
 /** Format a compact status badge and weak-spot flag for a quick-review card. */
 export function formatCardStatus(
   record: ReviewRecord | undefined,
