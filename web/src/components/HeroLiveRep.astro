@@ -1,0 +1,487 @@
+---
+import { getGuide } from "../data/algorithmGuides";
+import { mlProblems } from "../data/mlProblems";
+import { problems } from "../data/problems";
+import { buildHeroReps, serializeHeroReps } from "../lib/hero-reps";
+
+const reps = buildHeroReps(
+  { problems, getGuide, mlProblems },
+  import.meta.env.BASE_URL,
+);
+const first = reps[0]!;
+const repsJson = serializeHeroReps(reps);
+
+const RATING_OPTIONS = [
+  {
+    key: "again",
+    label: "Again",
+    interval: "Today",
+    message: "Preview: re-queued for today · lapses +1",
+  },
+  {
+    key: "hard",
+    label: "Hard",
+    interval: "2d",
+    message: "Preview: stepped gently without resetting streak → +2d",
+  },
+  {
+    key: "good",
+    label: "Good",
+    interval: "6d",
+    message: "Preview: scheduled in 6 days (with ±15% fuzz)",
+  },
+  {
+    key: "easy",
+    label: "Easy",
+    interval: "11d",
+    message: "Preview: graduated faster → +11d",
+  },
+] as const;
+---
+
+<hero-live-rep
+  class="rep-widget"
+  role="region"
+  tabindex="0"
+  aria-label="Interactive spaced-repetition preview card"
+>
+  <script type="application/json" data-hero-reps set:html={repsJson} />
+
+  <div class="rep-top">
+    <span class="rep-live">Live rep · Blind mode</span>
+    <button
+      type="button"
+      class="rep-cycle-btn"
+      data-rep-cycle
+      aria-label={`Cycle sample problem (showing 1 of ${reps.length})`}
+    >
+      Rep 1 / {reps.length} ↻
+    </button>
+  </div>
+
+  <p class="rep-title" data-rep-title>{first.title}</p>
+  <p class="rep-prompt" data-rep-prompt>{first.prompt}</p>
+
+  <button type="button" class="rep-reveal-btn" data-rep-reveal aria-expanded="false">
+    Reveal pattern &amp; trap <kbd>Space</kbd>
+  </button>
+
+  <div class="rep-back" data-rep-back hidden>
+    <div class="rep-row">
+      <span>Pattern</span>
+      <strong data-rep-pattern>{first.pattern}</strong>
+    </div>
+    <div class="rep-row">
+      <span>Top trap</span>
+      <span data-rep-trap>{first.topTrap}</span>
+    </div>
+
+    <div class="rep-ratings" role="group" aria-label="Preview recall rating">
+      {
+        RATING_OPTIONS.map((option) => (
+          <button
+            type="button"
+            class={`rate-btn ${option.key}`}
+            data-rep-rate
+            data-msg={option.message}
+            aria-pressed="false"
+          >
+            {option.label}
+            <small>{option.interval}</small>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="rep-footer">
+      <p class="rep-feedback" data-rep-feedback role="status" aria-live="polite">
+        Click a rating above to preview the scheduler…
+      </p>
+      <a class="rep-open-link" data-rep-link href={first.href}>
+        Open problem <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+</hero-live-rep>
+
+<script>
+  interface HeroRepClient {
+    slug: string;
+    title: string;
+    prompt: string;
+    pattern: string;
+    topTrap: string;
+    href: string;
+  }
+
+  const DEFAULT_FEEDBACK = "Click a rating above to preview the scheduler…";
+
+  class HeroLiveRepElement extends HTMLElement {
+    private reps: HeroRepClient[] = [];
+    private index = 0;
+
+    connectedCallback(): void {
+      if (this.dataset.bound === "true") return;
+      this.dataset.bound = "true";
+
+      const payload = this.querySelector<HTMLScriptElement>("script[data-hero-reps]");
+      if (!payload?.textContent) return;
+
+      try {
+        const parsed = JSON.parse(payload.textContent);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.reps = parsed as HeroRepClient[];
+        }
+      } catch {
+        return;
+      }
+
+      if (this.reps.length === 0) return;
+
+      const revealBtn = this.querySelector<HTMLButtonElement>("[data-rep-reveal]");
+      const cycleBtn = this.querySelector<HTMLButtonElement>("[data-rep-cycle]");
+      const ratingBtns = Array.from(
+        this.querySelectorAll<HTMLButtonElement>("[data-rep-rate]"),
+      );
+
+      revealBtn?.addEventListener("click", () => this.reveal(true));
+      cycleBtn?.addEventListener("click", () => this.cycle());
+
+      for (const btn of ratingBtns) {
+        btn.addEventListener("click", () => this.selectRating(btn, ratingBtns));
+      }
+
+      this.addEventListener("keydown", (event) => {
+        if (event.code !== "Space" || event.repeat) return;
+        const back = this.querySelector<HTMLElement>("[data-rep-back]");
+        if (!back?.hidden) return;
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("a, button")) return;
+        event.preventDefault();
+        this.reveal(true);
+      });
+    }
+
+    private reveal(focusRating: boolean): void {
+      const back = this.querySelector<HTMLElement>("[data-rep-back]");
+      const revealBtn = this.querySelector<HTMLButtonElement>("[data-rep-reveal]");
+      if (!back || !revealBtn) return;
+
+      back.hidden = false;
+      revealBtn.hidden = true;
+      revealBtn.setAttribute("aria-expanded", "true");
+
+      if (focusRating) {
+        const firstRate = this.querySelector<HTMLButtonElement>("[data-rep-rate]");
+        firstRate?.focus();
+      }
+    }
+
+    private selectRating(
+      activeBtn: HTMLButtonElement,
+      allBtns: HTMLButtonElement[],
+    ): void {
+      for (const btn of allBtns) {
+        btn.setAttribute("aria-pressed", String(btn === activeBtn));
+      }
+      const feedback = this.querySelector<HTMLElement>("[data-rep-feedback]");
+      if (feedback) {
+        feedback.textContent = activeBtn.dataset.msg ?? DEFAULT_FEEDBACK;
+      }
+    }
+
+    private cycle(): void {
+      if (this.reps.length === 0) return;
+      this.index = (this.index + 1) % this.reps.length;
+      const rep = this.reps[this.index]!;
+
+      const title = this.querySelector<HTMLElement>("[data-rep-title]");
+      const prompt = this.querySelector<HTMLElement>("[data-rep-prompt]");
+      const pattern = this.querySelector<HTMLElement>("[data-rep-pattern]");
+      const trap = this.querySelector<HTMLElement>("[data-rep-trap]");
+      const link = this.querySelector<HTMLAnchorElement>("[data-rep-link]");
+      const cycleBtn = this.querySelector<HTMLButtonElement>("[data-rep-cycle]");
+      const back = this.querySelector<HTMLElement>("[data-rep-back]");
+      const revealBtn = this.querySelector<HTMLButtonElement>("[data-rep-reveal]");
+      const feedback = this.querySelector<HTMLElement>("[data-rep-feedback]");
+
+      if (title) title.textContent = rep.title;
+      if (prompt) prompt.textContent = rep.prompt;
+      if (pattern) pattern.textContent = rep.pattern;
+      if (trap) trap.textContent = rep.topTrap;
+      if (link) link.href = rep.href;
+      if (cycleBtn) {
+        cycleBtn.textContent = `Rep ${this.index + 1} / ${this.reps.length} ↻`;
+        cycleBtn.setAttribute(
+          "aria-label",
+          `Cycle sample problem (showing ${this.index + 1} of ${this.reps.length})`,
+        );
+      }
+
+      if (back) back.hidden = true;
+      if (revealBtn) {
+        revealBtn.hidden = false;
+        revealBtn.setAttribute("aria-expanded", "false");
+      }
+      if (feedback) feedback.textContent = DEFAULT_FEEDBACK;
+
+      for (const btn of this.querySelectorAll<HTMLButtonElement>("[data-rep-rate]")) {
+        btn.setAttribute("aria-pressed", "false");
+      }
+    }
+  }
+
+  if (!customElements.get("hero-live-rep")) {
+    customElements.define("hero-live-rep", HeroLiveRepElement);
+  }
+</script>
+
+<style>
+  .rep-widget {
+    min-width: 0;
+    background: var(--glass-surface-strong);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-lg, 16px);
+    padding: 1.35rem 1.45rem;
+    box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .rep-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font: 500 0.68rem/1.4 var(--font-mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .rep-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--accent);
+  }
+
+  .rep-live::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    flex-shrink: 0;
+  }
+
+  .rep-cycle-btn {
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface-base);
+    color: var(--text);
+    font: 500 0.68rem var(--font-mono);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .rep-cycle-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .rep-title {
+    margin: 0;
+    font: 600 1.55rem/1.12 var(--font-serif);
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .rep-prompt {
+    margin: 0;
+    padding: 0.85rem 0.95rem;
+    border-radius: 10px;
+    background: var(--surface-base);
+    border: 1px solid var(--border);
+    font: 400 0.86rem/1.55 var(--font-sans);
+    color: var(--muted);
+  }
+
+  .rep-reveal-btn {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--accent-ring);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 0.84rem var(--font-sans);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .rep-reveal-btn:hover {
+    background: var(--accent-veil);
+  }
+
+  .rep-reveal-btn kbd {
+    font: 500 0.68rem var(--font-mono);
+    padding: 0.08rem 0.35rem;
+    border-radius: var(--radius-xs, 4px);
+    border: 1px solid currentColor;
+    opacity: 0.8;
+  }
+
+  .rep-back {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--border);
+    animation: heroRepFadeUp 0.2s var(--ease-out, ease-out);
+  }
+
+  .rep-back[hidden],
+  .rep-reveal-btn[hidden] {
+    display: none;
+  }
+
+  .rep-row {
+    display: grid;
+    grid-template-columns: 4.8rem minmax(0, 1fr);
+    gap: 0.5rem;
+    font: 400 0.84rem/1.5 var(--font-sans);
+    color: var(--text);
+    align-items: baseline;
+  }
+
+  .rep-row > span:first-child {
+    font: 600 0.68rem/1.4 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .rep-row strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .rep-ratings {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-top: 0.2rem;
+  }
+
+  .rate-btn {
+    padding: 0.45rem 0.35rem;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface-base);
+    color: var(--text);
+    font: 600 0.76rem var(--font-sans);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+  }
+
+  .rate-btn small {
+    font: 400 0.66rem var(--font-mono);
+    color: var(--muted);
+  }
+
+  .rate-btn:hover,
+  .rate-btn[aria-pressed="true"] {
+    border-color: currentColor;
+    background: var(--panel);
+  }
+
+  .rate-btn.again {
+    color: var(--status-hard);
+  }
+
+  .rate-btn.hard {
+    color: var(--status-medium);
+  }
+
+  .rate-btn.good {
+    color: var(--status-easy);
+  }
+
+  .rate-btn.easy {
+    color: var(--status-info);
+  }
+
+  .rep-footer {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .rep-feedback {
+    margin: 0;
+    font: 400 0.72rem/1.4 var(--font-mono);
+    color: var(--accent);
+    min-height: 1.4em;
+  }
+
+  .rep-open-link {
+    font: 500 0.72rem/1.4 var(--font-mono);
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .rep-open-link:hover {
+    color: var(--accent);
+  }
+
+  .rep-widget:focus-visible,
+  .rep-widget :global(button:focus-visible),
+  .rep-widget :global(a:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @keyframes heroRepFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rep-widget {
+      padding: 1.15rem;
+    }
+
+    .rep-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.2rem;
+    }
+
+    .rep-ratings {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rep-back {
+      animation: none;
+    }
+  }
+</style>
