@@ -36,7 +36,12 @@ function isReviewRecord(value: unknown): value is ReviewRecord {
       value.lastRating === 0 ||
       value.lastRating === 1 ||
       value.lastRating === 2 ||
-      value.lastRating === 3)
+      value.lastRating === 3) &&
+    (value.lapses === undefined ||
+      (typeof value.lapses === "number" &&
+        Number.isInteger(value.lapses) &&
+        value.lapses >= 0)) &&
+    (value.note === undefined || typeof value.note === "string")
   );
 }
 

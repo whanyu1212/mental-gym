@@ -23,6 +23,7 @@ const { domain, slug, title, difficulty, group } = Astro.props;
     </div>
 
     <p class="recall-prompt">How well did you recall the solution?</p>
+    <p class="recall-suggestion sr-suggestion" hidden></p>
 
     <div class="recall-buttons">
       <button class="recall-btn again" data-quality="0">
@@ -48,18 +49,38 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 </recall-rating>
 
 <script>
-  import { getRecord, putReviewAndEvent } from "../scripts/sr-db";
+  import {
+    pickLatestAttempt,
+    suggestRecallRating,
+  } from "../scripts/attempt-calibration";
+  import {
+    getAttemptsForProblem,
+    getRecord,
+    putReviewAndEvent,
+  } from "../scripts/sr-db";
   import {
     createNewRecord,
+    daysUntilDue,
     localDateISO,
+    QUALITY_LABELS,
     schedule,
     statusOf,
-    daysUntilDue,
   } from "../scripts/sr-scheduler";
   import type { ReviewQuality } from "../scripts/sr-types";
 
   class RecallRatingElement extends HTMLElement {
+    private initialized = false;
+    private onProgressUpdated: (() => void) | null = null;
+
     connectedCallback() {
+      if (this.initialized) {
+        if (this.onProgressUpdated) {
+          window.addEventListener("mental-gym:progress-updated", this.onProgressUpdated);
+        }
+        return;
+      }
+      this.initialized = true;
+
       const domain = this.dataset.domain as "algorithms" | "ml" | "sql";
       const slug = this.dataset.slug!;
       const title = this.dataset.title!;
@@ -68,8 +89,44 @@ const { domain, slug, title, difficulty, group } = Astro.props;
       const key = `${domain}:${slug}`;
 
       const badge = this.querySelector(".sr-badge") as HTMLElement;
+      const suggestionEl = this.querySelector(".sr-suggestion") as HTMLElement;
       const resultEl = this.querySelector(".sr-result") as HTMLElement;
       const buttons = this.querySelectorAll<HTMLButtonElement>(".recall-btn");
+
+      let isSubmitting = false;
+      let hasSubmitted = false;
+      let suggestionGen = 0;
+
+      const clearSuggestion = () => {
+        buttons.forEach((button) => button.classList.remove("suggested"));
+        suggestionEl.textContent = "";
+        suggestionEl.hidden = true;
+      };
+
+      const refreshSuggestion = async () => {
+        if (hasSubmitted || isSubmitting) return;
+        const gen = ++suggestionGen;
+        try {
+          const attempts = await getAttemptsForProblem(key);
+          if (gen !== suggestionGen || hasSubmitted || isSubmitting) return;
+          const latest = pickLatestAttempt(attempts);
+          if (!latest) {
+            clearSuggestion();
+            return;
+          }
+          const suggestion = suggestRecallRating(latest);
+          buttons.forEach((button) => {
+            button.classList.toggle(
+              "suggested",
+              Number(button.dataset.quality) === suggestion.quality
+            );
+          });
+          suggestionEl.textContent = `Suggested: ${QUALITY_LABELS[suggestion.quality]} (${suggestion.reason}).`;
+          suggestionEl.hidden = false;
+        } catch {
+          if (gen === suggestionGen) clearSuggestion();
+        }
+      };
 
       // Show current status
       getRecord(key).then((record) => {
@@ -88,7 +145,11 @@ const { domain, slug, title, difficulty, group } = Astro.props;
         }
       });
 
-      let isSubmitting = false;
+      void refreshSuggestion();
+      this.onProgressUpdated = () => {
+        void refreshSuggestion();
+      };
+      window.addEventListener("mental-gym:progress-updated", this.onProgressUpdated);
 
       buttons.forEach((btn) => {
         btn.addEventListener("click", async () => {
@@ -124,6 +185,8 @@ const { domain, slug, title, difficulty, group } = Astro.props;
             return;
           }
 
+          hasSubmitted = true;
+          clearSuggestion();
           window.dispatchEvent(new CustomEvent("mental-gym:progress-updated"));
           btn.classList.add("selected");
 
@@ -141,6 +204,12 @@ const { domain, slug, title, difficulty, group } = Astro.props;
           badge.className = `recall-status-badge sr-badge status-${days === 0 ? "due" : "upcoming"}`;
         });
       });
+    }
+
+    disconnectedCallback() {
+      if (this.onProgressUpdated) {
+        window.removeEventListener("mental-gym:progress-updated", this.onProgressUpdated);
+      }
     }
   }
 
@@ -212,6 +281,17 @@ const { domain, slug, title, difficulty, group } = Astro.props;
     font-family: var(--font-sans);
   }
 
+  .recall-suggestion {
+    margin: -0.4rem 0 0.9rem;
+    font-size: var(--fs-fine);
+    color: var(--accent);
+    font-family: var(--font-sans);
+  }
+
+  .recall-suggestion[hidden] {
+    display: none;
+  }
+
   .recall-buttons {
     display: flex;
     gap: 0.5rem;
@@ -245,6 +325,12 @@ const { domain, slug, title, difficulty, group } = Astro.props;
 
   .recall-btn:hover:not(:disabled) {
     border-color: var(--accent);
+  }
+
+  .recall-btn.suggested:not(:disabled) {
+    border-color: var(--accent-ring);
+    background: var(--accent-glow);
+    box-shadow: inset 0 0 0 1px var(--accent-ring);
   }
 
   .recall-btn:disabled {

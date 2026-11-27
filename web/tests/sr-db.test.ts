@@ -8,8 +8,10 @@ import {
   exportAll,
   getAllAttemptEvents,
   getAllRecords,
+  getDueRecords,
   importAll,
   putAttemptEvent,
+  putRecords,
   resetDatabase,
 } from "../src/scripts/sr-db.ts";
 import type { ReviewRecord } from "../src/scripts/sr-types.ts";
@@ -123,4 +125,53 @@ test("v3 progress upgrades to v4 without losing reviews and includes attempts in
   await resetDatabase();
   assert.deepEqual(await getAllRecords(), []);
   assert.deepEqual(await getAllAttemptEvents(), []);
+});
+
+test("putRecords writes multiple records including lapses and note and ignores empty batches", async () => {
+  await resetDatabase();
+  await putRecords([]);
+  assert.deepEqual(await getAllRecords(), []);
+
+  const first: ReviewRecord = {
+    ...record,
+    lapses: 2,
+    note: "Check duplicate keys",
+  };
+  const second: ReviewRecord = {
+    ...record,
+    problemKey: "algorithms:49-group-anagrams",
+    slug: "49-group-anagrams",
+    title: "Group Anagrams",
+    lapses: 0,
+  };
+
+  await putRecords([first, second]);
+  const stored = (await getAllRecords()).sort((a, b) =>
+    a.problemKey.localeCompare(b.problemKey)
+  );
+  assert.deepEqual(stored, [first, second]);
+  await resetDatabase();
+});
+
+test("getDueRecords excludes unreviewed note-only records even when dueDate <= today", async () => {
+  await resetDatabase();
+  const unreviewedNoteOnly: ReviewRecord = {
+    ...record,
+    problemKey: "algorithms:14-longest-common-prefix",
+    slug: "14-longest-common-prefix",
+    title: "Longest Common Prefix",
+    interval: 0,
+    repetitions: 0,
+    dueDate: "2026-08-12",
+    lastReviewDate: null,
+    lastRating: null,
+    note: "Check empty list",
+  };
+  await putRecords([record, unreviewedNoteOnly]);
+  const due = await getDueRecords("2026-08-13");
+  assert.deepEqual(
+    due.map((r) => r.problemKey),
+    [record.problemKey]
+  );
+  await resetDatabase();
 });

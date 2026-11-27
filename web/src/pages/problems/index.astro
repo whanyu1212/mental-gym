@@ -3,8 +3,11 @@ import { problems } from "../../data/problems";
 import { mlProblems } from "../../data/mlProblems";
 import { sqlProblems } from "../../data/sqlProblems";
 import DueForReview from "../../components/DueForReview.astro";
+import QuickReviewCard from "../../components/QuickReviewCard.astro";
 import SRDataManager from "../../components/SRDataManager.astro";
 import ResumeRow from "../../components/ResumeRow.astro";
+import { getGuide } from "../../data/algorithmGuides";
+import { buildQuickReviewItem } from "../../lib/quick-review";
 import Layout from "../../layouts/Layout.astro";
 import { withBase } from "../../lib/url";
 
@@ -67,6 +70,10 @@ const sqlByCategory = Object.fromEntries(
 				<button class="filter-chip" data-difficulty="medium">Medium</button>
 				<button class="filter-chip" data-difficulty="hard">Hard</button>
 			</div>
+			<div class="view-toggle" role="group" aria-label="Problem list view">
+				<button class="view-chip active" type="button" data-view="table" aria-pressed="true">Table</button>
+				<button class="view-chip" type="button" data-view="cards" aria-pressed="false">Quick Review</button>
+			</div>
 			<div class="filter-active" hidden>
 				<span class="filter-active-label">Topic</span>
 				<button class="filter-topic-clear" data-clear-topic>
@@ -95,7 +102,7 @@ const sqlByCategory = Object.fromEntries(
 					id={`algo-${group.toLowerCase().replace(/\s+&?\s*/g, "-")}`}
 				>
 					<h2 class="group-title">{group}</h2>
-					<div class="table-scroll" role="region" aria-label={`${group} algorithm problems`} tabindex="0">
+					<div class="table-scroll" role="region" aria-label={`${group} algorithm problems`} tabindex="0" data-view-container="table">
 					<table class="problem-table">
 						<thead>
 							<tr>
@@ -132,6 +139,11 @@ const sqlByCategory = Object.fromEntries(
 							))}
 						</tbody>
 					</table>
+					</div>
+					<div class="quick-review-grid" data-view-container="cards" hidden>
+						{algoByGroup[group].map((problem) => (
+							<QuickReviewCard item={buildQuickReviewItem(problem, getGuide(problem.slug))} />
+						))}
 					</div>
 				</section>
 			))
@@ -323,7 +335,7 @@ const sqlByCategory = Object.fromEntries(
 			const key = row?.dataset.srKey;
 			if (!key) continue;
 			const record = byKey.get(key);
-			if (!record) continue; // never reviewed → leave blank (quiet by default)
+			if (!record || record.lastReviewDate === null) continue; // unreviewed → leave blank (quiet by default)
 
 			const status = statusOf(record, today);
 			let label: string;
@@ -358,25 +370,79 @@ const sqlByCategory = Object.fromEntries(
 		if (!algoSection) return;
 
 		const diffChips = algoSection.querySelectorAll<HTMLButtonElement>(".filter-chip");
+		const viewChips = algoSection.querySelectorAll<HTMLButtonElement>(".view-chip");
+		const tableContainers = algoSection.querySelectorAll<HTMLElement>('[data-view-container="table"]');
+		const cardContainers = algoSection.querySelectorAll<HTMLElement>('[data-view-container="cards"]');
 		const rows = algoSection.querySelectorAll<HTMLTableRowElement>("tbody tr[data-difficulty]");
+		const cards = algoSection.querySelectorAll<HTMLElement>("quick-review-card[data-difficulty-filter]");
 		const groups = algoSection.querySelectorAll<HTMLElement>(".group");
 		const activeBox = algoSection.querySelector<HTMLElement>(".filter-active");
 		const activeName = algoSection.querySelector<HTMLElement>(".filter-topic-name");
 		const countEl = algoSection.querySelector<HTMLElement>(".filter-count");
 		const clearBtn = algoSection.querySelector<HTMLButtonElement>("[data-clear-topic]");
 
+		const VIEW_STORAGE_KEY = "problems-algo-view";
+		const setView = (view: "table" | "cards", persist = true) => {
+			const isCards = view === "cards";
+			tableContainers.forEach((el) => { el.hidden = isCards; });
+			cardContainers.forEach((el) => { el.hidden = !isCards; });
+			viewChips.forEach((btn) => {
+				const active = btn.dataset.view === view;
+				btn.classList.toggle("active", active);
+				btn.setAttribute("aria-pressed", String(active));
+			});
+			if (persist) {
+				try {
+					localStorage.setItem(VIEW_STORAGE_KEY, view);
+				} catch {
+					// Ignore storage restrictions
+				}
+			}
+		};
+
+		const requestedView = new URLSearchParams(window.location.search).get("view");
+		let savedView: string | null = null;
+		try {
+			savedView = localStorage.getItem(VIEW_STORAGE_KEY);
+		} catch {
+			savedView = null;
+		}
+		const initialView: "table" | "cards" =
+			requestedView === "quick" || requestedView === "cards"
+				? "cards"
+				: requestedView === "table"
+					? "table"
+					: savedView === "cards"
+						? "cards"
+						: "table";
+		setView(initialView, false);
+
+		viewChips.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const view = btn.dataset.view === "cards" ? "cards" : "table";
+				setView(view, true);
+			});
+		});
+
 		let activeDiff = "all";
 		let activeTopic: string | null = null;
+
+		const matchesFilter = (diff: string | undefined, topicsRaw: string | undefined) => {
+			const diffOk = activeDiff === "all" || diff === activeDiff;
+			const topics = (topicsRaw ?? "").split(" ");
+			const topicOk = !activeTopic || topics.includes(activeTopic);
+			return diffOk && topicOk;
+		};
 
 		const apply = () => {
 			let shown = 0;
 			rows.forEach((row) => {
-				const diffOk = activeDiff === "all" || row.dataset.difficulty === activeDiff;
-				const topics = (row.dataset.topics ?? "").split(" ");
-				const topicOk = !activeTopic || topics.includes(activeTopic);
-				const visible = diffOk && topicOk;
+				const visible = matchesFilter(row.dataset.difficulty, row.dataset.topics);
 				row.hidden = !visible;
 				if (visible) shown++;
+			});
+			cards.forEach((card) => {
+				card.hidden = !matchesFilter(card.dataset.difficultyFilter, card.dataset.topics);
 			});
 
 			// Hide any group whose rows are all filtered out — and keep the
@@ -544,7 +610,8 @@ const sqlByCategory = Object.fromEntries(
 		margin-bottom: 1.75rem;
 	}
 
-	.filter-difficulty {
+	.filter-difficulty,
+	.view-toggle {
 		display: inline-flex;
 		gap: 0.25rem;
 		padding: 0.2rem;
@@ -553,7 +620,8 @@ const sqlByCategory = Object.fromEntries(
 		border-radius: var(--radius-sm);
 	}
 
-	.filter-chip {
+	.filter-chip,
+	.view-chip {
 		background: transparent;
 		border: none;
 		color: var(--muted);
@@ -565,11 +633,13 @@ const sqlByCategory = Object.fromEntries(
 		transition: background 0.15s, color 0.15s;
 	}
 
-	.filter-chip:hover {
+	.filter-chip:hover,
+	.view-chip:hover {
 		color: var(--text);
 	}
 
-	.filter-chip.active {
+	.filter-chip.active,
+	.view-chip.active {
 		background: var(--accent-dim);
 		color: var(--accent);
 		font-weight: 500;
@@ -739,6 +809,23 @@ const sqlByCategory = Object.fromEntries(
 		overflow-x: auto;
 		position: relative;
 		border-radius: var(--radius-md);
+	}
+
+	.table-scroll[hidden],
+	.quick-review-grid[hidden] {
+		display: none;
+	}
+
+	.quick-review-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+	}
+
+	@media (max-width: 900px) {
+		.quick-review-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.table-scroll:focus-visible {

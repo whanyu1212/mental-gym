@@ -19,6 +19,8 @@ const pathname = stripBase(Astro.url.pathname);
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href={withBase("/favicon.svg")} />
 		<link rel="apple-touch-icon" href={withBase("/apple-touch-icon.svg")} />
+		<link rel="manifest" href={withBase("/manifest.webmanifest")} />
+		<meta name="theme-color" content="#101613" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<script is:inline>
@@ -48,7 +50,8 @@ const pathname = stripBase(Astro.url.pathname);
 					<a href={withBase("/learn/")} class={pathname.startsWith("/learn") || pathname.startsWith("/notes") ? "active" : ""}
 						>Learn</a
 					>
-					<a href={withBase("/#review")}>Review</a
+					<a href={withBase("/review")} class={pathname.startsWith("/review") ? "active" : ""}
+						>Review</a
 					>
 					<button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
 						<span class="theme-toggle__icon" aria-hidden="true">◐</span>

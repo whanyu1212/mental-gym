@@ -105,7 +105,7 @@
           return;
         }
         const today = todayISO();
-        const due = records.filter((r) => r.dueDate <= today).length;
+        const due = records.filter((r) => r.lastReviewDate !== null && r.dueDate <= today).length;
         summaryEl.textContent = `${records.length} problems tracked · ${attempts.length} attempts${due > 0 ? ` · ${due} due` : ""}`;
 
         let snapshot: ReturnType<typeof readBackupSnapshot>;
