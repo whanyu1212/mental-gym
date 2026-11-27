@@ -412,3 +412,27 @@ test("date parsing and numeric options reject overflow dates and handle NaN safe
   });
   assert.equal(spreadWithNaNDays[0].dueDate, TODAY);
 });
+
+test("first-review Easy fuzzed upward still uses the 6-day second learning step", () => {
+  const firstEasy = schedule(makeRecord(), 3, {
+    now: NOW,
+    random: () => 0.999999,
+  });
+  assert.equal(firstEasy.repetitions, 1);
+  assert.equal(firstEasy.interval, 5);
+
+  const dueDate = new Date(2026, 11, 2, 10, 0, 0);
+  const secondEasyMin = schedule(firstEasy, 3, {
+    now: dueDate,
+    random: () => 0,
+  });
+  assert.equal(secondEasyMin.repetitions, 2);
+  assert.equal(secondEasyMin.interval, 6);
+
+  const secondEasyMax = schedule(firstEasy, 3, {
+    now: dueDate,
+    random: () => 0.999999,
+  });
+  assert.equal(secondEasyMax.repetitions, 2);
+  assert.equal(secondEasyMax.interval, 7);
+});

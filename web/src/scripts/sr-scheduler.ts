@@ -146,7 +146,8 @@ export function schedule(
     repetitions += 1;
     if (repetitions === 1) {
       interval = 4;
-    } else if (repetitions === 2 && interval <= 4) {
+    } else if (repetitions === 2 && interval <= 5) {
+      minFuzzedInterval = Math.max(2, interval + 1);
       interval = 6;
     } else {
       minFuzzedInterval = interval + 2;
