@@ -114,6 +114,18 @@ const complexityLabel = [item.timeComplexity, item.spaceComplexity]
     return recordsPromise;
   }
 
+  function syncCachedRecord(srKey: string, updated: ReviewRecord): void {
+    if (!recordsPromise) return;
+    recordsPromise = recordsPromise.then((map) => {
+      if (updated.lastReviewDate === null && !updated.note) {
+        map.delete(srKey);
+      } else {
+        map.set(srKey, updated);
+      }
+      return map;
+    });
+  }
+
   window.addEventListener("mental-gym:progress-updated", (event) => {
     const detail = (event as CustomEvent<{ source?: string }>).detail;
     if (detail?.source === "quick-review-note") return;
@@ -230,9 +242,14 @@ const complexityLabel = [item.timeComplexity, item.spaceComplexity]
           syncDirty();
           applyStatus(updated);
           showSaveMessage(savedNote ? "Saved" : "Cleared");
+          syncCachedRecord(srKey, updated);
           window.dispatchEvent(
             new CustomEvent("mental-gym:progress-updated", {
-              detail: { source: "quick-review-note", problemKey: srKey },
+              detail: {
+                source: "quick-review-note",
+                problemKey: srKey,
+                origin: this,
+              },
             })
           );
         } catch {
@@ -250,9 +267,15 @@ const complexityLabel = [item.timeComplexity, item.spaceComplexity]
       hydrate(false);
 
       this.onExternalUpdate = (event: Event) => {
-        const detail = (event as CustomEvent<{ source?: string; problemKey?: string }>).detail;
-        if (detail?.source === "quick-review-note" && detail.problemKey === srKey) {
-          return;
+        const detail = (
+          event as CustomEvent<{
+            source?: string;
+            problemKey?: string;
+            origin?: QuickReviewCardElement;
+          }>
+        ).detail;
+        if (detail?.source === "quick-review-note") {
+          if (detail.origin === this || detail.problemKey !== srKey) return;
         }
         hasLocalSave = false;
         queueMicrotask(() => hydrate(true));
