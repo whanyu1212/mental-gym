@@ -110,6 +110,13 @@ export async function putRecords(records: ReviewRecord[]): Promise<void> {
   await complete(transaction);
 }
 
+export async function deleteRecord(key: string): Promise<void> {
+  const db = await open();
+  const transaction = db.transaction(REVIEWS_STORE, "readwrite");
+  transaction.objectStore(REVIEWS_STORE).delete(key);
+  await complete(transaction);
+}
+
 export async function putReviewAndEvent(
   record: ReviewRecord,
   event: ReviewEvent
@@ -178,7 +185,12 @@ export async function getDueRecords(
     const range = IDBKeyRange.upperBound(todayISO);
     const index = store(db, REVIEWS_STORE, "readonly").index("dueDate");
     const request = index.getAll(range);
-    request.onsuccess = () => resolve(request.result as ReviewRecord[]);
+    request.onsuccess = () =>
+      resolve(
+        (request.result as ReviewRecord[]).filter(
+          (record) => record.lastReviewDate !== null
+        )
+      );
     request.onerror = () => reject(request.error);
   });
 }
