@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import HomeSession from '../components/HomeSession.astro';
-import LearningIllustration from '../components/LearningIllustration.astro';
+import HeroLiveRep from '../components/HeroLiveRep.astro';
 import ResumeRow from '../components/ResumeRow.astro';
 import { mlProblems } from '../data/mlProblems';
 import { problems } from '../data/problems';
@@ -14,13 +14,13 @@ const completedML = mlProblems.filter(problem => problem.status === 'Completed')
   <div class="home">
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow"><span class="status-dot"></span> A practice space for curious minds</p>
+        <p class="eyebrow"><span class="status-dot"></span> A deliberate practice gym for DSA, ML &amp; SQL</p>
         <h1>Build a mind<br />for <em>hard problems.</em></h1>
-        <p class="description">Solve problems. Build models. Make it stick.<br class="wide-break" /> A little deliberate practice, every day.</p>
-        <div class="hero-actions"><a class="primary-action" href="#review">Start a session <span aria-hidden="true">↗</span></a><a class="roadmap-link" href={withBase('/roadmap/')}>Explore the roadmap <span aria-hidden="true">→</span></a></div>
-        <p class="hero-footnote">First principles. Real practice. Lasting recall.</p>
+        <p class="description">Attempt cold before peeking. Capture the traps that actually tripped you up. Lock in patterns with spaced recall.</p>
+        <div class="hero-actions"><a class="primary-action" href={withBase('/review/')}>Start daily review <span class="due-pill" data-hero-due hidden></span> <span aria-hidden="true">↗</span></a><a class="roadmap-link" href={withBase('/roadmap/')}>Explore the roadmap <span aria-hidden="true">→</span></a></div>
+        <p class="hero-footnote">Blind review · Personal trap notes · Local-first spaced repetition</p>
       </div>
-      <LearningIllustration />
+      <HeroLiveRep />
     </section>
     <div class="learning-strip" aria-label="The learning cycle"><span>Good thinking takes practice.</span><ol><li>Learn</li><li>Implement</li><li>Practice</li><li>Review</li><li>Retain</li></ol></div>
     <ResumeRow />
@@ -52,20 +52,48 @@ const completedML = mlProblems.filter(problem => problem.status === 'Completed')
     <footer class="home-footer"><span>Mental Gym</span><p>Keep showing up. The connections will follow.</p><a href={withBase('/progress')}>Your progress ↗</a></footer>
   </div>
 </Layout>
+<script>
+  import { getDueRecords } from "../scripts/sr-db";
+  import { todayISO } from "../scripts/sr-scheduler";
+
+  async function hydrateDueBadge(): Promise<void> {
+    const badge = document.querySelector<HTMLElement>("[data-hero-due]");
+    if (!badge) return;
+
+    try {
+      const due = await getDueRecords(todayISO());
+      if (due.length > 0) {
+        badge.textContent = `${due.length} due`;
+        badge.hidden = false;
+      } else {
+        badge.hidden = true;
+      }
+    } catch {
+      // Storage unavailable (e.g. private browsing); leave CTA as plain link.
+    }
+  }
+
+  void hydrateDueBadge();
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) void hydrateDueBadge();
+  });
+</script>
 <style>
   .home { --home-accent: var(--accent); --home-on-accent: var(--on-accent); --home-tint: #f0f5e9; --home-border: #dce5d5; --home-card: #f5f8f1; }
   :global([data-theme="dark"]) .home { --home-tint: #1c2922; --home-border: #354338; --home-card: #1c241f; }
-  .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 2.5rem; align-items: center; padding: 2.5rem 0 2rem; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.08fr); gap: 2.5rem; align-items: center; padding: 2.5rem 0 2rem; }
   .hero-copy { min-width: 0; }
   .eyebrow { color: var(--home-accent); font: 500 .58rem/1.5 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; margin: 0 0 .75rem; }
   .hero .eyebrow { display: flex; align-items: center; gap: .5rem; font-size: .6rem; letter-spacing: .045em; }
   .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--home-accent); flex-shrink: 0; }
   h1 { font: 600 clamp(2.6rem, 5.1vw, 3.65rem)/.98 var(--font-serif); letter-spacing: -.045em; margin: 1.1rem 0; }
   h1 em { font-weight: 400; color: var(--home-accent); }
-  .description { color: var(--muted); font: .92rem/1.65 var(--font-sans); margin: 1.2rem 0 1.5rem; }
+  .description { color: var(--muted); font: .92rem/1.65 var(--font-sans); margin: 1.2rem 0 1.5rem; max-width: 44ch; }
   .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .9rem; }
-  .primary-action { display: inline-flex; gap: 1.3rem; align-items: center; background: var(--home-accent); color: var(--home-on-accent); padding: .85rem 1rem; border-radius: 6px; font: 600 .72rem var(--font-sans); text-decoration: none; }
+  .primary-action { display: inline-flex; gap: .7rem; align-items: center; background: var(--home-accent); color: var(--home-on-accent); padding: .85rem 1rem; border-radius: 6px; font: 600 .72rem var(--font-sans); text-decoration: none; }
   .primary-action:hover { filter: brightness(1.15); }
+  .due-pill { display: inline-block; padding: .14rem .48rem; border-radius: 999px; background: color-mix(in srgb, var(--home-on-accent) 18%, transparent); font: 600 .66rem var(--font-mono); line-height: 1.2; }
+  .due-pill[hidden] { display: none; }
   .roadmap-link { font: 500 .68rem var(--font-sans); color: var(--text); }
   .roadmap-link span { margin-left: .3rem; }
   .hero-footnote { color: var(--muted); font: .6rem/1.5 var(--font-mono); margin: 1.3rem 0 0; }
@@ -107,6 +135,6 @@ const completedML = mlProblems.filter(problem => problem.status === 'Completed')
   .home :global(a:focus-visible) { outline: 2px solid var(--home-accent); outline-offset: 5px; }
   @media (max-width: 850px) { .hero { gap: 1.3rem; } .hero-actions { align-items: flex-start; flex-direction: column; } .learning-strip { align-items: flex-start; flex-direction: column; gap: .6rem; } }
   @media (max-width: 680px) { .hero { grid-template-columns: minmax(0, 1fr); gap: 1.8rem; padding-top: 1.5rem; } h1 { font-size: clamp(2.8rem, 10vw, 3.65rem); } .hero-actions { flex-direction: row; align-items: center; } .hero-footnote { margin-top: 1rem; } .domain-grid { grid-template-columns: minmax(0, 1fr); } .domain-art { height: 100px; } .section-heading { align-items: flex-start; flex-direction: column; gap: .75rem; } .domain-card { padding: 1.3rem; } .domain-card h3 { font-size: 1.65rem; } .card-top { font-size: .58rem; } .domain-card p { max-width: 360px; } .home-footer { flex-wrap: wrap; } .home-footer p { flex-basis: 60%; } }
-  @media (max-width: 400px) { .learning-strip ol { gap: .4rem; font-size: .55rem; } .learning-strip li + li::before { margin-right: .4rem; } .notes li em { display: none; } .wide-break { display: none; } }
+  @media (max-width: 400px) { .learning-strip ol { gap: .4rem; font-size: .55rem; } .learning-strip li + li::before { margin-right: .4rem; } .notes li em { display: none; } }
   @media (prefers-reduced-motion: reduce) { .domain-card { transition: none; } .domain-card:hover { transform: none; } }
 </style>
