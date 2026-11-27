@@ -1,11 +1,15 @@
 ---
+import { withBase } from "../lib/url";
 ---
 
 <due-for-review>
   <section class="due-section" style="display:none">
     <div class="due-header">
-      <h2 class="due-heading">Due for Review</h2>
-      <span class="due-count"></span>
+      <div class="due-header-title">
+        <h2 class="due-heading">Due for Review</h2>
+        <span class="due-count"></span>
+      </div>
+      <a class="due-start-btn" href={withBase("/review/")}>Start review session →</a>
     </div>
     <div class="due-cards"></div>
   </section>
@@ -91,9 +95,38 @@
 
   .due-header {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .due-header-title {
+    display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+  }
+
+  .due-start-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-xs);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-ring);
+    color: var(--accent);
+    font-size: var(--fs-fine);
+    font-weight: 600;
+    font-family: var(--font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .due-start-btn:hover {
+    background: var(--accent-veil);
+    text-decoration: none;
   }
 
   .due-heading {
