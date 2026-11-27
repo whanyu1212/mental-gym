@@ -106,15 +106,20 @@ test("version 3 imports with no attempts", () => {
 });
 
 test("version 4 round trip preserves records, events, highlights, and attempts", () => {
+  const annotatedRecord: ReviewRecord = {
+    ...record,
+    lapses: 2,
+    note: "Check complement before inserting current value",
+  };
   const json = serializeExport(
-    [record],
+    [annotatedRecord],
     [event],
     [highlight],
     [attempt],
     "2026-07-13T12:00:00.000Z"
   );
   assert.deepEqual(parseExport(json), {
-    records: [record],
+    records: [annotatedRecord],
     events: [event],
     highlights: [highlight],
     attempts: [attempt],
@@ -266,5 +271,38 @@ test("invalid versions and malformed events are rejected", () => {
         attempts: [{ ...attempt, durationSeconds: -1 }],
       }),
     /invalid attempt events/
+  );
+  assert.throws(
+    () =>
+      normalizeExport({
+        version: 4,
+        records: [{ ...record, lapses: -1 }],
+        events: [],
+        highlights: [],
+        attempts: [],
+      }),
+    /invalid review records/
+  );
+  assert.throws(
+    () =>
+      normalizeExport({
+        version: 4,
+        records: [{ ...record, lapses: 1.5 }],
+        events: [],
+        highlights: [],
+        attempts: [],
+      }),
+    /invalid review records/
+  );
+  assert.throws(
+    () =>
+      normalizeExport({
+        version: 4,
+        records: [{ ...record, note: 123 }],
+        events: [],
+        highlights: [],
+        attempts: [],
+      }),
+    /invalid review records/
   );
 });
